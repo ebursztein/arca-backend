@@ -39,6 +39,32 @@ class Planet(str, Enum):
     NORTH_NODE = "north node"
 
 
+class CelestialBody(str, Enum):
+    """
+    Celestial body enumeration including planets and chart angles.
+
+    Used for aspects which can occur between any combination of planets and angles.
+    """
+    # Planets
+    SUN = "sun"
+    MOON = "moon"
+    MERCURY = "mercury"
+    VENUS = "venus"
+    MARS = "mars"
+    JUPITER = "jupiter"
+    SATURN = "saturn"
+    URANUS = "uranus"
+    NEPTUNE = "neptune"
+    PLUTO = "pluto"
+    NORTH_NODE = "north node"
+
+    # Chart Angles
+    ASCENDANT = "asc"
+    IMUM_COELI = "ic"
+    DESCENDANT = "dsc"
+    MIDHEAVEN = "mc"
+
+
 class Element(str, Enum):
     """Element enumeration."""
     FIRE = "fire"
@@ -69,13 +95,79 @@ class ChartType(str, Enum):
     NATAL = "natal"
     TRANSIT = "transit"
 
+
+class House(int, Enum):
+    """
+    House enumeration with meanings.
+
+    Houses represent different life areas in astrology.
+    In whole sign houses, each sign occupies one complete house.
+    """
+    FIRST = 1
+    SECOND = 2
+    THIRD = 3
+    FOURTH = 4
+    FIFTH = 5
+    SIXTH = 6
+    SEVENTH = 7
+    EIGHTH = 8
+    NINTH = 9
+    TENTH = 10
+    ELEVENTH = 11
+    TWELFTH = 12
+
+    @property
+    def meaning(self) -> str:
+        """Get the life area meaning for this house."""
+        meanings = {
+            1: "self, identity, appearance",
+            2: "money, values, resources",
+            3: "communication, siblings, short trips",
+            4: "home, family, roots",
+            5: "creativity, romance, children",
+            6: "health, work, daily routines",
+            7: "partnerships, relationships",
+            8: "transformation, shared resources, intimacy",
+            9: "travel, philosophy, higher learning",
+            10: "career, public image, goals",
+            11: "friendships, groups, hopes",
+            12: "spirituality, solitude, unconscious"
+        }
+        return meanings[self.value]
+
+    @property
+    def ordinal(self) -> str:
+        """Get the ordinal representation (1st, 2nd, 3rd, etc.)."""
+        n = self.value
+        if 11 <= n <= 13:
+            return f"{n}th"
+        else:
+            return f"{n}{['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][n % 10]}"
+
+
+# Planet ruler mappings for each zodiac sign (Modern Astrology)
+SIGN_RULERS = {
+    ZodiacSign.ARIES: Planet.MARS,
+    ZodiacSign.TAURUS: Planet.VENUS,
+    ZodiacSign.GEMINI: Planet.MERCURY,
+    ZodiacSign.CANCER: Planet.MOON,
+    ZodiacSign.LEO: Planet.SUN,
+    ZodiacSign.VIRGO: Planet.MERCURY,
+    ZodiacSign.LIBRA: Planet.VENUS,
+    ZodiacSign.SCORPIO: Planet.PLUTO,      # Modern ruler (traditional: Mars)
+    ZodiacSign.SAGITTARIUS: Planet.JUPITER,
+    ZodiacSign.CAPRICORN: Planet.SATURN,
+    ZodiacSign.AQUARIUS: Planet.URANUS,    # Modern ruler (traditional: Saturn)
+    ZodiacSign.PISCES: Planet.NEPTUNE      # Modern ruler (traditional: Jupiter)
+}
+
 # Pydantic Models for Chart Data
 class PlanetPosition(BaseModel):
     """A planet's position and metadata."""
-    name: str
+    name: Planet
     symbol: str
     position_dms: str = Field(description="Formatted position like '15° ♈ 23'")
-    sign: str
+    sign: ZodiacSign
     degree_in_sign: float = Field(ge=0, lt=30)
     absolute_degree: float = Field(ge=0, lt=360)
     house: int = Field(ge=1, le=12)
@@ -84,38 +176,118 @@ class PlanetPosition(BaseModel):
     element: Element
     modality: Modality
 
+    @field_validator('name', mode='before')
+    @classmethod
+    def convert_name(cls, v) -> Planet:
+        """Convert string to Planet enum (case-insensitive)."""
+        if isinstance(v, Planet):
+            return v
+        return Planet(v.lower())
+
+    @field_validator('sign', mode='before')
+    @classmethod
+    def convert_sign(cls, v) -> ZodiacSign:
+        """Convert string to ZodiacSign enum (case-insensitive)."""
+        if isinstance(v, ZodiacSign):
+            return v
+        return ZodiacSign(v.lower())
+
 
 class HouseCusp(BaseModel):
     """A house cusp with ruler information."""
     number: int = Field(ge=1, le=12)
-    sign: str
+    sign: ZodiacSign
     degree_in_sign: float = Field(ge=0, lt=30)
     absolute_degree: float = Field(ge=0, lt=360)
-    ruler: str
-    ruler_sign: str
+    ruler: Planet
+    ruler_sign: ZodiacSign
     ruler_house: int = Field(ge=1, le=12)
-    classic_ruler: str
-    classic_ruler_sign: str
+    classic_ruler: Planet
+    classic_ruler_sign: ZodiacSign
     classic_ruler_house: int = Field(ge=1, le=12)
+
+    @field_validator('sign', 'ruler_sign', 'classic_ruler_sign', mode='before')
+    @classmethod
+    def convert_zodiac_sign(cls, v) -> ZodiacSign:
+        """Convert string to ZodiacSign enum (case-insensitive)."""
+        if isinstance(v, ZodiacSign):
+            return v
+
+        # Map unicode symbols to zodiac signs (natal library may return just symbols)
+        symbol_map = {
+            '♈': ZodiacSign.ARIES,
+            '♉': ZodiacSign.TAURUS,
+            '♊': ZodiacSign.GEMINI,
+            '♋': ZodiacSign.CANCER,
+            '♌': ZodiacSign.LEO,
+            '♍': ZodiacSign.VIRGO,
+            '♎': ZodiacSign.LIBRA,
+            '♏': ZodiacSign.SCORPIO,
+            '♐': ZodiacSign.SAGITTARIUS,
+            '♑': ZodiacSign.CAPRICORN,
+            '♒': ZodiacSign.AQUARIUS,
+            '♓': ZodiacSign.PISCES
+        }
+
+        # Check if it's just a symbol
+        v_str = str(v).strip()
+        if v_str in symbol_map:
+            return symbol_map[v_str]
+
+        # natal library may return "♓ pisces", extract just the text part
+        if ' ' in v_str:
+            v_str = v_str.split()[-1]
+
+        # Try to extract sign name from lowercase text
+        for sign in ZodiacSign:
+            if sign.value in v_str.lower():
+                return sign
+
+        # If nothing matched, try direct conversion
+        return ZodiacSign(v_str.lower())
+
+    @field_validator('ruler', 'classic_ruler', mode='before')
+    @classmethod
+    def convert_planet(cls, v) -> Planet:
+        """Convert string to Planet enum (case-insensitive)."""
+        if isinstance(v, Planet):
+            return v
+        return Planet(v.lower())
 
 
 class AspectData(BaseModel):
-    """An aspect between two celestial bodies."""
-    body1: str
-    body2: str
+    """An aspect between two celestial bodies (planets or angles)."""
+    body1: CelestialBody
+    body2: CelestialBody
     aspect_type: AspectType
     aspect_symbol: str
     exact_degree: int = Field(description="Exact degree of aspect (0, 60, 90, 120, 180)")
     orb: float = Field(ge=0, description="Orb in degrees from exact")
     applying: bool = Field(description="True if applying, False if separating")
 
+    @field_validator('body1', 'body2', mode='before')
+    @classmethod
+    def convert_body(cls, v) -> CelestialBody:
+        """Convert string to CelestialBody enum (case-insensitive)."""
+        if isinstance(v, CelestialBody):
+            return v
+        return CelestialBody(v.lower())
+
 
 class AnglePosition(BaseModel):
     """Position of one of the four angles (Asc, IC, Dsc, MC)."""
-    sign: str
+    sign: ZodiacSign
     degree_in_sign: float = Field(ge=0, lt=30)
     absolute_degree: float = Field(ge=0, lt=360)
     position_dms: str = Field(description="Formatted position like '15° ♈ 23'")
+
+    @field_validator('sign', mode='before')
+    @classmethod
+    def convert_sign(cls, v) -> ZodiacSign:
+        """Convert string to ZodiacSign enum (case-insensitive)."""
+        if isinstance(v, ZodiacSign):
+            return v
+        return ZodiacSign(v.lower())
 
 
 class ChartAngles(BaseModel):
@@ -489,6 +661,8 @@ def get_astro_chart(
     )
 
     # Extract planet positions
+    # Filter to only supported planets (natal library may return other bodies)
+    supported_planet_names = {p.value for p in Planet}
     planets = [
         PlanetPosition(
             name=planet.name,
@@ -504,7 +678,27 @@ def get_astro_chart(
             modality=planet.sign.modality
         )
         for planet in data.planets
+        if planet.name in supported_planet_names
     ]
+
+    # Manually add North Node (calculated point, not in data.planets list)
+    if hasattr(data, 'asc_node'):
+        north_node = data.asc_node
+        planets.append(
+            PlanetPosition(
+                name="north node",
+                symbol=north_node.symbol if hasattr(north_node, 'symbol') else "☊",
+                position_dms=north_node.signed_dms,
+                sign=north_node.sign.name,
+                degree_in_sign=round(north_node.signed_deg + north_node.minute / 60, 2),
+                absolute_degree=round(north_node.degree, 2),
+                house=data.house_of(north_node),
+                speed=round(north_node.speed, 4),
+                retrograde=north_node.retro if hasattr(north_node, 'retro') else False,
+                element=north_node.sign.element,
+                modality=north_node.sign.modality
+            )
+        )
 
     # Extract house cusps
     houses = [
@@ -524,6 +718,8 @@ def get_astro_chart(
     ]
 
     # Extract aspects
+    # Include all aspects (planets and angles) - filter to supported celestial bodies
+    supported_body_names = {b.value for b in CelestialBody}
     aspects = [
         AspectData(
             body1=aspect.body1.name,
@@ -535,6 +731,7 @@ def get_astro_chart(
             applying=aspect.applying
         )
         for aspect in data.aspects
+        if aspect.body1.name in supported_body_names and aspect.body2.name in supported_body_names
     ]
 
     # Extract the four angles
@@ -574,22 +771,27 @@ def get_astro_chart(
         modalities[planet.sign.modality] += 1
 
     # Get quadrant counts
+    # Q1 = Houses 1-3 (NE), Q2 = Houses 4-6 (NW), Q3 = Houses 7-9 (SW), Q4 = Houses 10-12 (SE)
     quadrant_counts = [len(q) for q in data.quadrants]
 
     distributions = ChartDistributions(
         elements=ElementDistribution(**elements),
         modalities=ModalityDistribution(**modalities),
         quadrants=QuadrantDistribution(
-            first=quadrant_counts[0],
-            second=quadrant_counts[1],
-            third=quadrant_counts[2],
-            fourth=quadrant_counts[3]
+            first=quadrant_counts[0],   # Houses 1-3
+            second=quadrant_counts[1],  # Houses 4-6
+            third=quadrant_counts[2],   # Houses 7-9
+            fourth=quadrant_counts[3]   # Houses 10-12
         ),
         hemispheres=HemisphereDistribution(
-            northern=quadrant_counts[0] + quadrant_counts[3],
-            southern=quadrant_counts[1] + quadrant_counts[2],
-            eastern=quadrant_counts[0] + quadrant_counts[1],
-            western=quadrant_counts[2] + quadrant_counts[3]
+            # Northern hemisphere: Houses 1-6 (below horizon) = Q1 + Q2
+            northern=quadrant_counts[0] + quadrant_counts[1],
+            # Southern hemisphere: Houses 7-12 (above horizon) = Q3 + Q4
+            southern=quadrant_counts[2] + quadrant_counts[3],
+            # Eastern hemisphere: Houses 10-3 (ascendant side/left) = Q1 + Q4
+            eastern=quadrant_counts[0] + quadrant_counts[3],
+            # Western hemisphere: Houses 4-9 (descendant side/right) = Q2 + Q3
+            western=quadrant_counts[1] + quadrant_counts[2]
         )
     )
 
@@ -695,85 +897,209 @@ def compute_birth_chart(
     return chart.model_dump(), exact_chart
 
 
-def summarize_transits(transit_chart: dict, sun_sign: ZodiacSign) -> str:
+def calculate_solar_house(sun_sign: str, transit_sign: str) -> House:
     """
-    Extract key transit aspects relevant to a sun sign for LLM context.
+    Calculate the Solar House for a transiting planet using whole sign houses.
 
-    Focuses on the most impactful transits:
-    - Sun aspects (everyone feels these - core identity energy)
-    - Moon aspects (emotional tone of the day)
-    - Mercury/Venus/Mars aspects (daily affairs - communication, love, action)
-    - Major outer planet aspects (Jupiter, Saturn, Uranus, Neptune, Pluto)
+    In whole sign house systems, the Sun sign always occupies the 1st house,
+    and each subsequent sign occupies the next house in order.
+
+    Args:
+        sun_sign: The natal sun sign (e.g., "aries", "taurus")
+        transit_sign: The sign of the transiting planet (e.g., "libra", "virgo")
+
+    Returns:
+        House enum (e.g., House.FIRST, House.SIXTH) with meaning and ordinal properties
+
+    Examples:
+        >>> house = calculate_solar_house("aries", "aries")
+        >>> house.value
+        1
+        >>> house.ordinal
+        '1st'
+        >>> house.meaning
+        'self, identity, appearance'
+
+    Raises:
+        ValueError: If invalid sign names are provided
+    """
+    sign_order = list(ZodiacSign)
+
+    try:
+        # Convert strings to enums if needed
+        if isinstance(sun_sign, str):
+            sun_sign_enum = ZodiacSign(sun_sign.lower())
+        else:
+            sun_sign_enum = sun_sign
+
+        if isinstance(transit_sign, str):
+            transit_sign_enum = ZodiacSign(transit_sign.lower())
+        else:
+            transit_sign_enum = transit_sign
+
+        natal_sun_sign_index = sign_order.index(sun_sign_enum)
+        transit_sign_index = sign_order.index(transit_sign_enum)
+    except (ValueError, KeyError):
+        raise ValueError(f"Invalid sign name provided: sun_sign={sun_sign}, transit_sign={transit_sign}")
+
+    # Calculate house number using whole sign system
+    # Distance from natal sun sign, wrapping around the zodiac
+    distance = (transit_sign_index - natal_sun_sign_index) % 12
+
+    # Add 1 to convert from 0-based distance to 1-based house number
+    house_number = distance + 1
+
+    # Return House enum
+    return House(house_number)
+
+
+def summarize_transits(transit_chart: dict, sun_sign: str) -> str:
+    """
+    Extract key transit aspects personalized to a user's sun sign for LLM context.
+
+    Provides highly personalized transit information including:
+    - Aspects between transiting planets and natal Sun position
+    - Current positions of all personal planets (Sun, Moon, Mercury, Venus, Mars)
+    - Positions of outer planets for context
+    - Which house areas are being activated
+    - Retrograde planets
+    - Sign ruler positions
 
     Args:
         transit_chart: NatalChartData dict from compute_birth_chart() with chart_type="transit"
-        sun_sign: ZodiacSign enum value
+        sun_sign: Sun sign as string (e.g., "aries", "taurus")
 
     Returns:
-        Human-readable summary of key transits for LLM prompt context
+        Personalized summary of key transits for LLM prompt context
 
     Example:
         >>> transit_data, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
-        >>> summary = summarize_transits(transit_data, ZodiacSign.TAURUS)
+        >>> summary = summarize_transits(transit_data, "taurus")
         >>> print(summary)
-        "Sun in Libra (balance, partnerships). Moon in Scorpio (deep emotions, transformation)..."
+        "Your Sun: Taurus. Transit Sun in Libra (6th house - health, work) ..."
     """
+    # Convert sun_sign string to ZodiacSign enum if needed
+    if isinstance(sun_sign, str):
+        sun_sign = ZodiacSign(sun_sign.lower())
+
     # Extract planets for easy access
+    # Note: p["name"] is now a Planet enum (str-based), so we can use it as dict key
     planets = {p["name"]: p for p in transit_chart["planets"]}
-    aspects = transit_chart["aspects"]
 
     # Build summary parts
     parts = []
 
-    # 1. Sun position (sets the overall tone)
-    sun = planets.get(Planet.SUN.value)
-    if sun:
-        parts.append(f"Sun in {sun['sign'].title()} at {sun['degree_in_sign']:.1f}°")
+    # 1. User's natal Sun sign (identity anchor)
+    parts.append(f"Your Sun: {sun_sign.value.title()}")
 
-    # 2. Moon position (emotional climate)
-    moon = planets.get(Planet.MOON.value)
-    if moon:
-        parts.append(f"Moon in {moon['sign'].title()} at {moon['degree_in_sign']:.1f}°")
+    # 2. Calculate natal Sun position (use midpoint of sign, ~15°)
+    # Map signs to absolute degrees (Aries = 0°, Taurus = 30°, etc.)
+    sign_order = list(ZodiacSign)
+    natal_sun_sign_index = sign_order.index(sun_sign)
+    natal_sun_degree = natal_sun_sign_index * 30 + 15  # Midpoint of sign
 
-    # 3. Key aspects involving personal planets (Sun, Moon, Mercury, Venus, Mars)
-    personal_planets = [
-        Planet.SUN.value,
-        Planet.MOON.value,
-        Planet.MERCURY.value,
-        Planet.VENUS.value,
-        Planet.MARS.value
-    ]
-    key_aspects = []
+    # 3. Transit Sun position with house and aspect to natal Sun
+    transit_sun = planets.get(Planet.SUN.value)
+    if transit_sun:
+        transit_sun_abs = transit_sun["absolute_degree"]
+        sun_sign_name = transit_sun["sign"]
 
-    for aspect in aspects:
-        body1 = aspect["body1"]
-        body2 = aspect["body2"]
-        aspect_type = aspect["aspect_type"]
-        orb = aspect["orb"]
+        # Calculate house using whole sign system (returns House enum)
+        sun_house = calculate_solar_house(sun_sign, sun_sign_name)
 
-        # Filter for tight aspects (orb < 3°) involving personal planets
-        if orb < 3.0:
-            if body1 in personal_planets or body2 in personal_planets:
-                # Format: "Venus trine Neptune (2.1° orb)"
-                symbol = aspect["aspect_symbol"]
-                key_aspects.append(
-                    f"{body1.title()} {aspect_type} {body2.title()} "
-                    f"({symbol}, {orb:.1f}° orb)"
-                )
+        # Calculate aspect to natal Sun
+        degree_diff = abs(transit_sun_abs - natal_sun_degree)
+        if degree_diff > 180:
+            degree_diff = 360 - degree_diff
 
-    # Limit to top 5 most relevant aspects
-    if key_aspects:
-        parts.append("Key aspects: " + "; ".join(key_aspects[:5]))
+        natal_sun_aspect = None
+        if degree_diff < 5:
+            natal_sun_aspect = "conjunction (new beginning)"
+        elif 85 <= degree_diff <= 95:
+            natal_sun_aspect = "square (challenge, growth)"
+        elif 115 <= degree_diff <= 125:
+            natal_sun_aspect = "trine (ease, flow)"
+        elif 175 <= degree_diff <= 185:
+            natal_sun_aspect = "opposition (awareness, balance)"
+        elif 55 <= degree_diff <= 65:
+            natal_sun_aspect = "sextile (opportunity)"
 
-    # 4. Retrograde planets (notable when personal planets are retrograde)
-    retrogrades = []
-    for planet_name in personal_planets:
+        sun_part = f"Transit Sun in {sun_sign_name.title()} at {transit_sun['degree_in_sign']:.1f}° (your {sun_house.ordinal} house: {sun_house.meaning})"
+        if natal_sun_aspect:
+            sun_part += f" - {natal_sun_aspect} your natal Sun"
+        parts.append(sun_part)
+
+    # 4. Transit Moon position with house
+    transit_moon = planets.get(Planet.MOON.value)
+    if transit_moon:
+        moon_sign_name = transit_moon["sign"]
+        moon_house = calculate_solar_house(sun_sign, moon_sign_name)
+        parts.append(f"Transit Moon in {moon_sign_name.title()} at {transit_moon['degree_in_sign']:.1f}° (your {moon_house.ordinal} house: {moon_house.meaning})")
+
+    # 5. Personal planets positions
+    personal_info = []
+    for planet_name in [Planet.MERCURY.value, Planet.VENUS.value, Planet.MARS.value]:
         planet = planets.get(planet_name)
-        if planet and planet["retrograde"]:
-            retrogrades.append(f"{planet_name.title()} Rx")
+        if planet:
+            sign = planet["sign"]
+            degree = planet["degree_in_sign"]
+            retro = " Rx" if planet["retrograde"] else ""
+            personal_info.append(f"{planet_name.title()} in {sign.title()} {degree:.1f}°{retro}")
 
-    if retrogrades:
-        parts.append("Retrograde: " + ", ".join(retrogrades))
+    if personal_info:
+        parts.append("Personal planets: " + ", ".join(personal_info))
+
+    # 6. Aspects to natal Sun from transiting planets
+    natal_sun_aspects = []
+    for planet_name in [Planet.MERCURY.value, Planet.VENUS.value, Planet.MARS.value,
+                        Planet.JUPITER.value, Planet.SATURN.value]:
+        planet = planets.get(planet_name)
+        if planet:
+            transit_degree = planet["absolute_degree"]
+            degree_diff = abs(transit_degree - natal_sun_degree)
+            if degree_diff > 180:
+                degree_diff = 360 - degree_diff
+
+            # Check for major aspects (tighter orbs for outer planets)
+            max_orb = 5 if planet_name in [Planet.JUPITER.value, Planet.SATURN.value] else 3
+
+            if degree_diff < max_orb:
+                natal_sun_aspects.append(f"{planet_name.title()} conjunction")
+            elif 87 <= degree_diff <= 93:
+                natal_sun_aspects.append(f"{planet_name.title()} square")
+            elif 117 <= degree_diff <= 123:
+                natal_sun_aspects.append(f"{planet_name.title()} trine")
+            elif 177 <= degree_diff <= 183:
+                natal_sun_aspects.append(f"{planet_name.title()} opposition")
+            elif 57 <= degree_diff <= 63:
+                natal_sun_aspects.append(f"{planet_name.title()} sextile")
+
+    if natal_sun_aspects:
+        parts.append("Aspects to your natal Sun: " + ", ".join(natal_sun_aspects))
+
+    # 7. Outer planets context (slow-moving, set longer-term themes)
+    outer_info = []
+    for planet_name in [Planet.JUPITER.value, Planet.SATURN.value, Planet.URANUS.value,
+                        Planet.NEPTUNE.value, Planet.PLUTO.value]:
+        planet = planets.get(planet_name)
+        if planet:
+            sign = planet["sign"]
+            retro = " Rx" if planet["retrograde"] else ""
+            outer_info.append(f"{planet_name.title()} in {sign.title()}{retro}")
+
+    if outer_info:
+        parts.append("Outer planets: " + ", ".join(outer_info))
+
+    # 8. Sign ruler position (important for sun sign)
+    ruler_planet = SIGN_RULERS.get(sun_sign)
+    if ruler_planet:
+        ruler_planet_name = ruler_planet.value
+        if ruler_planet_name in planets:
+            ruler = planets[ruler_planet_name]
+            ruler_sign_name = ruler["sign"]
+            ruler_house = calculate_solar_house(sun_sign, ruler_sign_name)
+            retro = " (retrograde)" if ruler["retrograde"] else ""
+            parts.append(f"Your ruling planet {ruler_planet_name.title()} in {ruler['sign'].title()} at {ruler['degree_in_sign']:.1f}° (your {ruler_house.ordinal} house){retro}")
 
     # Join all parts with ". "
     return ". ".join(parts) + "."

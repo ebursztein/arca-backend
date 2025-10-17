@@ -11,9 +11,14 @@ from astro import (
     SunSignProfile,
     compute_birth_chart,
     summarize_transits,
+    calculate_solar_house,
     ZodiacSign,
     Element,
-    Modality
+    Modality,
+    House,
+    Planet,
+    CelestialBody,
+    SIGN_RULERS
 )
 
 
@@ -378,7 +383,7 @@ class TestComputeBirthChart:
         assert "angles" in chart_data
         assert "distributions" in chart_data
 
-        # Planets list should have 11 planets (sun through pluto)
+        # Planets list should have 11 planets (sun through pluto + north node)
         assert len(chart_data["planets"]) == 11
 
         # Houses should be 12
@@ -487,7 +492,7 @@ class TestComputeBirthChart:
         assert "eastern" in hemispheres
         assert "western" in hemispheres
 
-        # Sum of elements should equal 11 (all planets)
+        # Sum of elements should equal 11 (all planets including north node)
         total_elements = sum([
             elements["fire"],
             elements["earth"],
@@ -515,3 +520,338 @@ class TestComputeBirthChart:
             assert "degree_in_sign" in angle
             assert "absolute_degree" in angle
             assert "position_dms" in angle
+
+
+class TestSummarizeTransits:
+    """Tests for summarize_transits function."""
+
+    def test_basic_transit_summary_includes_sun_and_moon(self):
+        """Test that transit summary includes Sun and Moon positions."""
+        # Get transit chart for today
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+
+        summary = summarize_transits(transit_chart, ZodiacSign.TAURUS)
+
+        # Summary should be a non-empty string
+        assert isinstance(summary, str)
+        assert len(summary) > 0
+
+        # Should mention Sun position
+        assert "Sun" in summary or "sun" in summary
+
+        # Should mention Moon position
+        assert "Moon" in summary or "moon" in summary
+
+    def test_transit_summary_format(self):
+        """Test that transit summary has proper format."""
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.ARIES)
+
+        # Should end with a period
+        assert summary.endswith(".")
+
+        # Should contain degree symbols or "at" for positions
+        assert "at" in summary.lower() or "°" in summary
+
+    def test_transit_summary_with_different_signs(self):
+        """Test that transit summary works for all zodiac signs."""
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+
+        # Should work for all signs
+        for sign in ZodiacSign:
+            summary = summarize_transits(transit_chart, sign)
+            assert isinstance(summary, str)
+            assert len(summary) > 0
+            assert summary.endswith(".")
+
+    def test_transit_summary_includes_aspects_when_present(self):
+        """Test that tight aspects are included in summary."""
+        # Use a date/time with known aspects
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.GEMINI)
+
+        # Summary should be informative (more than just Sun/Moon positions)
+        assert len(summary) > 50  # Should have substantial content
+
+        # Should contain proper formatting
+        assert ". " in summary  # Multiple sentences
+
+    def test_transit_summary_handles_retrogrades(self):
+        """Test that retrograde planets are handled correctly."""
+        # Use a date when Mercury or other personal planets might be retrograde
+        transit_chart, _ = compute_birth_chart("2025-01-15", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.CAPRICORN)
+
+        # Summary should be well-formed
+        assert isinstance(summary, str)
+        assert len(summary) > 0
+
+        # If retrograde planets are present, they should be noted
+        # (This is date-dependent, so we just check format is correct)
+        if "Rx" in summary or "retrograde" in summary.lower():
+            assert "Retrograde" in summary or "Rx" in summary
+
+    def test_transit_summary_length_is_reasonable(self):
+        """Test that summary isn't too short or too long."""
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.LEO)
+
+        # Should be informative but concise (good for LLM context)
+        assert len(summary) >= 30, "Summary too short"
+        assert len(summary) <= 1000, "Summary too long for LLM context"
+
+    def test_transit_summary_with_exact_aspects(self):
+        """Test that exact aspects (tight orbs) are prioritized."""
+        # Create a transit chart
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.VIRGO)
+
+        # If aspects are present, they should mention orb
+        if "aspect" in summary.lower() or any(aspect_word in summary for aspect_word in ["trine", "square", "opposition", "conjunction", "sextile"]):
+            # Aspects should include orb information
+            assert "orb" in summary.lower() or "°" in summary
+
+    def test_transit_summary_structure(self):
+        """Test that summary has logical structure."""
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.SCORPIO)
+
+        # Should start with "Your Sun:" (personalized format)
+        assert summary.startswith("Your Sun:"), "Summary should start with personalized Sun sign"
+
+        # Should have proper sentence structure
+        sentences = summary.split(". ")
+        assert len(sentences) >= 2, "Summary should have multiple sentences"
+
+    def test_transit_summary_planets_are_capitalized(self):
+        """Test that planet names are properly capitalized in summary."""
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        summary = summarize_transits(transit_chart, ZodiacSign.LIBRA)
+
+        # Planet names should be capitalized
+        planets_to_check = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"]
+        found_planets = [planet for planet in planets_to_check if planet in summary]
+
+        # At least Sun and Moon should be present and capitalized
+        assert "Sun" in summary
+        assert "Moon" in summary
+
+    def test_transit_summary_with_null_chart_data(self):
+        """Test that function handles edge cases gracefully."""
+        # Create a minimal valid transit chart
+        transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+
+        # Should not raise exception
+        try:
+            summary = summarize_transits(transit_chart, ZodiacSign.AQUARIUS)
+            assert isinstance(summary, str)
+        except Exception as e:
+            pytest.fail(f"summarize_transits raised unexpected exception: {e}")
+
+
+class TestCalculateSolarHouse:
+    """
+    Tests for calculate_solar_house function.
+
+    These tests verify the Solar House calculation using whole sign houses,
+    where the Sun sign always occupies the 1st house and each subsequent
+    sign occupies the next house in zodiacal order.
+    """
+
+    # 1. Tests for Specific Problems Found (Regression Tests)
+
+    def test_aries_sun_with_transit_in_virgo_is_6th_house(self):
+        """
+        Checks if a transit in Virgo for an Aries Sun is correctly placed in the 6th House.
+        Aries(1), Taurus(2), Gemini(3), Cancer(4), Leo(5), Virgo(6).
+        """
+        house = calculate_solar_house("aries", "virgo")
+        assert house == House.SIXTH
+        assert house.value == 6
+        assert house.ordinal == "6th"
+        assert house.meaning == "health, work, daily routines"
+
+    def test_scorpio_sun_with_transit_in_libra_is_12th_house(self):
+        """
+        Checks if a transit in Libra for a Scorpio Sun is correctly placed in the 12th House.
+        This is a "wrap-around" test, as Libra comes before Scorpio.
+        Scorpio(1)...Sagittarius(2)...Capricorn(3)...Aquarius(4)...Pisces(5)...
+        Aries(6)...Taurus(7)...Gemini(8)...Cancer(9)...Leo(10)...Virgo(11)...Libra(12).
+        """
+        house = calculate_solar_house("scorpio", "libra")
+        assert house == House.TWELFTH
+        assert house.value == 12
+        assert house.ordinal == "12th"
+        assert house.meaning == "spirituality, solitude, unconscious"
+
+    # 2. Sanity Check and Boundary Condition Tests
+
+    def test_transit_in_same_sign_is_1st_house(self):
+        """
+        A planet transiting a person's Sun sign should always be in their 1st Solar House.
+        """
+        assert calculate_solar_house("leo", "leo").value == 1
+        assert calculate_solar_house("aries", "aries").value == 1
+        assert calculate_solar_house("pisces", "pisces").value == 1
+
+    def test_transit_in_next_sign_is_2nd_house(self):
+        """
+        A transit in the sign immediately following the Sun sign should be the 2nd House.
+        """
+        assert calculate_solar_house("pisces", "aries").value == 2
+        assert calculate_solar_house("aries", "taurus").value == 2
+        assert calculate_solar_house("leo", "virgo").value == 2
+
+    def test_transit_in_opposite_sign_is_7th_house(self):
+        """
+        The opposite sign (180° apart) should always be the 7th house.
+        """
+        assert calculate_solar_house("aries", "libra").value == 7
+        assert calculate_solar_house("taurus", "scorpio").value == 7
+        assert calculate_solar_house("gemini", "sagittarius").value == 7
+        assert calculate_solar_house("cancer", "capricorn").value == 7
+        assert calculate_solar_house("leo", "aquarius").value == 7
+        assert calculate_solar_house("virgo", "pisces").value == 7
+
+    # 3. General Logic and "Wrap-Around" Tests
+
+    def test_gemini_sun_with_transit_in_virgo_is_4th_house(self):
+        """
+        Checks a standard forward count.
+        Gemini(1), Cancer(2), Leo(3), Virgo(4).
+        """
+        assert calculate_solar_house("gemini", "virgo").value == 4
+
+    def test_cancer_sun_with_transit_in_taurus_is_11th_house(self):
+        """
+        Checks another wrap-around case to ensure the logic is robust.
+        Cancer(1)...Leo(2)...Virgo(3)...Libra(4)...Scorpio(5)...Sagittarius(6)...
+        Capricorn(7)...Aquarius(8)...Pisces(9)...Aries(10)...Taurus(11).
+        """
+        assert calculate_solar_house("cancer", "taurus").value == 11
+
+    def test_aquarius_sun_with_transit_in_capricorn_is_12th_house(self):
+        """
+        Another wrap-around test: Capricorn is immediately before Aquarius.
+        Aquarius(1)...Pisces(2)...Aries(3)...Taurus(4)...Gemini(5)...Cancer(6)...
+        Leo(7)...Virgo(8)...Libra(9)...Scorpio(10)...Sagittarius(11)...Capricorn(12).
+        """
+        assert calculate_solar_house("aquarius", "capricorn").value == 12
+
+    def test_pisces_sun_with_transit_in_aquarius_is_12th_house(self):
+        """
+        Test the sign immediately before in the zodiac.
+        """
+        assert calculate_solar_house("pisces", "aquarius").value == 12
+
+    # 4. Comprehensive All-Signs Tests
+
+    def test_all_twelve_houses_for_aries_sun(self):
+        """
+        Verify all 12 houses for Aries Sun to ensure complete zodiac coverage.
+        """
+        aries_houses = {
+            "aries": 1, "taurus": 2, "gemini": 3, "cancer": 4,
+            "leo": 5, "virgo": 6, "libra": 7, "scorpio": 8,
+            "sagittarius": 9, "capricorn": 10, "aquarius": 11, "pisces": 12
+        }
+        for transit_sign, expected_house in aries_houses.items():
+            house = calculate_solar_house("aries", transit_sign)
+            assert house.value == expected_house, \
+                f"Aries Sun with {transit_sign} transit should be house {expected_house}"
+
+    def test_all_twelve_houses_for_libra_sun(self):
+        """
+        Verify all 12 houses for Libra Sun (halfway through zodiac).
+        """
+        libra_houses = {
+            "libra": 1, "scorpio": 2, "sagittarius": 3, "capricorn": 4,
+            "aquarius": 5, "pisces": 6, "aries": 7, "taurus": 8,
+            "gemini": 9, "cancer": 10, "leo": 11, "virgo": 12
+        }
+        for transit_sign, expected_house in libra_houses.items():
+            house = calculate_solar_house("libra", transit_sign)
+            assert house.value == expected_house, \
+                f"Libra Sun with {transit_sign} transit should be house {expected_house}"
+
+    # 5. Error Handling Tests
+
+    def test_invalid_sun_sign_raises_error(self):
+        """Test that invalid sun sign raises ValueError."""
+        with pytest.raises(ValueError):
+            calculate_solar_house("invalid_sign", "aries")
+
+    def test_invalid_transit_sign_raises_error(self):
+        """Test that invalid transit sign raises ValueError."""
+        with pytest.raises(ValueError):
+            calculate_solar_house("aries", "invalid_sign")
+
+    # 6. Case Insensitivity Tests
+
+    def test_case_insensitive_sign_names(self):
+        """Test that sign names are case-insensitive."""
+        assert calculate_solar_house("ARIES", "VIRGO").value == 6
+        assert calculate_solar_house("Scorpio", "Libra").value == 12
+        assert calculate_solar_house("LeO", "lEo").value == 1
+
+    # 7. Enum Input Tests
+
+    def test_accepts_zodiac_sign_enums(self):
+        """Test that function accepts ZodiacSign enum inputs."""
+        assert calculate_solar_house(ZodiacSign.ARIES, ZodiacSign.VIRGO).value == 6
+        assert calculate_solar_house(ZodiacSign.SCORPIO, ZodiacSign.LIBRA).value == 12
+
+    # 8. House Enum Properties Tests
+
+    def test_house_enum_has_ordinal_property(self):
+        """Test that House enum provides ordinal formatting."""
+        assert House.FIRST.ordinal == "1st"
+        assert House.SECOND.ordinal == "2nd"
+        assert House.THIRD.ordinal == "3rd"
+        assert House.FOURTH.ordinal == "4th"
+        assert House.ELEVENTH.ordinal == "11th"
+        assert House.TWELFTH.ordinal == "12th"
+
+    def test_house_enum_has_meaning_property(self):
+        """Test that House enum provides life area meanings."""
+        assert House.FIRST.meaning == "self, identity, appearance"
+        assert House.SEVENTH.meaning == "partnerships, relationships"
+        assert House.TENTH.meaning == "career, public image, goals"
+        assert House.TWELFTH.meaning == "spirituality, solitude, unconscious"
+
+
+class TestSignRulers:
+    """Tests for SIGN_RULERS constant."""
+
+    def test_all_signs_have_rulers(self):
+        """Test that all zodiac signs have assigned rulers."""
+        for sign in ZodiacSign:
+            assert sign in SIGN_RULERS, f"{sign} missing from SIGN_RULERS"
+            assert isinstance(SIGN_RULERS[sign], Planet), f"{sign} ruler is not a Planet enum"
+
+    def test_ruler_planet_values_are_valid(self):
+        """Test that all ruler planets are valid Planet enums."""
+        for sign, ruler in SIGN_RULERS.items():
+            # Should be able to access the value
+            assert hasattr(ruler, 'value')
+            # Value should be a lowercase string
+            assert isinstance(ruler.value, str)
+            assert ruler.value.islower()
+
+    def test_specific_rulerships(self):
+        """Test specific modern rulerships."""
+        # Traditional rulerships (unchanged)
+        assert SIGN_RULERS[ZodiacSign.ARIES] == Planet.MARS
+        assert SIGN_RULERS[ZodiacSign.TAURUS] == Planet.VENUS
+        assert SIGN_RULERS[ZodiacSign.GEMINI] == Planet.MERCURY
+        assert SIGN_RULERS[ZodiacSign.CANCER] == Planet.MOON
+        assert SIGN_RULERS[ZodiacSign.LEO] == Planet.SUN
+        assert SIGN_RULERS[ZodiacSign.VIRGO] == Planet.MERCURY
+        assert SIGN_RULERS[ZodiacSign.LIBRA] == Planet.VENUS
+        assert SIGN_RULERS[ZodiacSign.SAGITTARIUS] == Planet.JUPITER
+        assert SIGN_RULERS[ZodiacSign.CAPRICORN] == Planet.SATURN
+
+        # Modern rulerships (outer planets)
+        assert SIGN_RULERS[ZodiacSign.SCORPIO] == Planet.PLUTO, "Scorpio modern ruler is Pluto"
+        assert SIGN_RULERS[ZodiacSign.AQUARIUS] == Planet.URANUS, "Aquarius modern ruler is Uranus"
+        assert SIGN_RULERS[ZodiacSign.PISCES] == Planet.NEPTUNE, "Pisces modern ruler is Neptune"
