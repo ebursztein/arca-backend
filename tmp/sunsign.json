@@ -1,0 +1,505 @@
+{
+  "schema_version": "1.1",
+  "schema_name": "sun_sign_profile",
+  "description": "Comprehensive astrological profile data for all individuals sharing the same Sun sign. This data is sign-specific and can be cached globally.",
+
+  "sign": {
+    "type": "string",
+    "example": "Aries",
+    "description": "Name of the zodiac sign"
+  },
+
+  "dates": {
+    "type": "string",
+    "example": "March 21 - April 19",
+    "description": "Date range when the Sun transits this sign (Note: Birth time may affect exact cusps)"
+  },
+
+  "symbol": {
+    "type": "string",
+    "example": "The Ram",
+    "description": "Traditional symbol representing the sign"
+  },
+
+  "glyph": {
+    "type": "string",
+    "example": "♈",
+    "description": "Unicode astrological glyph for the sign"
+  },
+
+  "element": {
+    "type": "string",
+    "enum": ["Fire", "Earth", "Air", "Water"],
+    "example": "Fire",
+    "description": "Elemental classification of the sign"
+  },
+
+  "modality": {
+    "type": "string",
+    "enum": ["Cardinal", "Fixed", "Mutable"],
+    "example": "Cardinal",
+    "description": "The sign's mode of expression and action style"
+  },
+
+  "polarity": {
+    "type": "string",
+    "enum": ["Masculine/Yang", "Feminine/Yin"],
+    "example": "Masculine/Yang",
+    "description": "Energetic polarity - extroverted or introverted orientation"
+  },
+
+  "ruling_planet": {
+    "type": "string",
+    "example": "Mars",
+    "description": "The planet that governs this sign"
+  },
+
+  "ruling_planet_glyph": {
+    "type": "string",
+    "example": "♂",
+    "description": "Unicode glyph for the ruling planet"
+  },
+
+  "planetary_dignities": {
+    "exaltation": {
+      "type": "string",
+      "example": "Sun",
+      "description": "Planet that expresses most powerfully in this sign"
+    },
+    "detriment": {
+      "type": "string",
+      "example": "Venus",
+      "description": "Planet that faces challenges in this sign"
+    },
+    "fall": {
+      "type": "string",
+      "example": "Saturn",
+      "description": "Planet at its weakest expression in this sign"
+    }
+  },
+
+  "body_parts_ruled": {
+    "type": "array",
+    "items": {"type": "string"},
+    "example": ["Head", "Face", "Brain", "Eyes"],
+    "description": "Physical body areas associated with and governed by this sign"
+  },
+
+  "correspondences": {
+    "tarot": {
+      "type": "string",
+      "example": "The Emperor (IV)",
+      "description": "Major Arcana tarot card correspondence"
+    },
+    "colors": {
+      "type": "array",
+      "items": {"type": "string"},
+      "example": ["Red", "Scarlet", "Crimson"],
+      "description": "Colors that resonate with this sign's energy"
+    },
+    "gemstones": {
+      "type": "array",
+      "items": {"type": "string"},
+      "example": ["Diamond", "Bloodstone", "Ruby"],
+      "description": "Crystals and stones aligned with the sign"
+    },
+    "metal": {
+      "type": "string",
+      "example": "Iron",
+      "description": "Metal associated with the sign's energy"
+    },
+    "day_of_week": {
+      "type": "string",
+      "example": "Tuesday",
+      "description": "Day of the week ruled by this sign's planet"
+    },
+    "lucky_numbers": {
+      "type": "array",
+      "items": {"type": "integer"},
+      "example": [1, 9],
+      "description": "Numbers that carry favorable energy for this sign"
+    }
+  },
+
+  "keywords": {
+    "type": "array",
+    "items": {"type": "string"},
+    "example": ["Leader", "Action-Oriented", "Impulsive", "Courageous", "Independent"],
+    "description": "Core descriptive keywords capturing the sign's essence"
+  },
+
+  "positive_traits": {
+    "type": "array",
+    "items": {"type": "string"},
+    "example": ["Confident", "Enthusiastic", "Honest", "Passionate", "Brave", "Ambitious", "Protective"],
+    "description": "Constructive qualities and strengths naturally expressed by this sign"
+  },
+
+  "shadow_traits": {
+    "type": "array",
+    "items": {"type": "string"},
+    "example": [
+      "Impatient",
+      "Hot-tempered",
+      "Self-focused",
+      "Aggressive when blocked",
+      "Recklessly impulsive"
+    ],
+    "description": "Challenging patterns and underdeveloped expressions of the sign's energy (when unintegrated)"
+  },
+
+  "life_lesson": {
+    "type": "string",
+    "example": "To balance self-assertion with consideration for others; to direct courage toward worthy causes rather than reckless action.",
+    "description": "Primary evolutionary lesson this sign is here to learn"
+  },
+
+  "evolutionary_goal": {
+    "type": "string",
+    "example": "Developing patience, strategic thinking, and completing what is started before charging into the next adventure.",
+    "description": "Highest expression and developmental aim for this sign"
+  },
+
+  "mythology": {
+    "type": "string",
+    "example": "Aries is associated with the Golden Ram of Greek mythology, whose fleece was sought by Jason and the Argonauts. The ram represents courage, sacrifice, and the initiation of great quests.",
+    "description": "Mythological stories and archetypes connected to this sign"
+  },
+
+  "seasonal_association": {
+    "type": "string",
+    "example": "Spring Equinox - new beginnings, emergence, awakening of nature's energy after winter dormancy.",
+    "description": "Connection to natural cycles and seasonal energies in the Northern Hemisphere"
+  },
+
+  "archetypal_roles": {
+    "type": "array",
+    "items": {"type": "string"},
+    "example": ["The Warrior", "The Pioneer", "The Hero", "The Survivor"],
+    "description": "Universal archetypal patterns embodied by this sign"
+  },
+
+  "health_tendencies": {
+    "strengths": {
+      "type": "string",
+      "example": "High energy, fast recovery, athletic constitution, strong vitality",
+      "description": "Natural health advantages for this sign"
+    },
+    "vulnerabilities": {
+      "type": "string",
+      "example": "Headaches, eye strain, accidents from haste, inflammation, burns, fevers",
+      "description": "Physical areas requiring attention and care"
+    },
+    "wellness_advice": {
+      "type": "string",
+      "example": "Channel excess energy through regular exercise, practice patience to avoid injuries, manage stress to prevent inflammation. For health concerns, consult qualified healthcare providers.",
+      "description": "Guidance for maintaining optimal health (informational only, not medical advice)"
+    }
+  },
+
+  "compatibility_overview": {
+    "description": "Relationship compatibility is multifaceted—consider your full birth chart (Moon sign, Rising sign, Venus/Mars placements) alongside Sun sign. These are general solar patterns.",
+    "same_sign": {
+      "type": "string",
+      "example": "Natural understanding of motivations; can mirror strengths or amplify weaknesses depending on maturity levels",
+      "description": "Compatibility with the same sign"
+    },
+    "most_compatible": {
+      "type": "array",
+      "items": {
+        "sign": {"type": "string"},
+        "reason": {"type": "string"}
+      },
+      "example": [
+        {
+          "sign": "Leo",
+          "reason": "Shared fire element, mutual admiration, exciting partnership"
+        },
+        {
+          "sign": "Sagittarius",
+          "reason": "Adventure-seeking fire signs, freedom-loving, optimistic"
+        }
+      ],
+      "description": "Signs with natural harmony and ease"
+    },
+    "challenging": {
+      "type": "array",
+      "items": {
+        "sign": {"type": "string"},
+        "reason": {"type": "string"}
+      },
+      "example": [
+        {
+          "sign": "Cancer",
+          "reason": "Emotional sensitivity vs. directness clash; requires conscious communication"
+        }
+      ],
+      "description": "Signs requiring extra effort and understanding"
+    },
+    "growth_oriented": {
+      "type": "array",
+      "items": {
+        "sign": {"type": "string"},
+        "reason": {"type": "string"}
+      },
+      "example": [
+        {
+          "sign": "Libra",
+          "reason": "Opposite sign teaches balance, diplomacy, consideration; catalyzes personal evolution"
+        }
+      ],
+      "description": "Signs that catalyze personal evolution through complementary differences"
+    }
+  },
+
+  "summary": {
+    "type": "string",
+    "example": "Aries is a dynamic and courageous fire sign known for its leadership, enthusiasm, and pioneering spirit. Those born under this sign are natural initiators who thrive on action and adventure. While their impulsive nature can lead to challenges, Aries individuals are here to learn patience and strategic thinking. With their bold energy and fearless approach, they inspire others to embrace life with passion and authenticity.",
+    "description": "Concise overview capturing the essence of the sign"
+  },
+
+  "domain_profiles": {
+    "love_and_relationships": {
+      "style": {
+        "type": "string",
+        "example": "Direct, passionate, spontaneous",
+        "description": "How this sign approaches romantic relationships"
+      },
+      "needs": {
+        "type": "string",
+        "example": "Excitement, independence, admiration",
+        "description": "Core relationship requirements"
+      },
+      "gives": {
+        "type": "string",
+        "example": "Protection, enthusiasm, unwavering loyalty",
+        "description": "What this sign brings to partnerships"
+      },
+      "challenges": {
+        "type": "string",
+        "example": "Boredom with routine, need for constant novelty, impatience with emotional processing",
+        "description": "Common relationship obstacles"
+      },
+      "attracts": {
+        "type": "string",
+        "example": "Confident, independent partners who can keep up with their pace",
+        "description": "Type of partners naturally drawn to this sign"
+      },
+      "communication_style": {
+        "type": "string",
+        "example": "Direct and candid; may need to practice active listening and emotional validation",
+        "description": "How this sign communicates with partners"
+      }
+    },
+
+    "family_and_friendships": {
+      "friendship_style": {
+        "type": "string",
+        "example": "Loyal and protective, initiates adventures, prefers action to deep conversation",
+        "description": "How this sign shows up in platonic relationships"
+      },
+      "parenting_style": {
+        "type": "string",
+        "example": "Encouraging independence, teaching bravery, may be impatient with slow development",
+        "description": "Approach to raising children"
+      },
+      "childhood_needs": {
+        "type": "string",
+        "example": "Physical activity, challenges, independence, quick responses to requests",
+        "description": "What this sign needed as a child"
+      },
+      "family_role": {
+        "type": "string",
+        "example": "The protector, the one who takes action in crisis, the motivator",
+        "description": "Typical position within family dynamics"
+      },
+      "sibling_dynamics": {
+        "type": "string",
+        "example": "Often takes leadership role; may be competitive or protective depending on birth order",
+        "description": "How this sign relates to siblings"
+      }
+    },
+
+    "path_and_profession": {
+      "career_strengths": {
+        "type": "array",
+        "items": {"type": "string"},
+        "example": [
+          "Entrepreneurship and starting new ventures",
+          "Leadership and military/competitive fields",
+          "Emergency response and crisis management",
+          "Sales and motivational speaking",
+          "Athletics and physical pursuits"
+        ],
+        "description": "Professional domains where this sign naturally excels"
+      },
+      "work_style": {
+        "type": "string",
+        "example": "Self-directed, fast-paced, prefers leadership roles, thrives under pressure",
+        "description": "How this sign approaches daily work"
+      },
+      "leadership_approach": {
+        "type": "string",
+        "example": "Lead from the front, inspire through action, decisive and direct",
+        "description": "Management and leadership tendencies"
+      },
+      "ideal_work_environment": {
+        "type": "string",
+        "example": "Dynamic, competitive, autonomy-granting, with clear goals and quick results",
+        "description": "Optimal professional settings"
+      },
+      "growth_area": {
+        "type": "string",
+        "example": "Follow-through on long-term projects; delegating rather than abandoning; team collaboration",
+        "description": "Professional development focus areas"
+      }
+    },
+
+    "personal_growth_and_wellbeing": {
+      "growth_path": {
+        "type": "string",
+        "example": "Learning patience, developing follow-through, balancing self-focus with empathy",
+        "description": "Key areas for personal development"
+      },
+      "healing_modalities": {
+        "type": "array",
+        "items": {"type": "string"},
+        "example": [
+          "High-intensity physical exercise",
+          "Martial arts and competitive sports",
+          "Adventure therapy",
+          "Short-term action-oriented counseling"
+        ],
+        "description": "Therapeutic approaches aligned with this sign"
+      },
+      "stress_triggers": {
+        "type": "string",
+        "example": "Feeling controlled, slow progress, lack of autonomy, boredom",
+        "description": "Common sources of overwhelm"
+      },
+      "stress_relief_practices": {
+        "type": "string",
+        "example": "Physical challenges, solo adventures, competitive activities, clearing space quickly",
+        "description": "Restorative activities for this sign"
+      },
+      "mindfulness_approach": {
+        "type": "string",
+        "example": "Active meditation (walking meditation, running, tai chi); present-moment awareness through movement",
+        "description": "Meditation and presence practices suited to this sign's nature"
+      }
+    },
+
+    "finance_and_abundance": {
+      "money_mindset": {
+        "type": "string",
+        "example": "Money is freedom to act; views wealth as fuel for adventures and new starts",
+        "description": "Core beliefs about finances"
+      },
+      "earning_style": {
+        "type": "string",
+        "example": "Entrepreneurial, prefers commission/performance-based income, takes calculated financial risks",
+        "description": "How this sign makes money"
+      },
+      "spending_patterns": {
+        "type": "string",
+        "example": "Impulsive purchases, invests in experiences and new ventures, generous but not saving-focused",
+        "description": "Financial habits and tendencies"
+      },
+      "abundance_lesson": {
+        "type": "string",
+        "example": "Building financial stamina and long-term reserves; finishing financial projects before starting new ones; delayed gratification",
+        "description": "Growth edge around money"
+      },
+      "financial_advisory_note": {
+        "type": "string",
+        "example": "Consult with qualified financial advisors for personalized guidance",
+        "description": "Disclaimer for financial information"
+      }
+    },
+
+    "life_purpose_and_spirituality": {
+      "spiritual_path": {
+        "type": "string",
+        "example": "The warrior's path - courage, self-discovery through action, leading by example",
+        "description": "Natural approach to meaning and transcendence"
+      },
+      "soul_mission": {
+        "type": "string",
+        "example": "To initiate, to pioneer new frontiers, to embody courageous authenticity",
+        "description": "Higher purpose themes"
+      },
+      "spiritual_practices": {
+        "type": "array",
+        "items": {"type": "string"},
+        "example": [
+          "Active meditation (walking, running)",
+          "Vision quests and solo journeys",
+          "Fire ceremonies",
+          "Warrior traditions",
+          "Nature immersion"
+        ],
+        "description": "Spiritual modalities that resonate"
+      },
+      "connection_to_divine": {
+        "type": "string",
+        "example": "Through action, courage in the face of fear, defending the vulnerable, embodying authenticity",
+        "description": "How this sign experiences the sacred"
+      }
+    },
+
+    "home_and_environment": {
+      "home_needs": {
+        "type": "string",
+        "example": "Space for physical activity, minimal clutter, room to spread out, home gym or active area",
+        "description": "Ideal living space qualities"
+      },
+      "decorating_style": {
+        "type": "string",
+        "example": "Bold colors, modern and minimal, functional over decorative, statement pieces",
+        "description": "Aesthetic preferences"
+      },
+      "location_preferences": {
+        "type": "string",
+        "example": "Urban energy, access to activities, pioneering developments, walkable neighborhoods",
+        "description": "Geographic tendencies"
+      },
+      "relationship_to_space": {
+        "type": "string",
+        "example": "Home base for launching adventures rather than sanctuary; may move frequently; prefers lived-in vs. pristine"
+      },
+      "seasonal_home_adjustments": {
+        "type": "string",
+        "example": "Summer: outdoor spaces activated; Winter: indoor gym/activity areas; Spring: renovation/new projects; Fall: adventure planning zone",
+        "description": "Seasonal adaptations to home environment"
+      }
+    },
+
+    "decisions_and_crossroads": {
+      "decision_making_style": {
+        "type": "string",
+        "example": "Quick, instinctual, action-first, trusts gut feelings, minimal deliberation",
+        "description": "How this sign approaches choices"
+      },
+      "decision_tips": {
+        "type": "string",
+        "example": "Pause to consider 2-3 consequences before acting; write down 'why' before major decisions; consult trusted advisors",
+        "description": "Strategies to improve decision quality"
+      },
+      "when_stuck": {
+        "type": "string",
+        "example": "Take immediate action, any action; analyze later; breaks through by doing; may benefit from short-term timelines",
+        "description": "Strategy when facing obstacles"
+      },
+      "crisis_response": {
+        "type": "string",
+        "example": "Rises to the occasion, becomes more focused and effective under pressure, natural first responder, takes charge",
+        "description": "Behavior during turning points"
+      },
+      "advice_for_major_choices": {
+        "type": "string",
+        "example": "Slow down just enough to consider consequences; channel courage wisely; ensure you're starting what you can finish; seek perspectives from slower signs",
+        "description": "Guidance for important decisions"
+      }
+    }
+  }
+}
