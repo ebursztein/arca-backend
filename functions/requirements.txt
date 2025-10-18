@@ -4,3 +4,4 @@ google-genai>=1.45.0
 posthog>=6.7.8
 pydantic>=2.12.2
 rich>=14.2.0
+python-dotenv>=1.1.1

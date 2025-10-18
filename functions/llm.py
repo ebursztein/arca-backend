@@ -8,19 +8,23 @@ Implements split architecture:
 With context caching for cost optimization.
 """
 
+import logging
 import os
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
 from jinja2 import Environment, FileSystemLoader
-from google import genai
 from google.genai import types
 from pydantic import BaseModel
-from rich.console import Console
-from rich.table import Table
+from dotenv import load_dotenv
 
-console = Console()
+from posthog.ai.gemini import Client as PHClient
+from posthog import Posthog
+POSTHOG_HOST = "https://us.i.posthog.com"
+load_dotenv()
+
+TEMPERATURE = 0.7
 
 from astro import (
     ZodiacSign,
@@ -75,7 +79,10 @@ def generate_daily_horoscope(
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable not found")
 
-    client = genai.Client(api_key=api_key)
+    # client = genai.Client(api_key=api_key)
+    _POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
+    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)
+    client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Prepare helper data
     chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
@@ -98,6 +105,10 @@ def generate_daily_horoscope(
 
     daily_prompt = f"{static_prompt}\n\n{dynamic_prompt}"
 
+    print("\n\n--- Daily Prompt ---\n")
+    print(daily_prompt)
+    print("\n--- End of Daily Prompt ---\n\n")
+
     # fixme cache dynamic + static
     cache_content = None
 
@@ -113,9 +124,9 @@ def generate_daily_horoscope(
     # Compose final prompt
     prompt = f"{daily_prompt}\n\n{personalization_prompt}"
 
-    console.print(f"\n[yellow]Generated Daily Horoscope Prompt:[/yellow]")
-    console.print(prompt)
-    console.print("\n[yellow]End of Prompt[/yellow]\n")
+    # console.print(f"\n[yellow]Generated Daily Horoscope Prompt:[/yellow]")
+    # console.print(prompt)
+    # console.print("\n[yellow]End of Prompt[/yellow]\n")
 
     # Define response schema
     class DailyHoroscopeResponse(BaseModel):
@@ -133,10 +144,9 @@ def generate_daily_horoscope(
         start_time = datetime.now()
 
         config = types.GenerateContentConfig(
-            temperature=0.9,
-            top_p=0.95,
-            top_k=40,
+            temperature=TEMPERATURE,
             max_output_tokens=4096,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
             response_mime_type="application/json",
             response_schema=DailyHoroscopeResponse,
             cached_content=cache_content if cache_content else None
@@ -145,12 +155,19 @@ def generate_daily_horoscope(
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
-            config=config
+            config=config,
+            # posthog specific metadata
+            posthog_distinct_id=user_profile.user_id, # optional
+            posthog_properties={"generation_type": "daily_horoscope"} # optional
+
         )
 
         generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DailyHoroscopeResponse = response.parsed
+
+        # Shutdown PostHog client to flush events as we're in a serverless environment
+        posthog.shutdown()
 
         return DailyHoroscope(
             date=date,
@@ -203,7 +220,10 @@ def generate_detailed_horoscope(
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable not found")
 
-    client = genai.Client(api_key=api_key)
+    # client = genai.Client(api_key=api_key)
+    _POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
+    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)
+    client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Get upcoming transits
     upcoming_transits = get_upcoming_transits(user_profile.natal_chart, date, days_ahead=5)
@@ -240,9 +260,9 @@ def generate_detailed_horoscope(
     # Compose final prompt
     prompt = f"{static_prompt}\n\n{dynamic_prompt}\n\n{personalization_prompt}"
 
-    console.print(f"\n[yellow]Generated Detailed Horoscope Prompt:[/yellow]")
-    console.print(prompt)
-    console.print("\n[yellow]End of Prompt[/yellow]\n")
+    # console.print(f"\n[yellow]Generated Detailed Horoscope Prompt:[/yellow]")
+    # console.print(prompt)
+    # console.print("\n[yellow]End of Prompt[/yellow]\n")
     # Define response schema
     class DetailedHoroscopeResponse(BaseModel):
         general_transits_overview: list[str]
@@ -254,24 +274,27 @@ def generate_detailed_horoscope(
         start_time = datetime.now()
 
         config = types.GenerateContentConfig(
-            temperature=0.9,
-            top_p=0.95,
-            top_k=40,
+            temperature=TEMPERATURE,
             max_output_tokens=8192,
             response_mime_type="application/json",
             response_schema=DetailedHoroscopeResponse,
-            cached_content=cached_content if cached_content else None
+            cached_content=cached_content if cached_content else None,
         )
 
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
-            config=config
+            config=config,
+            posthog_distinct_id=user_profile.user_id, # optional
+            posthog_properties={"generation_type": "detailed_horoscope"} # optional
         )
 
         generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DetailedHoroscopeResponse = response.parsed
+
+        # Shutdown PostHog client to flush events as we're in a serverless environment
+        posthog.shutdown()
 
         return DetailedHoroscope(
             general_transits_overview=parsed.general_transits_overview,
@@ -287,106 +310,56 @@ def generate_detailed_horoscope(
 
 
 # Cache management functions
+# FIXME use a single cache function
+# def create_daily_static_cache(
+#     date: str,
+#     model_name: str = "gemini-2.5-flash",
+#     api_key: Optional[str] = None,
+#     ttl: str = "86400s"  # 24 hours
+# ) -> Optional[str]:
+#     """
+#     Create cache for daily horoscope static instructions (Prompt 1).
 
-def create_daily_static_cache(
-    date: str,
-    model_name: str = "gemini-2.5-flash",
-    api_key: Optional[str] = None,
-    ttl: str = "86400s"  # 24 hours
-) -> Optional[str]:
-    """
-    Create cache for daily horoscope static instructions (Prompt 1).
+#     Args:
+#         date: ISO date string (YYYY-MM-DD) - used as cache key prefix
+#         model_name: Model version (must include version suffix)
+#         api_key: Gemini API key
+#         ttl: Time to live (default: 24 hours)
 
-    Args:
-        date: ISO date string (YYYY-MM-DD) - used as cache key prefix
-        model_name: Model version (must include version suffix)
-        api_key: Gemini API key
-        ttl: Time to live (default: 24 hours)
+#     Returns:
+#         Cache name for use in generate_daily_horoscope
+#     """
+#     return None  # Disable caching for now
+#     if not api_key:
+#         api_key = os.environ.get("GEMINI_API_KEY")
+#     if not api_key:
+#         raise ValueError("GEMINI_API_KEY environment variable not found")
 
-    Returns:
-        Cache name for use in generate_daily_horoscope
-    """
-    return None  # Disable caching for now
-    if not api_key:
-        api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not found")
+#     client = genai.Client(api_key=api_key)
 
-    client = genai.Client(api_key=api_key)
+#     # Check if cache already exists for this date
+#     cache_display_name = f"arca-daily-static-{date}-{model_name}"
+#     for existing_cache in client.caches.list():
+#         if existing_cache.display_name == cache_display_name:
+#             return existing_cache.name
 
-    # Check if cache already exists for this date
-    cache_display_name = f"arca-daily-static-{date}-{model_name}"
-    for existing_cache in client.caches.list():
-        if existing_cache.display_name == cache_display_name:
-            return existing_cache.name
+#     # Render daily static template
+#     daily_static = jinja_env.get_template("daily_static.j2").render()
 
-    # Render daily static template
-    daily_static = jinja_env.get_template("daily_static.j2").render()
+#     # Check token count (min 1024 for caching, use 2000 token safety margin)
+#     # Rough estimate: 1 token ~= 3-4 chars
+#     if len(daily_static) < 6000:  # ~2000 tokens minimum for safety
+#         return None  # Skip caching if too small
 
-    # Check token count (min 1024 for caching, use 2000 token safety margin)
-    # Rough estimate: 1 token ~= 3-4 chars
-    if len(daily_static) < 6000:  # ~2000 tokens minimum for safety
-        return None  # Skip caching if too small
+#     cache = client.caches.create(
+#         model=f"models/{model_name}",
+#         config=types.CreateCachedContentConfig(
+#             display_name=cache_display_name,
+#             system_instruction=daily_static,
+#             ttl=ttl
+#         )
+#     )
 
-    cache = client.caches.create(
-        model=f"models/{model_name}",
-        config=types.CreateCachedContentConfig(
-            display_name=cache_display_name,
-            system_instruction=daily_static,
-            ttl=ttl
-        )
-    )
-
-    return cache.name
+#     return cache.name
 
 
-def create_detailed_static_cache(
-    date: str,
-    model_name: str = "gemini-2.5-flash",
-    api_key: Optional[str] = None,
-    ttl: str = "86400s"  # 24 hours
-) -> Optional[str]:
-    """
-    Create cache for detailed horoscope static instructions (Prompt 2).
-
-    Args:
-        date: ISO date string (YYYY-MM-DD) - used as cache key prefix
-        model_name: Model version (must include version suffix)
-        api_key: Gemini API key
-        ttl: Time to live (default: 24 hours)
-
-    Returns:
-        Cache name for use in generate_detailed_horoscope
-    """
-    return None  # Disable caching for now
-    if not api_key:
-        api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not found")
-
-    client = genai.Client(api_key=api_key)
-
-    # Check if cache already exists for this date
-    cache_display_name = f"arca-detailed-static-{date}-{model_name}"
-    for existing_cache in client.caches.list():
-        if existing_cache.display_name == cache_display_name:
-            return existing_cache.name
-
-    # Render detailed static template
-    detailed_static = jinja_env.get_template("detailed_static.j2").render()
-
-    # Check token count (min 1024 for caching, use 2000 token safety margin)
-    # Rough estimate: 1 token ~= 3-4 chars
-    if len(detailed_static) < 6000:  # ~2000 tokens minimum for safety
-        return None  # Skip caching if too small
-
-    cache = client.caches.create(
-        model=f"models/{model_name}",
-        config=types.CreateCachedContentConfig(
-            display_name=cache_display_name,
-            system_instruction=detailed_static,
-            ttl=ttl
-        )
-    )
-
-    return cache.name

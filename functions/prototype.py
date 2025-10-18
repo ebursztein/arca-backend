@@ -42,9 +42,7 @@ from astro import (
 # Import our LLM modules
 from llm import (
     generate_daily_horoscope,
-    generate_detailed_horoscope,
-    create_daily_static_cache,
-    create_detailed_static_cache
+    generate_detailed_horoscope
 )
 
 # Import our Pydantic models
@@ -134,7 +132,7 @@ def simulate_journal_entry_and_memory_update(
 
 def main():
     """Run the end-to-end prototype simulation."""
-    model_name = "gemini-2.5-flash"
+    model_name = "gemini-2.5-flash-lite"
 
 
     print_section("🌟 ARCA BACKEND V1 PROTOTYPE 🌟", style="bold magenta")
@@ -149,7 +147,7 @@ def main():
 
     # Simulated user
     user = {
-        "id": "user_test_123",
+        "id": "test_user_001",
         "name": "Alex",
         "email": "alex@example.com"
     }
@@ -157,7 +155,7 @@ def main():
     console.print(f"[green]✓ User authenticated: {user['name']} ({user['email']})[/green]")
 
     # Birth information
-    birth_date = "1985-05-15"
+    birth_date = "1985-06-15"
     console.print(f"\n[cyan]Birth Date:[/cyan] {birth_date}")
 
     # Calculate sun sign
@@ -358,57 +356,6 @@ def main():
         border_style="yellow"
     ))
 
-    console.print("\n[dim]→ Read detailed predictions below ↓[/dim]\n")
-
-    # Show token usage
-    from rich.table import Table
-    table = Table(title="LLM Token Usage", show_header=True, header_style="bold magenta")
-    table.add_column("Stage", style="dim", width=30)
-    table.add_column("Model", style="dim", width=20)
-    table.add_column("Time (s)", justify="right")
-    table.add_column("Prompt Tokens", justify="right")
-    table.add_column("Output Tokens", justify="right")
-    table.add_column("Thinking Tokens", justify="right")
-    table.add_column("Cached Tokens", justify="right")
-    table.add_column("Total Tokens", justify="right")
-
-
-    for stage, t in [
-        ("Daily Horoscope", daily_horoscope),
-        ("Detailed Horoscope", detailed_horoscope)
-    ]:
-        # force type hinting
-        data: DailyHoroscope | HoroscopeDetails = t
-
-        # example output for usage data
-        # {
-        #     'cache_tokens_details': None,
-        #     'cached_content_token_count': None,
-        #     'candidates_token_count': 1672,
-        #     'candidates_tokens_details': None,
-        #     'prompt_token_count': 2358,
-        #     'prompt_tokens_details': [{'modality': <MediaModality.TEXT: 'TEXT'>, 'token_count': 2358}],
-        #     'thoughts_token_count': 3059,
-        #     'tool_use_prompt_token_count': None,
-        #     'tool_use_prompt_tokens_details': None,
-        #     'total_token_count': 7089,
-        #     'traffic_type': None
-        # }
-        # console.print(data.usage)
-        table.add_row(
-            stage,
-            data.model_used,
-            str(data.generation_time_ms / 1000),
-            str(data.usage.get("prompt_token_count", 0)),
-            str(data.usage.get("candidates_token_count", 0)),
-            str(data.usage.get("thoughts_token_count", 0)),
-            str(data.usage.get("cached_content_token_count", 0)),
-            str(data.usage.get("total_token_count", 0)),
-        )
-
-    console.print(table)
-
-
 
     # ========================================================================
     # 4. EXPANDED VIEW - DETAILED PREDICTIONS
@@ -490,27 +437,60 @@ def main():
     console.print(f"\n[yellow]Recent Readings:[/yellow] {len(memory.recent_readings)}")
 
     # ========================================================================
-    # 6. SUMMARY
+    # 6. PERFORMANCE SUMMARY
     # ========================================================================
-    print_section("✅ PROTOTYPE COMPLETE", style="bold green")
+    console.print("\n[dim]→ Read detailed predictions below ↓[/dim]\n")
 
-    console.print("[green]Successfully demonstrated:[/green]")
-    console.print("  ✓ User onboarding with birth date")
-    console.print("  ✓ Sun sign calculation and profile loading")
-    console.print("  ✓ Birth chart computation (V1 mode)")
-    console.print("  ✓ Transit data generation and summarization")
-    console.print("  ✓ Natal-transit aspect analysis (TRUE PERSONALIZATION!)")
-    console.print("  ✓ Lunar phase calculation with guidance")
-    console.print("  ✓ LLM-powered horoscope generation with enhanced context")
-    console.print("  ✓ Memory/personalization system")
-    console.print("  ✓ Journal entry tracking")
-    console.print("  ✓ Category engagement tracking")
+    # Show token usage
+    from rich.table import Table
+    table = Table(title="LLM Token Usage", show_header=True, header_style="bold magenta")
+    table.add_column("Stage", style="dim", width=30)
+    table.add_column("Model", style="dim", width=20)
+    table.add_column("Time (s)", justify="right")
+    table.add_column("Prompt Tokens", justify="right")
+    table.add_column("Output Tokens", justify="right")
+    table.add_column("Thinking Tokens", justify="right")
+    table.add_column("Cached Tokens", justify="right")
+    table.add_column("Total Tokens", justify="right")
 
-    console.print("\n[cyan]Next Steps:[/cyan]")
-    console.print("  → Integrate with Firebase (Firestore + Callable Functions)")
-    console.print("  → Add PostHog LLM analytics tracking")
-    console.print("  → Implement Firestore trigger for memory updates")
-    console.print("  → Build iOS app integration")
+
+    for stage, t in [
+        ("Daily Horoscope", daily_horoscope),
+        ("Detailed Horoscope", detailed_horoscope)
+    ]:
+        # force type hinting
+        data: DailyHoroscope | HoroscopeDetails = t
+
+        # example output for usage data
+        # {
+        #     'cache_tokens_details': None,
+        #     'cached_content_token_count': None,
+        #     'candidates_token_count': 1672,
+        #     'candidates_tokens_details': None,
+        #     'prompt_token_count': 2358,
+        #     'prompt_tokens_details': [{'modality': <MediaModality.TEXT: 'TEXT'>, 'token_count': 2358}],
+        #     'thoughts_token_count': 3059,
+        #     'tool_use_prompt_token_count': None,
+        #     'tool_use_prompt_tokens_details': None,
+        #     'total_token_count': 7089,
+        #     'traffic_type': None
+        # }
+        # console.print(data.usage)
+        table.add_row(
+            stage,
+            data.model_used,
+            str(data.generation_time_ms / 1000),
+            str(data.usage.get("prompt_token_count", 0)),
+            str(data.usage.get("candidates_token_count", 0)),
+            str(data.usage.get("thoughts_token_count", 0)),
+            str(data.usage.get("cached_content_token_count", 0)),
+            str(data.usage.get("total_token_count", 0)),
+        )
+
+    console.print(table)
+
+
+
 
     print_section("", style="bold magenta")
 
