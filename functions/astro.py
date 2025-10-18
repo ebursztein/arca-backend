@@ -686,7 +686,7 @@ def get_astro_chart(
         north_node = data.asc_node
         planets.append(
             PlanetPosition(
-                name="north node",
+                name="north node",  # type: ignore[arg-type]
                 symbol=north_node.symbol if hasattr(north_node, 'symbol') else "☊",
                 position_dms=north_node.signed_dms,
                 sign=north_node.sign.name,

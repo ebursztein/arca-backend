@@ -48,6 +48,11 @@ class UserProfile(BaseModel):
     name: str = Field(description="User's name from auth provider")
     email: str = Field(description="User's email from auth provider")
 
+    # subscription
+    is_premium: bool = Field(False, description="True if user has premium subscription")
+    premium_expiry: Optional[str] = Field(None,
+        description="ISO date of premium subscription expiry (None if non-premium)")
+
     # Birth information
     birth_date: str = Field(description="Birth date in YYYY-MM-DD format")
     birth_time: Optional[str] = Field(None, description="Birth time in HH:MM format (optional, V2+)")
@@ -73,8 +78,8 @@ class CategoryEngagement(BaseModel):
     """
     Engagement tracking for a single category.
     """
-    count: int = Field(0, ge=0, description="Total times viewed")
-    last_mentioned: Optional[str] = Field(None, description="ISO date of last view")
+    count: int = Field(default=0, ge=0, description="Total times viewed")
+    last_mentioned: Optional[str] = Field(default=None, description="ISO date of last view")
 
 
 class CategoryViewed(BaseModel):

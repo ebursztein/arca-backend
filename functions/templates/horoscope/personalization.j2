@@ -8,8 +8,8 @@ Birth Date: {{ user.birth_date }}
 Sun Sign: {{ user.sun_sign.title() }}
 Natal Chart Overview:
 • Sun in {{ user.sun_sign.title() }}
-• Ascendant: {{ user.natal_chart.angles.ascendant.sign.value.title() }} at {{ user.natal_chart.angles.ascendant.degree_in_sign }}°
-• Moon: {{ (user.natal_chart.planets | selectattr('name', 'equalto', 'moon') | first).sign.value.title() }}
+• Ascendant: {{ user.natal_chart.angles.ascendant.sign.title() }} at {{ user.natal_chart.angles.ascendant.degree_in_sign }}°
+• Moon: {{ (user.natal_chart.planets | selectattr('name', 'equalto', 'moon') | first).sign.title() }}
 • Chart Emphasis: {{ chart_emphasis }}
 
 [SUN SIGN ESSENCE]

@@ -81,7 +81,7 @@ def generate_daily_horoscope(
 
     # client = genai.Client(api_key=api_key)
     _POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
-    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)
+    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)  # type: ignore[arg-type]
     client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Prepare helper data
@@ -111,9 +111,9 @@ def generate_daily_horoscope(
 
     daily_prompt = f"{static_prompt}\n\n{dynamic_prompt}"
 
-    print("\n\n--- Daily Prompt ---\n")
-    print(daily_prompt)
-    print("\n--- End of Daily Prompt ---\n\n")
+    # print("\n\n--- Daily Prompt ---\n")
+    # print(daily_prompt)
+    # print("\n--- End of Daily Prompt ---\n\n")
 
     # fixme cache dynamic + static
     cache_content = None
@@ -228,7 +228,7 @@ def generate_detailed_horoscope(
 
     # client = genai.Client(api_key=api_key)
     _POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
-    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)
+    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)  # type: ignore[arg-type]
     client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Get upcoming transits
