@@ -1,8 +1,14 @@
 Here is the foundational context and all necessary data for the detailed horoscope.
 
 ═══════════════════════════════════════════════════════════════════
-FOUNDATION FROM HOROSCOPE
+FOUNDATION FROM DAILY HOROSCOPE
 ═══════════════════════════════════════════════════════════════════
+
+**IMPORTANT:** Use these as context but DO NOT copy the exact phrasing.
+Vary your vocabulary in the detailed predictions.
+
+[Daily Theme]
+{{ daily_horoscope.daily_theme_headline }}
 
 [Technical Analysis]
 {{ daily_horoscope.technical_analysis }}
@@ -16,9 +22,6 @@ FOUNDATION FROM HOROSCOPE
 [Lunar Cycle Update]
 {{ daily_horoscope.lunar_cycle_update }}
 
-[Daily Theme Headline]
-{{ daily_horoscope.daily_theme_headline }}
-
 [Daily Overview]
 {{ daily_horoscope.daily_overview }}
 
@@ -31,18 +34,48 @@ FOUNDATION FROM HOROSCOPE
 • REFLECT ON: {{ daily_horoscope.actionable_advice.reflect_on }}
 
 ═══════════════════════════════════════════════════════════════════
+KEY TRANSIT SUMMARY FOR QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════
+
+Primary Transit: {{ transits.primary_aspect.transit_planet.value.title() }} {{ transits.primary_aspect.aspect_type }} {{ transits.primary_aspect.natal_planet.value.title() }}
+House Activated: {{ transits.primary_aspect.natal_house.ordinal }} ({{ transits.primary_aspect.natal_house.meaning }})
+Transit Strength: {{ "VERY STRONG" if transits.primary_aspect.orb < 1 else "STRONG" if transits.primary_aspect.orb < 2 else "MODERATE" }}
+Nature: {{ "Challenging/Dynamic" if transits.primary_aspect.aspect_type in ["square", "opposition"] else "Harmonious" if transits.primary_aspect.aspect_type in ["trine", "sextile"] else "Activation" }}
+
+**VOCABULARY ROTATION REMINDER:**
+When referencing this transit across 4-8 paragraphs, use different phrasings:
+- Para 1: "Pluto square to your natal Pluto"
+- Para 2: "This intense Pluto-Pluto dynamic"
+- Para 3: "The transformative square from transiting Pluto"
+- Para 4: "This evolutionary challenge"
+- Para 5: "The Pluto activation in your chart"
+etc.
+
+═══════════════════════════════════════════════════════════════════
 ADDITIONAL CELESTIAL DATA FOR {{ date }}
 ═══════════════════════════════════════════════════════════════════
 
 [Collective & Upcoming Transits]
 General Transits Summary: {{ transits.basic_transit_summary }}
+
 {% if transits.retrograde_planets %}
 Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }}
 {% endif %}
-{% if upcoming_transits %}
-Upcoming Transits (Next 2-5 days):
-{% for event in upcoming_transits[:2] %}
-• In {{ event.days_away }} days: {{ event.description }}
+
+{% if transits.moon_aspects %}
+Today's Moon Aspects:
+{% for aspect in transits.moon_aspects[:3] %}
+• Moon {{ aspect.aspect_type }} {{ aspect.planet.value.title() }} - {{ aspect.interpretation }}
 {% endfor %}
 {% endif %}
 
+{% if upcoming_transits %}
+Upcoming Transits (Next 2-7 days):
+{% for event in upcoming_transits[:3] %}
+• {{ event.date_formatted }}: {{ event.description }}
+{% endfor %}
+{% endif %}
+
+[Most Relevant Life Domains for This Transit]
+Based on the {{ transits.primary_aspect.natal_house.ordinal }} house activation and {{ transits.primary_aspect.transit_planet.value.title() }}/{{ transits.primary_aspect.natal_planet.value.title() }} symbolism, prioritize these domains:
+{{ suggested_life_domains|join(', ') }}

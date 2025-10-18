@@ -7,21 +7,37 @@ TODAY'S COSMIC WEATHER ({{ date }})
 {% if transits.primary_aspect %}
 [KEY PERSONAL TRANSIT]
 {{ primary_aspect_formatted }}
+
+⏰ TIMING DETAILS:
+• Orb: {{ "%.2f"|format(transits.primary_aspect.orb) }}° - {{ "APPLYING (building to exact)" if transits.primary_aspect.applying else "SEPARATING (releasing)" }}
+• Strength: {{ "VERY STRONG" if transits.primary_aspect.orb < 1 else "STRONG" if transits.primary_aspect.orb < 2 else "MODERATE" }}
+• Peak window: {{ transits.primary_aspect.peak_date_range if transits.primary_aspect.peak_date_range else "Active today" }}
+• Core meaning: {{ transits.primary_aspect.aspect_type.title() }} aspects create {{ "tension requiring action" if transits.primary_aspect.aspect_type == "square" else "harmonious flow" if transits.primary_aspect.aspect_type == "trine" else "dynamic energy" }}
+
+This is your MOST SIGNIFICANT personal transit today.
+
 {% else %}
 [KEY PERSONAL TRANSIT]
 No major natal-transit aspects within orb today. Focus on general transits and the collective lunar energy. The user's natal chart is in a quieter phase for integration and reflection.
+
+🌊 INTEGRATION PHASE: Use today's collective energy for rest, processing recent events, and emotional digestion. Tomorrow's transits will resume with more direct activation.
 {% endif %}
 
 [LUNAR CYCLE GUIDANCE]
 - Moon Phase: {{ transits.lunar_phase.phase_name.replace('_', ' ').title() }} {{ transits.lunar_phase.phase_emoji }} ({{ transits.lunar_phase.illumination_percent }}% illuminated)
 - Moon in {{ transits.moon_sign.value.title() }} - transiting user's {{ transits.moon_house.ordinal }} house ({{ transits.moon_house.meaning }})
 - Phase Energy: {{ transits.lunar_phase.energy }}
+- Emotional Tone: {{ transits.moon_sign.value.title() }} brings {{ moon_sign_emotional_description }}
 - Ritual/Practice: {{ transits.lunar_phase.ritual_suggestion }}
 - The Moon {{ lunar_moon_interpretation }} and colors how the user experiences the key transit.
 
 [GENERAL TRANSIT POSITIONS]
 {{ transits.basic_transit_summary }}
+
 {% if transits.retrograde_planets %}
-Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }} - themes of review and revision.
+🔄 Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }} - themes of review, revision, and internal processing dominate.
 {% endif %}
 
+{% if transits.applying_aspects_count > 3 %}
+⚡ HIGH ACTIVITY PERIOD: {{ transits.applying_aspects_count }} transits building to exact in the next 48 hours. Expect acceleration.
+{% endif %}

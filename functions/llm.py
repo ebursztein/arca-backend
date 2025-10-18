@@ -91,6 +91,11 @@ def generate_daily_horoscope(
     if transit_data.primary_aspect:
         primary_aspect_formatted = format_primary_aspect_details(transit_data.primary_aspect)
 
+    # Get moon sign profile for emotional description
+    from astro import get_sun_sign_profile
+    moon_sign_profile = get_sun_sign_profile(transit_data.moon_sign)
+    moon_sign_keywords = ", ".join(moon_sign_profile.keywords[:3]).lower() if moon_sign_profile else "emotional coloring"
+
     # Render templates valid for 24 hours
     static_template = jinja_env.get_template("daily_static.j2")
     static_prompt = static_template.render()
@@ -100,7 +105,8 @@ def generate_daily_horoscope(
         date=date,
         transits=transit_data,
         lunar_moon_interpretation=lunar_moon_interpretation,
-        primary_aspect_formatted=primary_aspect_formatted
+        primary_aspect_formatted=primary_aspect_formatted,
+        moon_sign_emotional_description=moon_sign_keywords
     )
 
     daily_prompt = f"{static_prompt}\n\n{dynamic_prompt}"

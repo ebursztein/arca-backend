@@ -148,14 +148,14 @@ def main():
     # Simulated user
     user = {
         "id": "test_user_001",
-        "name": "Alex",
-        "email": "alex@example.com"
+        "name": "Marianna",
+        "email": "mary@example.com"
     }
 
     console.print(f"[green]✓ User authenticated: {user['name']} ({user['email']})[/green]")
 
     # Birth information
-    birth_date = "1985-06-15"
+    birth_date = "1990-02-13"
     console.print(f"\n[cyan]Birth Date:[/cyan] {birth_date}")
 
     # Calculate sun sign

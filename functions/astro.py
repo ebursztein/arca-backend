@@ -1341,6 +1341,10 @@ class EnhancedTransitSummary(BaseModel):
     basic_transit_summary: str = Field(
         description="Text summary of general transits (fallback/context)"
     )
+    applying_aspects_count: int = Field(
+        default=0,
+        description="Count of aspects applying (building to exact) in next 48 hours"
+    )
 
 
 def summarize_transits_with_natal(
@@ -1413,6 +1417,9 @@ def summarize_transits_with_natal(
     # Get basic transit summary as text fallback
     basic_summary = summarize_transits(transit_chart, sun_sign.value)
 
+    # Count applying aspects (building to exact)
+    applying_count = sum(1 for asp in personal_aspects if asp.applying)
+
     return EnhancedTransitSummary(
         primary_aspect=primary_aspect,
         all_natal_transit_aspects=personal_aspects[:5],  # Top 5
@@ -1421,7 +1428,8 @@ def summarize_transits_with_natal(
         moon_house=moon_house,
         retrograde_planets=retrograde_planets,
         sun_sign=sun_sign,
-        basic_transit_summary=basic_summary
+        basic_transit_summary=basic_summary,
+        applying_aspects_count=applying_count
     )
 
 
@@ -1573,6 +1581,38 @@ def lunar_house_interpretation(house: House) -> str:
     }
 
     return interpretations.get(house, "colors your emotional experience")
+
+
+def moon_sign_emotional_quality(moon_sign: ZodiacSign) -> str:
+    """
+    Describe emotional tone of Moon transiting through a sign.
+
+    Args:
+        moon_sign: ZodiacSign enum for Moon's position
+
+    Returns:
+        Description of emotional quality
+
+    Example:
+        >>> moon_sign_emotional_quality(ZodiacSign.ARIES)
+        'impulsive, direct emotional responses and desire for action'
+    """
+    qualities = {
+        ZodiacSign.ARIES: "impulsive, direct emotional responses and desire for action",
+        ZodiacSign.TAURUS: "grounded, sensual feelings and need for comfort",
+        ZodiacSign.GEMINI: "mental stimulation, curiosity, and emotional versatility",
+        ZodiacSign.CANCER: "heightened sensitivity, nurturing instincts, and emotional depth",
+        ZodiacSign.LEO: "warmth, generosity, and desire for recognition",
+        ZodiacSign.VIRGO: "analytical feelings, attention to detail, and practical concerns",
+        ZodiacSign.LIBRA: "harmony-seeking, relational awareness, and aesthetic sensitivity",
+        ZodiacSign.SCORPIO: "emotional intensity, depth, and transformative power",
+        ZodiacSign.SAGITTARIUS: "optimism, restlessness, and philosophical perspective",
+        ZodiacSign.CAPRICORN: "emotional reserve, ambition, and practical focus",
+        ZodiacSign.AQUARIUS: "detached perspective, humanitarian concern, and innovative thinking",
+        ZodiacSign.PISCES: "empathy, dreaminess, and spiritual receptivity"
+    }
+
+    return qualities.get(moon_sign, "emotional coloring")
 
 
 def format_primary_aspect_details(aspect: 'NatalTransitAspect') -> str:
