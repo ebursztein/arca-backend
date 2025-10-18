@@ -1,0 +1,27 @@
+Here is the data for today's Fast Horoscope.
+
+═══════════════════════════════════════════════════════════════════
+TODAY'S COSMIC WEATHER ({{ date }})
+═══════════════════════════════════════════════════════════════════
+
+{% if transits.primary_aspect %}
+[KEY PERSONAL TRANSIT]
+{{ primary_aspect_formatted }}
+{% else %}
+[KEY PERSONAL TRANSIT]
+No major natal-transit aspects within orb today. Focus on general transits and the collective lunar energy. The user's natal chart is in a quieter phase for integration and reflection.
+{% endif %}
+
+[LUNAR CYCLE GUIDANCE]
+- Moon Phase: {{ transits.lunar_phase.phase_name.replace('_', ' ').title() }} {{ transits.lunar_phase.phase_emoji }} ({{ transits.lunar_phase.illumination_percent }}% illuminated)
+- Moon in {{ transits.moon_sign.value.title() }} - transiting user's {{ transits.moon_house.ordinal }} house ({{ transits.moon_house.meaning }})
+- Phase Energy: {{ transits.lunar_phase.energy }}
+- Ritual/Practice: {{ transits.lunar_phase.ritual_suggestion }}
+- The Moon {{ lunar_moon_interpretation }} and colors how the user experiences the key transit.
+
+[GENERAL TRANSIT POSITIONS]
+{{ transits.basic_transit_summary }}
+{% if transits.retrograde_planets %}
+Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }} - themes of review and revision.
+{% endif %}
+

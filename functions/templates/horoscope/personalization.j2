@@ -1,0 +1,35 @@
+═══════════════════════════════════════════════════════════════════
+USER & PERSONALIZATION CONTEXT
+═══════════════════════════════════════════════════════════════════
+
+[USER PROFILE]
+Name: {{ user.name }}
+Birth Date: {{ user.birth_date }}
+Sun Sign: {{ user.sun_sign.title() }}
+Natal Chart Overview:
+• Sun in {{ user.sun_sign.title() }}
+• Ascendant: {{ user.natal_chart.angles.ascendant.sign.value.title() }} at {{ user.natal_chart.angles.ascendant.degree_in_sign }}°
+• Moon: {{ (user.natal_chart.planets | selectattr('name', 'equalto', 'moon') | first).sign.value.title() }}
+• Chart Emphasis: {{ chart_emphasis }}
+
+[SUN SIGN ESSENCE]
+Element: {{ sign.element.value.title() }} | Modality: {{ sign.modality.value.title() }}
+Ruling Planet: {{ sign.ruling_planet }}
+Core Keywords: {{ sign.keywords[:5]|join(', ') }}
+Life Lesson: {{ sign.life_lesson }}
+Evolutionary Goal: {{ sign.evolutionary_goal }}
+
+[PERSONALIZATION MEMORY (from {{ user.name }}'s journey)]
+Use this data to build continuity, reference explored themes, avoid repetition, and connect today's transit to the user's ongoing story.
+{{ memory.format_for_llm() }}
+
+
+[PERSONALIZATION USAGE]
+Use this personalization data to:
+- Build continuity with previous readings
+- Reference themes they've been exploring
+- Avoid repeating the same guidance
+- Create a sense of journey and progression
+- Show you "know" them intuitively through accumulated wisdom
+- Connect today's transit to their ongoing story
+- Address them directly and intimately using their name and other personal details when appropriate.

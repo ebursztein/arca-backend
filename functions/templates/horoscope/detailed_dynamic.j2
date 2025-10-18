@@ -1,0 +1,48 @@
+Here is the foundational context and all necessary data for the detailed horoscope.
+
+═══════════════════════════════════════════════════════════════════
+FOUNDATION FROM HOROSCOPE
+═══════════════════════════════════════════════════════════════════
+
+[Technical Analysis]
+{{ daily_horoscope.technical_analysis }}
+
+[Key Active Transit Analysis]
+{{ daily_horoscope.key_active_transit }}
+
+[Primary Area of Life Activated]
+{{ daily_horoscope.area_of_life_activated }}
+
+[Lunar Cycle Update]
+{{ daily_horoscope.lunar_cycle_update }}
+
+[Daily Theme Headline]
+{{ daily_horoscope.daily_theme_headline }}
+
+[Daily Overview]
+{{ daily_horoscope.daily_overview }}
+
+[Summary]
+{{ daily_horoscope.summary }}
+
+[Core Actionable Advice]
+• DO: {{ daily_horoscope.actionable_advice.do }}
+• DON'T: {{ daily_horoscope.actionable_advice.dont }}
+• REFLECT ON: {{ daily_horoscope.actionable_advice.reflect_on }}
+
+═══════════════════════════════════════════════════════════════════
+ADDITIONAL CELESTIAL DATA FOR {{ date }}
+═══════════════════════════════════════════════════════════════════
+
+[Collective & Upcoming Transits]
+General Transits Summary: {{ transits.basic_transit_summary }}
+{% if transits.retrograde_planets %}
+Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }}
+{% endif %}
+{% if upcoming_transits %}
+Upcoming Transits (Next 2-5 days):
+{% for event in upcoming_transits[:2] %}
+• In {{ event.days_away }} days: {{ event.description }}
+{% endfor %}
+{% endif %}
+

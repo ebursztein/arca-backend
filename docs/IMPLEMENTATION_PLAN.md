@@ -1,13 +1,132 @@
 # V1 Implementation Plan
 
-## Current State
-- ✅ Astrology functions: `natal_chart`, `daily_transit`, `user_transit`
-- ✅ Astro data models in `astro.py`
-- ✅ Firebase emulator setup
-- ✅ Test script for astro functions (`test.py`)
-- ✅ Prototype validation script (`prototype.py`)
-- ✅ Dependencies: `google-genai`, `posthog`, `natal`, `pydantic`, `rich`
-- ⬜ Need to add: `pytz` (for timezone conversion in V2+)
+## Current State (Updated 2025-10-18)
+
+### ✅ Sprint 1: Core Astrology Module - COMPLETE
+**Location:** `functions/astro.py` (Production-ready)
+
+**Enums & Type Safety:**
+- 7 type-safe enums (ZodiacSign, Planet, CelestialBody, Element, Modality, AspectType, House, ChartType)
+- 20+ Pydantic models with automatic validation
+- CelestialBody enum includes planets AND chart angles (Asc, IC, Dsc, MC)
+- All 11 celestial bodies (10 planets + North Node)
+- Planet-to-planet AND planet-to-angle aspects
+
+**Sun Sign Profile System:**
+- 12 complete JSON profiles in `functions/signs/` (aries.json → pisces.json)
+- 40+ fields per sign covering 8 life domains
+- Schema: `docs/sunsign.json`
+- Validated with strict tests (no placeholders allowed)
+
+**Core Functions:**
+- `get_sun_sign(birth_date)` - Calculate sun sign from birth date
+- `get_sun_sign_profile(sun_sign)` - Load complete sun sign profile (40+ fields)
+- `get_astro_chart(utc_dt, lat, lon)` - Generate natal/transit charts
+- `compute_birth_chart(birth_date, ...)` - User-friendly wrapper (V1/V2 support)
+- `calculate_solar_house(sun_sign, transit_sign)` - Solar house system
+- `summarize_transits(transit_chart, sun_sign)` - Basic transit summaries
+- `summarize_transits_with_natal(natal_chart, transit_chart)` - **ENHANCED** natal-transit aspect analysis
+- `get_upcoming_transits(natal_chart, date, days_ahead)` - Look-ahead transit events
+- `describe_chart_emphasis(distributions)` - Chart emphasis description
+- `lunar_house_interpretation(house)` - Lunar house meanings
+- `format_primary_aspect_details(aspect)` - Format aspect for display
+
+**Enhanced Transit Analysis:**
+- `EnhancedTransitSummary` model with natal-transit aspects
+- `NatalTransitAspect` model for personalized transit-to-natal aspects
+- `LunarPhaseInfo` model with phase name, emoji, illumination, energy, ritual suggestions
+- `UpcomingTransit` model for look-ahead events
+- TRUE PERSONALIZATION: Compares current transits to user's natal chart
+
+**Test Suite:**
+- `functions/astro_test.py` - 60 tests passing, 100% coverage
+- All functions validated with comprehensive test cases
+
+**Documentation:**
+- `docs/ASTROLOGY_MODULE.md` - Complete technical reference
+- All APIs documented with examples
+
+---
+
+### ✅ Sprint 2: LLM Integration - COMPLETE
+**Location:** `functions/llm.py`, `functions/models.py`, `functions/templates/`
+
+**Pydantic Data Models (`models.py`):**
+- `UserProfile` - Complete user profile with natal chart
+- `MemoryCollection` - Server-side memory with category tracking + recent readings
+- `CategoryEngagement` - Track count + last_mentioned per category
+- `JournalEntry` - Immutable journal entries (source of truth)
+- `DailyHoroscope` - Complete horoscope with enhanced fields:
+  - `daily_theme_headline` - Shareable wisdom (max 15 words)
+  - `daily_overview` - Emotional/energetic tone
+  - `key_active_transit` - Technical analysis with exact degrees
+  - `area_of_life_activated` - Specific life domain/house
+  - `actionable_advice` - Structured DO/DON'T/REFLECT
+  - `lunar_cycle_update` - Ritual and wellness guidance
+  - `general_transits_overview` - Collective transit bullets
+  - `look_ahead_preview` - Upcoming transits preview
+  - `technical_analysis` - Astronomical explanation
+  - `summary` - Main screen summary
+  - `details` - All 8 life categories
+- `HoroscopeDetails` - 8 life categories with ~100-120 words each
+- `ActionableAdvice` - Structured do/don't/reflect format
+- Helper functions: `create_empty_memory()`, `update_memory_from_journal()`
+
+**LLM Integration (`llm.py`):**
+- ✅ Gemini API client initialization
+- ✅ Jinja2 template rendering with `FileSystemLoader`
+- ✅ `generate_horoscope()` function with structured JSON output
+- ✅ Uses `response_schema` for validated Pydantic output
+- ✅ Token usage tracking (input/output/total tokens)
+- ✅ Generation time tracking (milliseconds)
+- ✅ Model selection support (default: `gemini-2.5-flash`)
+- ⚠️ PostHog analytics NOT YET integrated (deferred)
+
+**Jinja2 Prompt Template (`templates/horoscope_prompt.j2`):**
+- ✅ Comprehensive 350+ line prompt with detailed instructions
+- ✅ User profile section (name, birth date, natal chart overview, sun sign essence)
+- ✅ Today's cosmic weather with enhanced natal-transit aspects
+- ✅ Primary aspect highlighted as foundation for all guidance
+- ✅ Secondary aspects for background influences
+- ✅ Lunar cycle guidance with Moon phase + house interpretation
+- ✅ General transit positions + retrogrades
+- ✅ Look-ahead preview (next 2-5 days)
+- ✅ Personalization data from memory (formatted with `memory.format_for_llm()`)
+- ✅ Detailed section structure with requirements and examples
+- ✅ Style guidelines (elevated, mystical, technical accuracy)
+- ✅ Output format specification (valid JSON)
+
+**Prototype (`functions/prototype.py`):**
+- ✅ End-to-end simulation from onboarding → horoscope → journal entry
+- ✅ Uses Rich console for beautiful terminal output
+- ✅ Demonstrates complete V1 user journey
+- ✅ Shows natal-transit aspect analysis (TRUE PERSONALIZATION!)
+- ✅ Displays all enhanced horoscope fields with panels
+- ✅ Validates memory update logic
+- ✅ Ready for Firebase integration
+
+**Dependencies:**
+- ✅ `google-genai` - Gemini API SDK
+- ✅ `posthog` - Installed but not yet integrated
+- ✅ `natal` - Astronomical calculations
+- ✅ `pydantic` - Data validation
+- ✅ `rich` - Terminal formatting
+- ✅ `jinja2` - Prompt templating
+- ⚠️ Need to add: `pytz` (for timezone conversion in V2+)
+
+---
+
+### ⬜ Sprint 3: Firestore Operations - TODO
+**Location:** `functions/firestore_ops.py` (not yet created)
+
+### ⬜ Sprint 4: Firebase Callable Functions - TODO
+**Location:** `functions/main.py` (needs callable functions)
+
+### ⬜ Sprint 5: Firestore Triggers - TODO
+**Location:** `functions/main.py` (needs triggers)
+
+### ⬜ Sprint 6: End-to-End Validation - TODO
+**Location:** Integration tests + production deployment
 
 ## What We Need to Build
 
@@ -366,24 +485,46 @@
 
 ## Implementation Order
 
-### Sprint 1: Foundation (No LLM, No Firebase)
-1. ✅ Setup complete (already done)
-2. ⬜ Write `functions/utils.py` with all utilities
-3. ⬜ Write `functions/test_utils.py` and validate
-4. ⬜ Run: `pytest functions/test_utils.py -v`
+### Sprint 1: Foundation (Core Astrology) ✅ COMPLETED
+1. ✅ Setup complete with Firebase emulator + dependencies
+2. ✅ Core astrology module `functions/astro.py` with production-ready type safety
+   - All 7 enums (ZodiacSign, Planet, CelestialBody, Element, Modality, AspectType, House, ChartType)
+   - 20+ Pydantic models for validation
+   - Sun sign profiles (12 JSON files with 8 life domains each)
+   - Basic functions: `get_sun_sign()`, `get_sun_sign_profile()`, `compute_birth_chart()`, `calculate_solar_house()`
+   - Enhanced functions: `summarize_transits_with_natal()`, `get_upcoming_transits()`, `describe_chart_emphasis()`
+3. ✅ Comprehensive test suite `functions/astro_test.py` (60 tests, 100% coverage)
+4. ✅ All tests passing: `pytest functions/astro_test.py -v`
+5. ✅ Documentation: `docs/ASTROLOGY_MODULE.md`
 
-**Deliverable**: Pure Python utilities working and tested
+**Deliverable**: ✅ Production-ready astrology engine with TRUE personalization (natal-transit aspects)
 
 ---
 
-### Sprint 2: LLM Integration (No Firebase yet)
-1. ⬜ Get Gemini API key and PostHog credentials
-2. ⬜ Write `functions/llm.py` with horoscope generator
-3. ⬜ Write `functions/test_llm.py` with mocks
-4. ⬜ Test with real Gemini API (manual script)
-5. ⬜ Validate output quality, adjust prompt
+### Sprint 2: LLM Integration ✅ COMPLETED
+1. ✅ Pydantic data models in `functions/models.py`
+   - UserProfile, MemoryCollection, JournalEntry, DailyHoroscope
+   - CategoryEngagement, CategoryViewed, HoroscopeDetails, ActionableAdvice
+   - Helper functions: `create_empty_memory()`, `update_memory_from_journal()`
+2. ✅ LLM integration in `functions/llm.py`
+   - Gemini API client with structured JSON output
+   - Jinja2 template rendering from `templates/horoscope_prompt.j2`
+   - Token usage tracking + generation time tracking
+   - `generate_horoscope()` function with enhanced personalization
+3. ✅ Comprehensive Jinja2 prompt template (350+ lines)
+   - User profile section with natal chart overview
+   - Enhanced transit analysis with natal-transit aspects
+   - Lunar cycle guidance with Moon phase + house interpretation
+   - Memory/personalization context
+   - All 8 life categories with detailed requirements
+   - Style guidelines and output format
+4. ✅ Working prototype in `functions/prototype.py`
+   - End-to-end simulation with Rich console output
+   - Demonstrates complete user journey
+   - Validates memory update logic
+5. ⚠️ PostHog analytics integration deferred (installed but not integrated)
 
-**Deliverable**: LLM generating horoscopes with good quality
+**Deliverable**: ✅ LLM generating deeply personalized horoscopes with natal-transit aspects, ready for Firebase
 
 ---
 

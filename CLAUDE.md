@@ -25,7 +25,66 @@ arca-backend is the backend service for a daily tarot and astrology app that pro
 - `rich` (v14.2.0+) - Terminal output formatting for development
 - `firebase-admin` (v7.1.0+) - Admin SDK for Firebase services
 - `firebase-functions` (v0.4.3+) - Cloud Functions framework
-- LLM integration (to be implemented) for generating personalized readings
+- `google-genai` - Gemini API SDK for LLM integration
+  - **Production model:** `gemini-2.5-flash` (best balance of speed/quality)
+  - **Fast option:** `gemini-2.5-flash-lite` (lowest latency, cost-optimized)
+  - **Complex reasoning:** `gemini-2.5-pro` (advanced tasks, slower)
+  - **Context caching:** Available for cost optimization on repeated contexts
+    - Minimum tokens: 1,024 (Flash), 2,048-4,096 (Pro)
+    - Default TTL: 1 hour (configurable)
+    - Use case: Cache sun sign profiles, natal chart data, static system instructions
+    - Reduces costs by ~50-90% on cached input tokens
+    - Requires explicit model version suffix (e.g., `gemini-2.0-flash-001`)
+    - API methods:
+      ```python
+      # Create cache
+      cache = client.caches.create(
+          model='models/gemini-2.0-flash-001',
+          config=types.CreateCachedContentConfig(
+              display_name='cache-name',
+              system_instruction='...',
+              contents=[...],
+              ttl="3600s"  # or expiration_time
+          )
+      )
+
+      # Use cached content
+      response = client.models.generate_content(
+          model=model,
+          contents='query',
+          config=types.GenerateContentConfig(cached_content=cache.name)
+      )
+
+      # List/Get/Update/Delete
+      client.caches.list()
+      client.caches.get(name=cache_name)
+      client.caches.update(name=cache_name, config=types.UpdateCachedContentConfig(ttl='300s'))
+      client.caches.delete(cache.name)
+
+      # Check cache hits in response
+      print(response.usage_metadata.cached_content_token_count)
+      ```
+- `jinja2` - Prompt templating system
+  - **Template architecture:** Modular design with static/dynamic/personalization split
+  - **Location:** `functions/templates/horoscope/`
+  - **Fast Horoscope (Prompt 1):**
+    - `daily_static.j2` - System instructions, task, style guidelines (cacheable, shared)
+    - `daily_dynamic.j2` - Today's transits, lunar data (changes daily)
+    - `personalization.j2` - User profile, natal chart, memory (cacheable per user)
+  - **Detailed Horoscope (Prompt 2):**
+    - `detailed_static.j2` - System instructions for detailed predictions (cacheable, shared)
+    - `detailed_dynamic.j2` - Fast horoscope output + upcoming transits (changes per request)
+    - `personalization.j2` - Same shared template (cacheable per user)
+  - **Composition:**
+    ```
+    Fast = daily_static + daily_dynamic + personalization
+    Detailed = detailed_static + detailed_dynamic + personalization
+    ```
+  - **Caching strategy:**
+    - Static templates: Cache per model (same for all users)
+    - Personalization: Cache per user (natal chart + sun sign profile)
+    - Dynamic: Never cache (transits change daily)
+- `pydantic` (v2.12.2+) - Data validation and type safety
 
 **Target Platform:** iOS app (this is the backend service)
 
@@ -35,17 +94,19 @@ arca-backend is the backend service for a daily tarot and astrology app that pro
 arca-backend/
 ├── functions/              # Firebase Cloud Functions (Python)
 │   ├── main.py            # Cloud Functions entry point
+│   ├── astro.py           # ⭐ Core astrology module with Pydantic models
+│   ├── astro_test.py      # ⭐ Comprehensive test suite (60 tests)
+│   ├── signs/             # ⭐ Sun sign profile data (JSON)
+│   │   ├── aries.json     # Complete Aries profile (8 life domains)
+│   │   ├── taurus.json    # (etc. for all 12 signs)
+│   │   └── ...
 │   ├── utils.py           # Core utilities (sun sign, transit summary, etc.)
 │   ├── llm.py             # LLM integration (Gemini, PostHog)
 │   ├── firestore_ops.py   # Firestore CRUD operations
-│   ├── astro.py           # Pydantic models for astrology data
-│   ├── test_*.py          # Unit and integration tests
 │   ├── requirements.txt   # Functions runtime dependencies
 │   └── venv/              # Local virtual environment
-├── signs/                 # Sun sign data (markdown files)
-│   ├── aries.md           # Aries metadata and onboarding fact
-│   ├── taurus.md          # (etc. for all 12 signs)
-│   └── ...
+├── docs/                  # Documentation and schema
+│   └── sunsign.json       # Sun sign profile JSON schema
 ├── public_site/           # Marketing/landing static site (Astro)
 │   ├── src/               # Astro source files
 │   ├── dist/              # Built static files (for hosting)
@@ -57,8 +118,6 @@ arca-backend/
 ├── pyproject.toml         # Python project dependencies (uv)
 ├── uv.lock               # Locked dependency versions
 ├── deploy-site.sh        # Site deployment script
-├── prototype.py           # End-to-end validation script
-├── test.py                # Astrology functions test script
 ├── CLAUDE.md             # This file
 ├── MVP_PLAN.md           # Complete V1 product/architecture plan
 ├── IMPLEMENTATION_PLAN.md # Technical implementation roadmap
@@ -219,25 +278,50 @@ Functions decorated with `@firestore_fn.on_document_created()` etc.:
 
 ## Current Implementation Status
 
-### Completed
-- Firebase project setup and configuration
-- Local emulator configuration
-- Cloud Functions scaffolding with natal integration
-- Static marketing site (Astro-based)
-- Basic dependencies and project structure
-- Example function using natal for chart calculations
+### ✅ Completed - Astrology Core (Sprint 1.4-1.10)
+- **Type-safe astrology module** (`functions/astro.py`)
+  - 7 production-ready enums (ZodiacSign, Planet, CelestialBody, Element, Modality, AspectType, House, ChartType)
+  - 20+ Pydantic models with full validation
+  - CelestialBody enum includes planets AND chart angles (Asc, IC, Dsc, MC)
+  - Automatic string-to-enum conversion with unicode symbol support
+  - North Node included in planets list (11 celestial bodies total)
+- **Complete sun sign profile system**
+  - 12 JSON profiles with 8 life domains each (40+ fields per sign)
+  - Domains: love, family, career, growth, finance, purpose, home, decisions
+  - SunSignProfile Pydantic model with strict validation
+  - Loaded from `functions/signs/` directory (deployed with Cloud Functions)
+- **Astronomical calculations**
+  - `get_astro_chart()` - Generate complete natal/transit charts
+  - `compute_birth_chart()` - User-friendly wrapper with V1/V2 support
+  - `calculate_solar_house()` - Whole sign house system (returns House enum)
+  - `summarize_transits()` - Personalized transit summaries for LLM context
+  - `get_sun_sign()` - Calculate sun sign from birth date
+  - `get_sun_sign_profile()` - Load rich profile data
+- **Comprehensive test coverage** (60 tests passing)
+  - Sun sign calculation tests (13 tests)
+  - Sun sign profile validation tests (12 tests with "HARD FAIL" messages)
+  - Birth chart computation tests (5 tests)
+  - Transit summary tests (10 tests)
+  - Solar house calculation tests (17 tests including regression + boundary conditions)
+  - Sign rulers tests (3 tests for modern astrology rulerships)
+- **Infrastructure**
+  - Firebase project setup and configuration
+  - Local emulator configuration
+  - Cloud Functions scaffolding with natal integration
+  - Static marketing site (Astro-based)
+  - JSON schema documentation (`docs/sunsign.json`)
 
-### To Be Implemented
+### 🚧 In Progress
 - LLM integration for personalized readings
+
+### 📋 To Be Implemented
 - User authentication and profile management
 - Journal entry creation and storage
 - Theme extraction and tracking system
 - Insight synthesis and memory updates
 - Tarot reading logic and interpretation
-- Transit and aspect analysis
 - Production Firestore security rules
-- Production-ready Cloud Functions
-- Error handling and logging
+- Production-ready Cloud Functions (error handling, logging)
 - Rate limiting and abuse prevention
 
 ## Design Principles
@@ -261,6 +345,177 @@ Functions decorated with `@firestore_fn.on_document_created()` etc.:
 - Reframe everyday concerns as opportunities for growth
 - Create a sacred daily practice, not just an app check-in
 - Document and reflect spiritual evolution over time
+
+## Astrology Module Architecture (`functions/astro.py`)
+
+The `astro.py` module provides a type-safe, production-ready astrology API built on top of the `natal` library. It uses Pydantic for validation and enums for type safety.
+
+### Core Enums
+
+All enums inherit from `str` for JSON serialization compatibility:
+
+```python
+class ZodiacSign(str, Enum):
+    """12 zodiac signs: aries, taurus, gemini, ..., pisces"""
+
+class Planet(str, Enum):
+    """11 celestial bodies: sun, moon, mercury, ..., pluto, north_node"""
+
+class CelestialBody(str, Enum):
+    """15 bodies: all planets + 4 chart angles (asc, ic, dsc, mc)"""
+
+class Element(str, Enum):
+    """4 elements: fire, earth, air, water"""
+
+class Modality(str, Enum):
+    """3 modalities: cardinal, fixed, mutable"""
+
+class AspectType(str, Enum):
+    """6 aspect types: conjunction, opposition, trine, square, sextile, quincunx"""
+
+class House(int, Enum):
+    """12 houses with .ordinal and .meaning properties"""
+    FIRST = 1  # .ordinal="1st", .meaning="self, identity, appearance"
+
+class ChartType(str, Enum):
+    """Chart types: natal, transit"""
+```
+
+### Pydantic Models
+
+**Chart Data Models:**
+- `PlanetPosition` - Planet with sign, house, retrograde status, element, modality
+- `HouseCusp` - House cusp with sign, ruler, classic ruler (all enums)
+- `AspectData` - Aspect between two CelestialBody enums (includes angles!)
+- `AnglePosition` - Position of Asc/IC/Dsc/MC
+- `ChartAngles` - All 4 angles
+- `NatalChartData` - Complete chart with planets, houses, aspects, distributions
+
+**Profile Models:**
+- `SunSignProfile` - Complete sun sign profile (40+ fields, 8 life domains)
+- `DomainProfiles` - 8 life domains (love, family, career, growth, finance, purpose, home, decisions)
+- `LoveAndRelationships`, `FamilyAndFriendships`, etc. - Individual domain models
+
+**Distribution Models:**
+- `ElementDistribution` - Planet counts in fire/earth/air/water
+- `ModalityDistribution` - Planet counts in cardinal/fixed/mutable
+- `QuadrantDistribution` - Planet counts in houses 1-3, 4-6, 7-9, 10-12
+- `HemisphereDistribution` - Planet counts in northern/southern, eastern/western
+
+### Key Functions
+
+```python
+def get_sun_sign(birth_date: str) -> ZodiacSign:
+    """Calculate sun sign from birth date (fixed tropical dates)."""
+
+def get_sun_sign_profile(sun_sign: ZodiacSign) -> SunSignProfile:
+    """Load complete sun sign profile from JSON."""
+
+def get_astro_chart(utc_dt: str, lat: float, lon: float,
+                   chart_type: ChartType) -> NatalChartData:
+    """Generate complete natal/transit chart with full Pydantic validation.
+    Includes all 11 planets (10 physical + North Node) and all aspects
+    (planet-to-planet AND planet-to-angle).
+    """
+
+def compute_birth_chart(birth_date: str, birth_time: str = None,
+                       birth_timezone: str = None,
+                       birth_lat: float = None,
+                       birth_lon: float = None) -> Tuple[dict, bool]:
+    """User-friendly wrapper that returns (chart_dict, is_exact).
+    V1 mode: No birth time → noon UTC at 0,0 (sun sign accurate)
+    V2 mode: Full info → precise chart with houses/angles
+    """
+
+def calculate_solar_house(sun_sign: str, transit_sign: str) -> House:
+    """Calculate solar house using whole sign system.
+    Returns House enum with .ordinal and .meaning properties.
+    Example: calculate_solar_house("aries", "virgo") == House.SIXTH
+    """
+
+def summarize_transits(transit_chart: dict, sun_sign: str) -> str:
+    """Generate personalized transit summary for LLM context.
+    Includes: aspects to natal sun, house placements, ruling planet,
+    personal/outer planets, retrogrades.
+    """
+```
+
+### Automatic Validation Features
+
+**Field Validators:**
+- String-to-enum conversion (case-insensitive)
+- Unicode zodiac symbol mapping (♈→Aries, ♉→Taurus, etc.)
+- Mixed format parsing ("♓ pisces" → Pisces)
+- Handles natal library's various output formats
+
+**Data Integrity:**
+- All planet names validated against Planet enum
+- All zodiac signs validated against ZodiacSign enum
+- All aspects validated against supported CelestialBody values
+- North Node manually added from `data.asc_node` attribute
+
+### Modern Astrology Rulerships
+
+```python
+SIGN_RULERS = {
+    ZodiacSign.SCORPIO: Planet.PLUTO,      # Modern (traditional: Mars)
+    ZodiacSign.AQUARIUS: Planet.URANUS,    # Modern (traditional: Saturn)
+    ZodiacSign.PISCES: Planet.NEPTUNE      # Modern (traditional: Jupiter)
+    # ... traditional rulers unchanged
+}
+```
+
+### Sun Sign Profile System
+
+**Data Structure:**
+- 12 JSON files in `functions/signs/` (aries.json, taurus.json, etc.)
+- 40+ fields per sign covering all life areas
+- 8 life domains with detailed subsections
+- Complete planetary dignities, correspondences, health patterns
+- Compatibility analysis (most compatible, challenging, growth-oriented)
+
+**Validation:**
+- Strict tests ensure 100% data completeness
+- "HARD FAIL" messages for any missing/incomplete data
+- No placeholder text allowed (TBD, TODO, FIXME)
+- Element/modality combinations validated (12 unique combos)
+
+### House System
+
+Uses **whole sign houses** for transit calculations:
+- Sun sign always occupies 1st house
+- Each subsequent sign = next house
+- Simple, predictable, works without birth time
+- House enum provides semantic meaning for each house
+
+### Usage Example
+
+```python
+from astro import compute_birth_chart, get_sun_sign_profile, summarize_transits
+
+# Get complete birth chart
+chart_data, is_exact = compute_birth_chart(
+    birth_date="1990-06-15",
+    birth_time="14:30",
+    birth_timezone="America/New_York",
+    birth_lat=40.7128,
+    birth_lon=-74.0060
+)
+
+# Access type-safe enum data
+for planet in chart_data["planets"]:
+    print(f"{planet['name']} in {planet['sign']}")  # Both are enums
+
+# Get sun sign profile
+from astro import ZodiacSign
+profile = get_sun_sign_profile(ZodiacSign.GEMINI)
+print(profile.domain_profiles.love_and_relationships.style)
+
+# Generate transit summary
+transit_chart, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+summary = summarize_transits(transit_chart, "taurus")
+# Returns: "Your Sun: Taurus. Transit Sun in Libra at 24.4° ..."
+```
 
 ## Natal Library Usage
 

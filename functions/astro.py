@@ -670,7 +670,7 @@ def get_astro_chart(
             position_dms=planet.signed_dms,
             sign=planet.sign.name,
             degree_in_sign=round(planet.signed_deg + planet.minute / 60, 2),
-            absolute_degree=round(planet.degree, 2),
+            absolute_degree=min(round(planet.degree % 360, 2), 359.99),
             house=data.house_of(planet),
             speed=round(planet.speed, 4),
             retrograde=planet.retro,
@@ -691,7 +691,7 @@ def get_astro_chart(
                 position_dms=north_node.signed_dms,
                 sign=north_node.sign.name,
                 degree_in_sign=round(north_node.signed_deg + north_node.minute / 60, 2),
-                absolute_degree=round(north_node.degree, 2),
+                absolute_degree=min(round(north_node.degree % 360, 2), 359.99),
                 house=data.house_of(north_node),
                 speed=round(north_node.speed, 4),
                 retrograde=north_node.retro if hasattr(north_node, 'retro') else False,
@@ -706,7 +706,7 @@ def get_astro_chart(
             number=house.value,
             sign=house.sign.name,
             degree_in_sign=round(house.degree % 30, 2),
-            absolute_degree=round(house.degree, 2),
+            absolute_degree=min(round(house.degree % 360, 2), 359.99),
             ruler=house.ruler,
             ruler_sign=house.ruler_sign,
             ruler_house=house.ruler_house,
@@ -739,25 +739,25 @@ def get_astro_chart(
         ascendant=AnglePosition(
             sign=data.asc.sign.name,
             degree_in_sign=round(data.asc.signed_deg + data.asc.minute / 60, 2),
-            absolute_degree=round(data.asc.degree, 2),
+            absolute_degree=min(round(data.asc.degree % 360, 2), 359.99),
             position_dms=data.asc.signed_dms
         ),
         imum_coeli=AnglePosition(
             sign=data.ic.sign.name,
             degree_in_sign=round(data.ic.signed_deg + data.ic.minute / 60, 2),
-            absolute_degree=round(data.ic.degree, 2),
+            absolute_degree=min(round(data.ic.degree % 360, 2), 359.99),
             position_dms=data.ic.signed_dms
         ),
         descendant=AnglePosition(
             sign=data.dsc.sign.name,
             degree_in_sign=round(data.dsc.signed_deg + data.dsc.minute / 60, 2),
-            absolute_degree=round(data.dsc.degree, 2),
+            absolute_degree=min(round(data.dsc.degree % 360, 2), 359.99),
             position_dms=data.dsc.signed_dms
         ),
         midheaven=AnglePosition(
             sign=data.mc.sign.name,
             degree_in_sign=round(data.mc.signed_deg + data.mc.minute / 60, 2),
-            absolute_degree=round(data.mc.degree, 2),
+            absolute_degree=min(round(data.mc.degree % 360, 2), 359.99),
             position_dms=data.mc.signed_dms
         )
     )
@@ -1103,3 +1103,500 @@ def summarize_transits(transit_chart: dict, sun_sign: str) -> str:
 
     # Join all parts with ". "
     return ". ".join(parts) + "."
+
+
+# =============================================================================
+# Natal-Transit Aspect Analysis (Personalization Core)
+# =============================================================================
+
+class NatalTransitAspect(BaseModel):
+    """
+    An aspect between a natal planet and a transiting planet.
+
+    This is THE KEY to true personalization - shows what's happening
+    to the user's specific chart today.
+    """
+    natal_planet: Planet = Field(description="Natal planet being aspected")
+    natal_sign: ZodiacSign = Field(description="Sign of natal planet")
+    natal_degree: float = Field(ge=0, lt=360, description="Absolute degree of natal planet")
+    natal_house: int = Field(ge=1, le=12, description="House of natal planet")
+
+    transit_planet: Planet = Field(description="Transiting planet")
+    transit_sign: ZodiacSign = Field(description="Sign of transiting planet")
+    transit_degree: float = Field(ge=0, lt=360, description="Absolute degree of transiting planet")
+
+    aspect_type: AspectType = Field(description="Type of aspect")
+    exact_degree: int = Field(description="Exact degree of aspect (0, 60, 90, 120, 180)")
+    orb: float = Field(ge=0, description="Orb in degrees from exact")
+    applying: bool = Field(description="True if applying (building), False if separating (waning)")
+
+    meaning: str = Field(description="Interpretation key for this aspect")
+
+    @field_validator('natal_planet', 'transit_planet', mode='before')
+    @classmethod
+    def convert_planet(cls, v) -> Planet:
+        """Convert string to Planet enum (case-insensitive)."""
+        if isinstance(v, Planet):
+            return v
+        return Planet(v.lower())
+
+    @field_validator('natal_sign', 'transit_sign', mode='before')
+    @classmethod
+    def convert_sign(cls, v) -> ZodiacSign:
+        """Convert string to ZodiacSign enum (case-insensitive)."""
+        if isinstance(v, ZodiacSign):
+            return v
+        return ZodiacSign(v.lower())
+
+    @field_validator('aspect_type', mode='before')
+    @classmethod
+    def convert_aspect(cls, v) -> AspectType:
+        """Convert string to AspectType enum (case-insensitive)."""
+        if isinstance(v, AspectType):
+            return v
+        return AspectType(v.lower())
+
+
+def find_natal_transit_aspects(
+    natal_chart: dict,
+    transit_chart: dict,
+    orb: float = 3.0
+) -> list[NatalTransitAspect]:
+    """
+    Find aspects between natal planets and transiting planets.
+
+    This is THE KEY to personalization - shows what's actually happening
+    to the user's specific chart today.
+
+    Args:
+        natal_chart: Natal chart dict from compute_birth_chart()
+        transit_chart: Transit chart dict from compute_birth_chart()
+        orb: Maximum orb in degrees (default 3.0)
+
+    Returns:
+        List of NatalTransitAspect objects, sorted by orb (tightest first)
+
+    Example:
+        >>> natal, _ = compute_birth_chart("1985-05-15")
+        >>> transit, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        >>> aspects = find_natal_transit_aspects(natal, transit)
+        >>> if aspects:
+        ...     print(f"{aspects[0].transit_planet.value} {aspects[0].aspect_type.value} natal {aspects[0].natal_planet.value}")
+        'saturn square natal sun'
+    """
+    aspects_found = []
+
+    # Create lookup dicts
+    natal_planets = {p["name"]: p for p in natal_chart["planets"]}
+    transit_planets = {p["name"]: p for p in transit_chart["planets"]}
+
+    # Major aspects to check
+    aspect_definitions = {
+        AspectType.CONJUNCTION: (0, "fusion of energies"),
+        AspectType.SEXTILE: (60, "opportunity"),
+        AspectType.SQUARE: (90, "tension requiring action"),
+        AspectType.TRINE: (120, "natural flow"),
+        AspectType.OPPOSITION: (180, "awareness through contrast")
+    }
+
+    for natal_name, natal_planet in natal_planets.items():
+        for transit_name, transit_planet in transit_planets.items():
+            natal_deg = natal_planet["absolute_degree"]
+            transit_deg = transit_planet["absolute_degree"]
+
+            for aspect_type, (exact_deg, meaning) in aspect_definitions.items():
+                # Calculate angle difference
+                diff = abs((transit_deg - natal_deg) % 360)
+                if diff > 180:
+                    diff = 360 - diff
+
+                angle_diff = abs(diff - exact_deg)
+
+                if angle_diff <= orb:
+                    # Determine if applying or separating
+                    # Simplified: if transit is moving faster, it's applying
+                    applying = transit_planet["speed"] > natal_planet.get("speed", 0)
+
+                    aspects_found.append(
+                        NatalTransitAspect(
+                            natal_planet=natal_name,
+                            natal_sign=natal_planet["sign"],
+                            natal_degree=natal_deg,
+                            natal_house=natal_planet["house"],
+                            transit_planet=transit_name,
+                            transit_sign=transit_planet["sign"],
+                            transit_degree=transit_deg,
+                            aspect_type=aspect_type,
+                            exact_degree=exact_deg,
+                            orb=round(angle_diff, 2),
+                            applying=applying,
+                            meaning=meaning
+                        )
+                    )
+
+    # Sort by orb (tightest aspects first)
+    return sorted(aspects_found, key=lambda x: x.orb)
+
+
+# =============================================================================
+# Lunar Phase Analysis
+# =============================================================================
+
+class LunarPhase(BaseModel):
+    """Lunar phase information with actionable guidance."""
+    phase_name: str = Field(description="Phase name (e.g., 'new_moon', 'waxing_crescent')")
+    phase_emoji: str = Field(description="Moon emoji for this phase")
+    angle: float = Field(ge=0, lt=360, description="Angle between Sun and Moon in degrees")
+    illumination_percent: int = Field(ge=0, le=100, description="Percentage of moon illuminated")
+    energy: str = Field(description="Energetic quality of this phase")
+    ritual_suggestion: str = Field(description="Recommended activity or focus")
+
+
+def calculate_lunar_phase(sun_degree: float, moon_degree: float) -> LunarPhase:
+    """
+    Calculate lunar phase and return actionable info.
+
+    Args:
+        sun_degree: Absolute degree of Sun (0-360)
+        moon_degree: Absolute degree of Moon (0-360)
+
+    Returns:
+        LunarPhase object with phase name, emoji, and guidance
+
+    Example:
+        >>> phase = calculate_lunar_phase(180.0, 270.0)
+        >>> phase.phase_name
+        'last_quarter'
+        >>> phase.phase_emoji
+        '🌗'
+    """
+    # Calculate angle between Sun and Moon
+    angle = (moon_degree - sun_degree) % 360
+
+    # Define phases with their ranges
+    phases = [
+        (0, 45, "new_moon", "🌑", "New beginnings, fresh starts", "Plant seeds of intention"),
+        (45, 90, "waxing_crescent", "🌒", "Growth, momentum building", "Take first action steps"),
+        (90, 135, "first_quarter", "🌓", "Decision point, overcoming obstacles", "Push through resistance"),
+        (135, 180, "waxing_gibbous", "🌔", "Refinement, almost there", "Fine-tune and adjust"),
+        (180, 225, "full_moon", "🌕", "Culmination, illumination, release", "Celebrate and let go"),
+        (225, 270, "waning_gibbous", "🌖", "Gratitude, sharing wisdom", "Give back, teach others"),
+        (270, 315, "last_quarter", "🌗", "Reevaluation, course correction", "Release what's not working"),
+        (315, 360, "waning_crescent", "🌘", "Rest, reflection, surrender", "Dream and restore")
+    ]
+
+    # Find matching phase
+    for start, end, name, emoji, energy, ritual in phases:
+        if start <= angle < end:
+            # Calculate illumination percentage
+            # Maximum illumination (100%) at 180°, minimum (0%) at 0°/360°
+            illumination = int((1 - abs(angle - 180) / 180) * 100)
+
+            return LunarPhase(
+                phase_name=name,
+                phase_emoji=emoji,
+                angle=round(angle, 1),
+                illumination_percent=illumination,
+                energy=energy,
+                ritual_suggestion=ritual
+            )
+
+    # Default to new moon if somehow no match
+    return LunarPhase(
+        phase_name="new_moon",
+        phase_emoji="🌑",
+        angle=0.0,
+        illumination_percent=0,
+        energy="New beginnings, fresh starts",
+        ritual_suggestion="Plant seeds of intention"
+    )
+
+
+# =============================================================================
+# Enhanced Transit Summary with Natal Context
+# =============================================================================
+
+class EnhancedTransitSummary(BaseModel):
+    """
+    Comprehensive transit summary with natal chart context.
+
+    This is what powers truly personalized horoscopes.
+    """
+    primary_aspect: Optional[NatalTransitAspect] = Field(
+        None,
+        description="Most significant natal-transit aspect of the day"
+    )
+    all_natal_transit_aspects: list[NatalTransitAspect] = Field(
+        default_factory=list,
+        description="Top 5 natal-transit aspects by tightness"
+    )
+    lunar_phase: LunarPhase = Field(description="Current lunar phase with guidance")
+    moon_sign: ZodiacSign = Field(description="Current Moon sign")
+    moon_house: House = Field(description="Moon's solar house position")
+    retrograde_planets: list[Planet] = Field(
+        default_factory=list,
+        description="Planets currently retrograde"
+    )
+    sun_sign: ZodiacSign = Field(description="User's natal sun sign")
+    basic_transit_summary: str = Field(
+        description="Text summary of general transits (fallback/context)"
+    )
+
+
+def summarize_transits_with_natal(
+    natal_chart: dict,
+    transit_chart: dict
+) -> EnhancedTransitSummary:
+    """
+    Enhanced transit summary with natal chart context.
+
+    Returns structured data perfect for LLM personalization.
+
+    Args:
+        natal_chart: Natal chart dict from compute_birth_chart()
+        transit_chart: Transit chart dict from compute_birth_chart()
+
+    Returns:
+        EnhancedTransitSummary with primary aspects, lunar phase, and context
+
+    Example:
+        >>> natal, _ = compute_birth_chart("1985-05-15")
+        >>> transit, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        >>> summary = summarize_transits_with_natal(natal, transit)
+        >>> if summary.primary_aspect:
+        ...     print(f"Primary: {summary.primary_aspect.transit_planet.value} {summary.primary_aspect.aspect_type.value}")
+    """
+    # Extract sun sign from natal chart
+    sun_sign = ZodiacSign(natal_chart["planets"][0]["sign"])  # Sun is always first
+
+    # Get natal-transit aspects
+    personal_aspects = find_natal_transit_aspects(natal_chart, transit_chart)
+
+    # Find THE most important aspect of the day
+    primary_aspect = None
+    if personal_aspects:
+        # Prioritize: outer planet aspects > personal planet aspects
+        # and tighter orbs > wider orbs
+        outer_planets = {Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO}
+
+        for aspect in personal_aspects:
+            transit_planet = aspect.transit_planet
+            if transit_planet in outer_planets and aspect.orb < 2:
+                primary_aspect = aspect
+                break
+
+        # Fallback to tightest personal planet aspect
+        if not primary_aspect:
+            primary_aspect = personal_aspects[0]
+
+    # Get Moon data
+    transit_planets = {p["name"]: p for p in transit_chart["planets"]}
+    moon = transit_planets.get(Planet.MOON.value)
+    sun = transit_planets.get(Planet.SUN.value)
+
+    # Calculate lunar phase
+    lunar_phase = calculate_lunar_phase(
+        sun["absolute_degree"],
+        moon["absolute_degree"]
+    )
+
+    # Calculate Moon's solar house
+    moon_sign = ZodiacSign(moon["sign"])
+    moon_house = calculate_solar_house(sun_sign, moon_sign)
+
+    # Find retrograde planets
+    retrograde_planets = [
+        Planet(p["name"]) for p in transit_chart["planets"]
+        if p["retrograde"]
+    ]
+
+    # Get basic transit summary as text fallback
+    basic_summary = summarize_transits(transit_chart, sun_sign.value)
+
+    return EnhancedTransitSummary(
+        primary_aspect=primary_aspect,
+        all_natal_transit_aspects=personal_aspects[:5],  # Top 5
+        lunar_phase=lunar_phase,
+        moon_sign=moon_sign,
+        moon_house=moon_house,
+        retrograde_planets=retrograde_planets,
+        sun_sign=sun_sign,
+        basic_transit_summary=basic_summary
+    )
+
+
+# =============================================================================
+# Upcoming Transits (Look-Ahead)
+# =============================================================================
+
+class UpcomingTransit(BaseModel):
+    """An upcoming significant transit."""
+    date: str = Field(description="Date of transit (YYYY-MM-DD)")
+    days_away: int = Field(ge=1, description="Days until this transit")
+    aspect: NatalTransitAspect = Field(description="The aspect that will occur")
+    description: str = Field(description="Human-readable description")
+
+
+def get_upcoming_transits(
+    natal_chart: dict,
+    start_date: str,
+    days_ahead: int = 7
+) -> list[UpcomingTransit]:
+    """
+    Calculate major transits coming in the next N days.
+
+    Critical for the "look_ahead_preview" field and creating daily engagement.
+
+    Args:
+        natal_chart: Natal chart dict from compute_birth_chart()
+        start_date: Starting date for look-ahead (YYYY-MM-DD)
+        days_ahead: Number of days to look ahead (default 7)
+
+    Returns:
+        List of UpcomingTransit objects (max 3 most significant)
+
+    Example:
+        >>> natal, _ = compute_birth_chart("1985-05-15")
+        >>> upcoming = get_upcoming_transits(natal, "2025-10-17", days_ahead=5)
+        >>> for transit in upcoming:
+        ...     print(f"In {transit.days_away} days: {transit.description}")
+    """
+    from datetime import datetime, timedelta
+
+    upcoming = []
+    base_date = datetime.strptime(start_date, "%Y-%m-%d")
+
+    for day_offset in range(1, days_ahead + 1):
+        future_date = base_date + timedelta(days=day_offset)
+        future_date_str = future_date.strftime("%Y-%m-%d")
+
+        # Calculate future transit chart
+        future_chart, _ = compute_birth_chart(
+            future_date_str,
+            birth_time="12:00"  # Approximate
+        )
+
+        # Check for significant events (use tighter orb for "upcoming")
+        aspects = find_natal_transit_aspects(natal_chart, future_chart, orb=1.0)
+
+        if aspects:
+            # Take the most significant aspect
+            aspect = aspects[0]
+            description = (
+                f"{aspect.transit_planet.value.title()} "
+                f"{aspect.aspect_type.value} your natal "
+                f"{aspect.natal_planet.value.title()}"
+            )
+
+            upcoming.append(
+                UpcomingTransit(
+                    date=future_date_str,
+                    days_away=day_offset,
+                    aspect=aspect,
+                    description=description
+                )
+            )
+
+    # Return top 3 upcoming events
+    return upcoming[:3]
+
+
+# =============================================================================
+# Prompt Helper Functions
+# =============================================================================
+
+def describe_chart_emphasis(distributions: dict) -> str:
+    """
+    Describe chart emphasis from element/modality distributions.
+
+    Args:
+        distributions: Chart distributions dict with 'elements' and 'modalities'
+
+    Returns:
+        Human-readable description of chart emphasis
+
+    Example:
+        >>> distributions = {
+        ...     'elements': {'fire': 3, 'earth': 4, 'air': 2, 'water': 2},
+        ...     'modalities': {'cardinal': 3, 'fixed': 5, 'mutable': 3}
+        ... }
+        >>> describe_chart_emphasis(distributions)
+        '4 planets in Earth signs, 5 planets in Fixed mode'
+    """
+    elements = distributions.get('elements', {})
+    modalities = distributions.get('modalities', {})
+
+    # Find dominant element
+    if elements:
+        dominant_element = max(elements.items(), key=lambda x: x[1])
+        element_str = f"{dominant_element[1]} planets in {dominant_element[0].title()} signs"
+    else:
+        element_str = "balanced elemental distribution"
+
+    # Find dominant modality
+    if modalities:
+        dominant_modality = max(modalities.items(), key=lambda x: x[1])
+        modality_str = f"{dominant_modality[1]} planets in {dominant_modality[0].title()} mode"
+    else:
+        modality_str = "balanced modal distribution"
+
+    return f"{element_str}, {modality_str}"
+
+
+def lunar_house_interpretation(house: House) -> str:
+    """
+    Interpret Moon's transit through a solar house.
+
+    Args:
+        house: House enum representing Moon's position
+
+    Returns:
+        Interpretation of emotional focus for this house
+
+    Example:
+        >>> lunar_house_interpretation(House.FIRST)
+        'brings emotional focus to your identity and how you present yourself'
+    """
+    interpretations = {
+        House.FIRST: "brings emotional focus to your identity and how you present yourself",
+        House.SECOND: "heightens feelings about security and self-worth",
+        House.THIRD: "makes communication and learning emotionally colored",
+        House.FOURTH: "draws attention to home, family, and roots",
+        House.FIFTH: "enlivens creativity and heart-centered expression",
+        House.SIXTH: "brings emotions into daily routines and health practices",
+        House.SEVENTH: "sensitizes you to partnership dynamics",
+        House.EIGHTH: "deepens emotional intimacy and transformation",
+        House.NINTH: "expands your emotional horizons through meaning-seeking",
+        House.TENTH: "brings feelings about career and public role to the surface",
+        House.ELEVENTH: "activates emotional connection to community and aspirations",
+        House.TWELFTH: "calls for emotional solitude and spiritual retreat"
+    }
+
+    return interpretations.get(house, "colors your emotional experience")
+
+
+def format_primary_aspect_details(aspect: 'NatalTransitAspect') -> str:
+    """
+    Format primary natal-transit aspect for detailed LLM prompt.
+
+    Args:
+        aspect: NatalTransitAspect Pydantic model
+
+    Returns:
+        Detailed formatted string for prompt
+
+    Example:
+        >>> format_primary_aspect_details(aspect)
+        'Transit Saturn at 15.2° Pisces forms a square (90°) to your natal Moon...'
+    """
+    house = House(aspect.natal_house)
+
+    return f"""Transit {aspect.transit_planet.value.title()} at {aspect.transit_degree:.1f}° {aspect.transit_sign.value.title()}
+forms a {aspect.aspect_type.value} (exact at {aspect.exact_degree}°)
+to your natal {aspect.natal_planet.value.title()} at {aspect.natal_degree:.1f}° {aspect.natal_sign.value.title()}
+Located in your {house.ordinal} house ({house.meaning})
+
+Orb: {aspect.orb}° - {"APPLYING (building to exact)" if aspect.applying else "SEPARATING (waning from exact)"}
+Core meaning: {aspect.meaning}
+
+This is your MOST SIGNIFICANT personal transit today."""
