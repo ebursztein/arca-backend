@@ -7,10 +7,6 @@ from firebase_admin import initialize_app, firestore
 from datetime import datetime
 from typing import Optional
 
-# Define secrets
-GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
-POSTHOG_API_KEY = params.SecretParam("POSTHOG_API_KEY")
-
 from astro import (
     get_astro_chart,
     compute_birth_chart,
@@ -28,12 +24,16 @@ from models import (
 )
 from llm import generate_daily_horoscope, generate_detailed_horoscope
 
+# Define secrets
+GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
+POSTHOG_API_KEY = params.SecretParam("POSTHOG_API_KEY")
+
 # For cost control, you can set the maximum number of containers that can be
 # running at the same time. This helps mitigate the impact of unexpected
 # traffic spikes by instead downgrading performance. This limit is a per-function
 # limit. You can override the limit for each function using the max_instances
 # parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
-options.set_global_options(max_instances=50)
+options.set_global_options(max_instances=200)
 
 # default LLM model
 DEFAULT_MODEL = "gemini-2.5-flash-lite"
@@ -42,10 +42,8 @@ DEFAULT_MODEL = "gemini-2.5-flash-lite"
 # ! don't know how to change it -- the firestore.json don't sees to work
 DATABASE_ID = "(default)"
 
-
 # Initialize Firebase app (but only if not already initialized)
 initialize_app()
-
 
 @https_fn.on_call()
 def natal_chart(req: https_fn.CallableRequest) -> dict:

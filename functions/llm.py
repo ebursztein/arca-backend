@@ -8,7 +8,6 @@ Implements split architecture:
 With context caching for cost optimization.
 """
 
-import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -17,9 +16,11 @@ from jinja2 import Environment, FileSystemLoader
 from google.genai import types
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from posthog.ai.gemini import Client as PHClient
-from posthog import Posthog
-POSTHOG_HOST = "https://us.i.posthog.com"
+import httpx
+import uuid
+from google import genai
+from google.genai.types import GenerateContentResponse, GenerateContentResponseUsageMetadata
+
 load_dotenv()
 
 TEMPERATURE = 0.7
@@ -48,6 +49,139 @@ TEMPLATE_DIR = Path(__file__).parent / "templates" / "horoscope"
 jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 
 
+def capture_llm_generation(
+    posthog_api_key: str,
+    distinct_id: str,
+    model: str,
+    provider: str,
+    prompt: str,
+    response: str,
+    usage: GenerateContentResponseUsageMetadata | None,
+    latency: float,
+    generation_type: str,
+    temperature: float = 0,
+    max_tokens: int = 0,
+    thinking_budget: int = 0,
+):
+    """
+    Manually capture LLM generation event to PostHog using HTTP API.
+
+    Args:
+        posthog_api_key: PostHog project API key
+        distinct_id: User's distinct ID
+        model: Model name (e.g., "gemini-2.5-flash")
+        provider: Provider name (e.g., "gemini")
+        prompt: prompt messages
+        output: model output
+        usage: UsageMetadata object from Gemini response for token counts
+        latency: Latency in seconds
+        generation_type: Custom property for generation type
+        temperature: Temperature parameter
+        max_tokens: Max tokens parameter
+        thinking_budget: Thinking budget parameter
+    """
+    POSTHOG_HOST = "https://us.i.posthog.com"
+
+    # cleanup API key
+    posthog_api_key = posthog_api_key.replace("\n", '')
+    posthog_api_key = posthog_api_key.replace('"', '').replace("'", '').strip()
+
+    # parse usage
+    input_tokens = 0
+    output_tokens = 0
+    cached_tokens = 0
+    if usage:
+        # cached tokens
+        if usage.cached_content_token_count:
+            cached_tokens = usage.cached_content_token_count
+        # input tokens
+        if usage.prompt_token_count:
+            input_tokens += usage.prompt_token_count
+
+        # output tokens need to include candidates + thoughts
+        if usage.thoughts_token_count:
+            input_tokens += usage.thoughts_token_count
+        if usage.candidates_token_count:
+            output_tokens = usage.candidates_token_count
+
+    # format messages
+    input_messages=[{"role": "user",
+                     "content": [{"type": "text", "text": prompt[:1000]}]  # Truncate for readability
+                 }],
+
+    output_messages=[{"role": "assistant",
+                      "content": [{"type": "text", "text": response[:1000]}]  # Truncate for readability
+                  }],
+
+
+
+    try:
+        # Build properties with distinct_id inside
+        properties = {
+            "distinct_id": distinct_id,
+            "$ai_trace_id": str(uuid.uuid4()),
+            "$ai_span_name": generation_type,
+            "$ai_model": model,
+            "$ai_provider": provider,
+            "$ai_input": input_messages,
+            "$ai_input_tokens": input_tokens,
+            "$ai_output_choices": output_messages,
+            "$ai_output_tokens": output_tokens,
+            "$ai_cache_read_input_tokens": cached_tokens,
+            "$ai_latency": latency,
+            "$ai_http_status": 200,
+            "$ai_is_error": False,
+
+            # additional parameters
+            "thinking_budget": thinking_budget,
+            "generation_type": generation_type,
+        }
+
+        # Add optional parameters
+        if temperature is not None:
+            properties["$ai_temperature"] = temperature
+        if max_tokens is not None:
+            properties["$ai_max_tokens"] = max_tokens
+
+        # PostHog event format
+        # Use UTC time with Z suffix and no microseconds (or milliseconds only)
+        utc_now = datetime.utcnow()
+        timestamp = utc_now.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
+
+        event_data = {
+            "api_key": posthog_api_key,
+            "event": "$ai_generation",
+            "properties": properties,
+            "timestamp": timestamp
+        }
+        print(f"[PostHog]LLM generation User: {distinct_id} | Type: {generation_type} | Tokens: {input_tokens}→{output_tokens}")
+
+        # Send to PostHog event endpoint
+        resp = httpx.post(
+            f"{POSTHOG_HOST}/i/v0/e/",
+            json=event_data,
+            headers={"Content-Type": "application/json"},
+            timeout=5.0
+        )
+        # from rich.console import Console
+        # console = Console()
+        # console.print(event_data)
+        # console.print("[PostHog]LLM generation response:")
+        # console.print(resp)
+
+        # print(f"[PostHog] Response: {resp.status_code}: {resp.text}")
+
+        if resp.status_code == 200:
+            print("✓ PostHog event captured successfully")
+        else:
+            print(f"⚠ PostHog failed: {resp.status_code} - {resp.text}")
+
+    except Exception as e:
+        print(f"⚠ PostHog error: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 def generate_daily_horoscope(
     date: str,
     user_profile: UserProfile,
@@ -73,6 +207,10 @@ def generate_daily_horoscope(
     Returns:
         DailyHoroscope: Validated horoscope with 8 core fields
     """
+
+    MAX_TOKENS = 4096
+    THINKING_BUDGET = 0
+
     if not api_key:
         api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -84,19 +222,9 @@ def generate_daily_horoscope(
         print("WARNING: POSTHOG_API_KEY not provided in generate_daily_horoscope")
         raise ValueError("POSTHOG_API_KEY not provided")
 
-    # Log PostHog key for debugging (first 14 chars)
-    print(f"PostHog Initialized: {posthog_api_key[:14]}... | host: {POSTHOG_HOST}")
+    # Initialize Gemini client (direct, no SDK wrapper)
+    client = genai.Client(api_key=api_key)
 
-    # Initialize PostHog client for serverless environment
-    # sync_mode=True ensures events are sent immediately, not batched
-    posthog = Posthog(
-        project_api_key=posthog_api_key,
-        host=POSTHOG_HOST,
-        sync_mode=True,  # Critical for serverless - send events synchronously
-        # debug=True,  # Enable debug logging
-        # on_error=lambda err, batch: print(f"PostHog error: {err}")  # Log errors
-    )
-    client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Prepare helper data
     chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
@@ -165,37 +293,42 @@ def generate_daily_horoscope(
 
         config = types.GenerateContentConfig(
             temperature=TEMPERATURE,
-            max_output_tokens=4096,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            max_output_tokens=MAX_TOKENS,
+            thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
             response_mime_type="application/json",
             response_schema=DailyHoroscopeResponse,
             cached_content=cache_content if cache_content else None
         )
 
-        # Use sync generation with PostHog client
-        response = client.models.generate_content(
+        # Direct Gemini call (no SDK wrapper)
+        response: GenerateContentResponse = client.models.generate_content(
             model=model_name,
             contents=prompt,
-            config=config,
-            # posthog specific metadata
-            posthog_distinct_id=user_profile.user_id, # optional
-            posthog_properties={"generation_type": "daily_horoscope"} # optional
-
+            config=config
         )
-
-        # Shutdown PostHog
-        # In sync_mode, events are already sent immediately, but we still call shutdown for cleanup
-        try:
-            posthog.shutdown()
-        except Exception as e:
-            # In sync_mode, shutdown may have issues with non-existent consumer thread
-            print(f"PostHog shutdown warning (safe to ignore in sync_mode): {e}")
 
         generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DailyHoroscopeResponse = response.parsed
 
         print(f"[generate_daily_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
+
+        # Manually capture to PostHog using HTTP API
+        output = f"Headline: {parsed.daily_theme_headline}\nOverview: {parsed.daily_overview}\nSummary: {parsed.summary}"
+        capture_llm_generation(
+            posthog_api_key=posthog_api_key,
+            distinct_id=user_profile.user_id,
+            model=model_name,
+            provider="gemini",
+            prompt=prompt,
+            response=output,
+            usage=response.usage_metadata,
+            latency=generation_time_ms / 1000.0,
+            generation_type="daily_horoscope",
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+            thinking_budget=THINKING_BUDGET
+        )
 
         return DailyHoroscope(
             date=date,
@@ -244,6 +377,9 @@ def generate_detailed_horoscope(
     Returns:
         DetailedHoroscope: Validated horoscope with 8 life categories
     """
+    THINKING_BUDGET = 0
+    MAX_TOKENS = 8192
+
     if not api_key:
         api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -255,19 +391,8 @@ def generate_detailed_horoscope(
         print("WARNING: POSTHOG_API_KEY not provided in generate_detailed_horoscope")
         raise ValueError("POSTHOG_API_KEY not provided")
 
-    # Log PostHog key for debugging (first 14 chars)
-    print(f"PostHog Configured: {posthog_api_key[:14]}... | host: {POSTHOG_HOST}")
-
-    # Initialize PostHog client for serverless environment
-    # sync_mode=True ensures events are sent immediately, not batched
-    posthog = Posthog(
-        project_api_key=posthog_api_key,
-        host=POSTHOG_HOST,
-        sync_mode=True,  # Critical for serverless - send events synchronously
-        # debug=True,  # Enable debug logging
-        # on_error=lambda err, batch: print(f"PostHog error: {err}")  # Log errors
-    )
-    client = PHClient(api_key=api_key, posthog_client=posthog)
+    # Initialize Gemini client (direct, no SDK wrapper)
+    client = genai.Client(api_key=api_key)
 
     # Get upcoming transits
     upcoming_transits = get_upcoming_transits(user_profile.natal_chart, date, days_ahead=5)
@@ -319,34 +444,42 @@ def generate_detailed_horoscope(
 
         config = types.GenerateContentConfig(
             temperature=TEMPERATURE,
-            max_output_tokens=8192,
+            max_output_tokens=MAX_TOKENS,
             response_mime_type="application/json",
             response_schema=DetailedHoroscopeResponse,
+            thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
             cached_content=cached_content if cached_content else None,
         )
 
-        # Use sync generation with PostHog client
+        # Direct Gemini call (no SDK wrapper)
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
-            config=config,
-            posthog_distinct_id=user_profile.user_id, # optional
-            posthog_properties={"generation_type": "detailed_horoscope"} # optional
+            config=config
         )
-
-        # Shutdown PostHog
-        # In sync_mode, events are already sent immediately, but we still call shutdown for cleanup
-        try:
-            posthog.shutdown()
-        except Exception as e:
-            # In sync_mode, shutdown may have issues with non-existent consumer thread
-            print(f"PostHog shutdown warning (safe to ignore in sync_mode): {e}")
 
         generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DetailedHoroscopeResponse = response.parsed
 
         print(f"[generate_detailed_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
+
+        # Manually capture to PostHog using HTTP API
+        response_output = parsed.look_ahead_preview
+        capture_llm_generation(
+            posthog_api_key=posthog_api_key,
+            distinct_id=user_profile.user_id,
+            model=model_name,
+            provider="gemini",
+            prompt=prompt,
+            response=response_output,
+            usage=response.usage_metadata,
+            latency=generation_time_ms / 1000.0,
+            generation_type="detailed_horoscope",
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+            thinking_budget=THINKING_BUDGET
+        )
         return DetailedHoroscope(
             general_transits_overview=parsed.general_transits_overview,
             look_ahead_preview=parsed.look_ahead_preview,
