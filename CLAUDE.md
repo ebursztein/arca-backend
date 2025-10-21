@@ -85,6 +85,48 @@ arca-backend is the backend service for a daily tarot and astrology app that pro
     - Personalization: Cache per user (natal chart + sun sign profile)
     - Dynamic: Never cache (transits change daily)
 - `pydantic` (v2.12.2+) - Data validation and type safety
+- `posthog` - Analytics and LLM observability
+  - **PostHog AI Gemini Integration:** `posthog.ai.gemini.Client`
+  - **Critical: Async patterns required**
+    - ALL Cloud Functions that use PostHog MUST be async
+    - MUST use `await posthog.ashutdown()` (not `posthog.shutdown()`)
+    - Synchronous functions will NOT send events (serverless functions exit too fast)
+  - **Best practices:**
+    ```python
+    from posthog import Posthog
+    from posthog.ai.gemini import Client as PHClient
+
+    # Initialize with debug mode for development
+    posthog = Posthog(
+        project_api_key=posthog_api_key,
+        host="https://us.i.posthog.com",
+        debug=True,
+        on_error=lambda err, batch: print(f"PostHog error: {err}")
+    )
+    client = PHClient(api_key=gemini_key, posthog_client=posthog)
+
+    # Generate content with tracking (use client.aio for async)
+    response = await client.aio.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=config,
+        posthog_distinct_id=user_id,
+        posthog_properties={"generation_type": "daily_horoscope"}
+    )
+
+    # CRITICAL: Must await shutdown in async functions
+    await posthog.ashutdown()
+    ```
+  - **Why async is required:**
+    - Firebase Cloud Functions are serverless - they terminate immediately after return
+    - `posthog.shutdown()` is synchronous but doesn't block until events are sent
+    - `await posthog.ashutdown()` ensures events are flushed before function exits
+    - Without `await`, all PostHog events are lost
+  - **Async API methods:**
+    - `client.aio.models.generate_content()` - Async content generation
+    - `await posthog.ashutdown()` - Async shutdown with event flushing
+    - ALL LLM functions MUST be async: `async def generate_daily_horoscope(...)`
+    - ALL Cloud Functions MUST be async: `async def get_daily_horoscope(req: ...)`
 
 **Target Platform:** iOS app (this is the backend service)
 
@@ -175,10 +217,35 @@ arca-backend/
 
 ### Cloud Functions
 - **Runtime**: Python 3.13
-- **Max Instances**: 10 (global default for cost control)
+- **Max Instances**: 50 (global default for cost control)
 - **Types**:
   - **Callable functions** - Invoked via Firebase SDK from iOS
   - **Firestore triggers** - Automated background processing
+- **Async/Await Support**:
+  - **IMPORTANT: Firebase Cloud Functions must be synchronous** (firebase-functions SDK limitation)
+  - **Internal async functions** (LLM, PostHog) use `async def` and are called via `asyncio.run()`
+  - **Pattern:**
+    ```python
+    import asyncio
+
+    # Cloud Function is SYNC
+    @https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
+    def my_function(req: https_fn.CallableRequest) -> dict:
+        # Call async LLM function using asyncio.run()
+        result = asyncio.run(generate_daily_horoscope(...))
+        return result.model_dump()
+
+    # LLM function is ASYNC
+    async def generate_daily_horoscope(...) -> DailyHoroscope:
+        response = await client.aio.models.generate_content(...)
+        await posthog.ashutdown()
+        return DailyHoroscope(...)
+    ```
+  - **Why this pattern:**
+    - Firebase Cloud Functions SDK doesn't support `async def` decorators
+    - LLM and PostHog operations are async and MUST use `await`
+    - `asyncio.run()` bridges sync Cloud Functions with async internal operations
+    - PostHog events are properly flushed with `await posthog.ashutdown()`
 
 ### Firebase Hosting
 - **Public Directory**: `public_site/dist`

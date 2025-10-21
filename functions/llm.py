@@ -13,12 +13,10 @@ import os
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
-
 from jinja2 import Environment, FileSystemLoader
 from google.genai import types
 from pydantic import BaseModel
 from dotenv import load_dotenv
-
 from posthog.ai.gemini import Client as PHClient
 from posthog import Posthog
 POSTHOG_HOST = "https://us.i.posthog.com"
@@ -57,10 +55,11 @@ def generate_daily_horoscope(
     transit_data: EnhancedTransitSummary,
     memory: MemoryCollection,
     api_key: Optional[str] = None,
+    posthog_api_key: Optional[str] = None,
     model_name: str = "gemini-2.5-flash",
 ) -> DailyHoroscope:
     """
-    Generate daily horoscope (Prompt 1) - core transit analysis.
+    Generate daily horoscope (Prompt 1) - core transit analysis (async internal).
 
     Args:
         date: ISO date string (YYYY-MM-DD)
@@ -77,11 +76,26 @@ def generate_daily_horoscope(
     if not api_key:
         api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not found")
+        raise ValueError("GEMINI_API_KEY not provided")
 
-    # client = genai.Client(api_key=api_key)
-    _POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
-    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)  # type: ignore[arg-type]
+    if not posthog_api_key:
+        posthog_api_key = os.environ.get("POSTHOG_API_KEY")
+    if not posthog_api_key:
+        print("WARNING: POSTHOG_API_KEY not provided in generate_daily_horoscope")
+        raise ValueError("POSTHOG_API_KEY not provided")
+
+    # Log PostHog key for debugging (first 14 chars)
+    print(f"PostHog Initialized: {posthog_api_key[:14]}... | host: {POSTHOG_HOST}")
+
+    # Initialize PostHog client for serverless environment
+    # sync_mode=True ensures events are sent immediately, not batched
+    posthog = Posthog(
+        project_api_key=posthog_api_key,
+        host=POSTHOG_HOST,
+        sync_mode=True,  # Critical for serverless - send events synchronously
+        # debug=True,  # Enable debug logging
+        # on_error=lambda err, batch: print(f"PostHog error: {err}")  # Log errors
+    )
     client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Prepare helper data
@@ -158,6 +172,7 @@ def generate_daily_horoscope(
             cached_content=cache_content if cache_content else None
         )
 
+        # Use sync generation with PostHog client
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
@@ -168,12 +183,19 @@ def generate_daily_horoscope(
 
         )
 
+        # Shutdown PostHog
+        # In sync_mode, events are already sent immediately, but we still call shutdown for cleanup
+        try:
+            posthog.shutdown()
+        except Exception as e:
+            # In sync_mode, shutdown may have issues with non-existent consumer thread
+            print(f"PostHog shutdown warning (safe to ignore in sync_mode): {e}")
+
         generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DailyHoroscopeResponse = response.parsed
 
-        # Shutdown PostHog client to flush events as we're in a serverless environment
-        posthog.shutdown()
+        print(f"[generate_daily_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
 
         return DailyHoroscope(
             date=date,
@@ -203,6 +225,7 @@ def generate_detailed_horoscope(
     memory: MemoryCollection,
     daily_horoscope: DailyHoroscope,
     api_key: Optional[str] = None,
+    posthog_api_key: Optional[str] = None,
     model_name: str = "gemini-2.5-flash",
 ) -> DetailedHoroscope:
     """
@@ -224,11 +247,26 @@ def generate_detailed_horoscope(
     if not api_key:
         api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not found")
+        raise ValueError("GEMINI_API_KEY not provided")
 
-    # client = genai.Client(api_key=api_key)
-    _POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
-    posthog = Posthog(_POSTHOG_API_KEY, host=POSTHOG_HOST)  # type: ignore[arg-type]
+    if not posthog_api_key:
+        posthog_api_key = os.environ.get("POSTHOG_API_KEY")
+    if not posthog_api_key:
+        print("WARNING: POSTHOG_API_KEY not provided in generate_detailed_horoscope")
+        raise ValueError("POSTHOG_API_KEY not provided")
+
+    # Log PostHog key for debugging (first 14 chars)
+    print(f"PostHog Configured: {posthog_api_key[:14]}... | host: {POSTHOG_HOST}")
+
+    # Initialize PostHog client for serverless environment
+    # sync_mode=True ensures events are sent immediately, not batched
+    posthog = Posthog(
+        project_api_key=posthog_api_key,
+        host=POSTHOG_HOST,
+        sync_mode=True,  # Critical for serverless - send events synchronously
+        # debug=True,  # Enable debug logging
+        # on_error=lambda err, batch: print(f"PostHog error: {err}")  # Log errors
+    )
     client = PHClient(api_key=api_key, posthog_client=posthog)
 
     # Get upcoming transits
@@ -287,6 +325,7 @@ def generate_detailed_horoscope(
             cached_content=cached_content if cached_content else None,
         )
 
+        # Use sync generation with PostHog client
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
@@ -295,13 +334,19 @@ def generate_detailed_horoscope(
             posthog_properties={"generation_type": "detailed_horoscope"} # optional
         )
 
+        # Shutdown PostHog
+        # In sync_mode, events are already sent immediately, but we still call shutdown for cleanup
+        try:
+            posthog.shutdown()
+        except Exception as e:
+            # In sync_mode, shutdown may have issues with non-existent consumer thread
+            print(f"PostHog shutdown warning (safe to ignore in sync_mode): {e}")
+
         generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DetailedHoroscopeResponse = response.parsed
 
-        # Shutdown PostHog client to flush events as we're in a serverless environment
-        posthog.shutdown()
-
+        print(f"[generate_detailed_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
         return DetailedHoroscope(
             general_transits_overview=parsed.general_transits_overview,
             look_ahead_preview=parsed.look_ahead_preview,

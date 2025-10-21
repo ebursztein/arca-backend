@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 """
-Integration Test - Mimics iOS App Flow
+Integration Test - Tests Firebase Functions via Emulator
 
-Simulates what the iOS app will do:
-1. Get sun sign from birth date (onboarding)
-2. Create user profile with natal chart
-3. Generate daily horoscope (Prompt 1)
-4. Generate detailed horoscope (Prompt 2)
-5. Create journal entry when user reads
-6. Verify memory gets updated automatically
-
-This tests the complete backend by directly using Firestore and the business logic,
-exactly how the deployed Cloud Functions would work.
+This properly tests the deployed Cloud Functions by calling them through
+the Firebase Functions emulator, exactly how the iOS app will call them.
 
 Requirements:
     - Firebase emulator running (firebase emulators:start)
@@ -23,49 +15,21 @@ Usage:
 
 import os
 import sys
-from datetime import datetime
+import requests
+import time
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-import time
-
-# Add functions directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'functions'))
-
-# Set emulator environment variable
-os.environ['FIRESTORE_EMULATOR_HOST'] = '127.0.0.1:8080'
-
-from firebase_admin import initialize_app, firestore, get_app
-
-# Initialize Firebase
-try:
-    app = get_app()
-except ValueError:
-    app = initialize_app()
-
-# Import business logic modules
-from astro import (
-    get_sun_sign,
-    get_sun_sign_profile,
-    compute_birth_chart,
-    summarize_transits_with_natal,
-)
-from models import (
-    UserProfile,
-    MemoryCollection,
-    JournalEntry,
-    EntryType,
-    CategoryViewed,
-    CategoryName,
-    create_empty_memory,
-    update_memory_from_journal,
-)
-from llm import (
-    generate_daily_horoscope,
-    generate_detailed_horoscope,
-)
 
 console = Console()
+
+# Firebase Functions emulator endpoint
+FUNCTIONS_EMULATOR_HOST = "http://127.0.0.1:5001"
+PROJECT_ID = "arca-baf77"  # Your Firebase project ID
+REGION = "us-central1"  # Default region
+
+# Base URL for callable functions
+FUNCTIONS_BASE_URL = f"{FUNCTIONS_EMULATOR_HOST}/{PROJECT_ID}/{REGION}"
 
 # Test data
 TEST_USER_ID = "integration_test_user"
@@ -81,56 +45,83 @@ def print_section(title: str, style: str = "bold cyan"):
     console.print(f"[{style}]{'=' * 70}[/{style}]\n")
 
 
-def cleanup_test_data():
-    """Clean up test data before starting."""
-    db = firestore.client()
+def call_function(function_name: str, data: dict) -> dict:
+    """
+    Call a Firebase callable function via the emulator.
 
-    # Delete test user
-    db.collection("users").document(TEST_USER_ID).delete()
+    Args:
+        function_name: Name of the function
+        data: Request data
 
-    # Delete test memory
-    db.collection("memory").document(TEST_USER_ID).delete()
+    Returns:
+        Response data from the function
 
-    # Delete test journal entries
-    journal_ref = db.collection("users").document(TEST_USER_ID).collection("journal")
-    docs = journal_ref.stream()
-    for doc in docs:
-        doc.reference.delete()
+    Raises:
+        Exception if the function call fails
+    """
+    url = f"{FUNCTIONS_BASE_URL}/{function_name}"
 
-    console.print("[yellow]✓ Test data cleaned up[/yellow]")
+    # Firebase callable functions expect data in a specific format
+    payload = {"data": data}
+
+    try:
+        response = requests.post(url, json=payload, timeout=120)
+        response.raise_for_status()
+
+        result = response.json()
+
+        # Check for Firebase Functions error format
+        if "error" in result:
+            error = result["error"]
+            raise Exception(f"Function error: {error.get('message', 'Unknown error')}")
+
+        return result.get("result", {})
+
+    except requests.exceptions.Timeout:
+        raise Exception(f"Function call timed out after 120 seconds")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"HTTP request failed: {str(e)}")
 
 
 def main():
     """Run the complete integration test."""
 
-    print_section("🌟 ARCA BACKEND INTEGRATION TEST 🌟", "bold magenta")
-    console.print("[dim]Simulating iOS app user journey...[/dim]\n")
+    print_section("🌟 ARCA FIREBASE FUNCTIONS INTEGRATION TEST 🌟", "bold magenta")
+    console.print("[dim]Testing via Firebase Functions Emulator...[/dim]\n")
 
-    # Clean up any existing test data
-    cleanup_test_data()
-
-    db = firestore.client()
+    # Check emulator is running
+    try:
+        response = requests.get(FUNCTIONS_EMULATOR_HOST, timeout=5)
+        console.print("[green]✓ Firebase Functions emulator is running[/green]\n")
+    except:
+        console.print("[bold red]❌ Error: Firebase Functions emulator not running[/bold red]")
+        console.print("Start it with: firebase emulators:start")
+        sys.exit(1)
 
     # =========================================================================
-    # Step 1: iOS App - Onboarding: Get Sun Sign
+    # Step 1: Get Sun Sign (Onboarding)
     # =========================================================================
     print_section("1️⃣  ONBOARDING: GET SUN SIGN", "bold cyan")
 
     console.print(f"[cyan]User enters birth date:[/cyan] {TEST_BIRTH_DATE}")
+    console.print(f"[cyan]Calling: get_sun_sign_from_date()[/cyan]\n")
 
-    # Calculate sun sign (this is what get_sun_sign_from_date() does)
-    sun_sign = get_sun_sign(TEST_BIRTH_DATE)
-    sun_sign_profile = get_sun_sign_profile(sun_sign)
+    result = call_function("get_sun_sign_from_date", {
+        "birth_date": TEST_BIRTH_DATE
+    })
 
-    console.print(f"[green]✓ Sun Sign:[/green] {sun_sign.value.title()} {sun_sign_profile.symbol}")
-    console.print(f"[green]✓ Element:[/green] {sun_sign_profile.element.value.title()}")
-    console.print(f"[green]✓ Modality:[/green] {sun_sign_profile.modality.value.title()}")
-    console.print(f"[green]✓ Ruling Planet:[/green] {sun_sign_profile.ruling_planet}")
+    sun_sign = result["sun_sign"]
+    profile = result["profile"]
 
-    console.print(f"\n[dim]iOS shows: \"You're a {sun_sign.value.title()}! ♊\"[/dim]")
+    console.print(f"[green]✓ Sun Sign:[/green] {sun_sign.title()} {profile['symbol']}")
+    console.print(f"[green]✓ Element:[/green] {profile['element'].title()}")
+    console.print(f"[green]✓ Modality:[/green] {profile['modality'].title()}")
+    console.print(f"[green]✓ Ruling Planet:[/green] {profile['ruling_planet']}")
+
+    console.print(f"\n[dim]iOS shows: \"You're a {sun_sign.title()}! {profile['symbol']}\"[/dim]")
 
     # =========================================================================
-    # Step 2: iOS App - Create User Profile
+    # Step 2: Create User Profile
     # =========================================================================
     print_section("2️⃣  CREATE USER PROFILE", "bold cyan")
 
@@ -140,227 +131,166 @@ def main():
     console.print(f"  • Email: {TEST_EMAIL}")
     console.print(f"  • Birth Date: {TEST_BIRTH_DATE}")
     console.print(f"  • Mode: V1 (birth date only)")
+    console.print(f"\n[cyan]Calling: create_user_profile()[/cyan]\n")
 
-    # Compute natal chart (this is what create_user_profile() does)
-    natal_chart, exact_chart = compute_birth_chart(birth_date=TEST_BIRTH_DATE)
+    result = call_function("create_user_profile", {
+        "user_id": TEST_USER_ID,
+        "name": TEST_NAME,
+        "email": TEST_EMAIL,
+        "birth_date": TEST_BIRTH_DATE
+    })
 
-    now = datetime.now().isoformat()
-
-    user_profile = UserProfile(
-        user_id=TEST_USER_ID,
-        name=TEST_NAME,
-        email=TEST_EMAIL,
-        is_premium=False,
-        premium_expiry=None,
-        birth_date=TEST_BIRTH_DATE,
-        birth_time=None,
-        birth_timezone=None,
-        birth_lat=None,
-        birth_lon=None,
-        sun_sign=sun_sign.value,
-        natal_chart=natal_chart,
-        exact_chart=exact_chart,
-        created_at=now,
-        last_active=now
-    )
-
-    # Save to Firestore
-    db.collection("users").document(TEST_USER_ID).set(user_profile.model_dump())
-
-    # Initialize memory
-    memory = create_empty_memory(TEST_USER_ID)
-    db.collection("memory").document(TEST_USER_ID).set(memory.model_dump())
-
-    console.print(f"[green]✓ Profile saved to Firestore[/green]")
-    console.print(f"[green]✓ Memory collection initialized[/green]")
-    console.print(f"[green]✓ Natal chart computed: {len(natal_chart['planets'])} planets[/green]")
+    console.print(f"[green]✓ Profile created successfully[/green]")
+    console.print(f"[green]✓ Sun sign: {result['sun_sign']}[/green]")
+    console.print(f"[green]✓ Mode: {result['mode']}[/green]")
+    console.print(f"[green]✓ Exact chart: {result['exact_chart']}[/green]")
 
     # =========================================================================
-    # Step 3: iOS App - User Opens App, Generate Daily Horoscope
+    # Step 3: Generate Daily Horoscope (Prompt 1)
     # =========================================================================
     print_section("3️⃣  GENERATE DAILY HOROSCOPE (Prompt 1)", "bold cyan")
 
-    today = datetime.now().strftime("%Y-%m-%d")
-    console.print(f"[cyan]Date:[/cyan] {today}")
-    console.print("[cyan]iOS calls: get_daily_horoscope(user_id)[/cyan]\n")
+    console.print(f"[cyan]Calling: get_daily_horoscope(user_id)[/cyan]")
+    console.print("[yellow]This should take <2 seconds...[/yellow]\n")
 
-    # Get user profile from Firestore (like the function does)
-    user_doc = db.collection("users").document(TEST_USER_ID).get()
-    user_data = user_doc.to_dict()
-    user_profile = UserProfile(**user_data)
-
-    # Get memory
-    memory_doc = db.collection("memory").document(TEST_USER_ID).get()
-    memory_data = memory_doc.to_dict()
-    memory = MemoryCollection(**memory_data)
-
-    # Compute today's transits
-    transit_chart, _ = compute_birth_chart(birth_date=today, birth_time="12:00")
-
-    # Get natal-transit aspects
-    transit_data = summarize_transits_with_natal(user_profile.natal_chart, transit_chart)
-
-    console.print(f"[yellow]Computing horoscope (this takes 2-3 seconds)...[/yellow]")
-
-    # Generate daily horoscope
     start_time = time.time()
-    daily_horoscope = generate_daily_horoscope(
-        date=today,
-        user_profile=user_profile,
-        sun_sign_profile=sun_sign_profile,
-        transit_data=transit_data,
-        memory=memory,
-        model_name="gemini-2.5-flash-lite"
-    )
+    daily_result = call_function("get_daily_horoscope", {
+        "user_id": TEST_USER_ID,
+    })
     daily_time = (time.time() - start_time) * 1000
 
     console.print(f"[green]✓ Generated in {daily_time:.0f}ms[/green]")
-    console.print(f"[green]✓ Model: {daily_horoscope.model_used}[/green]\n")
+    console.print(f"[green]✓ Model: {daily_result['model_used']}[/green]\n")
 
     # Display what iOS would show
     console.print(Panel(
-        daily_horoscope.daily_theme_headline,
+        daily_result['daily_theme_headline'],
         title="[bold magenta]💫 Daily Theme (Notification/Headline)[/bold magenta]",
         border_style="magenta"
     ))
 
     console.print(Panel(
-        daily_horoscope.summary,
+        daily_result['summary'],
         title="[bold cyan]✨ Summary (Main Screen)[/bold cyan]",
         border_style="cyan"
     ))
 
-    console.print("[dim]iOS shows these immediately (<2s load time)[/dim]")
+    console.print("[dim]iOS shows these immediately[/dim]")
 
     # =========================================================================
-    # Step 4: iOS App - Load Detailed Predictions in Background
+    # Step 4: Generate Detailed Horoscope (Prompt 2)
     # =========================================================================
     print_section("4️⃣  GENERATE DETAILED HOROSCOPE (Prompt 2)", "bold cyan")
 
-    console.print("[cyan]iOS calls: get_detailed_horoscope(user_id, daily_horoscope)[/cyan]")
-    console.print("[yellow]Computing detailed predictions (this takes 5-7 seconds)...[/yellow]\n")
+    console.print("[cyan]Calling: get_detailed_horoscope(user_id, daily_horoscope)[/cyan]")
+    console.print("[yellow]This should take ~5-7 seconds...[/yellow]\n")
 
-    # Generate detailed horoscope
     start_time = time.time()
-    detailed_horoscope = generate_detailed_horoscope(
-        date=today,
-        user_profile=user_profile,
-        sun_sign_profile=sun_sign_profile,
-        transit_data=transit_data,
-        memory=memory,
-        daily_horoscope=daily_horoscope,
-        model_name="gemini-2.5-flash-lite"
-    )
+    detailed_result = call_function("get_detailed_horoscope", {
+        "user_id": TEST_USER_ID,
+        "daily_horoscope": daily_result,
+    })
     detailed_time = (time.time() - start_time) * 1000
 
     console.print(f"[green]✓ Generated in {detailed_time:.0f}ms[/green]")
-    console.print(f"[green]✓ Model: {detailed_horoscope.model_used}[/green]\n")
+    console.print(f"[green]✓ Model: {detailed_result['model_used']}[/green]\n")
 
     # Show categories
-    details = detailed_horoscope.details.model_dump()
+    details = detailed_result['details']
     console.print("[yellow]Categories available to user:[/yellow]")
-    for category in details.keys():
-        word_count = len(details[category].split())
+    for category, text in details.items():
+        word_count = len(text.split())
         console.print(f"  • {category.replace('_', ' ').title()}: {word_count} words")
 
     console.print("\n[dim]iOS loads these in background while user reads summary[/dim]")
 
     # =========================================================================
-    # Step 5: iOS App - User Reads Categories, Create Journal Entry
+    # Step 5: Create Journal Entry
     # =========================================================================
     print_section("5️⃣  USER READS HOROSCOPE → CREATE JOURNAL ENTRY", "bold cyan")
 
     console.print("[cyan]Simulating user reading Love and Career sections...[/cyan]")
+    console.print(f"[cyan]Calling: add_journal_entry()[/cyan]\n")
 
     # User reads 2 categories
-    categories_read = [
-        CategoryViewed(
-            category=CategoryName.LOVE_RELATIONSHIPS,
-            text=details['love_relationships']
-        ),
-        CategoryViewed(
-            category=CategoryName.PATH_PROFESSION,
-            text=details['path_profession']
-        )
+    categories_viewed = [
+        {
+            "category": "love_relationships",
+            "text": details['love_relationships']
+        },
+        {
+            "category": "path_profession",
+            "text": details['path_profession']
+        }
     ]
 
-    # Create journal entry (this is what add_journal_entry() does)
-    entry_id = f"entry_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    journal_result = call_function("add_journal_entry", {
+        "user_id": TEST_USER_ID,
+        "date": daily_result['date'],
+        "entry_type": "horoscope_reading",
+        "summary_viewed": daily_result['summary'],
+        "categories_viewed": categories_viewed,
+        "time_spent_seconds": 180
+    })
 
-    journal_entry = JournalEntry(
-        entry_id=entry_id,
-        date=today,
-        entry_type=EntryType.HOROSCOPE_READING,
-        summary_viewed=daily_horoscope.summary,
-        categories_viewed=categories_read,
-        time_spent_seconds=180,
-        created_at=datetime.now().isoformat()
-    )
-
-    # Save to Firestore
-    db.collection("users").document(TEST_USER_ID).collection("journal").document(entry_id).set(
-        journal_entry.model_dump()
-    )
+    entry_id = journal_result['entry_id']
 
     console.print(f"[green]✓ Journal entry created: {entry_id}[/green]")
-    console.print(f"[green]✓ Categories read: {len(categories_read)}[/green]")
-    console.print(f"[green]✓ Time spent: {journal_entry.time_spent_seconds}s[/green]")
+    console.print(f"[green]✓ Categories read: {len(categories_viewed)}[/green]")
+    console.print(f"[green]✓ Time spent: 180s[/green]")
 
     # =========================================================================
-    # Step 6: Firestore Trigger - Auto-Update Memory
+    # Step 6: Wait for Trigger & Verify Memory
     # =========================================================================
-    print_section("6️⃣  FIRESTORE TRIGGER: UPDATE MEMORY", "bold cyan")
+    print_section("6️⃣  FIRESTORE TRIGGER: VERIFY MEMORY UPDATE", "bold cyan")
 
-    console.print("[cyan]Simulating trigger: update_memory_on_journal_entry()[/cyan]")
+    console.print("[cyan]Waiting for trigger: update_memory_on_journal_entry()[/cyan]")
+    console.print("[dim]Trigger should fire automatically when journal entry is created...[/dim]\n")
 
-    # This is what the Firestore trigger does automatically
-    memory_doc = db.collection("memory").document(TEST_USER_ID).get()
-    memory_data = memory_doc.to_dict()
-    memory = MemoryCollection(**memory_data)
+    # Wait a bit for trigger to fire
+    time.sleep(2)
 
-    # Update memory using helper function
-    updated_memory = update_memory_from_journal(memory, journal_entry)
+    # Get memory to verify it was updated
+    console.print(f"[cyan]Calling: get_memory()[/cyan]\n")
+    memory_result = call_function("get_memory", {
+        "user_id": TEST_USER_ID
+    })
 
-    # Write back to Firestore
-    db.collection("memory").document(TEST_USER_ID).set(updated_memory.model_dump())
-
-    console.print(f"[green]✓ Memory collection updated[/green]\n")
+    console.print(f"[green]✓ Memory collection exists[/green]\n")
 
     # Show what changed
     console.print("[yellow]Category Engagement Updated:[/yellow]")
-    for cat_name, cat_data in updated_memory.categories.items():
-        if cat_data.count > 0:
-            console.print(f"  • {cat_name.value.replace('_', ' ').title()}: {cat_data.count} views (last: {cat_data.last_mentioned})")
+    categories = memory_result['categories']
+    for cat_name, cat_data in categories.items():
+        if cat_data['count'] > 0:
+            console.print(f"  • {cat_name.replace('_', ' ').title()}: {cat_data['count']} views (last: {cat_data['last_mentioned']})")
 
-    console.print(f"\n[yellow]Recent Readings:[/yellow] {len(updated_memory.recent_readings)} reading(s)")
-    if updated_memory.recent_readings:
-        reading = updated_memory.recent_readings[0]
-        console.print(f"  • {reading.date}: {len(reading.categories_viewed)} categories viewed")
+    recent_readings = memory_result['recent_readings']
+    console.print(f"\n[yellow]Recent Readings:[/yellow] {len(recent_readings)} reading(s)")
+    if recent_readings:
+        reading = recent_readings[0]
+        console.print(f"  • {reading['date']}: {len(reading['categories_viewed'])} categories viewed")
 
     # =========================================================================
-    # Step 7: Verify Everything Worked
+    # Step 7: Verification
     # =========================================================================
     print_section("7️⃣  VERIFICATION", "bold cyan")
 
-    # Check user profile exists
-    user_check = db.collection("users").document(TEST_USER_ID).get()
+    # Verify profile exists
+    profile_result = call_function("get_user_profile", {
+        "user_id": TEST_USER_ID
+    })
     console.print(f"[green]✓ User profile exists in Firestore[/green]")
 
-    # Check memory exists and was updated
-    memory_check = db.collection("memory").document(TEST_USER_ID).get()
-    memory_final = memory_check.to_dict()
-    console.print(f"[green]✓ Memory collection exists and updated[/green]")
-    console.print(f"  Love views: {memory_final['categories']['love_relationships']['count']}")
-    console.print(f"  Career views: {memory_final['categories']['path_profession']['count']}")
+    # Verify memory was updated
+    assert categories['love_relationships']['count'] == 1, "Love category should have 1 view"
+    assert categories['path_profession']['count'] == 1, "Career category should have 1 view"
+    assert len(recent_readings) == 1, "Should have 1 recent reading"
 
-    # Check journal entry exists
-    journal_check = db.collection("users").document(TEST_USER_ID).collection("journal").document(entry_id).get()
-    console.print(f"[green]✓ Journal entry exists in Firestore[/green]")
-
-    # Assertions
-    assert memory_final['categories']['love_relationships']['count'] == 1
-    assert memory_final['categories']['path_profession']['count'] == 1
-    assert len(memory_final['recent_readings']) == 1
+    console.print(f"[green]✓ Memory collection updated correctly[/green]")
+    console.print(f"  Love views: {categories['love_relationships']['count']}")
+    console.print(f"  Career views: {categories['path_profession']['count']}")
+    console.print(f"[green]✓ Journal entry stored[/green]")
 
     # =========================================================================
     # Summary
@@ -378,19 +308,16 @@ def main():
 
     console.print(table)
 
-    console.print("\n[bold green]✅ All backend operations working correctly:[/bold green]")
-    console.print("[green]  • User onboarding with sun sign[/green]")
-    console.print("[green]  • Profile creation with natal chart[/green]")
-    console.print("[green]  • Daily horoscope generation (<2s)[/green]")
-    console.print("[green]  • Detailed predictions (~5s)[/green]")
-    console.print("[green]  • Journal entry creation[/green]")
-    console.print("[green]  • Memory auto-update via trigger logic[/green]")
+    console.print("\n[bold green]✅ All Firebase Functions working correctly:[/bold green]")
+    console.print("[green]  • get_sun_sign_from_date()[/green]")
+    console.print("[green]  • create_user_profile()[/green]")
+    console.print("[green]  • get_daily_horoscope()[/green]")
+    console.print("[green]  • get_detailed_horoscope()[/green]")
+    console.print("[green]  • add_journal_entry()[/green]")
+    console.print("[green]  • get_memory()[/green]")
+    console.print("[green]  • update_memory_on_journal_entry() [trigger][/green]")
 
-    console.print("\n[bold cyan]📱 Ready for iOS app integration![/bold cyan]")
-
-    # Cleanup
-    console.print("\n[yellow]Cleaning up test data...[/yellow]")
-    cleanup_test_data()
+    console.print("\n[bold cyan]📱 Backend ready for iOS app integration![/bold cyan]")
 
 
 if __name__ == "__main__":
@@ -398,17 +325,6 @@ if __name__ == "__main__":
     if "GEMINI_API_KEY" not in os.environ:
         console.print("[bold red]❌ Error: GEMINI_API_KEY environment variable not set[/bold red]")
         console.print("Set it with: export GEMINI_API_KEY='your-key-here'")
-        sys.exit(1)
-
-    # Check if emulator is running
-    try:
-        db = firestore.client()
-        db.collection("_test").document("_test").get()
-        console.print("[green]✓ Firebase emulator connected[/green]")
-    except Exception as e:
-        console.print("[bold red]❌ Error: Firebase emulator not running[/bold red]")
-        console.print("Start it with: firebase emulators:start")
-        console.print(f"Error: {e}")
         sys.exit(1)
 
     try:

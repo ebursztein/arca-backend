@@ -2,10 +2,14 @@
 # To get started, simply uncomment the below code or create your own.
 # Deploy with `firebase deploy`
 
-from firebase_functions import https_fn, options, firestore_fn
+from firebase_functions import https_fn, options, firestore_fn, params
 from firebase_admin import initialize_app, firestore
 from datetime import datetime
 from typing import Optional
+
+# Define secrets
+GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
+POSTHOG_API_KEY = params.SecretParam("POSTHOG_API_KEY")
 
 from astro import (
     get_astro_chart,
@@ -29,15 +33,18 @@ from llm import generate_daily_horoscope, generate_detailed_horoscope
 # traffic spikes by instead downgrading performance. This limit is a per-function
 # limit. You can override the limit for each function using the max_instances
 # parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
-options.set_global_options(max_instances=10)
+options.set_global_options(max_instances=50)
+
+# default LLM model
+DEFAULT_MODEL = "gemini-2.5-flash-lite"
+
+# Set default database name for Firestore client
+# ! don't know how to change it -- the firestore.json don't sees to work
+DATABASE_ID = "(default)"
+
 
 # Initialize Firebase app (but only if not already initialized)
-try:
-    from firebase_admin import get_app
-    get_app()  # Check if already initialized
-except ValueError:
-    # Not initialized yet, do it now
-    initialize_app()
+initialize_app()
 
 
 @https_fn.on_call()
@@ -310,7 +317,7 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         )
 
         # Save to Firestore
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
         db.collection("users").document(user_id).set(user_profile.model_dump())
 
         # Initialize empty memory collection
@@ -360,7 +367,7 @@ def get_user_profile(req: https_fn.CallableRequest) -> dict:
                 message="Missing required parameter: user_id"
             )
 
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
         doc = db.collection("users").document(user_id).get()
 
         if not doc.exists:
@@ -408,7 +415,7 @@ def get_memory(req: https_fn.CallableRequest) -> dict:
                 message="Missing required parameter: user_id"
             )
 
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
         doc = db.collection("memory").document(user_id).get()
 
         if not doc.exists:
@@ -478,7 +485,7 @@ def add_journal_entry(req: https_fn.CallableRequest) -> dict:
         journal_entry = JournalEntry(**entry_data)
 
         # Save to Firestore (auto-generate ID)
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
         collection_ref = db.collection("users").document(user_id).collection("journal")
         doc_ref = collection_ref.document()
         entry_id = doc_ref.id
@@ -578,7 +585,7 @@ def get_sun_sign_from_date(req: https_fn.CallableRequest) -> dict:
 # Sprint 4: Horoscope Generation
 # =============================================================================
 
-@https_fn.on_call()
+@https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
 def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
     """
     Generate daily horoscope (Prompt 1) - fast, shown immediately.
@@ -588,13 +595,11 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
                 daily_theme_headline, daily_overview, summary, actionable_advice,
                 lunar_cycle_update
     - Returns in <2 seconds
-    - Uses gemini-2.5-flash or gemini-2.5-flash-lite
 
     Expected request data:
     {
         "user_id": "firebase_auth_id",
         "date": "2025-10-18",  // Optional, defaults to today
-        "model_name": "gemini-2.5-flash"  // Optional, defaults to gemini-2.5-flash
     }
 
     Returns:
@@ -612,10 +617,10 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
 
         # Optional parameters
         date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
-        model_name = data.get("model_name", "gemini-2.5-flash")
+        model_name = DEFAULT_MODEL
 
         # Get user profile from Firestore
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
         user_doc = db.collection("users").document(user_id).get()
 
         if not user_doc.exists:
@@ -664,6 +669,8 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
             sun_sign_profile=sun_sign_profile,
             transit_data=transit_data,
             memory=memory,
+            api_key=GEMINI_API_KEY.value,
+            posthog_api_key=POSTHOG_API_KEY.value,
             model_name=model_name
         )
 
@@ -688,7 +695,7 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         )
 
 
-@https_fn.on_call()
+@https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
 def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
     """
     Generate detailed horoscope (Prompt 2) - loaded in background.
@@ -697,14 +704,12 @@ def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
     - Includes: general_transits_overview, look_ahead_preview, details (8 categories)
     - Takes ~5 seconds
     - Uses daily_horoscope output as context
-    - Uses gemini-2.5-flash or gemini-2.5-flash-lite
 
     Expected request data:
     {
         "user_id": "firebase_auth_id",
         "date": "2025-10-18",  // Optional, defaults to today
         "daily_horoscope": { ... },  // Output from get_daily_horoscope()
-        "model_name": "gemini-2.5-flash"  // Optional, defaults to gemini-2.5-flash
     }
 
     Returns:
@@ -723,10 +728,10 @@ def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
 
         # Optional parameters
         date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
-        model_name = data.get("model_name", "gemini-2.5-flash")
+        model_name = DEFAULT_MODEL
 
         # Get user profile from Firestore
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
         user_doc = db.collection("users").document(user_id).get()
 
         if not user_doc.exists:
@@ -780,6 +785,8 @@ def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
             transit_data=transit_data,
             memory=memory,
             daily_horoscope=daily_horoscope,
+            api_key=GEMINI_API_KEY.value,
+            posthog_api_key=POSTHOG_API_KEY.value,
             model_name=model_name
         )
 
@@ -833,7 +840,7 @@ def update_memory_on_journal_entry(
             return
 
         # Get Firestore client
-        db = firestore.client()
+        db = firestore.client(database_id=DATABASE_ID)
 
         # Get current memory or create new one
         memory_doc = db.collection("memory").document(user_id).get()

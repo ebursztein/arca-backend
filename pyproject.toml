@@ -13,6 +13,7 @@ dependencies = [
     "posthog>=6.7.8",
     "pydantic>=2.12.2",
     "python-dotenv>=1.1.1",
+    "requests>=2.32.5",
     "rich>=14.2.0",
 ]
 
