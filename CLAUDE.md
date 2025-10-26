@@ -142,12 +142,20 @@ arca-backend/
 │   │   ├── aries.json     # Complete Aries profile (8 life domains)
 │   │   ├── taurus.json    # (etc. for all 12 signs)
 │   │   └── ...
-│   ├── utils.py           # Core utilities (sun sign, transit summary, etc.)
+│   ├── models.py          # Pydantic data models (UserProfile, MemoryCollection, etc.)
 │   ├── llm.py             # LLM integration (Gemini, PostHog)
-│   ├── firestore_ops.py   # Firestore CRUD operations
+│   ├── prototype.py       # End-to-end prototype/testing script
+│   ├── templates/         # Jinja2 prompt templates
+│   │   └── horoscope/     # Horoscope generation templates
 │   ├── requirements.txt   # Functions runtime dependencies
 │   └── venv/              # Local virtual environment
-├── docs/                  # Documentation and schema
+├── docs/                  # Documentation
+│   ├── CLAUDE.md          # This file - complete backend technical guide
+│   ├── MVP_PLAN.md        # Complete V1 product/architecture plan
+│   ├── IMPLEMENTATION_PLAN.md  # Technical implementation roadmap
+│   ├── TODO.md            # Sprint-based task list (current work)
+│   ├── ios.md             # iOS integration guide (Firebase functions reference)
+│   ├── ASTROLOGY_MODULE.md # Complete astrology API reference
 │   └── sunsign.json       # Sun sign profile JSON schema
 ├── public_site/           # Marketing/landing static site (Astro)
 │   ├── src/               # Astro source files
@@ -160,17 +168,14 @@ arca-backend/
 ├── pyproject.toml         # Python project dependencies (uv)
 ├── uv.lock               # Locked dependency versions
 ├── deploy-site.sh        # Site deployment script
-├── CLAUDE.md             # This file
-├── MVP_PLAN.md           # Complete V1 product/architecture plan
-├── IMPLEMENTATION_PLAN.md # Technical implementation roadmap
-└── TODO.md               # Sprint-based task list (current work)
+└── CLAUDE.md             # Backend overview (see docs/CLAUDE.md for details)
 ```
 
 ## Planning Documents
 
-**Read these to understand the project:**
+**Read these to understand the project (all in `docs/` directory):**
 
-1. **MVP_PLAN.md** - The complete V1 vision:
+1. **`docs/MVP_PLAN.md`** - The complete V1 vision:
    - Product scope (V1-V4 roadmap)
    - User flow and workflows
    - Data models (Firestore collections)
@@ -179,24 +184,34 @@ arca-backend/
    - LLM prompt templates
    - Success criteria
 
-2. **IMPLEMENTATION_PLAN.md** - Technical implementation guide:
+2. **`docs/IMPLEMENTATION_PLAN.md`** - Technical implementation guide:
    - 7 sprints with detailed tasks
-   - Module structure (utils, llm, firestore_ops)
+   - Module structure (astro, llm, models, firestore_ops)
    - Test strategy (unit, integration, e2e)
    - Environment setup
    - Timeline estimates
    - Risk mitigation
 
-3. **TODO.md** - Current work tracker:
-   - Sprint 1: Core Utilities (sun sign, transit summary)
-   - Sprint 2: LLM Integration (Gemini + prompts)
-   - Sprint 3: Firestore Operations
+3. **`docs/TODO.md`** - Current work tracker:
+   - Sprint 1: Core Astrology Module ✅ COMPLETE (60 tests)
+   - Sprint 2: LLM Integration ✅ COMPLETE (two-prompt architecture)
+   - Sprint 3: Firestore Operations ← NEXT
    - Sprint 4: Callable Functions
    - Sprint 5: Triggers
    - Sprint 6: Prototype Validation
-   - Progress tracking checkboxes
+   - Progress tracking: 23/49 tasks (47%)
 
-**Start here:** Check TODO.md to see current sprint and tasks.
+4. **`docs/ASTROLOGY_MODULE.md`** - Complete astrology API reference
+   - All functions with examples
+   - Pydantic models documentation
+   - Usage patterns
+
+5. **`docs/ios.md`** - iOS integration guide
+   - All Firebase functions with Swift examples
+   - Authentication setup
+   - Data models and error handling
+
+**Start here:** Check `docs/TODO.md` to see current sprint and tasks.
 
 ## Development Environment
 

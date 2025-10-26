@@ -805,6 +805,114 @@ def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
 
 
 # =============================================================================
+# Sprint X: Astrometers - Quantitative Transit Analysis
+# =============================================================================
+
+@https_fn.on_call()
+def get_astrometers(req: https_fn.CallableRequest) -> dict:
+    """
+    Calculate all 23 astrological meters for a user on a given date.
+
+    This provides quantitative analysis of:
+    - Overall intensity and harmony of transits
+    - Element energies (fire, earth, air, water)
+    - Cognitive state (mental clarity, decision quality, communication)
+    - Emotional state (intensity, relationship harmony, resilience)
+    - Physical/action state (energy, conflict risk, motivation)
+    - Life domains (career, opportunity, challenge, transformation)
+    - Specialized areas (intuition, innovation, karmic lessons, collective)
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "date": "2025-10-26",  // Optional, defaults to today
+    }
+
+    Returns:
+    {
+        "date": "2025-10-26T00:00:00",
+        "natal_chart_summary": {
+            "sun_sign": "gemini",
+            "ascendant_sign": "leo",
+            "moon_sign": "pisces"
+        },
+        "aspect_count": 12,
+        "overall_intensity": {...},  // MeterReading with intensity, harmony, interpretation, advice
+        "overall_harmony": {...},
+        "fire_energy": {...},
+        ... // All 23 meters
+    }
+    """
+    try:
+        from astrometers import get_meters
+
+        data = req.data
+        user_id = data.get("user_id")
+
+        if not user_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: user_id"
+            )
+
+        # Optional parameters
+        date_str = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+
+        # Get user profile from Firestore
+        db = firestore.client(database_id=DATABASE_ID)
+        user_doc = db.collection("users").document(user_id).get()
+
+        if not user_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"User profile not found: {user_id}"
+            )
+
+        user_data = user_doc.to_dict()
+        user_profile = UserProfile(**user_data)
+
+        # Get natal chart from user profile
+        natal_chart = user_profile.natal_chart
+
+        # Compute transit chart for the target date
+        transit_chart, _ = compute_birth_chart(
+            birth_date=date_str,
+            birth_time="12:00"  # Use noon for transits
+        )
+
+        # Parse date string to datetime
+        target_date = datetime.strptime(date_str, "%Y-%m-%d")
+
+        # Calculate all meters
+        all_meters = get_meters(
+            natal_chart=natal_chart,
+            transit_chart=transit_chart,
+            date=target_date
+        )
+
+        # Update last_active
+        db.collection("users").document(user_id).update({
+            "last_active": datetime.now().isoformat()
+        })
+
+        # Return as dictionary
+        return all_meters.model_dump()
+
+    except https_fn.HttpsError:
+        raise
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            message=f"Invalid parameter values: {str(e)}"
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error calculating astrometers: {str(e)}"
+        )
+
+
+# =============================================================================
 # Sprint 5: Firestore Triggers
 # =============================================================================
 
