@@ -1,3 +1,4 @@
+numpy>=2.3.4
 natal>=0.9.6
 firebase-functions>=0.4.3
 google-genai>=1.45.0
