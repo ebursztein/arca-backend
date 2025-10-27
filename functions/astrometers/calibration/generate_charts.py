@@ -115,8 +115,8 @@ def generate_sample_charts(count: int, output_file: str = "natal_charts.json") -
             natal_chart, is_exact = compute_birth_chart(
                 birth_date=birth_date,
                 birth_time=birth_time,
-                birth_lat=location["lat"],
-                birth_lon=location["lon"]
+                birth_lat=float(location["lat"]),
+                birth_lon=float(location["lon"])
             )
 
             # Store metadata
@@ -153,7 +153,7 @@ def generate_sample_charts(count: int, output_file: str = "natal_charts.json") -
     print()
 
     # Statistics
-    sun_signs = {}
+    sun_signs: dict[str, int] = {}
     for chart in charts:
         sign = chart["sun_sign"]
         sun_signs[sign] = sun_signs.get(sign, 0) + 1

@@ -445,7 +445,7 @@ def add_journal_entry(req: https_fn.CallableRequest) -> dict:
         "summary_viewed": "Today's summary text",
         "categories_viewed": [
             {
-                "category": "love_relationships",
+                "category": "mind",  // Valid values: "overview", "mind", "emotions", "body", "career", "evolution", "elements", "spiritual", "collective"
                 "text": "Full text that was read..."
             }
         ],

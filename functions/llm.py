@@ -32,7 +32,8 @@ from astro import (
     describe_chart_emphasis,
     lunar_house_interpretation,
     format_primary_aspect_details,
-    get_upcoming_transits
+    get_upcoming_transits,
+    compute_birth_chart
 )
 from models import (
     DailyHoroscope,
@@ -42,6 +43,7 @@ from models import (
     UserProfile,
     ActionableAdvice
 )
+from astrometers import get_meters, group_meters_by_domain
 
 
 # Initialize Jinja2 environment
@@ -226,12 +228,27 @@ def generate_daily_horoscope(
     client = genai.Client(api_key=api_key)
 
 
+    # Compute transit chart for astrometers
+    transit_chart, _ = compute_birth_chart(
+        birth_date=date,
+        birth_time="12:00"  # Use noon for transits
+    )
+
+    # Calculate astrometers
+    from datetime import datetime as dt
+    date_obj = dt.fromisoformat(date) if isinstance(date, str) else date
+    astrometers = get_meters(
+        natal_chart=user_profile.natal_chart,
+        transit_chart=transit_chart,
+        date=date_obj
+    )
+
+    # Group meters by domain
+    domain_meters = group_meters_by_domain(astrometers)
+
     # Prepare helper data
     chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
     lunar_moon_interpretation = lunar_house_interpretation(transit_data.moon_house)
-    primary_aspect_formatted = None
-    if transit_data.primary_aspect:
-        primary_aspect_formatted = format_primary_aspect_details(transit_data.primary_aspect)
 
     # Get moon sign profile for emotional description
     from astro import get_sun_sign_profile
@@ -247,8 +264,9 @@ def generate_daily_horoscope(
         date=date,
         transits=transit_data,
         lunar_moon_interpretation=lunar_moon_interpretation,
-        primary_aspect_formatted=primary_aspect_formatted,
-        moon_sign_emotional_description=moon_sign_keywords
+        moon_sign_emotional_description=moon_sign_keywords,
+        astrometers=astrometers,
+        domain_meters=domain_meters
     )
 
     daily_prompt = f"{static_prompt}\n\n{dynamic_prompt}"
@@ -279,8 +297,6 @@ def generate_daily_horoscope(
     # Define response schema
     class DailyHoroscopeResponse(BaseModel):
         technical_analysis: str
-        key_active_transit: str
-        area_of_life_activated: str
         lunar_cycle_update: str
         daily_theme_headline: str
         daily_overview: str
@@ -334,13 +350,12 @@ def generate_daily_horoscope(
             date=date,
             sun_sign=user_profile.sun_sign,
             technical_analysis=parsed.technical_analysis,
-            key_active_transit=parsed.key_active_transit,
-            area_of_life_activated=parsed.area_of_life_activated,
             lunar_cycle_update=parsed.lunar_cycle_update,
             daily_theme_headline=parsed.daily_theme_headline,
             daily_overview=parsed.daily_overview,
             summary=parsed.summary,
             actionable_advice=parsed.actionable_advice,
+            astrometers=astrometers,
             model_used=model_name,
             generation_time_ms=generation_time_ms,
             usage=usage
@@ -394,6 +409,10 @@ def generate_detailed_horoscope(
     # Initialize Gemini client (direct, no SDK wrapper)
     client = genai.Client(api_key=api_key)
 
+    # Get astrometers from daily horoscope and group by domain
+    astrometers = daily_horoscope.astrometers
+    domain_meters = group_meters_by_domain(astrometers)
+
     # Get upcoming transits
     upcoming_transits = get_upcoming_transits(user_profile.natal_chart, date, days_ahead=5)
 
@@ -413,7 +432,7 @@ def generate_detailed_horoscope(
     dynamic_prompt = dynamic_template.render(
         date=date,
         daily_horoscope=daily_horoscope,
-        transits=transit_data,
+        group_meters=domain_meters,
         upcoming_transits=upcoming_transits
     )
 

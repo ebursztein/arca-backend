@@ -286,8 +286,8 @@ def calculate_transit_power_complete(
     orb_deviation: float,
     max_orb: float,
     transit_planet: Planet,
-    today_deviation: float = None,
-    tomorrow_deviation: float = None,
+    today_deviation: Optional[float] = None,
+    tomorrow_deviation: Optional[float] = None,
     days_from_station: Optional[int] = None
 ) -> Tuple[float, dict]:
     """

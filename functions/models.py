@@ -6,8 +6,11 @@ All data structures used throughout the application for type safety and validati
 
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, Any
 from enum import Enum
+
+# Import new hierarchy system
+from astrometers.hierarchy import MeterGroup, SuperGroup
 
 
 # =============================================================================
@@ -20,18 +23,6 @@ class EntryType(str, Enum):
     TAROT_READING = "tarot_reading"  # V3+
     REFLECTION = "reflection"  # V3+
     QUESTION = "question"  # V3+
-
-
-class CategoryName(str, Enum):
-    """Life category names."""
-    LOVE_RELATIONSHIPS = "love_relationships"
-    FAMILY_FRIENDSHIPS = "family_friendships"
-    PATH_PROFESSION = "path_profession"
-    PERSONAL_GROWTH = "personal_growth"
-    FINANCE_ABUNDANCE = "finance_abundance"
-    PURPOSE_SPIRITUALITY = "purpose_spirituality"
-    HOME_ENVIRONMENT = "home_environment"
-    DECISIONS_CROSSROADS = "decisions_crossroads"
 
 
 # =============================================================================
@@ -84,9 +75,9 @@ class CategoryEngagement(BaseModel):
 
 class CategoryViewed(BaseModel):
     """
-    A category that was viewed in a reading.
+    A category/group that was viewed in a reading.
     """
-    category: CategoryName = Field(description="Category name")
+    category: MeterGroup = Field(description="Meter group name")
     text: str = Field(description="Full text that was viewed")
 
 
@@ -97,6 +88,10 @@ class RecentReading(BaseModel):
     date: str = Field(description="ISO date of reading")
     summary: str = Field(description="Summary text shown on main screen")
     categories_viewed: list[CategoryViewed] = Field(description="Categories expanded and read")
+    astrometers_summary: Optional[dict] = Field(
+        None,
+        description="Key astrometers data: overall_intensity, overall_harmony, key_aspects (for trend analysis)"
+    )
 
 
 class MemoryCollection(BaseModel):
@@ -108,9 +103,9 @@ class MemoryCollection(BaseModel):
     """
     user_id: str = Field(description="Firebase Auth user ID")
 
-    # Category engagement tracking
-    categories: dict[CategoryName, CategoryEngagement] = Field(
-        description="Engagement counts per category"
+    # Category engagement tracking (using MeterGroup hierarchy)
+    categories: dict[MeterGroup, CategoryEngagement] = Field(
+        description="Engagement counts per meter group"
     )
 
     # Recent readings for continuity (FIFO, max 10)
@@ -210,16 +205,20 @@ class JournalEntry(BaseModel):
 
 class HoroscopeDetails(BaseModel):
     """
-    Detailed horoscope predictions for all 8 life categories.
+    Detailed horoscope predictions for 9 life groups (new hierarchy system).
+
+    Based on 3-tier taxonomy: SuperGroup → MeterGroup → Meters
+    This model uses Level 2 (MeterGroup) for organizing predictions.
     """
-    love_relationships: str = Field(description="Love & Relationships guidance (~100-120 words)")
-    family_friendships: str = Field(description="Family & Friendships guidance (~100-120 words)")
-    path_profession: str = Field(description="Path & Profession guidance (~100-120 words)")
-    personal_growth: str = Field(description="Personal Growth & Well-being guidance (~100-120 words)")
-    finance_abundance: str = Field(description="Finance & Abundance guidance (~100-120 words)")
-    purpose_spirituality: str = Field(description="Life Purpose & Spirituality guidance (~100-120 words)")
-    home_environment: str = Field(description="Home & Environment guidance (~100-120 words)")
-    decisions_crossroads: str = Field(description="Decisions & Crossroads guidance (~100-120 words)")
+    overview: str = Field(description="Overall synthesis (~50-70 words)")
+    mind: str = Field(description="Mental clarity, decisions, communication (~100-130 words)")
+    emotions: str = Field(description="Feelings, relationships, resilience (~100-130 words)")
+    body: str = Field(description="Physical energy, action, conflict (~100-130 words)")
+    career: str = Field(description="Professional ambition and opportunities (~100-130 words)")
+    evolution: str = Field(description="Growth, challenges, transformation (~100-130 words)")
+    elements: str = Field(description="Elemental balance and temperament (~100-130 words)")
+    spiritual: str = Field(description="Intuition, karmic lessons (~100-130 words)")
+    collective: str = Field(description="Social consciousness and collective currents (~100-130 words)")
 
 
 class ActionableAdvice(BaseModel):
@@ -236,23 +235,18 @@ class DailyHoroscope(BaseModel):
     Daily horoscope - Prompt 1 fields shown immediately (<2s).
 
     Provides core transit analysis and immediate actionable guidance.
+    Based on astrometers quantitative analysis (23 specialized meters).
     """
     date: str = Field(description="ISO date of horoscope")
     sun_sign: str = Field(description="Sun sign (e.g., 'taurus')")
 
     # Ordered for optimal user experience
     technical_analysis: str = Field(description="Astronomical explanation (3-5 sentences)")
-    key_active_transit: str = Field(
-        description="Technical astrological analysis with exact degrees (4-5 sentences)"
-    )
-    area_of_life_activated: str = Field(
-        description="Specific life domain/house being spotlighted (2-3 sentences)"
-    )
     lunar_cycle_update: str = Field(
         description="Ritual and wellness guidance based on Moon phase (3-4 sentences)"
     )
     daily_theme_headline: str = Field(
-        description="Shareable wisdom sentence (max 15 words, profound and actionable)"
+        description="Shareable wisdom sentence (max 15 words, actionable)"
     )
     daily_overview: str = Field(
         description="Emotional/energetic tone for the day (2-3 sentences)"
@@ -260,6 +254,11 @@ class DailyHoroscope(BaseModel):
     summary: str = Field(description="Main screen summary (2-3 sentences)")
     actionable_advice: ActionableAdvice = Field(
         description="Structured DO/DON'T/REFLECT guidance"
+    )
+
+    # Astrometers data (quantitative foundation)
+    astrometers: Any = Field(
+        description="Complete astrometers reading with 23 meters, key aspects, and interpretations (AllMetersReading object)"
     )
 
     # Metadata
@@ -309,12 +308,6 @@ class CompleteHoroscope(BaseModel):
     daily_overview: str = Field(
         description="Emotional/energetic tone for the day (2-3 sentences)"
     )
-    key_active_transit: str = Field(
-        description="Technical astrological analysis with exact degrees (4-5 sentences)"
-    )
-    area_of_life_activated: str = Field(
-        description="Specific life domain/house being spotlighted (2-3 sentences)"
-    )
     actionable_advice: ActionableAdvice = Field(
         description="Structured DO/DON'T/REFLECT guidance"
     )
@@ -326,6 +319,11 @@ class CompleteHoroscope(BaseModel):
     )
     look_ahead_preview: str = Field(
         description="Upcoming significant transits (2-3 sentences)"
+    )
+
+    # Astrometers data (quantitative foundation)
+    astrometers: Any = Field(
+        description="Complete astrometers reading with 23 meters, key aspects, and interpretations (AllMetersReading object)"
     )
 
     # Detailed predictions
@@ -345,6 +343,8 @@ def create_empty_memory(user_id: str) -> MemoryCollection:
     """
     Create an empty memory collection for a new user.
 
+    Uses new 9-group hierarchy system (MeterGroup).
+
     Args:
         user_id: Firebase Auth user ID
 
@@ -354,14 +354,15 @@ def create_empty_memory(user_id: str) -> MemoryCollection:
     return MemoryCollection(
         user_id=user_id,
         categories={
-            CategoryName.LOVE_RELATIONSHIPS: CategoryEngagement(),
-            CategoryName.FAMILY_FRIENDSHIPS: CategoryEngagement(),
-            CategoryName.PATH_PROFESSION: CategoryEngagement(),
-            CategoryName.PERSONAL_GROWTH: CategoryEngagement(),
-            CategoryName.FINANCE_ABUNDANCE: CategoryEngagement(),
-            CategoryName.PURPOSE_SPIRITUALITY: CategoryEngagement(),
-            CategoryName.HOME_ENVIRONMENT: CategoryEngagement(),
-            CategoryName.DECISIONS_CROSSROADS: CategoryEngagement(),
+            MeterGroup.OVERVIEW: CategoryEngagement(),
+            MeterGroup.MIND: CategoryEngagement(),
+            MeterGroup.EMOTIONS: CategoryEngagement(),
+            MeterGroup.BODY: CategoryEngagement(),
+            MeterGroup.CAREER: CategoryEngagement(),
+            MeterGroup.EVOLUTION: CategoryEngagement(),
+            MeterGroup.ELEMENTS: CategoryEngagement(),
+            MeterGroup.SPIRITUAL: CategoryEngagement(),
+            MeterGroup.COLLECTIVE: CategoryEngagement(),
         },
         recent_readings=[],
         updated_at=datetime.now().isoformat()

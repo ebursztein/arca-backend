@@ -31,8 +31,8 @@ def calculate_weightage(
     planet: Planet,
     sign: ZodiacSign,
     house_number: int,
-    ascendant_sign: ZodiacSign = None,
-    degree_in_sign: float = None,
+    ascendant_sign: ZodiacSign | None = None,
+    degree_in_sign: float = 0.0,
     sensitivity: float = DEFAULT_SENSITIVITY
 ) -> float:
     """
@@ -109,8 +109,8 @@ def get_weightage_breakdown(
     planet: Planet,
     sign: ZodiacSign,
     house_number: int,
-    ascendant_sign: ZodiacSign = None,
-    degree_in_sign: float = None,
+    ascendant_sign: ZodiacSign | None = None,
+    degree_in_sign: float = 0.0,
     sensitivity: float = DEFAULT_SENSITIVITY
 ) -> dict:
     """

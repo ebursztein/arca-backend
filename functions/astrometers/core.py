@@ -121,7 +121,7 @@ def calculate_aspect_contribution(aspect: TransitAspect) -> AspectContribution:
         planet=aspect.natal_planet,
         sign=aspect.natal_sign,
         house_number=aspect.natal_house,
-        degree_in_sign=aspect.natal_degree_in_sign,
+        degree_in_sign=aspect.natal_degree_in_sign or 0.0,
         ascendant_sign=aspect.ascendant_sign,
         sensitivity=aspect.sensitivity
     )
@@ -132,8 +132,8 @@ def calculate_aspect_contribution(aspect: TransitAspect) -> AspectContribution:
         orb_deviation=aspect.orb_deviation,
         max_orb=aspect.max_orb,
         transit_planet=aspect.transit_planet,
-        today_deviation=aspect.today_deviation,
-        tomorrow_deviation=aspect.tomorrow_deviation,
+        today_deviation=aspect.today_deviation or 0.0,
+        tomorrow_deviation=aspect.tomorrow_deviation or 0.0,
         days_from_station=aspect.days_from_station
     )
 

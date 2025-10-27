@@ -874,6 +874,7 @@ def compute_birth_chart(
         # TODO: Convert local time to UTC using timezone (needs pytz)
         # For now, assume birth_time is already in UTC format
         # This will be properly implemented when we add timezone support
+        assert birth_lat and birth_lon
         utc_dt = f"{birth_date} {birth_time}"
         lat = birth_lat
         lon = birth_lon
@@ -1397,6 +1398,7 @@ def summarize_transits_with_natal(
     transit_planets = {p["name"]: p for p in transit_chart["planets"]}
     moon = transit_planets.get(Planet.MOON.value)
     sun = transit_planets.get(Planet.SUN.value)
+    assert moon and sun
 
     # Calculate lunar phase
     lunar_phase = calculate_lunar_phase(

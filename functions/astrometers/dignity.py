@@ -63,6 +63,8 @@ def calculate_dignity_score(
         # Outer planets (Uranus, Neptune, Pluto) have no traditional dignities
         return DIGNITY_NEUTRAL
 
+    assert isinstance(dignities, dict)
+
     # Check domicile
     if sign in dignities["domicile"]:
         return DIGNITY_DOMICILE

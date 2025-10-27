@@ -51,7 +51,6 @@ from models import (
     MemoryCollection,
     CategoryEngagement,
     CategoryViewed,
-    CategoryName,
     JournalEntry,
     EntryType,
     DailyHoroscope,
@@ -59,6 +58,7 @@ from models import (
     create_empty_memory,
     update_memory_from_journal,
 )
+from astrometers.hierarchy import MeterGroup
 
 console = Console()
 
@@ -312,18 +312,21 @@ def main():
         border_style="cyan"
     ))
 
-    # Key Active Transit
-    console.print(Panel(
-        daily_horoscope.key_active_transit,
-        title="[bold red]🔥 Key Personal Transit[/bold red]",
-        border_style="red"
-    ))
+    # Astrometers Summary
+    astrometers_summary = f"""Overall Intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})
+Overall Harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})
+Overall Quality: {daily_horoscope.astrometers.overall_unified_quality.value.upper()}
+Total Aspects Analyzed: {daily_horoscope.astrometers.aspect_count}
 
-    # Area of Life Activated
+Key Aspects Driving Today:"""
+
+    for key_aspect in daily_horoscope.astrometers.key_aspects[:3]:  # Show top 3
+        astrometers_summary += f"\n• {key_aspect.description}"
+
     console.print(Panel(
-        daily_horoscope.area_of_life_activated,
-        title="[bold blue]🎯 Life Area Activated[/bold blue]",
-        border_style="blue"
+        astrometers_summary,
+        title="[bold cyan]📊 Astrometers Analysis[/bold cyan]",
+        border_style="cyan"
     ))
 
     # Actionable Advice
@@ -358,35 +361,155 @@ def main():
 
 
     # ========================================================================
-    # 4. EXPANDED VIEW - DETAILED PREDICTIONS
+    # 4. METER DATA VERIFICATION (DEBUG)
     # ========================================================================
-    print_section("4️⃣  DETAILED PREDICTIONS", style="bold cyan")
+    print_section("4️⃣  METER DATA VERIFICATION", style="bold yellow")
 
-    # Simulate user viewing specific categories
-    categories_to_view = [
-        "love_relationships",
-        "path_profession",
-        "personal_growth",
-        "purpose_spirituality"
-    ]
+    console.print("[bold cyan]📊 Daily Horoscope Astrometers Data:[/bold cyan]\n")
 
-    category_icons = {
-        "love_relationships": "💕",
-        "family_friendships": "👥",
-        "path_profession": "💼",
-        "personal_growth": "🌱",
-        "finance_abundance": "💰",
-        "purpose_spirituality": "✨",
-        "home_environment": "🏡",
-        "decisions_crossroads": "🔀"
+    # Overall metrics
+    console.print(f"[yellow]Overall Metrics:[/yellow]")
+    console.print(f"  • Intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})")
+    console.print(f"  • Harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})")
+    console.print(f"  • Quality: {daily_horoscope.astrometers.overall_unified_quality.value.upper()}")
+    console.print(f"  • Total Aspects: {daily_horoscope.astrometers.aspect_count}\n")
+
+    # All key aspects
+    console.print(f"[yellow]Key Aspects ({len(daily_horoscope.astrometers.key_aspects)} total):[/yellow]")
+    for i, key_aspect in enumerate(daily_horoscope.astrometers.key_aspects, 1):
+        console.print(f"  {i}. {key_aspect.description}")
+        console.print(f"     Affects {key_aspect.meter_count} meters: {', '.join(key_aspect.affected_meters)}")
+        console.print(f"     DTI: {key_aspect.aspect.dti_contribution:.1f} | HQS: {key_aspect.aspect.hqs_contribution:.1f}")
+
+    # All 23 individual meters grouped by domain
+    console.print(f"\n[yellow]All 23 Meters by Domain:[/yellow]\n")
+
+    meters_by_domain = {
+        "Global Meters": [
+            ("Overall Intensity", daily_horoscope.astrometers.overall_intensity),
+            ("Overall Harmony", daily_horoscope.astrometers.overall_harmony)
+        ],
+        "Emotional Meters": [
+            ("Emotional Intensity", daily_horoscope.astrometers.emotional_intensity),
+            ("Relationship Harmony", daily_horoscope.astrometers.relationship_harmony),
+            ("Emotional Resilience", daily_horoscope.astrometers.emotional_resilience)
+        ],
+        "Cognitive Meters": [
+            ("Mental Clarity", daily_horoscope.astrometers.mental_clarity),
+            ("Decision Quality", daily_horoscope.astrometers.decision_quality),
+            ("Communication Flow", daily_horoscope.astrometers.communication_flow)
+        ],
+        "Physical/Action Meters": [
+            ("Physical Energy", daily_horoscope.astrometers.physical_energy),
+            ("Conflict Risk", daily_horoscope.astrometers.conflict_risk),
+            ("Motivation Drive", daily_horoscope.astrometers.motivation_drive)
+        ],
+        "Life Domain Meters": [
+            ("Career Ambition", daily_horoscope.astrometers.career_ambition),
+            ("Opportunity Window", daily_horoscope.astrometers.opportunity_window),
+            ("Challenge Intensity", daily_horoscope.astrometers.challenge_intensity),
+            ("Transformation Pressure", daily_horoscope.astrometers.transformation_pressure)
+        ],
+        "Specialized Meters": [
+            ("Intuition/Spirituality", daily_horoscope.astrometers.intuition_spirituality),
+            ("Innovation/Breakthrough", daily_horoscope.astrometers.innovation_breakthrough),
+            ("Karmic Lessons", daily_horoscope.astrometers.karmic_lessons),
+            ("Social/Collective", daily_horoscope.astrometers.social_collective)
+        ],
+        "Element Meters": [
+            ("Fire Energy", daily_horoscope.astrometers.fire_energy),
+            ("Earth Energy", daily_horoscope.astrometers.earth_energy),
+            ("Air Energy", daily_horoscope.astrometers.air_energy),
+            ("Water Energy", daily_horoscope.astrometers.water_energy)
+        ]
     }
 
-    viewed_categories = []
+    for domain, meters in meters_by_domain.items():
+        console.print(f"[cyan]{domain}:[/cyan]")
+        for meter_name, meter_reading in meters:
+            console.print(f"  • {meter_name}: {meter_reading.unified_score:.1f}/100 ({meter_reading.unified_quality.value.upper()})")
+            console.print(f"    Intensity: {meter_reading.intensity:.1f} | Harmony: {meter_reading.harmony:.1f} | State: {meter_reading.state_label}")
+        console.print()
 
-    for category in categories_to_view:
-        icon = category_icons.get(category, "🔮")
-        title = category.replace("_", " ").title()
-        text = getattr(detailed_horoscope.details, category)
+    # Domain meters used in detailed horoscope
+    console.print(f"[bold cyan]📋 Domain-Grouped Meters (for Detailed Horoscope):[/bold cyan]\n")
+
+    # Import the group function to show what detailed horoscope received
+    from astrometers import group_meters_by_domain
+    domain_meters = group_meters_by_domain(daily_horoscope.astrometers)
+
+    console.print(f"[yellow]Overview Group:[/yellow]")
+    console.print(f"  • Overall Intensity: {domain_meters['overview']['overall_intensity'].unified_score:.1f}/100")
+    console.print(f"  • Overall Harmony: {domain_meters['overview']['overall_harmony'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Mind Group:[/yellow]")
+    console.print(f"  • Mental Clarity: {domain_meters['mind']['mental_clarity'].unified_score:.1f}/100")
+    console.print(f"  • Decision Quality: {domain_meters['mind']['decision_quality'].unified_score:.1f}/100")
+    console.print(f"  • Communication Flow: {domain_meters['mind']['communication_flow'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Emotions Group:[/yellow]")
+    console.print(f"  • Emotional Intensity: {domain_meters['emotions']['emotional_intensity'].unified_score:.1f}/100")
+    console.print(f"  • Relationship Harmony: {domain_meters['emotions']['relationship_harmony'].unified_score:.1f}/100")
+    console.print(f"  • Emotional Resilience: {domain_meters['emotions']['emotional_resilience'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Body Group:[/yellow]")
+    console.print(f"  • Physical Energy: {domain_meters['body']['physical_energy'].unified_score:.1f}/100")
+    console.print(f"  • Conflict Risk: {domain_meters['body']['conflict_risk'].unified_score:.1f}/100")
+    console.print(f"  • Motivation Drive: {domain_meters['body']['motivation_drive'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Career Group:[/yellow]")
+    console.print(f"  • Career Ambition: {domain_meters['career']['career_ambition'].unified_score:.1f}/100")
+    console.print(f"  • Opportunity Window: {domain_meters['career']['opportunity_window'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Evolution Group:[/yellow]")
+    console.print(f"  • Challenge Intensity: {domain_meters['evolution']['challenge_intensity'].unified_score:.1f}/100")
+    console.print(f"  • Transformation Pressure: {domain_meters['evolution']['transformation_pressure'].unified_score:.1f}/100")
+    console.print(f"  • Innovation Breakthrough: {domain_meters['evolution']['innovation_breakthrough'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Elements Group:[/yellow]")
+    console.print(f"  • Fire Energy: {domain_meters['elements']['fire_energy'].unified_score:.1f}/100")
+    console.print(f"  • Earth Energy: {domain_meters['elements']['earth_energy'].unified_score:.1f}/100")
+    console.print(f"  • Air Energy: {domain_meters['elements']['air_energy'].unified_score:.1f}/100")
+    console.print(f"  • Water Energy: {domain_meters['elements']['water_energy'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Spiritual Group:[/yellow]")
+    console.print(f"  • Intuition/Spirituality: {domain_meters['spiritual']['intuition_spirituality'].unified_score:.1f}/100")
+    console.print(f"  • Karmic Lessons: {domain_meters['spiritual']['karmic_lessons'].unified_score:.1f}/100")
+
+    console.print(f"\n[yellow]Collective Group:[/yellow]")
+    console.print(f"  • Social/Collective: {domain_meters['collective']['social_collective'].unified_score:.1f}/100")
+
+    # ========================================================================
+    # 5. EXPANDED VIEW - DETAILED PREDICTIONS
+    # ========================================================================
+    print_section("5️⃣  DETAILED PREDICTIONS", style="bold cyan")
+
+    # Simulate user viewing specific groups (new 9-group system)
+    groups_to_view = [
+        "mind",
+        "emotions",
+        "career",
+        "spiritual"
+    ]
+
+    group_icons = {
+        "overview": "📊",
+        "mind": "🧠",
+        "emotions": "💕",
+        "body": "💪",
+        "career": "💼",
+        "evolution": "🌱",
+        "elements": "🔥",
+        "spiritual": "✨",
+        "collective": "🌍"
+    }
+
+    viewed_groups = []
+
+    for group in groups_to_view:
+        icon = group_icons.get(group, "🔮")
+        title = group.replace("_", " ").title()
+        text = getattr(detailed_horoscope.details, group)
 
         console.print(Panel(
             text,
@@ -395,17 +518,17 @@ def main():
         ))
 
         # Track for journal entry - create CategoryViewed Pydantic model
-        viewed_categories.append(
+        viewed_groups.append(
             CategoryViewed(
-                category=CategoryName(category),
+                category=MeterGroup(group),
                 text=text
             )
         )
 
     # ========================================================================
-    # 5. JOURNAL ENTRY & MEMORY UPDATE
+    # 6. JOURNAL ENTRY & MEMORY UPDATE
     # ========================================================================
-    print_section("5️⃣  JOURNAL ENTRY & MEMORY UPDATE", style="bold cyan")
+    print_section("6️⃣  JOURNAL ENTRY & MEMORY UPDATE", style="bold cyan")
 
     console.print("[cyan]Creating journal entry...[/cyan]")
 
@@ -416,7 +539,7 @@ def main():
         date=today,
         entry_type=EntryType.HOROSCOPE_READING,
         summary_viewed=daily_horoscope.summary,
-        categories_viewed=viewed_categories,
+        categories_viewed=viewed_groups,
         time_spent_seconds=180,  # Simulated
         created_at=datetime.now().isoformat()
     )
@@ -425,7 +548,7 @@ def main():
     memory = update_memory_from_journal(memory, journal_entry)
 
     console.print(f"[green]✓ Journal entry created: {entry_id}[/green]")
-    console.print(f"[green]✓ Categories viewed: {[c.category.value for c in viewed_categories]}[/green]")
+    console.print(f"[green]✓ Groups viewed: {[c.category.value for c in viewed_groups]}[/green]")
     console.print(f"[green]✓ Memory collection updated[/green]")
 
     # Show updated memory state
@@ -437,9 +560,9 @@ def main():
     console.print(f"\n[yellow]Recent Readings:[/yellow] {len(memory.recent_readings)}")
 
     # ========================================================================
-    # 6. PERFORMANCE SUMMARY
+    # 7. PERFORMANCE SUMMARY
     # ========================================================================
-    console.print("\n[dim]→ Read detailed predictions below ↓[/dim]\n")
+    print_section("7️⃣  PERFORMANCE SUMMARY", style="bold cyan")
 
     # Show token usage
     from rich.table import Table

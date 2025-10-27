@@ -191,7 +191,7 @@ def normalize_with_soft_ceiling(
         return min(target_scale, target_scale + compressed_excess)
 
 
-def normalize_intensity(dti: float, use_empirical: bool = True) -> float:
+def normalize_intensity(dti: float, meter_name: str = None, use_empirical: bool = True) -> float:
     """
     Normalize DTI (Dual Transit Influence) to 0-100 Intensity Meter.
 
@@ -207,29 +207,32 @@ def normalize_intensity(dti: float, use_empirical: bool = True) -> float:
 
     Args:
         dti: Raw DTI score (sum of all W_i × P_i)
+        meter_name: Name of the meter (for meter-specific calibration)
         use_empirical: Use empirical calibration if available (default: True)
 
     Returns:
         float: Intensity meter value (0-100) representing percentile rank
 
     Example:
-        >>> normalize_intensity(1805.47)  # Median from empirical data
+        >>> normalize_intensity(1805.47, "overall_intensity")  # Median for overall
         ~50.0  # 50th percentile
-        >>> normalize_intensity(3575.73)  # P99 from empirical data
-        ~99.0  # 99th percentile (top 1%)
+        >>> normalize_intensity(80.0, "mental_clarity")  # Mercury only
+        ~50.0  # 50th percentile for this meter
     """
     if dti <= 0:
         return 0.0
 
     if use_empirical:
-        # Try percentile-based normalization first
-        dti_scores, _ = load_historical_scores()
-        if dti_scores is not None:
-            return percentile_rank(dti, dti_scores)
-
-        # Fallback to soft ceiling with P99
+        # Use meter-specific calibration if available
         calibration = load_calibration_constants()
-        if calibration:
+        if calibration and meter_name:
+            # Version 3.0+ has per-meter calibration
+            if "meters" in calibration and meter_name in calibration["meters"]:
+                dti_max = calibration["meters"][meter_name]["dti_percentiles"]["p99"]
+                return normalize_with_soft_ceiling(dti, dti_max, METER_SCALE)
+
+        # Fallback to global calibration (version 2.0)
+        if calibration and "dti_percentiles" in calibration:
             dti_max = calibration["dti_percentiles"]["p99"]
             return normalize_with_soft_ceiling(dti, dti_max, METER_SCALE)
 
@@ -237,15 +240,15 @@ def normalize_intensity(dti: float, use_empirical: bool = True) -> float:
     return normalize_with_soft_ceiling(dti, DTI_MAX_ESTIMATE, METER_SCALE)
 
 
-def normalize_harmony(hqs: float, use_empirical: bool = True) -> float:
+def normalize_harmony(hqs: float, meter_name: str = None, use_empirical: bool = True) -> float:
     """
     Normalize HQS (Harmonic Quality Score) to 0-100 Harmony Meter.
 
-    Uses percentile-based normalization centered at 50 (neutral). The score
-    represents where this day ranks in the harmony distribution:
-    - Score 50 = neutral harmony (HQS around 0)
-    - Score 75 = 75th percentile (more harmonious than 75% of days)
-    - Score 25 = 25th percentile (more challenging than 75% of days)
+    HQS=0 is always mapped to 50 (neutral), with positive HQS scaling to 100
+    and negative HQS scaling to 0. This ensures semantic meaning where:
+    - HQS=0 is neutral (50)
+    - Positive HQS is harmonious (50-100)
+    - Negative HQS is challenging (0-50)
 
     The Harmony Meter answers: "What type of intensity?"
     - 0-30: Challenging (bottom 30%, growth through friction)
@@ -254,30 +257,47 @@ def normalize_harmony(hqs: float, use_empirical: bool = True) -> float:
 
     Args:
         hqs: Raw HQS score (sum of all W_i × P_i × Q_i)
+        meter_name: Name of the meter (for meter-specific calibration)
         use_empirical: Use empirical calibration if available (default: True)
 
     Returns:
-        float: Harmony meter value (0-100, where 50=neutral)
+        float: Harmony meter value (0-100, where 50=neutral at HQS=0)
 
     Examples:
         >>> normalize_harmony(0)
-        ~50.0  # Neutral (around median)
-        >>> normalize_harmony(748.60)  # P99 positive from empirical
-        ~99.0  # Top 1% harmonious
-        >>> normalize_harmony(-1438.01)  # P01 negative from empirical
-        ~1.0  # Bottom 1% challenging
+        50.0  # Neutral (HQS=0 always maps to 50)
+        >>> normalize_harmony(748.60, "overall_harmony")  # P99 positive
+        ~100.0  # Maximum harmonious
+        >>> normalize_harmony(-1438.01, "overall_harmony")  # P01 negative
+        ~0.0  # Maximum challenging
     """
-    if use_empirical:
-        # Try percentile-based normalization first
-        _, hqs_scores = load_historical_scores()
-        if hqs_scores is not None:
-            # Calculate percentile rank across full HQS distribution
-            # This naturally centers around median (HQS ~ -200)
-            return percentile_rank(hqs, hqs_scores)
+    # Always use soft ceiling normalization (centered at HQS=0)
+    # This ensures HQS=0 always equals 50 (neutral)
 
-        # Fallback to soft ceiling with P99/P01
+    if use_empirical:
+        # Use meter-specific calibration if available
         calibration = load_calibration_constants()
-        if calibration:
+        if calibration and meter_name:
+            # Version 3.0+ has per-meter calibration
+            if "meters" in calibration and meter_name in calibration["meters"]:
+                hqs_max_pos = calibration["meters"][meter_name]["hqs_percentiles"]["p99"]
+                hqs_max_neg = abs(calibration["meters"][meter_name]["hqs_percentiles"]["p01"])
+
+                if hqs >= 0:
+                    # Positive HQS: harmonious transits (50 to 100)
+                    normalized = normalize_with_soft_ceiling(
+                        hqs, hqs_max_pos, METER_SCALE / 2
+                    )
+                    return HARMONY_NEUTRAL + normalized
+                else:
+                    # Negative HQS: challenging transits (0 to 50)
+                    normalized = normalize_with_soft_ceiling(
+                        abs(hqs), hqs_max_neg, METER_SCALE / 2
+                    )
+                    return HARMONY_NEUTRAL - normalized
+
+        # Fallback to global calibration (version 2.0)
+        if calibration and "hqs_percentiles" in calibration:
             hqs_max_pos = calibration["hqs_percentiles"]["p99"]
             hqs_max_neg = abs(calibration["hqs_percentiles"]["p01"])
 
@@ -294,7 +314,7 @@ def normalize_harmony(hqs: float, use_empirical: bool = True) -> float:
                 )
                 return HARMONY_NEUTRAL - normalized
 
-    # Ultimate fallback to theoretical estimate
+    # Fallback to theoretical estimate
     if hqs >= 0:
         # Positive HQS: harmonious transits (50 to 100)
         normalized = normalize_with_soft_ceiling(
@@ -309,7 +329,7 @@ def normalize_harmony(hqs: float, use_empirical: bool = True) -> float:
         return HARMONY_NEUTRAL - normalized
 
 
-def normalize_meters(dti: float, hqs: float) -> Tuple[float, float]:
+def normalize_meters(dti: float, hqs: float, meter_name: str = None) -> Tuple[float, float]:
     """
     Normalize both DTI and HQS to meter scales in one call.
 
@@ -319,16 +339,17 @@ def normalize_meters(dti: float, hqs: float) -> Tuple[float, float]:
     Args:
         dti: Raw DTI score
         hqs: Raw HQS score
+        meter_name: Name of the meter (for meter-specific calibration)
 
     Returns:
         Tuple[float, float]: (intensity_meter, harmony_meter)
 
     Example:
-        >>> normalize_meters(100.0, -50.0)
+        >>> normalize_meters(100.0, -50.0, "mental_clarity")
         (50.0, 25.0)  # Moderate intensity, challenging harmony
     """
-    intensity = normalize_intensity(dti)
-    harmony = normalize_harmony(hqs)
+    intensity = normalize_intensity(dti, meter_name)
+    harmony = normalize_harmony(hqs, meter_name)
     return intensity, harmony
 
 

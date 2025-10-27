@@ -13,12 +13,6 @@ Vary your vocabulary in the detailed predictions.
 [Technical Analysis]
 {{ daily_horoscope.technical_analysis }}
 
-[Key Active Transit Analysis]
-{{ daily_horoscope.key_active_transit }}
-
-[Primary Area of Life Activated]
-{{ daily_horoscope.area_of_life_activated }}
-
 [Lunar Cycle Update]
 {{ daily_horoscope.lunar_cycle_update }}
 
@@ -34,48 +28,202 @@ Vary your vocabulary in the detailed predictions.
 • REFLECT ON: {{ daily_horoscope.actionable_advice.reflect_on }}
 
 ═══════════════════════════════════════════════════════════════════
-KEY TRANSIT SUMMARY FOR QUICK REFERENCE
+METERS DATA BY GROUP ({{ date }})
 ═══════════════════════════════════════════════════════════════════
 
-Primary Transit: {{ transits.primary_aspect.transit_planet.value.title() }} {{ transits.primary_aspect.aspect_type }} {{ transits.primary_aspect.natal_planet.value.title() }}
-House Activated: {{ transits.primary_aspect.natal_house.ordinal }} ({{ transits.primary_aspect.natal_house.meaning }})
-Transit Strength: {{ "VERY STRONG" if transits.primary_aspect.orb < 1 else "STRONG" if transits.primary_aspect.orb < 2 else "MODERATE" }}
-Nature: {{ "Challenging/Dynamic" if transits.primary_aspect.aspect_type in ["square", "opposition"] else "Harmonious" if transits.primary_aspect.aspect_type in ["trine", "sextile"] else "Activation" }}
+Use this data to generate predictions for the 9 life groups.
+Each group has relevant meters with intensity/harmony scores and interpretations.
 
-**VOCABULARY ROTATION REMINDER:**
-When referencing this transit across 4-8 paragraphs, use different phrasings:
-- Para 1: "Pluto square to your natal Pluto"
-- Para 2: "This intense Pluto-Pluto dynamic"
-- Para 3: "The transformative square from transiting Pluto"
-- Para 4: "This evolutionary challenge"
-- Para 5: "The Pluto activation in your chart"
-etc.
+---
+
+**OVERVIEW**
+Meters: overall_intensity, overall_harmony
+
+• Overall Intensity: {{ group_meters.overview.overall_intensity.intensity|round(1) }}/100 intensity, {{ group_meters.overview.overall_intensity.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.overview.overall_intensity.unified_quality.upper() }}
+  Interpretation: {{ group_meters.overview.overall_intensity.interpretation }}
+  Advice: {{ group_meters.overview.overall_intensity.advice|join(', ') }}
+
+• Overall Harmony: {{ group_meters.overview.overall_harmony.intensity|round(1) }}/100 intensity, {{ group_meters.overview.overall_harmony.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.overview.overall_harmony.unified_quality.upper() }}
+  Interpretation: {{ group_meters.overview.overall_harmony.interpretation }}
+  Advice: {{ group_meters.overview.overall_harmony.advice|join(', ') }}
+
+---
+
+**MIND**
+Meters: mental_clarity, decision_quality, communication_flow
+
+• Mental Clarity: {{ group_meters.mind.mental_clarity.intensity|round(1) }}/100 intensity, {{ group_meters.mind.mental_clarity.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.mind.mental_clarity.unified_quality.upper() }}
+  {% if group_meters.mind.mental_clarity.trend %}Trend: {{ group_meters.mind.mental_clarity.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.mind.mental_clarity.interpretation }}
+  Advice: {{ group_meters.mind.mental_clarity.advice|join(', ') }}
+
+• Decision Quality: {{ group_meters.mind.decision_quality.intensity|round(1) }}/100 intensity, {{ group_meters.mind.decision_quality.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.mind.decision_quality.unified_quality.upper() }}
+  {% if group_meters.mind.decision_quality.trend %}Trend: {{ group_meters.mind.decision_quality.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.mind.decision_quality.interpretation }}
+  Advice: {{ group_meters.mind.decision_quality.advice|join(', ') }}
+
+• Communication Flow: {{ group_meters.mind.communication_flow.intensity|round(1) }}/100 intensity, {{ group_meters.mind.communication_flow.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.mind.communication_flow.unified_quality.upper() }}
+  {% if group_meters.mind.communication_flow.trend %}Trend: {{ group_meters.mind.communication_flow.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.mind.communication_flow.interpretation }}
+  Advice: {{ group_meters.mind.communication_flow.advice|join(', ') }}
+
+---
+
+**EMOTIONS**
+Meters: emotional_intensity, relationship_harmony, emotional_resilience
+
+• Emotional Intensity: {{ group_meters.emotions.emotional_intensity.intensity|round(1) }}/100 intensity, {{ group_meters.emotions.emotional_intensity.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.emotions.emotional_intensity.unified_quality.upper() }}
+  {% if group_meters.emotions.emotional_intensity.trend %}Trend: {{ group_meters.emotions.emotional_intensity.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.emotions.emotional_intensity.interpretation }}
+  Advice: {{ group_meters.emotions.emotional_intensity.advice|join(', ') }}
+
+• Relationship Harmony: {{ group_meters.emotions.relationship_harmony.intensity|round(1) }}/100 intensity, {{ group_meters.emotions.relationship_harmony.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.emotions.relationship_harmony.unified_quality.upper() }}
+  {% if group_meters.emotions.relationship_harmony.trend %}Trend: {{ group_meters.emotions.relationship_harmony.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.emotions.relationship_harmony.interpretation }}
+  Advice: {{ group_meters.emotions.relationship_harmony.advice|join(', ') }}
+
+• Emotional Resilience: {{ group_meters.emotions.emotional_resilience.intensity|round(1) }}/100 intensity, {{ group_meters.emotions.emotional_resilience.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.emotions.emotional_resilience.unified_quality.upper() }}
+  {% if group_meters.emotions.emotional_resilience.trend %}Trend: {{ group_meters.emotions.emotional_resilience.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.emotions.emotional_resilience.interpretation }}
+  Advice: {{ group_meters.emotions.emotional_resilience.advice|join(', ') }}
+
+---
+
+**BODY**
+Meters: physical_energy, conflict_risk, motivation_drive
+
+• Physical Energy: {{ group_meters.body.physical_energy.intensity|round(1) }}/100 intensity, {{ group_meters.body.physical_energy.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.body.physical_energy.unified_quality.upper() }}
+  {% if group_meters.body.physical_energy.trend %}Trend: {{ group_meters.body.physical_energy.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.body.physical_energy.interpretation }}
+  Advice: {{ group_meters.body.physical_energy.advice|join(', ') }}
+
+• Conflict Risk: {{ group_meters.body.conflict_risk.intensity|round(1) }}/100 intensity, {{ group_meters.body.conflict_risk.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.body.conflict_risk.unified_quality.upper() }}
+  {% if group_meters.body.conflict_risk.trend %}Trend: {{ group_meters.body.conflict_risk.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.body.conflict_risk.interpretation }}
+  Advice: {{ group_meters.body.conflict_risk.advice|join(', ') }}
+
+• Motivation Drive: {{ group_meters.body.motivation_drive.intensity|round(1) }}/100 intensity, {{ group_meters.body.motivation_drive.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.body.motivation_drive.unified_quality.upper() }}
+  {% if group_meters.body.motivation_drive.trend %}Trend: {{ group_meters.body.motivation_drive.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.body.motivation_drive.interpretation }}
+  Advice: {{ group_meters.body.motivation_drive.advice|join(', ') }}
+
+---
+
+**CAREER**
+Meters: career_ambition, opportunity_window
+
+• Career Ambition: {{ group_meters.career.career_ambition.intensity|round(1) }}/100 intensity, {{ group_meters.career.career_ambition.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.career.career_ambition.unified_quality.upper() }}
+  {% if group_meters.career.career_ambition.trend %}Trend: {{ group_meters.career.career_ambition.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.career.career_ambition.interpretation }}
+  Advice: {{ group_meters.career.career_ambition.advice|join(', ') }}
+
+• Opportunity Window: {{ group_meters.career.opportunity_window.intensity|round(1) }}/100 intensity, {{ group_meters.career.opportunity_window.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.career.opportunity_window.unified_quality.upper() }}
+  {% if group_meters.career.opportunity_window.trend %}Trend: {{ group_meters.career.opportunity_window.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.career.opportunity_window.interpretation }}
+  Advice: {{ group_meters.career.opportunity_window.advice|join(', ') }}
+
+---
+
+**EVOLUTION**
+Meters: challenge_intensity, transformation_pressure, innovation_breakthrough
+
+• Challenge Intensity: {{ group_meters.evolution.challenge_intensity.intensity|round(1) }}/100 intensity, {{ group_meters.evolution.challenge_intensity.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.evolution.challenge_intensity.unified_quality.upper() }}
+  {% if group_meters.evolution.challenge_intensity.trend %}Trend: {{ group_meters.evolution.challenge_intensity.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.evolution.challenge_intensity.interpretation }}
+  Advice: {{ group_meters.evolution.challenge_intensity.advice|join(', ') }}
+
+• Transformation Pressure: {{ group_meters.evolution.transformation_pressure.intensity|round(1) }}/100 intensity, {{ group_meters.evolution.transformation_pressure.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.evolution.transformation_pressure.unified_quality.upper() }}
+  {% if group_meters.evolution.transformation_pressure.trend %}Trend: {{ group_meters.evolution.transformation_pressure.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.evolution.transformation_pressure.interpretation }}
+  Advice: {{ group_meters.evolution.transformation_pressure.advice|join(', ') }}
+
+• Innovation Breakthrough: {{ group_meters.evolution.innovation_breakthrough.intensity|round(1) }}/100 intensity, {{ group_meters.evolution.innovation_breakthrough.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.evolution.innovation_breakthrough.unified_quality.upper() }}
+  {% if group_meters.evolution.innovation_breakthrough.trend %}Trend: {{ group_meters.evolution.innovation_breakthrough.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.evolution.innovation_breakthrough.interpretation }}
+  Advice: {{ group_meters.evolution.innovation_breakthrough.advice|join(', ') }}
+
+---
+
+**ELEMENTS**
+Meters: fire_energy, earth_energy, air_energy, water_energy
+
+• Fire Energy: {{ group_meters.elements.fire_energy.intensity|round(1) }}/100 intensity, {{ group_meters.elements.fire_energy.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.elements.fire_energy.unified_quality.upper() }}
+  {% if group_meters.elements.fire_energy.trend %}Trend: {{ group_meters.elements.fire_energy.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.elements.fire_energy.interpretation }}
+  Advice: {{ group_meters.elements.fire_energy.advice|join(', ') }}
+
+• Earth Energy: {{ group_meters.elements.earth_energy.intensity|round(1) }}/100 intensity, {{ group_meters.elements.earth_energy.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.elements.earth_energy.unified_quality.upper() }}
+  {% if group_meters.elements.earth_energy.trend %}Trend: {{ group_meters.elements.earth_energy.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.elements.earth_energy.interpretation }}
+  Advice: {{ group_meters.elements.earth_energy.advice|join(', ') }}
+
+• Air Energy: {{ group_meters.elements.air_energy.intensity|round(1) }}/100 intensity, {{ group_meters.elements.air_energy.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.elements.air_energy.unified_quality.upper() }}
+  {% if group_meters.elements.air_energy.trend %}Trend: {{ group_meters.elements.air_energy.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.elements.air_energy.interpretation }}
+  Advice: {{ group_meters.elements.air_energy.advice|join(', ') }}
+
+• Water Energy: {{ group_meters.elements.water_energy.intensity|round(1) }}/100 intensity, {{ group_meters.elements.water_energy.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.elements.water_energy.unified_quality.upper() }}
+  {% if group_meters.elements.water_energy.trend %}Trend: {{ group_meters.elements.water_energy.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.elements.water_energy.interpretation }}
+  Advice: {{ group_meters.elements.water_energy.advice|join(', ') }}
+
+---
+
+**SPIRITUAL**
+Meters: intuition_spirituality, karmic_lessons
+
+• Intuition/Spirituality: {{ group_meters.spiritual.intuition_spirituality.intensity|round(1) }}/100 intensity, {{ group_meters.spiritual.intuition_spirituality.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.spiritual.intuition_spirituality.unified_quality.upper() }}
+  {% if group_meters.spiritual.intuition_spirituality.trend %}Trend: {{ group_meters.spiritual.intuition_spirituality.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.spiritual.intuition_spirituality.interpretation }}
+  Advice: {{ group_meters.spiritual.intuition_spirituality.advice|join(', ') }}
+
+• Karmic Lessons: {{ group_meters.spiritual.karmic_lessons.intensity|round(1) }}/100 intensity, {{ group_meters.spiritual.karmic_lessons.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.spiritual.karmic_lessons.unified_quality.upper() }}
+  {% if group_meters.spiritual.karmic_lessons.trend %}Trend: {{ group_meters.spiritual.karmic_lessons.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.spiritual.karmic_lessons.interpretation }}
+  Advice: {{ group_meters.spiritual.karmic_lessons.advice|join(', ') }}
+
+---
+
+**COLLECTIVE**
+Meters: social_collective
+
+• Social Collective: {{ group_meters.collective.social_collective.intensity|round(1) }}/100 intensity, {{ group_meters.collective.social_collective.harmony|round(1) }}/100 harmony
+  Quality: {{ group_meters.collective.social_collective.unified_quality.upper() }}
+  {% if group_meters.collective.social_collective.trend %}Trend: {{ group_meters.collective.social_collective.trend.upper() }}{% endif %}
+  Interpretation: {{ group_meters.collective.social_collective.interpretation }}
+  Advice: {{ group_meters.collective.social_collective.advice|join(', ') }}
 
 ═══════════════════════════════════════════════════════════════════
-ADDITIONAL CELESTIAL DATA FOR {{ date }}
+UPCOMING TRANSITS
 ═══════════════════════════════════════════════════════════════════
-
-[Collective & Upcoming Transits]
-General Transits Summary: {{ transits.basic_transit_summary }}
-
-{% if transits.retrograde_planets %}
-Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }}
-{% endif %}
-
-{% if transits.moon_aspects %}
-Today's Moon Aspects:
-{% for aspect in transits.moon_aspects[:3] %}
-• Moon {{ aspect.aspect_type }} {{ aspect.planet.value.title() }} - {{ aspect.interpretation }}
-{% endfor %}
-{% endif %}
 
 {% if upcoming_transits %}
-Upcoming Transits (Next 2-7 days):
+Next 2-7 days:
 {% for event in upcoming_transits[:3] %}
 • {{ event.date_formatted }}: {{ event.description }}
 {% endfor %}
+{% else %}
+No major upcoming transits in the next week.
 {% endif %}
-
-[Most Relevant Life Domains for This Transit]
-Based on the {{ transits.primary_aspect.natal_house.ordinal }} house activation and {{ transits.primary_aspect.transit_planet.value.title() }}/{{ transits.primary_aspect.natal_planet.value.title() }} symbolism, prioritize these domains:
-{{ suggested_life_domains|join(', ') }}

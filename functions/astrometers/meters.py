@@ -15,8 +15,9 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
+from enum import Enum
 from pydantic import BaseModel, Field
 
 # Import from existing modules
@@ -33,24 +34,242 @@ from .normalization import (
     get_intensity_label,
     get_harmony_label
 )
+# Import new hierarchy system (replaces old MeterGroup enum)
+from .hierarchy import Meter, MeterGroup, SuperGroup, get_group, get_super_group
+
+
+# ============================================================================
+# Meter Organization - Quality Labels
+# ============================================================================
+# Note: MeterGroup enum now imported from hierarchy.py (single source of truth)
+
+
+class QualityLabel(str, Enum):
+    """
+    Semantic quality labels for unified meter display.
+
+    These describe the nature of astrological activity and allow
+    the UI to make appropriate styling decisions (colors, icons, etc.)
+    without the API prescribing specific visual treatments.
+    """
+    QUIET = "quiet"              # Very low intensity (< 25) - negligible activity
+    PEACEFUL = "peaceful"        # Low intensity + high harmony - calm and positive
+    HARMONIOUS = "harmonious"    # High harmony (≥ 70) - supportive energy
+    MIXED = "mixed"              # Both supportive and challenging aspects
+    CHALLENGING = "challenging"  # Low harmony (≤ 30) - difficult energy
+
+
+# ============================================================================
+# Unified Score Calculation
+# ============================================================================
+
+def calculate_unified_score(
+    intensity: float,
+    harmony: float
+) -> Tuple[float, QualityLabel]:
+    """
+    Calculate unified score and semantic quality for single-bar display.
+
+    Approach: Use intensity as the primary metric (bar length = "how much is happening"),
+    with harmony determining semantic quality (for UI color/styling decisions).
+
+    Args:
+        intensity: Intensity meter (0-100)
+        harmony: Harmony meter (0-100)
+
+    Returns:
+        Tuple of (unified_score, quality_label):
+        - unified_score: The intensity value (0-100)
+        - quality_label: QualityLabel enum (UI decides colors):
+            - QUIET: Very low intensity (< 25) - negligible activity
+            - PEACEFUL: Low intensity (25-40) + high harmony (≥ 65) - calm and positive
+            - HARMONIOUS: High harmony (≥ 70) - supportive energy
+            - CHALLENGING: Low harmony (≤ 30) - difficult energy
+            - MIXED: Everything else - both supportive and challenging
+
+    Examples:
+        >>> calculate_unified_score(85, 25)
+        (85, QualityLabel.CHALLENGING)  # High intensity, low harmony
+
+        >>> calculate_unified_score(85, 90)
+        (85, QualityLabel.HARMONIOUS)  # High intensity, high harmony
+
+        >>> calculate_unified_score(20, 90)
+        (20, QualityLabel.QUIET)  # Very low intensity (harmony doesn't matter)
+
+        >>> calculate_unified_score(35, 80)
+        (35, QualityLabel.PEACEFUL)  # Low intensity with good harmony
+    """
+    # Very low intensity = quiet (regardless of harmony)
+    # Rationale: If intensity < 25, even challenging aspects are too weak to matter
+    if intensity < 25:
+        return intensity, QualityLabel.QUIET
+
+    # Low-moderate intensity with good harmony = peaceful
+    # Rationale: Some activity, but it's calm and supportive
+    if intensity < 40 and harmony >= 65:
+        return intensity, QualityLabel.PEACEFUL
+
+    # Standard harmony-based quality for moderate-to-high intensity
+    if harmony >= 70:
+        return intensity, QualityLabel.HARMONIOUS
+    elif harmony <= 30:
+        return intensity, QualityLabel.CHALLENGING
+    else:
+        return intensity, QualityLabel.MIXED
 
 
 # ============================================================================
 # MeterReading Model (Spec Section 7.4.2)
 # ============================================================================
 
+class TrendDirection(str, Enum):
+    """Trend direction for comparing readings across time."""
+    IMPROVING = "improving"     # Harmony increasing (≥10 points)
+    STABLE = "stable"           # Harmony within ±10 points
+    WORSENING = "worsening"     # Harmony decreasing (≥10 points)
+
+
 class MeterReading(BaseModel):
-    """Complete meter reading with explainability."""
+    """Complete meter reading with unified score and explainability."""
     meter_name: str
     date: datetime
-    intensity: float = Field(ge=0, le=100)
-    harmony: float = Field(ge=0, le=100)
+
+    # Organization
+    group: MeterGroup = Field(description="Life domain or meta category")
+
+    # Unified display (primary) - for single-bar UI
+    unified_score: float = Field(
+        ge=0, le=100,
+        description="Primary display score: intensity value (bar length)"
+    )
+    unified_quality: QualityLabel = Field(
+        description="Semantic quality label for UI styling decisions"
+    )
+
+    # Detailed breakdown (expandable)
+    intensity: float = Field(ge=0, le=100, description="How much is happening")
+    harmony: float = Field(ge=0, le=100, description="Quality of what's happening")
     state_label: str
     interpretation: str
     advice: List[str]
     top_aspects: List[AspectContribution]
     raw_scores: Dict[str, float]
     additional_context: Dict[str, Any] = Field(default_factory=dict)
+
+    # Trend (optional) - set via calculate_trend() when comparing with previous day
+    trend: Optional[TrendDirection] = Field(
+        None,
+        description="Trend direction vs previous reading (optional, calculated on-demand)"
+    )
+
+    def calculate_trend(self, previous_reading: "MeterReading") -> TrendDirection:
+        """
+        Calculate trend direction by comparing harmony scores.
+
+        Uses harmony (not intensity) because harmony represents "quality"
+        which is more meaningful for trend analysis. A day can have high
+        intensity but improving quality (getting better) or high intensity
+        with worsening quality (getting harder).
+
+        Args:
+            previous_reading: Yesterday's reading for same meter
+
+        Returns:
+            TrendDirection enum (improving, stable, worsening)
+
+        Example:
+            >>> today.harmony = 75
+            >>> yesterday.harmony = 60
+            >>> today.calculate_trend(yesterday)
+            TrendDirection.IMPROVING
+        """
+        delta = self.harmony - previous_reading.harmony
+
+        if delta >= 10:
+            return TrendDirection.IMPROVING
+        elif delta <= -10:
+            return TrendDirection.WORSENING
+        else:
+            return TrendDirection.STABLE
+
+
+class KeyAspect(BaseModel):
+    """
+    Major transit aspect appearing across multiple meters.
+
+    This deduplicates aspects that affect multiple life domains,
+    showing users which transits are driving their overall day.
+    """
+    aspect: AspectContribution
+    affected_meters: List[str] = Field(description="Meter names where this aspect appears")
+    meter_count: int = Field(description="Number of meters affected")
+
+    @property
+    def description(self) -> str:
+        """Generate human-readable description."""
+        return (
+            f"Transit {self.aspect.transit_planet.value.title()} "
+            f"{self.aspect.aspect_type.value} "
+            f"Natal {self.aspect.natal_planet.value.title()}"
+        )
+
+
+# ============================================================================
+# Planetary Motion Constants
+# ============================================================================
+
+# Average daily motion in degrees (approximate)
+PLANET_DAILY_MOTION = {
+    Planet.MOON: 13.0,
+    Planet.SUN: 1.0,
+    Planet.MERCURY: 1.5,
+    Planet.VENUS: 1.2,
+    Planet.MARS: 0.5,
+    Planet.JUPITER: 0.08,
+    Planet.SATURN: 0.03,
+    Planet.URANUS: 0.01,
+    Planet.NEPTUNE: 0.006,
+    Planet.PLUTO: 0.004,
+    Planet.NORTH_NODE: -0.05,  # Moves backward
+}
+
+
+def calculate_tomorrow_orb(
+    aspect_orb: float,
+    aspect_applying: bool,
+    transit_planet: Planet,
+    transit_planet_rx: bool = False
+) -> float:
+    """
+    Calculate expected orb deviation tomorrow based on planetary velocity.
+
+    Planets move at vastly different speeds (Moon: 13°/day, Saturn: 0.03°/day).
+    This function uses actual velocities instead of a fixed 0.2° assumption.
+
+    Args:
+        aspect_orb: Current orb deviation in degrees
+        aspect_applying: Is the aspect applying (moving toward exact)?
+        transit_planet: The transiting planet
+        transit_planet_rx: Is the transit planet retrograde?
+
+    Returns:
+        float: Expected orb tomorrow
+    """
+    base_speed = PLANET_DAILY_MOTION.get(transit_planet, 0.5)
+
+    # Retrograde reduces speed by ~40% on average
+    if transit_planet_rx:
+        base_speed *= 0.6
+
+    if aspect_applying:
+        # Moving toward exact - orb decreases
+        tomorrow_orb = max(0.0, aspect_orb - base_speed)
+    else:
+        # Moving away from exact - orb increases
+        tomorrow_orb = aspect_orb + base_speed
+
+    return tomorrow_orb
 
 
 # ============================================================================
@@ -93,21 +312,72 @@ def filter_soft_aspects(aspects: List[TransitAspect]) -> List[TransitAspect]:
     return [a for a in aspects if a.aspect_type in soft]
 
 
+def apply_retrograde_modifier(
+    reading: MeterReading,
+    transit_chart: dict,
+    planet: Planet,
+    harmony_multiplier: float = 0.7,
+    note: str = None
+) -> MeterReading:
+    """
+    Apply retrograde modifier to a meter reading.
+
+    When a planet is retrograde, its energy is internalized, delayed, or requires
+    extra patience. This typically reduces harmony (increases friction) but doesn't
+    change intensity.
+
+    Args:
+        reading: MeterReading to modify
+        transit_chart: Transit chart with planetary data
+        planet: Planet to check for retrograde
+        harmony_multiplier: How much to reduce harmony (default 0.7 = 30% reduction)
+        note: Custom note to append to interpretation (uses default if None)
+
+    Returns:
+        Modified MeterReading (modifies in place and returns for chaining)
+    """
+    planet_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == planet),
+        None
+    )
+
+    if planet_data and planet_data.get("retrograde", False):
+        reading.harmony *= harmony_multiplier
+        reading.additional_context[f"{planet.value}_retrograde"] = True
+
+        default_note = f"\n\nNote: {planet.value.title()} is retrograde - themes are internalized or delayed."
+        reading.interpretation += note or default_note
+
+    return reading
+
+
 def calculate_meter_score(
     aspects: List[TransitAspect],
     meter_name: str,
-    date: datetime
+    date: datetime,
+    group: MeterGroup
 ) -> MeterReading:
     """
     Generic meter calculation function.
 
     Uses existing calculate_astrometers() from core.py
-    Returns MeterReading with all fields populated
+    Returns MeterReading with all fields populated including unified score
+
+    Args:
+        aspects: List of transit aspects to analyze
+        meter_name: Name of the meter
+        date: Date of reading
+        group: MeterGroup for dashboard organization
     """
     if not aspects:
+        # Empty case: no activity
+        unified_score, unified_quality = calculate_unified_score(0.0, 50.0)
         return MeterReading(
             meter_name=meter_name,
             date=date,
+            group=group,
+            unified_score=unified_score,
+            unified_quality=unified_quality,
             intensity=0.0,
             harmony=50.0,
             state_label="Quiet",
@@ -120,9 +390,12 @@ def calculate_meter_score(
     # Calculate using core algorithm
     score = calculate_astrometers(aspects)
 
-    # Normalize
-    intensity = normalize_intensity(score.dti)
-    harmony = normalize_harmony(score.hqs)
+    # Normalize with meter-specific calibration
+    intensity = normalize_intensity(score.dti, meter_name=meter_name)
+    harmony = normalize_harmony(score.hqs, meter_name=meter_name)
+
+    # Calculate unified score
+    unified_score, unified_quality = calculate_unified_score(intensity, harmony)
 
     # Get labels
     intensity_label = get_intensity_label(intensity)
@@ -139,6 +412,9 @@ def calculate_meter_score(
     return MeterReading(
         meter_name=meter_name,
         date=date,
+        group=group,
+        unified_score=unified_score,
+        unified_quality=unified_quality,
         intensity=intensity,
         harmony=harmony,
         state_label=state_label,
@@ -169,7 +445,7 @@ def calculate_overall_intensity_meter(
     - 76-90: Very High (major themes active)
     - 91-100: Extreme (life-defining period)
     """
-    reading = calculate_meter_score(all_aspects, "overall_intensity", date)
+    reading = calculate_meter_score(all_aspects, "overall_intensity", date, MeterGroup.OVERVIEW)
 
     # Generate interpretation
     if reading.intensity < 26:
@@ -255,7 +531,7 @@ def calculate_overall_harmony_meter(
     - 61-80: Supportive (net harmonious influence)
     - 81-100: Very Supportive (predominantly harmonious)
     """
-    reading = calculate_meter_score(all_aspects, "overall_harmony", date)
+    reading = calculate_meter_score(all_aspects, "overall_harmony", date, MeterGroup.OVERVIEW)
 
     # Count supportive vs challenging aspects
     supportive = sum(1 for a in reading.top_aspects if a.quality_factor > 0)
@@ -360,16 +636,14 @@ def calculate_mental_clarity_meter(
     # Filter to Mercury aspects
     mercury_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.MERCURY])
 
-    reading = calculate_meter_score(mercury_aspects, "mental_clarity", date)
+    reading = calculate_meter_score(mercury_aspects, "mental_clarity", date, MeterGroup.MIND)
 
-    # Check Mercury retrograde
+    # Apply Mercury retrograde modifier (affects harmony calculation)
     mercury_data = next(
         (p for p in transit_chart["planets"] if p["name"] == Planet.MERCURY),
         None
     )
-    mercury_rx = mercury_data.get("retrograde", False) if mercury_data else False
-
-    if mercury_rx:
+    if mercury_data and mercury_data.get("retrograde", False):
         reading.harmony *= 0.6
         reading.additional_context["mercury_retrograde"] = True
 
@@ -436,7 +710,8 @@ def calculate_mental_clarity_meter(
             ]
             reading.state_label = "Intense Mixed"
 
-    if mercury_rx:
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("mercury_retrograde", False):
         reading.interpretation += "\n\nNote: Mercury is retrograde, adding review, revision, and reconsideration themes."
 
     return reading
@@ -455,7 +730,7 @@ def calculate_decision_quality_meter(
     decision_planets = [Planet.MERCURY, Planet.JUPITER, Planet.SATURN, Planet.NEPTUNE]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, decision_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "decision_quality", date)
+    reading = calculate_meter_score(filtered_aspects, "decision_quality", date, MeterGroup.MIND)
 
     if reading.intensity < 40:
         reading.interpretation = "Decision-making is relatively quiet. No major pushes or pressures."
@@ -529,7 +804,7 @@ def calculate_communication_flow_meter(
     comm_planets = [Planet.MERCURY, Planet.VENUS, Planet.MARS]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, comm_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "communication_flow", date)
+    reading = calculate_meter_score(filtered_aspects, "communication_flow", date, MeterGroup.MIND)
 
     if reading.intensity < 40:
         reading.interpretation = "Communication is quiet and routine. No special dynamics."
@@ -608,7 +883,7 @@ def calculate_emotional_intensity_meter(
     emotion_planets = [Planet.MOON, Planet.VENUS, Planet.PLUTO, Planet.NEPTUNE]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, emotion_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "emotional_intensity", date)
+    reading = calculate_meter_score(filtered_aspects, "emotional_intensity", date, MeterGroup.EMOTIONS)
 
     if reading.intensity < 40:
         reading.interpretation = "Emotional life is calm and balanced. Feelings are stable."
@@ -640,8 +915,8 @@ def calculate_emotional_intensity_meter(
                 "Stay grounded"
             ]
             reading.state_label = "Mixed Feelings"
-    else:  # High intensity
-        if reading.harmony > 60:
+    else:  # High intensity (70-100)
+        if reading.harmony > 70:
             reading.interpretation = "Peak emotional experiences. Profound joy, love, or spiritual connection."
             reading.advice = [
                 "Treasure this emotionally rich period",
@@ -650,8 +925,13 @@ def calculate_emotional_intensity_meter(
                 "Document meaningful moments"
             ]
             reading.state_label = "Peak Emotion"
-        elif reading.harmony < 40:
-            reading.interpretation = "Extreme emotional intensity. Crisis, catharsis, or deep transformation underway."
+        elif reading.harmony < 15:  # Severe emotional strain zone
+            reading.state_label = "Severe Emotional Strain"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme intensity AND extreme disharmony = truly severe
+                reading.interpretation = "Emotions under severe pressure. Possible catharsis, breakdown, or profound emotional transformation."
+            else:
+                reading.interpretation = "Significant emotional challenges. Deep feelings, old wounds, or intense vulnerability requiring care."
             reading.advice = [
                 "Seek support - don't go through this alone",
                 "Professional help may be appropriate",
@@ -659,28 +939,37 @@ def calculate_emotional_intensity_meter(
                 "This is a transformational passage",
                 "Be gentle with yourself"
             ]
-            reading.state_label = "Emotional Storm"
-        else:
+        elif reading.harmony < 30:  # Friction zone
+            reading.state_label = "Emotional Friction"
+            reading.interpretation = "Emotional friction present. Difficult feelings or relationship tension require attention."
+            reading.advice = [
+                "Honor your feelings without being overwhelmed",
+                "Process emotions healthily",
+                "This too shall pass"
+            ]
+        else:  # Mixed zone (30-70 harmony)
+            reading.state_label = "Intense Complex"
             reading.interpretation = "Powerful emotional activation with complex layers."
             reading.advice = [
                 "Major emotional themes are active",
                 "Give yourself space to feel",
                 "Stay connected to support systems"
             ]
-            reading.state_label = "Intense Complex"
 
     return reading
 
 
 def calculate_relationship_harmony_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Relationship Harmony Meter - connection quality, partnership dynamics.
 
     Spec: Section 5.5.2
     Primary: Venus aspects + 7th house transits
+    Modifier: Venus retrograde (relationships require extra patience)
     """
     # Venus aspects
     venus_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.VENUS])
@@ -689,7 +978,16 @@ def calculate_relationship_harmony_meter(
     # Combine (simple concatenation - duplicates don't matter for scoring)
     combined = venus_aspects + seventh_house
 
-    reading = calculate_meter_score(combined, "relationship_harmony", date)
+    reading = calculate_meter_score(combined, "relationship_harmony", date, MeterGroup.EMOTIONS)
+
+    # Apply Venus retrograde modifier (affects harmony calculation)
+    venus_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == Planet.VENUS),
+        None
+    )
+    if venus_data and venus_data.get("retrograde", False):
+        reading.harmony *= 0.7
+        reading.additional_context["venus_retrograde"] = True
 
     if reading.intensity < 40:
         reading.interpretation = "Relationship dynamics are stable and routine. No major themes."
@@ -721,7 +1019,7 @@ def calculate_relationship_harmony_meter(
                 "Balance needs"
             ]
             reading.state_label = "Mixed"
-    else:  # High intensity
+    else:  # High intensity (70-100)
         if reading.harmony > 70:
             reading.interpretation = "Peak relationship magic. Deep connection, breakthroughs, or falling in love."
             reading.advice = [
@@ -730,23 +1028,47 @@ def calculate_relationship_harmony_meter(
                 "Open your heart to love"
             ]
             reading.state_label = "Magic"
-        elif reading.harmony < 30:
-            reading.interpretation = "Major relationship crisis or transformation. Breakups, betrayals, or profound tests."
+        elif reading.harmony < 15:  # Severe friction zone
+            reading.state_label = "Severe Friction"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme = truly severe relationship crisis
+                reading.interpretation = "Relationship under severe strain. Possible breakup, betrayal, or profound transformation required."
+                reading.advice = [
+                    "Relationship challenges are serious but not necessarily terminal",
+                    "Seek counseling or mediation if the bond is worth saving",
+                    "Major decisions may be necessary - honor your truth",
+                    "Protect your boundaries and well-being"
+                ]
+            else:
+                # High intensity but not catastrophic
+                reading.interpretation = "Significant relationship challenges. Tests, conflicts, or disconnection require honest work."
+                reading.advice = [
+                    "Relationship friction is significant",
+                    "Open, honest communication is essential",
+                    "Consider couples counseling or mediation",
+                    "This difficulty can deepen bonds if navigated well"
+                ]
+        elif reading.harmony < 30:  # Friction zone
+            reading.interpretation = "Relationship friction or tension. Conflicts, misunderstandings, or growing distance."
             reading.advice = [
-                "Relationships are under extreme pressure",
-                "Seek counseling or mediation if needed",
-                "Major decisions may be necessary",
-                "Honor your truth and boundaries"
+                "Practice patience and compassion",
+                "Address issues constructively, not defensively",
+                "Avoid blame or criticism",
+                "Seek understanding before being understood"
             ]
-            reading.state_label = "Crisis"
-        else:
-            reading.interpretation = "Intense relationship activity with complexity."
+            reading.state_label = "Friction"
+        else:  # Mixed zone (30-70 harmony)
+            reading.interpretation = "Intense relationship activity with complexity. Passion and tension coexist."
             reading.advice = [
                 "Major relationship themes demand attention",
                 "Stay present and authentic",
-                "Transformations are underway"
+                "Transformations are underway - navigate with care"
             ]
             reading.state_label = "Intense"
+
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("venus_retrograde", False):
+        reading.interpretation += "\n\nNote: Venus retrograde - relationships require extra patience and reflection."
 
     return reading
 
@@ -764,7 +1086,7 @@ def calculate_emotional_resilience_meter(
     resilience_planets = [Planet.SUN, Planet.MOON, Planet.SATURN, Planet.MARS, Planet.JUPITER]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, resilience_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "emotional_resilience", date)
+    reading = calculate_meter_score(filtered_aspects, "emotional_resilience", date, MeterGroup.EMOTIONS)
 
     if reading.intensity < 40:
         reading.interpretation = "Normal emotional resilience. No special pressures or support."
@@ -832,18 +1154,29 @@ def calculate_emotional_resilience_meter(
 
 def calculate_physical_energy_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Physical Energy Meter - vitality, stamina, body energy.
 
     Spec: Section 5.6.1
     Planets: Sun (vitality) + Mars (action)
+    Modifier: Mars retrograde (energy may feel blocked or require strategic direction)
     """
     energy_planets = [Planet.SUN, Planet.MARS]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, energy_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "physical_energy", date)
+    reading = calculate_meter_score(filtered_aspects, "physical_energy", date, MeterGroup.BODY)
+
+    # Apply Mars retrograde modifier (affects harmony calculation)
+    mars_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == Planet.MARS),
+        None
+    )
+    if mars_data and mars_data.get("retrograde", False):
+        reading.harmony *= 0.65  # Mars Rx feels more frustrating
+        reading.additional_context["mars_retrograde"] = True
 
     if reading.intensity < 40:
         reading.interpretation = "Normal physical energy levels. No special activation."
@@ -875,7 +1208,7 @@ def calculate_physical_energy_meter(
                 "Balance activity and rest"
             ]
             reading.state_label = "Variable"
-    else:  # High intensity
+    else:  # High intensity (70-100)
         if reading.harmony > 70:
             reading.interpretation = "Peak physical vitality. Exceptional energy, strength, and drive."
             reading.advice = [
@@ -885,41 +1218,69 @@ def calculate_physical_energy_meter(
                 "Channel productively"
             ]
             reading.state_label = "Peak Vitality"
-        elif reading.harmony < 30:
-            reading.interpretation = "Extreme energy depletion or burnout. Health concerns possible."
+        elif reading.harmony < 15:  # Severe depletion zone
+            reading.state_label = "Severe Depletion"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme intensity AND extreme disharmony = truly severe
+                reading.interpretation = "Physical energy severely depleted. Possible burnout or health concerns requiring attention."
+            else:
+                reading.interpretation = "Significant energy depletion. Body needs rest and recovery."
             reading.advice = [
                 "Immediate rest required",
                 "Medical attention if symptoms persist",
                 "Cancel non-essential activities",
                 "This is your body demanding care"
             ]
-            reading.state_label = "Burnout Risk"
-        else:
+        elif reading.harmony < 30:  # Low energy period
+            reading.state_label = "Low Energy Period"
+            reading.interpretation = "Energy depletion present. Fatigue or reduced vitality."
+            reading.advice = [
+                "Rest and restore",
+                "Avoid overexertion",
+                "Gentle activity only",
+                "Listen to your body"
+            ]
+        else:  # Mixed zone (30-70 harmony)
+            reading.state_label = "Intense"
             reading.interpretation = "Intense physical activation with mixed quality."
             reading.advice = [
                 "High energy but use it wisely",
                 "Avoid overexertion",
                 "Monitor your body"
             ]
-            reading.state_label = "Intense"
+
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("mars_retrograde", False):
+        reading.interpretation += "\n\nNote: Mars retrograde - energy may feel blocked or require strategic direction."
 
     return reading
 
 
 def calculate_conflict_risk_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Conflict Risk Meter - likelihood of arguments, confrontations, aggression.
 
     Spec: Section 5.6.2
     Focus: Mars hard aspects (square, opposition)
+    Modifier: Mars retrograde (anger may be internalized or passive-aggressive)
     """
     mars_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.MARS])
     hard_aspects = filter_hard_aspects(mars_aspects)
 
-    reading = calculate_meter_score(hard_aspects, "conflict_risk", date)
+    reading = calculate_meter_score(hard_aspects, "conflict_risk", date, MeterGroup.BODY)
+
+    # Apply Mars retrograde modifier (affects harmony calculation)
+    mars_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == Planet.MARS),
+        None
+    )
+    if mars_data and mars_data.get("retrograde", False):
+        reading.harmony *= 0.65
+        reading.additional_context["mars_retrograde"] = True
 
     if reading.intensity < 30:
         reading.interpretation = "Low conflict risk. Tensions are minimal."
@@ -944,23 +1305,38 @@ def calculate_conflict_risk_meter(
         ]
         reading.state_label = "High Risk"
 
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("mars_retrograde", False):
+        reading.interpretation += "\n\nNote: Mars retrograde - anger may be internalized or express as passive-aggression."
+
     return reading
 
 
 def calculate_motivation_drive_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Motivation Drive Meter - ambition, initiative, pushing forward.
 
     Spec: Section 5.6.3
     Planets: Mars (drive), Jupiter (expansion), Saturn (discipline)
+    Modifier: Mars retrograde (drive may feel stalled or require redirection)
     """
     motivation_planets = [Planet.MARS, Planet.JUPITER, Planet.SATURN]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, motivation_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "motivation_drive", date)
+    reading = calculate_meter_score(filtered_aspects, "motivation_drive", date, MeterGroup.BODY)
+
+    # Apply Mars retrograde modifier (affects harmony calculation)
+    mars_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == Planet.MARS),
+        None
+    )
+    if mars_data and mars_data.get("retrograde", False):
+        reading.harmony *= 0.65
+        reading.additional_context["mars_retrograde"] = True
 
     if reading.intensity < 40:
         reading.interpretation = "Normal motivation levels. No special push or drag."
@@ -992,7 +1368,7 @@ def calculate_motivation_drive_meter(
                 "Stay consistent"
             ]
             reading.state_label = "Mixed"
-    else:  # High intensity
+    else:  # High intensity (70-100)
         if reading.harmony > 70:
             reading.interpretation = "Exceptional drive and ambition. Major goal achievement window."
             reading.advice = [
@@ -1002,23 +1378,47 @@ def calculate_motivation_drive_meter(
                 "Set ambitious targets"
             ]
             reading.state_label = "Peak Drive"
-        elif reading.harmony < 30:
-            reading.interpretation = "Severe motivational crisis. Burnout, depression, or major blocks."
+        elif reading.harmony < 15:  # Severe depletion zone
+            reading.state_label = "Severely Strained"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme = truly severe burnout risk
+                reading.interpretation = "Motivation severely depleted. Possible burnout, depression, or fundamental misalignment with goals."
+                reading.advice = [
+                    "This depletion is serious - rest is not optional",
+                    "Professional support may be beneficial",
+                    "Reevaluate your fundamental goals and direction",
+                    "Something needs to change - listen to this signal"
+                ]
+            else:
+                # High intensity but not catastrophic
+                reading.interpretation = "Significant motivational challenges. Major blocks, exhaustion, or goal misalignment."
+                reading.advice = [
+                    "Motivation struggles are significant",
+                    "Take time to rest and recharge",
+                    "Examine what's causing resistance",
+                    "Small steps forward are still progress"
+                ]
+        elif reading.harmony < 30:  # Friction zone
+            reading.interpretation = "Low motivation or blocked drive. Procrastination, frustration, or significant obstacles."
             reading.advice = [
-                "Something fundamental needs addressing",
-                "Don't force yourself",
-                "Seek help if this persists",
-                "Reevaluate goals and direction"
+                "Lower your expectations temporarily",
+                "Focus on small achievable wins",
+                "Address what's blocking your progress",
+                "Be patient and compassionate with yourself"
             ]
-            reading.state_label = "Crisis"
-        else:
-            reading.interpretation = "Intense push with mixed effectiveness."
+            reading.state_label = "Blocked"
+        else:  # Mixed zone (30-70 harmony)
+            reading.interpretation = "Intense push with mixed effectiveness. High drive but resistance is present."
             reading.advice = [
                 "High drive but manage it wisely",
-                "Avoid burnout",
-                "Balance effort with rest"
+                "Avoid burning out in pursuit of goals",
+                "Balance sustained effort with adequate rest"
             ]
             reading.state_label = "Intense Push"
+
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("mars_retrograde", False):
+        reading.interpretation += "\n\nNote: Mars retrograde - drive may feel stalled or require redirection."
 
     return reading
 
@@ -1029,13 +1429,15 @@ def calculate_motivation_drive_meter(
 
 def calculate_career_ambition_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Career Ambition Meter - professional drive, status, achievement.
 
     Spec: Section 5.7.1
     Focus: Saturn aspects + 10th house + Capricorn placements
+    Modifier: Saturn retrograde (delays, internal restructuring)
     """
     # Saturn aspects
     saturn_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.SATURN])
@@ -1044,7 +1446,16 @@ def calculate_career_ambition_meter(
     # Combine (simple concatenation - duplicates don't matter for scoring)
     combined = saturn_aspects + tenth_house
 
-    reading = calculate_meter_score(combined, "career_ambition", date)
+    reading = calculate_meter_score(combined, "career_ambition", date, MeterGroup.CAREER)
+
+    # Apply Saturn retrograde modifier (affects harmony calculation)
+    saturn_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == Planet.SATURN),
+        None
+    )
+    if saturn_data and saturn_data.get("retrograde", False):
+        reading.harmony *= 0.7
+        reading.additional_context["saturn_retrograde"] = True
 
     if reading.intensity < 40:
         reading.interpretation = "Normal career activity. No special pressure or opportunity."
@@ -1076,7 +1487,7 @@ def calculate_career_ambition_meter(
                 "Stay professional"
             ]
             reading.state_label = "Mixed"
-    else:  # High intensity
+    else:  # High intensity (70-100)
         if reading.harmony > 70:
             reading.interpretation = "Major career breakthrough window. Peak achievement and recognition."
             reading.advice = [
@@ -1086,40 +1497,75 @@ def calculate_career_ambition_meter(
                 "Leadership opportunities"
             ]
             reading.state_label = "Breakthrough"
-        elif reading.harmony < 30:
-            reading.interpretation = "Major career crisis. Job loss, failure, or profound tests."
+        elif reading.harmony < 15:  # Severe challenges zone
+            reading.state_label = "Major Challenges"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme intensity AND extreme disharmony = truly severe
+                reading.interpretation = "Career under severe pressure. Job security threats, major setbacks, or organizational restructuring."
+                reading.advice = [
+                    "Career obstacles are significant but navigable",
+                    "Seek guidance and support from trusted advisors",
+                    "This challenge can forge new professional strengths",
+                    "Maintain professional networks - they matter now"
+                ]
+            else:
+                # High intensity but not catastrophic
+                reading.interpretation = "Significant career challenges. Tests, obstacles, or setbacks require strategic response."
+                reading.advice = [
+                    "Career hurdles require focused effort",
+                    "Patience and persistence are essential",
+                    "Seek mentorship or professional advice",
+                    "This difficulty builds valuable resilience"
+                ]
+        elif reading.harmony < 30:  # Friction zone
+            reading.interpretation = "Career friction or stagnation. Progress requires extra effort and strategy."
             reading.advice = [
-                "Career is under major pressure",
-                "Seek guidance and support",
-                "This may be a necessary transformation",
-                "Consider all options carefully"
+                "Patience and persistence required",
+                "Not the time for bold career moves",
+                "Address root issues causing friction",
+                "Build resilience through small wins"
             ]
-            reading.state_label = "Crisis"
-        else:
-            reading.interpretation = "Intense career pressure with mixed outcomes."
+            reading.state_label = "Friction"
+        else:  # Mixed zone (30-70 harmony)
+            reading.interpretation = "Intense career activity with both opportunities and obstacles."
             reading.advice = [
                 "High-stakes career period",
                 "Stay strategic and professional",
-                "Major changes underway"
+                "Major changes underway - navigate carefully"
             ]
             reading.state_label = "High Stakes"
+
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("saturn_retrograde", False):
+        reading.interpretation += "\n\nNote: Saturn retrograde - career progress may be delayed or require internal restructuring."
 
     return reading
 
 
 def calculate_opportunity_window_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Opportunity Window Meter - luck, expansion, doors opening.
 
     Spec: Section 5.7.2
     Focus: Jupiter aspects (the Great Benefic)
+    Modifier: Jupiter retrograde (opportunities are internalized or require inner work)
     """
     jupiter_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.JUPITER])
 
-    reading = calculate_meter_score(jupiter_aspects, "opportunity_window", date)
+    reading = calculate_meter_score(jupiter_aspects, "opportunity_window", date, MeterGroup.CAREER)
+
+    # Apply Jupiter retrograde modifier (affects harmony calculation)
+    jupiter_data = next(
+        (p for p in transit_chart["planets"] if p["name"] == Planet.JUPITER),
+        None
+    )
+    if jupiter_data and jupiter_data.get("retrograde", False):
+        reading.harmony *= 0.7
+        reading.additional_context["jupiter_retrograde"] = True
 
     if reading.intensity < 40:
         reading.interpretation = "Normal opportunity baseline. No special luck or expansion."
@@ -1180,6 +1626,10 @@ def calculate_opportunity_window_meter(
             ]
             reading.state_label = "Big Complex"
 
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("jupiter_retrograde", False):
+        reading.interpretation += "\n\nNote: Jupiter retrograde - opportunities are internalized or require inner work first."
+
     return reading
 
 
@@ -1196,7 +1646,7 @@ def calculate_challenge_intensity_meter(
     challenge_planets = [Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, challenge_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "challenge_intensity", date)
+    reading = calculate_meter_score(filtered_aspects, "challenge_intensity", date, MeterGroup.EVOLUTION)
 
     if reading.intensity < 40:
         reading.interpretation = "Low challenge level. Life flows relatively easily."
@@ -1238,7 +1688,7 @@ def calculate_transformation_pressure_meter(
     transform_planets = [Planet.PLUTO, Planet.URANUS, Planet.NEPTUNE]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, transform_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "transformation_pressure", date)
+    reading = calculate_meter_score(filtered_aspects, "transformation_pressure", date, MeterGroup.EVOLUTION)
 
     if reading.intensity < 40:
         reading.interpretation = "Low transformation pressure. Relative stability."
@@ -1271,6 +1721,36 @@ def calculate_transformation_pressure_meter(
 # ELEMENT METERS (Spec Section 5.3)
 # ============================================================================
 
+def get_sign_strength(degree_in_sign: float) -> float:
+    """
+    Calculate planet strength based on position in sign.
+
+    Planets are stronger in the middle of a sign (15°) and weaker
+    at the boundaries (0° and 29°). This reflects the concept that
+    a planet just entering or leaving a sign is less established.
+
+    Args:
+        degree_in_sign: Position within sign (0-29.999°)
+
+    Returns:
+        float: Strength multiplier (0.7 to 1.0)
+              - 1.0 at 15° (center of sign)
+              - 0.7 at 0° or 29° (boundaries)
+
+    Example:
+        >>> get_sign_strength(15.0)  # Center
+        1.0
+        >>> get_sign_strength(0.0)   # Just entered
+        0.7
+        >>> get_sign_strength(29.0)  # About to leave
+        0.72
+    """
+    # Simple parabolic curve: strongest at 15° (middle)
+    distance_from_center = abs(degree_in_sign - 15.0)
+    strength = 1.0 - (distance_from_center / 15.0) * 0.3  # 70-100% strength
+    return max(0.7, min(1.0, strength))
+
+
 def calculate_element_distribution(
     natal_chart: dict,
     transit_chart: dict
@@ -1281,32 +1761,37 @@ def calculate_element_distribution(
     Spec: Section 5.3
     Formula: 70% natal baseline + 30% current transits
 
+    Enhancement: Weights planets by their position in sign.
+    A planet at 15° (middle of sign) has full strength (1.0).
+    A planet at 0° or 29° (boundaries) has reduced strength (0.7).
+
     Returns: {fire: %, earth: %, air: %, water: %}
     """
-    # Count planets by element in natal chart
-    natal_elements = {"fire": 0, "earth": 0, "air": 0, "water": 0}
+    # Count planets by element in natal chart (weighted by sign position)
+    natal_elements = {"fire": 0.0, "earth": 0.0, "air": 0.0, "water": 0.0}
     for planet in natal_chart.get("planets", []):
-        sign = planet.get("sign")
-        if sign:
-            element = sign.element if hasattr(sign, "element") else None
-            if element and element in natal_elements:
-                natal_elements[element] += 1
+        element = planet.get("element")
+        if element and element in natal_elements:
+            degree = planet.get("degree_in_sign", 15.0)  # Default to mid-sign
+            weight = get_sign_strength(degree)
+            natal_elements[element] += weight
 
-    # Count planets by element in transit chart
-    transit_elements = {"fire": 0, "earth": 0, "air": 0, "water": 0}
+    # Count planets by element in transit chart (weighted by sign position)
+    transit_elements = {"fire": 0.0, "earth": 0.0, "air": 0.0, "water": 0.0}
     for planet in transit_chart.get("planets", []):
-        sign = planet.get("sign")
-        if sign:
-            element = sign.element if hasattr(sign, "element") else None
-            if element and element in transit_elements:
-                transit_elements[element] += 1
+        element = planet.get("element")
+        if element and element in transit_elements:
+            degree = planet.get("degree_in_sign", 15.0)  # Default to mid-sign
+            weight = get_sign_strength(degree)
+            transit_elements[element] += weight
 
     # Calculate percentages (70% natal, 30% transit)
-    total_planets = sum(natal_elements.values())
+    total_natal = sum(natal_elements.values())
+    total_transit = sum(transit_elements.values())
     blended = {}
     for elem in ["fire", "earth", "air", "water"]:
-        natal_pct = (natal_elements[elem] / total_planets * 100) if total_planets > 0 else 25.0
-        transit_pct = (transit_elements[elem] / total_planets * 100) if total_planets > 0 else 25.0
+        natal_pct = (natal_elements[elem] / total_natal * 100) if total_natal > 0 else 25.0
+        transit_pct = (transit_elements[elem] / total_transit * 100) if total_transit > 0 else 25.0
         blended[elem] = (0.7 * natal_pct) + (0.3 * transit_pct)
 
     return blended
@@ -1327,7 +1812,7 @@ def calculate_fire_energy_meter(
     fire_planets = [Planet.SUN, Planet.MARS, Planet.JUPITER]
     filtered_aspects = filter_aspects_by_transit_planet(all_aspects, fire_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "fire_energy", date)
+    reading = calculate_meter_score(filtered_aspects, "fire_energy", date, MeterGroup.ELEMENTS)
 
     fire_pct = element_dist.get("fire", 25.0)
     reading.additional_context["fire_percentage"] = fire_pct
@@ -1397,7 +1882,7 @@ def calculate_earth_energy_meter(
     earth_planets = [Planet.VENUS, Planet.SATURN]
     filtered_aspects = filter_aspects_by_transit_planet(all_aspects, earth_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "earth_energy", date)
+    reading = calculate_meter_score(filtered_aspects, "earth_energy", date, MeterGroup.ELEMENTS)
 
     earth_pct = element_dist.get("earth", 25.0)
     reading.additional_context["earth_percentage"] = earth_pct
@@ -1430,8 +1915,8 @@ def calculate_earth_energy_meter(
                 "Address practical concerns"
             ]
             reading.state_label = "Stuck"
-    else:  # High intensity
-        if reading.harmony > 60:
+    else:  # High intensity (70-100)
+        if reading.harmony > 70:
             reading.interpretation = f"Peak earth energy. Exceptional productivity and manifestation power. {emphasis}"
             reading.advice = [
                 "Build something lasting",
@@ -1439,14 +1924,34 @@ def calculate_earth_energy_meter(
                 "Create solid foundations"
             ]
             reading.state_label = "Peak Manifestation"
-        else:
-            reading.interpretation = f"Heavy earth pressure. Severe limitations or material crisis. {emphasis}"
+        elif reading.harmony < 15:  # Severe pressure zone
+            reading.state_label = "Severe Pressure"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme intensity AND extreme disharmony = truly severe
+                reading.interpretation = f"Material circumstances under severe pressure. Possible financial/practical crisis. {emphasis}"
+            else:
+                reading.interpretation = f"Significant practical challenges. Major material constraints or limitations. {emphasis}"
             reading.advice = [
                 "Major practical challenges",
                 "Address material reality",
                 "Seek concrete solutions"
             ]
+        elif reading.harmony < 30:  # Friction zone
+            reading.state_label = "Material Friction"
+            reading.interpretation = f"Material friction. Practical obstacles or resource constraints. {emphasis}"
+            reading.advice = [
+                "Address practical concerns",
+                "Don't cling to false security",
+                "Flexibility needed"
+            ]
+        else:  # Mixed zone (30-70 harmony)
             reading.state_label = "Heavy"
+            reading.interpretation = f"Heavy earth pressure with mixed quality. Strong practical focus required. {emphasis}"
+            reading.advice = [
+                "Address material reality",
+                "Work through constraints",
+                "Build tangible solutions"
+            ]
 
     return reading
 
@@ -1466,7 +1971,7 @@ def calculate_air_energy_meter(
     air_planets = [Planet.MERCURY, Planet.URANUS]
     filtered_aspects = filter_aspects_by_transit_planet(all_aspects, air_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "air_energy", date)
+    reading = calculate_meter_score(filtered_aspects, "air_energy", date, MeterGroup.ELEMENTS)
 
     air_pct = element_dist.get("air", 25.0)
     reading.additional_context["air_percentage"] = air_pct
@@ -1535,7 +2040,7 @@ def calculate_water_energy_meter(
     water_planets = [Planet.MOON, Planet.PLUTO, Planet.NEPTUNE]
     filtered_aspects = filter_aspects_by_transit_planet(all_aspects, water_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "water_energy", date)
+    reading = calculate_meter_score(filtered_aspects, "water_energy", date, MeterGroup.ELEMENTS)
 
     water_pct = element_dist.get("water", 25.0)
     reading.additional_context["water_percentage"] = water_pct
@@ -1569,8 +2074,8 @@ def calculate_water_energy_meter(
                 "Avoid escapism"
             ]
             reading.state_label = "Turbulent"
-    else:  # High intensity
-        if reading.harmony > 60:
+    else:  # High intensity (70-100)
+        if reading.harmony > 70:
             reading.interpretation = f"Peak water energy. Profound emotional depth, spiritual connection, empathic gifts. {emphasis}"
             reading.advice = [
                 "Deep healing available",
@@ -1579,15 +2084,42 @@ def calculate_water_energy_meter(
                 "Trust the mystery"
             ]
             reading.state_label = "Deep Water Magic"
-        else:
-            reading.interpretation = f"Extreme emotional intensity. Potential overwhelm, crisis, or dissolution. {emphasis}"
+        elif reading.harmony < 15:  # Severe overwhelm zone
+            reading.state_label = "Severe Overwhelm"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme intensity AND extreme disharmony = truly severe
+                reading.interpretation = f"Emotional boundaries severely strained. Possible overwhelm or dissolution. {emphasis}"
+                reading.advice = [
+                    "Emotional emergency - seek support",
+                    "Don't go through this alone",
+                    "Professional help may be needed",
+                    "You will surface again"
+                ]
+            else:
+                reading.interpretation = f"Significant emotional intensity. Deep feelings or boundary challenges. {emphasis}"
+                reading.advice = [
+                    "Seek support",
+                    "Protect your emotional space",
+                    "Ground and center",
+                    "This too shall pass"
+                ]
+        elif reading.harmony < 30:  # Friction zone
+            reading.state_label = "Emotional Turbulence"
+            reading.interpretation = f"Emotional turbulence. Overwhelm, confusion, or boundary issues. {emphasis}"
             reading.advice = [
-                "Emotional emergency - seek support",
-                "Don't go through this alone",
-                "Professional help may be needed",
-                "You will surface again"
+                "Protect your emotional space",
+                "Set boundaries",
+                "Ground and center",
+                "Avoid escapism"
             ]
-            reading.state_label = "Drowning Risk"
+        else:  # Mixed zone (30-70 harmony)
+            reading.state_label = "Deep Waters"
+            reading.interpretation = f"Deep water activation with mixed quality. Strong emotional currents. {emphasis}"
+            reading.advice = [
+                "Navigate emotional depths carefully",
+                "Stay grounded",
+                "Trust your intuition"
+            ]
 
     return reading
 
@@ -1611,7 +2143,7 @@ def calculate_intuition_spirituality_meter(
     twelfth_house = filter_aspects_by_natal_house(all_aspects, [12])
     combined = filtered_aspects + twelfth_house
 
-    reading = calculate_meter_score(combined, "intuition_spirituality", date)
+    reading = calculate_meter_score(combined, "intuition_spirituality", date, MeterGroup.SPIRITUAL)
 
     if reading.intensity < 40:
         reading.interpretation = "Normal spiritual baseline. Intuition is quiet."
@@ -1636,8 +2168,8 @@ def calculate_intuition_spirituality_meter(
                 "Trust your common sense"
             ]
             reading.state_label = "Confused"
-    else:  # High intensity
-        if reading.harmony > 60:
+    else:  # High intensity (70-100)
+        if reading.harmony > 70:
             reading.interpretation = "Peak spiritual opening. Mystical experiences, profound insights, divine connection."
             reading.advice = [
                 "Rare spiritual opportunity",
@@ -1646,15 +2178,41 @@ def calculate_intuition_spirituality_meter(
                 "Sacred experiences are unfolding"
             ]
             reading.state_label = "Mystical"
-        else:
-            reading.interpretation = "Spiritual crisis or psychic overwhelm. Ego dissolution or dark night themes."
+        elif reading.harmony < 15:  # Severe overwhelm zone
+            reading.state_label = "Severe Spiritual Strain"
+            if reading.intensity > 90 and reading.harmony < 10:
+                # BOTH extreme intensity AND extreme disharmony = truly severe
+                reading.interpretation = "Psychic boundaries severely strained. Possible spiritual crisis or ego dissolution."
+                reading.advice = [
+                    "Spiritual emergency - seek grounded guidance",
+                    "This is part of the path but get support",
+                    "The dark night leads to dawn"
+                ]
+            else:
+                reading.interpretation = "Significant spiritual intensity. Discernment challenged, boundaries tested."
+                reading.advice = [
+                    "Seek grounded guidance",
+                    "Ground your spiritual practice",
+                    "Trust your common sense",
+                    "This too shall pass"
+                ]
+        elif reading.harmony < 30:  # Friction zone
+            reading.state_label = "Spiritual Confusion"
+            reading.interpretation = "Spiritual confusion or false guidance. Discernment compromised."
             reading.advice = [
-                "Spiritual emergency",
-                "Seek grounded guidance",
-                "This is part of the path but get support",
-                "The dark night leads to dawn"
+                "Be wary of delusion",
+                "Ground your spiritual practice",
+                "Avoid gurus or cults",
+                "Trust your common sense"
             ]
-            reading.state_label = "Dark Night"
+        else:  # Mixed zone (30-70 harmony)
+            reading.state_label = "Deep Spiritual Work"
+            reading.interpretation = "Intense spiritual activation with mixed quality. Profound but challenging."
+            reading.advice = [
+                "Navigate spiritual depths carefully",
+                "Seek experienced guidance",
+                "Trust the process"
+            ]
 
     return reading
 
@@ -1671,7 +2229,7 @@ def calculate_innovation_breakthrough_meter(
     """
     uranus_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.URANUS])
 
-    reading = calculate_meter_score(uranus_aspects, "innovation_breakthrough", date)
+    reading = calculate_meter_score(uranus_aspects, "innovation_breakthrough", date, MeterGroup.EVOLUTION)
 
     if reading.intensity < 40:
         reading.interpretation = "Low innovation activation. Status quo prevails."
@@ -1732,7 +2290,7 @@ def calculate_karmic_lessons_meter(
     karmic_planets = [Planet.SATURN, Planet.NORTH_NODE]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, karmic_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "karmic_lessons", date)
+    reading = calculate_meter_score(filtered_aspects, "karmic_lessons", date, MeterGroup.SPIRITUAL)
 
     if reading.intensity < 40:
         reading.interpretation = "Low karmic pressure. No major life lessons active."
@@ -1776,7 +2334,7 @@ def calculate_social_collective_meter(
     eleventh_house = filter_aspects_by_natal_house(all_aspects, [11])
     combined = filtered_aspects + eleventh_house
 
-    reading = calculate_meter_score(combined, "social_collective", date)
+    reading = calculate_meter_score(combined, "social_collective", date, MeterGroup.COLLECTIVE)
 
     if reading.intensity < 40:
         reading.interpretation = "Low collective activation. Personal themes dominate."
@@ -1848,11 +2406,14 @@ def convert_to_transit_aspects(
         }
         max_orb = max_orb_map.get(aspect.aspect_type, 8.0)
 
-        # Calculate tomorrow's orb (simple approximation)
-        if aspect.applying:
-            tomorrow_deviation = aspect.orb - 0.2  # Moving closer
-        else:
-            tomorrow_deviation = aspect.orb + 0.2  # Moving apart
+        # Calculate tomorrow's orb using actual planetary velocities
+        transit_rx = transit_planet_data.get("retrograde", False)
+        tomorrow_deviation = calculate_tomorrow_orb(
+            aspect.orb,
+            aspect.applying,
+            aspect.transit_planet,
+            transit_rx
+        )
 
         # Create TransitAspect
         ta = TransitAspect(
@@ -1881,6 +2442,19 @@ class AllMetersReading(BaseModel):
     natal_chart_summary: Dict[str, Any]
     transit_summary: Dict[str, Any]
     aspect_count: int
+    key_aspects: List[KeyAspect] = Field(
+        default_factory=list,
+        description="Major transit aspects affecting multiple meters (deduplicated)"
+    )
+
+    # Overall unified score (top-level summary)
+    overall_unified_score: float = Field(
+        ge=0, le=100,
+        description="Overall unified score for the entire day (from overall_intensity meter)"
+    )
+    overall_unified_quality: QualityLabel = Field(
+        description="Overall quality for the entire day"
+    )
 
     # Global Meters (2)
     overall_intensity: MeterReading
@@ -1918,6 +2492,161 @@ class AllMetersReading(BaseModel):
     innovation_breakthrough: MeterReading
     karmic_lessons: MeterReading
     social_collective: MeterReading
+
+
+def group_meters_by_domain(all_meters: AllMetersReading) -> Dict[str, Dict[str, MeterReading]]:
+    """
+    Group meters by the new 9-group taxonomy for easy access in templates.
+
+    Args:
+        all_meters: Complete AllMetersReading object
+
+    Returns:
+        Dictionary mapping group names to their relevant meters:
+        {
+            "overview": {"overall_intensity": MeterReading, "overall_harmony": MeterReading},
+            "mind": {"mental_clarity": MeterReading, ...},
+            ...
+        }
+    """
+    return {
+        "overview": {
+            "overall_intensity": all_meters.overall_intensity,
+            "overall_harmony": all_meters.overall_harmony
+        },
+        "mind": {
+            "mental_clarity": all_meters.mental_clarity,
+            "decision_quality": all_meters.decision_quality,
+            "communication_flow": all_meters.communication_flow
+        },
+        "emotions": {
+            "emotional_intensity": all_meters.emotional_intensity,
+            "relationship_harmony": all_meters.relationship_harmony,
+            "emotional_resilience": all_meters.emotional_resilience
+        },
+        "body": {
+            "physical_energy": all_meters.physical_energy,
+            "conflict_risk": all_meters.conflict_risk,
+            "motivation_drive": all_meters.motivation_drive
+        },
+        "career": {
+            "career_ambition": all_meters.career_ambition,
+            "opportunity_window": all_meters.opportunity_window
+        },
+        "evolution": {
+            "challenge_intensity": all_meters.challenge_intensity,
+            "transformation_pressure": all_meters.transformation_pressure,
+            "innovation_breakthrough": all_meters.innovation_breakthrough
+        },
+        "elements": {
+            "fire_energy": all_meters.fire_energy,
+            "earth_energy": all_meters.earth_energy,
+            "air_energy": all_meters.air_energy,
+            "water_energy": all_meters.water_energy
+        },
+        "spiritual": {
+            "intuition_spirituality": all_meters.intuition_spirituality,
+            "karmic_lessons": all_meters.karmic_lessons
+        },
+        "collective": {
+            "social_collective": all_meters.social_collective
+        }
+    }
+
+
+def extract_key_aspects(
+    all_meters: AllMetersReading,
+    top_n: int = 5,
+    min_dti_threshold: float = 100.0
+) -> List[KeyAspect]:
+    """
+    Extract and deduplicate major transit aspects from all meters.
+
+    Identifies aspects that appear across multiple meters, showing which
+    transits are driving the overall astrological climate.
+
+    Args:
+        all_meters: AllMetersReading with all 23 calculated meters
+        top_n: Maximum number of key aspects to return
+        min_dti_threshold: Minimum DTI strength to consider
+
+    Returns:
+        List of KeyAspect objects, sorted by DTI strength (descending)
+
+    Example:
+        >>> key_aspects = extract_key_aspects(meters, top_n=5)
+        >>> for ka in key_aspects:
+        ...     print(f"{ka.description}: affects {ka.meter_count} meters")
+    """
+    # Dictionary to track aspects: (natal_planet, transit_planet, aspect_type) -> data
+    aspect_map: Dict[tuple, Dict] = {}
+
+    # Get all meter readings
+    meters = [
+        all_meters.overall_intensity,
+        all_meters.overall_harmony,
+        all_meters.fire_energy,
+        all_meters.earth_energy,
+        all_meters.air_energy,
+        all_meters.water_energy,
+        all_meters.mental_clarity,
+        all_meters.decision_quality,
+        all_meters.communication_flow,
+        all_meters.emotional_intensity,
+        all_meters.relationship_harmony,
+        all_meters.emotional_resilience,
+        all_meters.physical_energy,
+        all_meters.conflict_risk,
+        all_meters.motivation_drive,
+        all_meters.career_ambition,
+        all_meters.opportunity_window,
+        all_meters.challenge_intensity,
+        all_meters.transformation_pressure,
+        all_meters.intuition_spirituality,
+        all_meters.innovation_breakthrough,
+        all_meters.karmic_lessons,
+        all_meters.social_collective,
+    ]
+
+    # Collect all aspects from all meters
+    for meter in meters:
+        for aspect in meter.top_aspects:
+            # Filter by DTI threshold
+            if aspect.dti_contribution < min_dti_threshold:
+                continue
+
+            # Create unique key for this aspect
+            key = (aspect.natal_planet, aspect.transit_planet, aspect.aspect_type)
+
+            if key not in aspect_map:
+                aspect_map[key] = {
+                    "aspect": aspect,
+                    "meters": [],
+                    "max_dti": aspect.dti_contribution
+                }
+
+            # Track which meter this appears in
+            if meter.meter_name not in aspect_map[key]["meters"]:
+                aspect_map[key]["meters"].append(meter.meter_name)
+
+            # Track highest DTI value across all meters
+            aspect_map[key]["max_dti"] = max(aspect_map[key]["max_dti"], aspect.dti_contribution)
+
+    # Convert to KeyAspect objects
+    key_aspects = [
+        KeyAspect(
+            aspect=data["aspect"],
+            affected_meters=data["meters"],
+            meter_count=len(data["meters"])
+        )
+        for key, data in aspect_map.items()
+    ]
+
+    # Sort by DTI strength (descending)
+    key_aspects.sort(key=lambda ka: ka.aspect.dti_contribution, reverse=True)
+
+    # Return top N
+    return key_aspects[:top_n]
 
 
 def get_meters(
@@ -1967,8 +2696,12 @@ def get_meters(
     # Calculate element distribution
     element_dist = calculate_element_distribution(natal_chart, transit_chart)
 
+    # Calculate global meters first (needed for overall unified score)
+    overall_intensity_meter = calculate_overall_intensity_meter(all_aspects, date)
+    overall_harmony_meter = calculate_overall_harmony_meter(all_aspects, date)
+
     # Calculate all meters
-    return AllMetersReading(
+    all_meters = AllMetersReading(
         date=date,
         natal_chart_summary={
             "sun_sign": natal_chart.get("sun_sign"),
@@ -1981,9 +2714,13 @@ def get_meters(
         },
         aspect_count=len(all_aspects),
 
+        # Overall unified score (top-level summary)
+        overall_unified_score=overall_intensity_meter.unified_score,
+        overall_unified_quality=overall_intensity_meter.unified_quality,
+
         # Global Meters
-        overall_intensity=calculate_overall_intensity_meter(all_aspects, date),
-        overall_harmony=calculate_overall_harmony_meter(all_aspects, date),
+        overall_intensity=overall_intensity_meter,
+        overall_harmony=overall_harmony_meter,
 
         # Element Meters
         fire_energy=calculate_fire_energy_meter(all_aspects, date, element_dist),
@@ -1998,17 +2735,17 @@ def get_meters(
 
         # Emotional Meters
         emotional_intensity=calculate_emotional_intensity_meter(all_aspects, date),
-        relationship_harmony=calculate_relationship_harmony_meter(all_aspects, date),
+        relationship_harmony=calculate_relationship_harmony_meter(all_aspects, date, transit_chart),
         emotional_resilience=calculate_emotional_resilience_meter(all_aspects, date),
 
         # Physical/Action Meters
-        physical_energy=calculate_physical_energy_meter(all_aspects, date),
-        conflict_risk=calculate_conflict_risk_meter(all_aspects, date),
-        motivation_drive=calculate_motivation_drive_meter(all_aspects, date),
+        physical_energy=calculate_physical_energy_meter(all_aspects, date, transit_chart),
+        conflict_risk=calculate_conflict_risk_meter(all_aspects, date, transit_chart),
+        motivation_drive=calculate_motivation_drive_meter(all_aspects, date, transit_chart),
 
         # Life Domain Meters
-        career_ambition=calculate_career_ambition_meter(all_aspects, date),
-        opportunity_window=calculate_opportunity_window_meter(all_aspects, date),
+        career_ambition=calculate_career_ambition_meter(all_aspects, date, transit_chart),
+        opportunity_window=calculate_opportunity_window_meter(all_aspects, date, transit_chart),
         challenge_intensity=calculate_challenge_intensity_meter(all_aspects, date),
         transformation_pressure=calculate_transformation_pressure_meter(all_aspects, date),
 
@@ -2018,3 +2755,8 @@ def get_meters(
         karmic_lessons=calculate_karmic_lessons_meter(all_aspects, date),
         social_collective=calculate_social_collective_meter(all_aspects, date),
     )
+
+    # Extract key aspects (major transits affecting multiple meters)
+    all_meters.key_aspects = extract_key_aspects(all_meters, top_n=5, min_dti_threshold=100.0)
+
+    return all_meters
