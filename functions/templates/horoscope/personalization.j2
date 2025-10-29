@@ -19,27 +19,6 @@ Core Keywords: {{ sign.keywords[:5]|join(', ') }}
 Life Lesson: {{ sign.life_lesson }}
 Evolutionary Goal: {{ sign.evolutionary_goal }}
 
-[SUN SIGN IN LIFE DOMAINS - Use these to personalize predictions]
-Love Style: {{ sign.domain_profiles.love_and_relationships.style }}
-Relationship Needs: {{ sign.domain_profiles.love_and_relationships.needs }}
-Career Strengths: {{ sign.domain_profiles.path_and_profession.career_strengths[:3]|join(', ') }}
-Work Style: {{ sign.domain_profiles.path_and_profession.work_style }}
-Growth Path: {{ sign.domain_profiles.personal_growth_and_wellbeing.growth_path }}
-Money Mindset: {{ sign.domain_profiles.finance_and_abundance.money_mindset }}
-Spiritual Path: {{ sign.domain_profiles.life_purpose_and_spirituality.spiritual_path }}
-Decision Style: {{ sign.domain_profiles.decisions_and_crossroads.decision_making_style }}
-
 [PERSONALIZATION MEMORY (from {{ user.name }}'s journey)]
 Use this data to build continuity, reference explored themes, avoid repetition, and connect today's transit to the user's ongoing story.
 {{ memory.format_for_llm() }}
-
-
-[PERSONALIZATION USAGE]
-Use this personalization data to:
-- Build continuity with previous readings
-- Reference themes they've been exploring
-- Avoid repeating the same guidance
-- Create a sense of journey and progression
-- Show you "know" them intuitively through accumulated wisdom
-- Connect today's transit to their ongoing story
-- Address them directly and intimately using their name and other personal details when appropriate.

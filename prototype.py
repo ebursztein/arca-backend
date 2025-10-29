@@ -130,8 +130,8 @@ def simulate_user_journey():
         console.print(f"  Fun fact: {profile_result.get('sun_sign_fact', 'N/A')}")
 
         if not profile_result.get('exact_chart'):
-            console.print("\n[dim]Note: V1 uses approximate chart (noon UTC, no location)")
-            console.print("V2+ will use exact birth time/location for precise houses/angles[/dim]")
+            console.print("\n[dim]Note: V1 uses approximate chart (noon UTC, no location)[/dim]")
+            console.print("[dim]V2+ will use exact birth time/location for precise houses/angles[/dim]")
     else:
         console.print("[red]✗ Profile creation failed[/red]")
         return
@@ -213,8 +213,8 @@ def simulate_user_journey():
         console.print("[red]✗ Journal entry creation failed[/red]")
         return
 
-    console.print("\n[dim]Note: In production, Firestore trigger would automatically")
-    console.print("update memory collection. In emulator, we'll simulate this.[/dim]")
+    console.print("\n[dim]Note: In production, Firestore trigger would automatically[/dim]")
+    console.print("[dim]update memory collection. In emulator, we'll simulate this.[/dim]")
 
     # Simulate trigger updating memory
     console.print("\n[yellow]⚡ Simulating Firestore trigger...[/yellow]")

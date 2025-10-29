@@ -19,6 +19,7 @@ from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
+import json
 
 # Import from existing modules
 from astro import Planet, AspectType, ZodiacSign, House
@@ -36,6 +37,121 @@ from .normalization import (
 )
 # Import new hierarchy system (replaces old MeterGroup enum)
 from .hierarchy import Meter, MeterGroup, SuperGroup, get_group, get_super_group
+from .constants import (
+    INTENSITY_QUIET_THRESHOLD,
+    INTENSITY_MILD_THRESHOLD,
+    INTENSITY_MODERATE_THRESHOLD,
+    INTENSITY_HIGH_THRESHOLD,
+    HARMONY_CHALLENGING_THRESHOLD,
+    HARMONY_HARMONIOUS_THRESHOLD
+)
+
+
+# ============================================================================
+# Label Loading from JSON
+# ============================================================================
+
+# Cache for loaded labels
+_LABEL_CACHE: Dict[str, Dict] = {}
+
+def load_meter_labels(meter_id: str) -> Dict:
+    """Load labels from JSON file for a specific meter."""
+    if meter_id in _LABEL_CACHE:
+        return _LABEL_CACHE[meter_id]
+
+    labels_dir = os.path.join(os.path.dirname(__file__), "labels")
+    label_file = os.path.join(labels_dir, f"{meter_id}.json")
+
+    with open(label_file, "r") as f:
+        labels = json.load(f)
+
+    _LABEL_CACHE[meter_id] = labels
+    return labels
+
+
+def get_intensity_level(intensity: float) -> str:
+    """Determine intensity level from score."""
+    if intensity < INTENSITY_QUIET_THRESHOLD:
+        return "quiet"
+    elif intensity < INTENSITY_MILD_THRESHOLD:
+        return "mild"
+    elif intensity < INTENSITY_MODERATE_THRESHOLD:
+        return "moderate"
+    elif intensity < INTENSITY_HIGH_THRESHOLD:
+        return "high"
+    else:
+        return "extreme"
+
+
+def get_harmony_level(harmony: float) -> str:
+    """Determine harmony level from score."""
+    if harmony < HARMONY_CHALLENGING_THRESHOLD:
+        return "challenging"
+    elif harmony < HARMONY_HARMONIOUS_THRESHOLD:
+        return "mixed"
+    else:
+        return "harmonious"
+
+
+def get_state_label_from_json(meter_id: str, intensity: float, harmony: float) -> str:
+    """Get state label from JSON based on intensity and harmony."""
+    labels = load_meter_labels(meter_id)
+
+    intensity_level = get_intensity_level(intensity)
+    harmony_level = get_harmony_level(harmony)
+
+    # Get from combined labels
+    combined = labels["experience_labels"]["combined"]
+    return combined[intensity_level][harmony_level]
+
+
+def get_advice_category_from_json(meter_id: str, intensity: float, harmony: float) -> str:
+    """Get advice category from JSON based on intensity and harmony."""
+    labels = load_meter_labels(meter_id)
+
+    intensity_level = get_intensity_level(intensity)
+    harmony_level = get_harmony_level(harmony)
+
+    # Get from advice templates
+    advice_templates = labels["advice_templates"]
+    return advice_templates[intensity_level][harmony_level]
+
+
+def get_meter_description_from_json(meter_id: str) -> Dict[str, Any]:
+    """Get meter description from JSON."""
+    labels = load_meter_labels(meter_id)
+    return labels["description"]
+
+
+def apply_labels_to_reading(reading: 'MeterReading', meter_id: str) -> None:
+    """
+    Apply JSON labels to a MeterReading object.
+
+    Sets:
+    - state_label: from experience_labels.combined
+    - interpretation: from description.overview + detailed
+    - advice: list with advice category
+
+    The advice category will be used by LLM to generate personalized advice.
+    """
+    # Get state label
+    reading.state_label = get_state_label_from_json(
+        meter_id,
+        reading.intensity,
+        reading.harmony
+    )
+
+    # Get description for interpretation
+    description = get_meter_description_from_json(meter_id)
+    reading.interpretation = f"{description['overview']} {description['detailed']}"
+
+    # Get advice category
+    advice_category = get_advice_category_from_json(
+        meter_id,
+        reading.intensity,
+        reading.harmony
+    )
+    reading.advice = [f"Advice type: {advice_category}"]
 
 
 # ============================================================================
@@ -68,55 +184,76 @@ def calculate_unified_score(
     harmony: float
 ) -> Tuple[float, QualityLabel]:
     """
-    Calculate unified score and semantic quality for single-bar display.
+    Calculate unified score that combines intensity and harmony.
 
-    Approach: Use intensity as the primary metric (bar length = "how much is happening"),
-    with harmony determining semantic quality (for UI color/styling decisions).
+    Approach:
+    - Harmony determines the SIGN (positive/negative direction)
+    - Intensity determines the MAGNITUDE (how strong)
+    - Unified score combines both dimensions into 0-100 scale
+
+    Formula:
+    1. Calculate harmony sign factor: (harmony - 50) / 50  → range [-1, +1]
+       - harmony=0   → sign=-1 (fully negative)
+       - harmony=50  → sign=0  (neutral)
+       - harmony=100 → sign=+1 (fully positive)
+
+    2. Calculate signed score: intensity × sign  → range [-100, +100]
+       - High intensity + high harmony = high positive score
+       - High intensity + low harmony = high negative score
+       - Low intensity = low magnitude (regardless of harmony)
+
+    3. Normalize to 0-100: (signed_score / 2) + 50
+       - -100 → 0  (worst: high intensity, terrible harmony)
+       - 0    → 50 (neutral: either no intensity or balanced harmony)
+       - +100 → 100 (best: high intensity, excellent harmony)
 
     Args:
-        intensity: Intensity meter (0-100)
-        harmony: Harmony meter (0-100)
+        intensity: Intensity meter (0-100) - how much is happening
+        harmony: Harmony meter (0-100) - quality of what's happening
 
     Returns:
         Tuple of (unified_score, quality_label):
-        - unified_score: The intensity value (0-100)
-        - quality_label: QualityLabel enum (UI decides colors):
-            - QUIET: Very low intensity (< 25) - negligible activity
-            - PEACEFUL: Low intensity (25-40) + high harmony (≥ 65) - calm and positive
-            - HARMONIOUS: High harmony (≥ 70) - supportive energy
-            - CHALLENGING: Low harmony (≤ 30) - difficult energy
-            - MIXED: Everything else - both supportive and challenging
+        - unified_score: Combined score (0-100)
+        - quality_label: QualityLabel enum for semantic interpretation
 
     Examples:
-        >>> calculate_unified_score(85, 25)
-        (85, QualityLabel.CHALLENGING)  # High intensity, low harmony
+        >>> calculate_unified_score(80, 90)
+        (82.0, QualityLabel.HARMONIOUS)  # High intensity, high harmony → 80*0.8=64 → 82
 
-        >>> calculate_unified_score(85, 90)
-        (85, QualityLabel.HARMONIOUS)  # High intensity, high harmony
+        >>> calculate_unified_score(80, 30)
+        (34.0, QualityLabel.CHALLENGING)  # High intensity, low harmony → 80*(-0.4)=-32 → 34
 
         >>> calculate_unified_score(20, 90)
-        (20, QualityLabel.QUIET)  # Very low intensity (harmony doesn't matter)
+        (58.0, QualityLabel.QUIET)  # Low intensity, high harmony → 20*0.8=16 → 58
 
-        >>> calculate_unified_score(35, 80)
-        (35, QualityLabel.PEACEFUL)  # Low intensity with good harmony
+        >>> calculate_unified_score(80, 50)
+        (50.0, QualityLabel.MIXED)  # High intensity, neutral harmony → 80*0=0 → 50
     """
-    # Very low intensity = quiet (regardless of harmony)
-    # Rationale: If intensity < 25, even challenging aspects are too weak to matter
-    if intensity < 25:
-        return intensity, QualityLabel.QUIET
+    # Calculate harmony sign factor: maps 0-100 to -1 to +1
+    harmony_sign = (harmony - 50) / 50
 
-    # Low-moderate intensity with good harmony = peaceful
-    # Rationale: Some activity, but it's calm and supportive
-    if intensity < 40 and harmony >= 65:
-        return intensity, QualityLabel.PEACEFUL
+    # Calculate signed score: intensity magnitude with harmony direction
+    signed_score = intensity * harmony_sign
 
-    # Standard harmony-based quality for moderate-to-high intensity
-    if harmony >= 70:
-        return intensity, QualityLabel.HARMONIOUS
-    elif harmony <= 30:
-        return intensity, QualityLabel.CHALLENGING
+    # Normalize from [-100, +100] to [0, 100]
+    unified_score = (signed_score / 2) + 50
+
+    # Determine quality label based on unified score
+    if unified_score < 25:
+        quality = QualityLabel.CHALLENGING  # Very bad energy
+    elif unified_score < 40:
+        quality = QualityLabel.MIXED  # Somewhat challenging
+    elif unified_score < 60:
+        if intensity < 25:
+            quality = QualityLabel.QUIET  # Low activity
+        else:
+            quality = QualityLabel.MIXED  # Neutral
+    elif unified_score < 75:
+        quality = QualityLabel.PEACEFUL  # Good but moderate
     else:
-        return intensity, QualityLabel.MIXED
+        quality = QualityLabel.HARMONIOUS  # Excellent energy
+
+    return unified_score, quality
 
 
 # ============================================================================
@@ -438,69 +575,11 @@ def calculate_overall_intensity_meter(
 
     Spec: Section 5.2.1
     Formula: Total DTI across all transits
-    Interpretation:
-    - 0-25: Quiet (rest, integrate)
-    - 26-50: Moderate (normal operations)
-    - 51-75: High (pay attention)
-    - 76-90: Very High (major themes active)
-    - 91-100: Extreme (life-defining period)
     """
     reading = calculate_meter_score(all_aspects, "overall_intensity", date, MeterGroup.OVERVIEW)
 
-    # Generate interpretation
-    if reading.intensity < 26:
-        reading.interpretation = (
-            "Your astrological activity is minimal right now. This is a quiet "
-            "period with low cosmic demands. Energy is subtle and internal."
-        )
-        reading.advice = [
-            "Rest and integrate recent experiences",
-            "Good time for routine maintenance and reflection",
-            "No major external pushes - go with your own flow"
-        ]
-    elif reading.intensity < 51:
-        reading.interpretation = (
-            "Normal level of astrological activity. Background cosmic currents "
-            "are present but not overwhelming. Standard life operations."
-        )
-        reading.advice = [
-            "Proceed with normal activities and plans",
-            "Incremental progress is favored",
-            "Balance activity with adequate rest"
-        ]
-    elif reading.intensity < 76:
-        reading.interpretation = (
-            "Significant astrological activity is present. The cosmos is clearly "
-            "sending signals and activating themes. Things are moving."
-        )
-        reading.advice = [
-            "Pay attention to emerging themes and synchronicities",
-            "This is not a time to coast - engage actively",
-            "Multiple life areas may be activated simultaneously"
-        ]
-    elif reading.intensity < 91:
-        reading.interpretation = (
-            "Very high intensity period - you're in the top 5% of cosmic activity. "
-            "Major themes are active and demanding attention. Life is happening."
-        )
-        reading.advice = [
-            "Major life themes are in focus - strategic engagement required",
-            "High-stakes period - your choices matter significantly",
-            "Ensure adequate support systems and self-care",
-            "This intensity won't last forever - ride the wave"
-        ]
-    else:
-        reading.interpretation = (
-            "EXTREME intensity period - top 1% of cosmic activity. This is a "
-            "life-defining window. Multiple powerful transits converge. All hands on deck."
-        )
-        reading.advice = [
-            "Life-defining period - stay grounded and centered",
-            "Seek support from trusted advisors and friends",
-            "Major transformations are underway - embrace the process",
-            "Document this period - future you will want to remember",
-            "Prioritize ruthlessly - you can't do everything at once"
-        ]
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "overall_intensity")
 
     # Add top contributors
     if reading.top_aspects:
@@ -510,7 +589,6 @@ def calculate_overall_intensity_meter(
             contrib_text += f"• {aspect.label} (DTI: {aspect.dti_contribution:.1f})\n"
         reading.interpretation += contrib_text
 
-    reading.state_label = get_intensity_label(reading.intensity)
     return reading
 
 
@@ -524,12 +602,6 @@ def calculate_overall_harmony_meter(
     Spec: Section 5.2.2
     Formula: Total HQS across all transits
     Scale: 0-100 where 50 is neutral
-    Interpretation:
-    - 0-20: Very Challenging (heavy difficult aspects)
-    - 21-40: Challenging (net difficult influence)
-    - 41-60: Mixed/Neutral (balance of both)
-    - 61-80: Supportive (net harmonious influence)
-    - 81-100: Very Supportive (predominantly harmonious)
     """
     reading = calculate_meter_score(all_aspects, "overall_harmony", date, MeterGroup.OVERVIEW)
 
@@ -544,70 +616,13 @@ def calculate_overall_harmony_meter(
         "neutral_count": neutral
     }
 
-    # Generate interpretation
-    if reading.harmony < 21:
-        reading.interpretation = (
-            "Very challenging astrological climate. Heavy difficult aspects dominate. "
-            "Growth through friction, obstacles, and tests. High resistance period."
-        )
-        reading.advice = [
-            "Expect obstacles and friction - this is temporary",
-            "Focus on building resilience and character",
-            "Avoid major risks or aggressive moves",
-            "Seek support and maintain perspective",
-            "Lessons are being forged - lean into the growth"
-        ]
-    elif reading.harmony < 41:
-        reading.interpretation = (
-            "Challenging astrological climate. Net difficult influence present. "
-            "Effort and conscious navigation required. Growth through challenge."
-        )
-        reading.advice = [
-            "Proceed with patience and persistence",
-            "Double-check plans and communications",
-            "Challenges are teaching valuable lessons",
-            "Maintain self-care and boundaries"
-        ]
-    elif reading.harmony < 61:
-        reading.interpretation = (
-            "Mixed astrological climate. Opportunities and challenges coexist. "
-            "Neither fully easy nor fully difficult. Balanced navigation required."
-        )
-        reading.advice = [
-            "Be discerning - some areas flow, others require effort",
-            "Leverage opportunities while managing challenges",
-            "Stay flexible and adaptive",
-            "Mixed periods often bring important growth"
-        ]
-    elif reading.harmony < 81:
-        reading.interpretation = (
-            "Supportive astrological climate. Net harmonious influence present. "
-            "Flow, ease, and natural unfolding. Favorable conditions for progress."
-        )
-        reading.advice = [
-            "Take advantage of favorable conditions",
-            "Good time for initiatives and forward movement",
-            "Things fall into place more easily than usual",
-            "Express gratitude for the grace period"
-        ]
-    else:
-        reading.interpretation = (
-            "Very supportive astrological climate. Predominantly harmonious aspects. "
-            "Grace, luck, and things falling into place. Peak favorable conditions."
-        )
-        reading.advice = [
-            "Rare window of exceptional cosmic support",
-            "Launch important initiatives and projects",
-            "Serendipity and synchronicity are heightened",
-            "Make meaningful progress while conditions favor you",
-            "Celebrate and appreciate this blessed period"
-        ]
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "overall_harmony")
 
     # Add breakdown
     breakdown = f"\n\nAspect breakdown: {supportive} supportive, {challenging} challenging, {neutral} neutral"
     reading.interpretation += breakdown
 
-    reading.state_label = get_harmony_label(reading.harmony)
     return reading
 
 
@@ -624,19 +639,21 @@ def calculate_mental_clarity_meter(
     Mental Clarity Meter - ease of thinking, concentration, mental processing.
 
     Spec: Section 5.4.1
-    Primary: All aspects to natal Mercury
-    Secondary: 3rd house transits
+    Primary: All aspects to natal Mercury + 3rd house
+    Transit filter: ONLY fast-moving transits (Mercury/Venus/Mars) = daily thinking
     Modifier: Mercury retrograde (×0.6 to clarity)
-
-    Interpretation Matrix:
-    - Low Intensity: Mental Quiet
-    - Moderate/High Harmony: Sharp Focus / Genius Mode
-    - Moderate/Low Harmony: Scattered / Overload
+    Note: Separated from innovation_breakthrough by using fast transits vs Uranus transits
     """
-    # Filter to Mercury aspects
+    # Filter to Mercury aspects + 3rd house
     mercury_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.MERCURY])
+    third_house = filter_aspects_by_natal_house(all_aspects, [3])
+    combined = mercury_aspects + third_house
 
-    reading = calculate_meter_score(mercury_aspects, "mental_clarity", date, MeterGroup.MIND)
+    # Filter to fast-moving transits only (daily thinking, not breakthrough moments)
+    fast_transits = [Planet.MERCURY, Planet.VENUS, Planet.MARS]
+    filtered_clarity = filter_aspects_by_transit_planet(combined, fast_transits)
+
+    reading = calculate_meter_score(filtered_clarity, "mental_clarity", date, MeterGroup.MIND)
 
     # Apply Mercury retrograde modifier (affects harmony calculation)
     mercury_data = next(
@@ -647,68 +664,8 @@ def calculate_mental_clarity_meter(
         reading.harmony *= 0.6
         reading.additional_context["mercury_retrograde"] = True
 
-    # Generate interpretation based on matrix
-    intensity = reading.intensity
-    harmony = reading.harmony
-
-    if intensity < 40:
-        reading.interpretation = "Your mind is quiet with low mental demand. Rest and integration period."
-        reading.advice = ["Low cognitive demands - good for mental rest", "Integration and reflection favored"]
-        reading.state_label = "Mental Quiet"
-    elif intensity < 70:
-        if harmony > 70:
-            reading.interpretation = "Excellent mental clarity. Thinking is sharp and communication flows easily."
-            reading.advice = [
-                "Excellent time for learning, writing, decisions",
-                "Complex problem-solving favored",
-                "Important conversations go well"
-            ]
-            reading.state_label = "Sharp Focus"
-        elif harmony < 30:
-            reading.interpretation = "Significantly reduced mental clarity. Brain fog, confusion, communication difficulties."
-            reading.advice = [
-                "Avoid important decisions if possible",
-                "Double-check details and communications",
-                "Give extra time for mental tasks",
-                "Rest your mind - reduce information overload"
-            ]
-            reading.state_label = "Scattered"
-        else:
-            reading.interpretation = "Mixed mental state with both clear moments and foggy periods."
-            reading.advice = [
-                "Mixed mental energy - proceed thoughtfully",
-                "Give extra time for important decisions",
-                "Be especially clear in communications"
-            ]
-            reading.state_label = "Mixed Mental Energy"
-    else:  # High intensity
-        if harmony > 70:
-            reading.interpretation = "Peak mental performance. Exceptional clarity, insight, and communication."
-            reading.advice = [
-                "Genius mode activated - tackle complex problems",
-                "Ideal for presentations, negotiations, creative work",
-                "Major mental breakthroughs possible",
-                "Document your insights - they're valuable"
-            ]
-            reading.state_label = "Genius Mode"
-        elif harmony < 30:
-            reading.interpretation = "Mind under significant stress. Mental overload, scattered thinking, or major miscommunications likely."
-            reading.advice = [
-                "Mental overload risk - prioritize and simplify",
-                "NOT the time for major decisions",
-                "High misunderstanding/argument risk - be careful",
-                "Consider postponing difficult conversations",
-                "Rest and recovery crucial"
-            ]
-            reading.state_label = "Mental Overload"
-        else:
-            reading.interpretation = "Intense mental activity with both breakthroughs and challenges."
-            reading.advice = [
-                "High mental activity - manage your energy",
-                "Both insights and confusion possible",
-                "Give yourself extra processing time"
-            ]
-            reading.state_label = "Intense Mixed"
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "mental_clarity")
 
     # Add retrograde note if applicable (after interpretation is set)
     if reading.additional_context.get("mercury_retrograde", False):
@@ -725,68 +682,17 @@ def calculate_decision_quality_meter(
     Decision Quality Meter - wisdom, judgment, strategic thinking.
 
     Spec: Section 5.4.2
-    Planets: Mercury (analysis), Jupiter (wisdom), Saturn (discernment), Neptune (intuition vs confusion)
+    Planets: Jupiter (wisdom), Saturn (discernment), Neptune (intuition vs confusion)
+    Note: Mercury removed - mental_clarity handles thinking speed, this meter handles wisdom
     """
-    decision_planets = [Planet.MERCURY, Planet.JUPITER, Planet.SATURN, Planet.NEPTUNE]
+    decision_planets = [Planet.JUPITER, Planet.SATURN, Planet.NEPTUNE]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, decision_planets)
 
     reading = calculate_meter_score(filtered_aspects, "decision_quality", date, MeterGroup.MIND)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Decision-making is relatively quiet. No major pushes or pressures."
-        reading.advice = ["Standard decision-making applies", "No urgent choices required"]
-        reading.state_label = "Baseline"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Excellent judgment and strategic thinking. Clarity and wisdom combine."
-            reading.advice = [
-                "Great time for important decisions",
-                "Trust your analysis and intuition",
-                "Long-term planning favored"
-            ]
-            reading.state_label = "Clear Judgment"
-        elif reading.harmony < 30:
-            reading.interpretation = "Clouded judgment or conflicting inputs. Decision-making is compromised."
-            reading.advice = [
-                "Postpone major decisions if possible",
-                "Seek outside counsel and perspective",
-                "Watch for self-deception or wishful thinking"
-            ]
-            reading.state_label = "Clouded"
-        else:
-            reading.interpretation = "Mixed signals for decision-making. Some clarity, some confusion."
-            reading.advice = [
-                "Take your time with important choices",
-                "Gather multiple perspectives",
-                "Trust logic over emotion"
-            ]
-            reading.state_label = "Mixed Signals"
-    else:  # High intensity
-        if reading.harmony > 70:
-            reading.interpretation = "Peak wisdom and strategic clarity. Major decisions favor you."
-            reading.advice = [
-                "Excellent window for life-changing decisions",
-                "Your judgment is exceptionally sound",
-                "Trust yourself - act decisively"
-            ]
-            reading.state_label = "Peak Wisdom"
-        elif reading.harmony < 30:
-            reading.interpretation = "High-stakes period with compromised judgment. Major confusion or delusion risk."
-            reading.advice = [
-                "AVOID major decisions if at all possible",
-                "High risk of costly mistakes",
-                "Seek professional advice for important matters",
-                "Wait for clarity"
-            ]
-            reading.state_label = "High Risk"
-        else:
-            reading.interpretation = "Important decision pressure with mixed clarity."
-            reading.advice = [
-                "Major choices are pressing but proceed carefully",
-                "Gather all available information",
-                "Sleep on big decisions"
-            ]
-            reading.state_label = "Pressure Mixed"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "decision_quality")
 
     return reading
 
@@ -806,62 +712,9 @@ def calculate_communication_flow_meter(
 
     reading = calculate_meter_score(filtered_aspects, "communication_flow", date, MeterGroup.MIND)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Communication is quiet and routine. No special dynamics."
-        reading.advice = ["Normal communication patterns apply"]
-        reading.state_label = "Routine"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Communication flows beautifully. You're articulate, heard, and persuasive."
-            reading.advice = [
-                "Excellent time for important conversations",
-                "Negotiations go well",
-                "Express yourself freely"
-            ]
-            reading.state_label = "Flowing"
-        elif reading.harmony < 30:
-            reading.interpretation = "Communication is strained. Misunderstandings, conflicts, or being misheard."
-            reading.advice = [
-                "Be extra clear and patient",
-                "Avoid heated arguments",
-                "Written communication may be safer than verbal",
-                "Clarify assumptions"
-            ]
-            reading.state_label = "Strained"
-        else:
-            reading.interpretation = "Mixed communication energy. Some clarity, some friction."
-            reading.advice = [
-                "Be mindful of tone and timing",
-                "Confirm understanding in conversations",
-                "Stay flexible"
-            ]
-            reading.state_label = "Mixed"
-    else:  # High intensity
-        if reading.harmony > 70:
-            reading.interpretation = "Peak communication power. Your words have exceptional impact and resonance."
-            reading.advice = [
-                "Ideal for presentations, pitches, or difficult talks",
-                "Your message lands powerfully",
-                "Speak your truth - people will listen"
-            ]
-            reading.state_label = "Powerful Voice"
-        elif reading.harmony < 30:
-            reading.interpretation = "High communication stress. Major conflicts, explosive arguments, or severe blocks."
-            reading.advice = [
-                "High argument/conflict risk - tread carefully",
-                "Postpone sensitive conversations if possible",
-                "Count to ten before responding",
-                "Seek mediation for disputes"
-            ]
-            reading.state_label = "Volatile"
-        else:
-            reading.interpretation = "Intense communication activity with mixed results."
-            reading.advice = [
-                "Important talks are happening but proceed thoughtfully",
-                "Balance assertiveness with diplomacy",
-                "Choose words carefully"
-            ]
-            reading.state_label = "Intense"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "communication_flow")
 
     return reading
 
@@ -878,83 +731,17 @@ def calculate_emotional_intensity_meter(
     Emotional Intensity Meter - depth of feeling, emotional activation.
 
     Spec: Section 5.5.1
-    Planets: Moon (emotions), Venus (affection), Pluto (depth), Neptune (sensitivity)
+    Planets: Moon (emotions), Venus (affection), Pluto (depth)
+    Note: Neptune removed - it's spiritual/mystical, not emotional. Moved to intuition_spirituality
     """
-    emotion_planets = [Planet.MOON, Planet.VENUS, Planet.PLUTO, Planet.NEPTUNE]
+    emotion_planets = [Planet.MOON, Planet.VENUS, Planet.PLUTO]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, emotion_planets)
 
     reading = calculate_meter_score(filtered_aspects, "emotional_intensity", date, MeterGroup.EMOTIONS)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Emotional life is calm and balanced. Feelings are stable."
-        reading.advice = ["Normal emotional baseline", "Good time for emotional rest"]
-        reading.state_label = "Calm"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = "Heightened positive emotions. Joy, love, connection, or creative inspiration."
-            reading.advice = [
-                "Savor the good feelings",
-                "Share emotions with loved ones",
-                "Channel into creative expression"
-            ]
-            reading.state_label = "Uplifted"
-        elif reading.harmony < 40:
-            reading.interpretation = "Emotional challenges present. Difficult feelings, old wounds, or relationship stress."
-            reading.advice = [
-                "Honor your feelings without being overwhelmed",
-                "Seek support if needed",
-                "This too shall pass",
-                "Process emotions healthily"
-            ]
-            reading.state_label = "Challenged"
-        else:
-            reading.interpretation = "Mixed emotional currents. Highs and lows, complexity."
-            reading.advice = [
-                "Ride the emotional waves mindfully",
-                "Allow space for all feelings",
-                "Stay grounded"
-            ]
-            reading.state_label = "Mixed Feelings"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = "Peak emotional experiences. Profound joy, love, or spiritual connection."
-            reading.advice = [
-                "Treasure this emotionally rich period",
-                "Peak experiences are unfolding",
-                "Open your heart fully",
-                "Document meaningful moments"
-            ]
-            reading.state_label = "Peak Emotion"
-        elif reading.harmony < 15:  # Severe emotional strain zone
-            reading.state_label = "Severe Emotional Strain"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme intensity AND extreme disharmony = truly severe
-                reading.interpretation = "Emotions under severe pressure. Possible catharsis, breakdown, or profound emotional transformation."
-            else:
-                reading.interpretation = "Significant emotional challenges. Deep feelings, old wounds, or intense vulnerability requiring care."
-            reading.advice = [
-                "Seek support - don't go through this alone",
-                "Professional help may be appropriate",
-                "Intense emotions are valid and important",
-                "This is a transformational passage",
-                "Be gentle with yourself"
-            ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.state_label = "Emotional Friction"
-            reading.interpretation = "Emotional friction present. Difficult feelings or relationship tension require attention."
-            reading.advice = [
-                "Honor your feelings without being overwhelmed",
-                "Process emotions healthily",
-                "This too shall pass"
-            ]
-        else:  # Mixed zone (30-70 harmony)
-            reading.state_label = "Intense Complex"
-            reading.interpretation = "Powerful emotional activation with complex layers."
-            reading.advice = [
-                "Major emotional themes are active",
-                "Give yourself space to feel",
-                "Stay connected to support systems"
-            ]
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "emotional_intensity")
 
     return reading
 
@@ -989,82 +776,9 @@ def calculate_relationship_harmony_meter(
         reading.harmony *= 0.7
         reading.additional_context["venus_retrograde"] = True
 
-    if reading.intensity < 40:
-        reading.interpretation = "Relationship dynamics are stable and routine. No major themes."
-        reading.advice = ["Normal relationship baseline", "Maintain routines"]
-        reading.state_label = "Stable"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Excellent relationship energy. Connection, harmony, and mutual understanding flow."
-            reading.advice = [
-                "Wonderful time for quality time together",
-                "Deepen bonds and intimacy",
-                "Resolve conflicts easily"
-            ]
-            reading.state_label = "Harmonious"
-        elif reading.harmony < 30:
-            reading.interpretation = "Relationship friction or disconnection. Conflicts, misunderstandings, or distance."
-            reading.advice = [
-                "Practice patience and compassion",
-                "Address issues constructively",
-                "Avoid blame or criticism",
-                "Seek understanding first"
-            ]
-            reading.state_label = "Friction"
-        else:
-            reading.interpretation = "Mixed relationship dynamics. Some connection, some challenges."
-            reading.advice = [
-                "Navigate with awareness",
-                "Communicate openly",
-                "Balance needs"
-            ]
-            reading.state_label = "Mixed"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = "Peak relationship magic. Deep connection, breakthroughs, or falling in love."
-            reading.advice = [
-                "Savor this exceptional connection",
-                "Major relationship milestones possible",
-                "Open your heart to love"
-            ]
-            reading.state_label = "Magic"
-        elif reading.harmony < 15:  # Severe friction zone
-            reading.state_label = "Severe Friction"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme = truly severe relationship crisis
-                reading.interpretation = "Relationship under severe strain. Possible breakup, betrayal, or profound transformation required."
-                reading.advice = [
-                    "Relationship challenges are serious but not necessarily terminal",
-                    "Seek counseling or mediation if the bond is worth saving",
-                    "Major decisions may be necessary - honor your truth",
-                    "Protect your boundaries and well-being"
-                ]
-            else:
-                # High intensity but not catastrophic
-                reading.interpretation = "Significant relationship challenges. Tests, conflicts, or disconnection require honest work."
-                reading.advice = [
-                    "Relationship friction is significant",
-                    "Open, honest communication is essential",
-                    "Consider couples counseling or mediation",
-                    "This difficulty can deepen bonds if navigated well"
-                ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.interpretation = "Relationship friction or tension. Conflicts, misunderstandings, or growing distance."
-            reading.advice = [
-                "Practice patience and compassion",
-                "Address issues constructively, not defensively",
-                "Avoid blame or criticism",
-                "Seek understanding before being understood"
-            ]
-            reading.state_label = "Friction"
-        else:  # Mixed zone (30-70 harmony)
-            reading.interpretation = "Intense relationship activity with complexity. Passion and tension coexist."
-            reading.advice = [
-                "Major relationship themes demand attention",
-                "Stay present and authentic",
-                "Transformations are underway - navigate with care"
-            ]
-            reading.state_label = "Intense"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "relationship_harmony")
 
     # Add retrograde note if applicable (after interpretation is set)
     if reading.additional_context.get("venus_retrograde", False):
@@ -1078,72 +792,29 @@ def calculate_emotional_resilience_meter(
     date: datetime
 ) -> MeterReading:
     """
-    Emotional Resilience Meter - capacity to handle stress, bounce back.
+    Emotional Resilience Meter - capacity to handle stress, emotional stability.
 
     Spec: Section 5.5.3
-    Planets: Sun (vitality), Saturn-Moon (emotional structure), Mars (courage), Jupiter (optimism)
+    Focus: Moon (emotional nature) + Saturn (emotional structure) + 4th house (foundation)
+
+    Rationale: Emotional resilience is specifically about emotional regulation and stress.
+    Moon = core emotional response patterns
+    Saturn = discipline, boundaries, stress management
+    4th house = emotional foundation, security needs, family patterns
     """
-    resilience_planets = [Planet.SUN, Planet.MOON, Planet.SATURN, Planet.MARS, Planet.JUPITER]
+    resilience_planets = [Planet.MOON, Planet.SATURN]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, resilience_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "emotional_resilience", date, MeterGroup.EMOTIONS)
+    # Add 4th house (emotional foundation)
+    fourth_house = filter_aspects_by_natal_house(all_aspects, [4])
 
-    if reading.intensity < 40:
-        reading.interpretation = "Normal emotional resilience. No special pressures or support."
-        reading.advice = ["Maintain healthy practices"]
-        reading.state_label = "Baseline"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Strong emotional resilience. You feel capable, optimistic, and supported."
-            reading.advice = [
-                "Tackle challenges confidently",
-                "Your emotional foundation is solid",
-                "Take on stretches"
-            ]
-            reading.state_label = "Strong"
-        elif reading.harmony < 30:
-            reading.interpretation = "Compromised resilience. Feeling fragile, depleted, or overwhelmed."
-            reading.advice = [
-                "Prioritize self-care and rest",
-                "Reduce stressors where possible",
-                "Lean on support systems",
-                "Be gentle with yourself"
-            ]
-            reading.state_label = "Fragile"
-        else:
-            reading.interpretation = "Variable resilience. Some days stronger than others."
-            reading.advice = [
-                "Monitor your capacity",
-                "Adjust expectations as needed",
-                "Ask for help when needed"
-            ]
-            reading.state_label = "Variable"
-    else:  # High intensity
-        if reading.harmony > 70:
-            reading.interpretation = "Exceptional resilience and inner strength. You're remarkably capable."
-            reading.advice = [
-                "Your strength is extraordinary right now",
-                "Lead and support others",
-                "Major challenges are manageable"
-            ]
-            reading.state_label = "Unshakeable"
-        elif reading.harmony < 30:
-            reading.interpretation = "Severe resilience depletion. Burnout, breakdown, or exhaustion risk."
-            reading.advice = [
-                "Emergency self-care required",
-                "Reduce all non-essential demands",
-                "Professional support strongly recommended",
-                "This is not weakness - this is being human"
-            ]
-            reading.state_label = "Depleted"
-        else:
-            reading.interpretation = "Major stress with mixed capacity to handle it."
-            reading.advice = [
-                "Significant pressure is present",
-                "Carefully manage your resources",
-                "Prioritize ruthlessly"
-            ]
-            reading.state_label = "Under Pressure"
+    # Combine
+    combined = filtered_aspects + fourth_house
+
+    reading = calculate_meter_score(combined, "emotional_resilience", date, MeterGroup.EMOTIONS)
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "emotional_resilience")
 
     return reading
 
@@ -1178,76 +849,9 @@ def calculate_physical_energy_meter(
         reading.harmony *= 0.65  # Mars Rx feels more frustrating
         reading.additional_context["mars_retrograde"] = True
 
-    if reading.intensity < 40:
-        reading.interpretation = "Normal physical energy levels. No special activation."
-        reading.advice = ["Standard energy baseline", "Regular routines"]
-        reading.state_label = "Normal"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Great physical energy. You feel strong, vital, and energized."
-            reading.advice = [
-                "Excellent time for physical activity",
-                "Take on active projects",
-                "Channel energy productively"
-            ]
-            reading.state_label = "Energized"
-        elif reading.harmony < 30:
-            reading.interpretation = "Low or blocked energy. Fatigue, depletion, or frustration."
-            reading.advice = [
-                "Rest and restore",
-                "Avoid overexertion",
-                "Gentle activity only",
-                "Check health if persistent"
-            ]
-            reading.state_label = "Low Energy"
-        else:
-            reading.interpretation = "Variable energy. Some vitality, some depletion."
-            reading.advice = [
-                "Listen to your body",
-                "Pace yourself",
-                "Balance activity and rest"
-            ]
-            reading.state_label = "Variable"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = "Peak physical vitality. Exceptional energy, strength, and drive."
-            reading.advice = [
-                "Harness this exceptional energy",
-                "Major physical accomplishments possible",
-                "Athletic peak",
-                "Channel productively"
-            ]
-            reading.state_label = "Peak Vitality"
-        elif reading.harmony < 15:  # Severe depletion zone
-            reading.state_label = "Severe Depletion"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme intensity AND extreme disharmony = truly severe
-                reading.interpretation = "Physical energy severely depleted. Possible burnout or health concerns requiring attention."
-            else:
-                reading.interpretation = "Significant energy depletion. Body needs rest and recovery."
-            reading.advice = [
-                "Immediate rest required",
-                "Medical attention if symptoms persist",
-                "Cancel non-essential activities",
-                "This is your body demanding care"
-            ]
-        elif reading.harmony < 30:  # Low energy period
-            reading.state_label = "Low Energy Period"
-            reading.interpretation = "Energy depletion present. Fatigue or reduced vitality."
-            reading.advice = [
-                "Rest and restore",
-                "Avoid overexertion",
-                "Gentle activity only",
-                "Listen to your body"
-            ]
-        else:  # Mixed zone (30-70 harmony)
-            reading.state_label = "Intense"
-            reading.interpretation = "Intense physical activation with mixed quality."
-            reading.advice = [
-                "High energy but use it wisely",
-                "Avoid overexertion",
-                "Monitor your body"
-            ]
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "physical_energy")
 
     # Add retrograde note if applicable (after interpretation is set)
     if reading.additional_context.get("mars_retrograde", False):
@@ -1262,16 +866,32 @@ def calculate_conflict_risk_meter(
     transit_chart: dict
 ) -> MeterReading:
     """
-    Conflict Risk Meter - likelihood of arguments, confrontations, aggression.
+    Conflict Risk Meter - direct confrontations, power struggles, external conflicts.
 
     Spec: Section 5.6.2
-    Focus: Mars hard aspects (square, opposition)
+    Focus: OPPOSITIONS ONLY from Mars/Pluto/Saturn transits to Mars/Pluto natal
     Modifier: Mars retrograde (anger may be internalized or passive-aggressive)
-    """
-    mars_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.MARS])
-    hard_aspects = filter_hard_aspects(mars_aspects)
 
-    reading = calculate_meter_score(hard_aspects, "conflict_risk", date, MeterGroup.BODY)
+    Rationale:
+    - Oppositions = external, direct confrontations (not internal friction)
+    - Natal Mars/Pluto = confrontation nature
+    - Transit Mars/Pluto/Saturn = active conflict triggers
+    - Mars-Pluto oppositions = power struggles
+    - Mars-Mars oppositions = direct clashes
+    - Saturn oppositions = obstacles from authority/structure
+    """
+    # Filter by natal planets: Mars, Pluto (confrontation nature)
+    natal_conflict = [Planet.MARS, Planet.PLUTO]
+    filtered_natal = filter_aspects_by_natal_planet(all_aspects, natal_conflict)
+
+    # Filter by transit planets: Mars, Pluto, Saturn (active triggers)
+    transit_conflict = [Planet.MARS, Planet.PLUTO, Planet.SATURN]
+    filtered_transit = filter_aspects_by_transit_planet(filtered_natal, transit_conflict)
+
+    # Filter to oppositions only (external conflicts)
+    oppositions = [a for a in filtered_transit if a.aspect_type == AspectType.OPPOSITION]
+
+    reading = calculate_meter_score(oppositions, "conflict_risk", date, MeterGroup.BODY)
 
     # Apply Mars retrograde modifier (affects harmony calculation)
     mars_data = next(
@@ -1282,28 +902,8 @@ def calculate_conflict_risk_meter(
         reading.harmony *= 0.65
         reading.additional_context["mars_retrograde"] = True
 
-    if reading.intensity < 30:
-        reading.interpretation = "Low conflict risk. Tensions are minimal."
-        reading.advice = ["Normal peaceful baseline"]
-        reading.state_label = "Low Risk"
-    elif reading.intensity < 60:
-        reading.interpretation = "Moderate conflict risk. Some irritation or friction possible."
-        reading.advice = [
-            "Be mindful of tone",
-            "Avoid unnecessary provocation",
-            "Choose battles wisely"
-        ]
-        reading.state_label = "Moderate Risk"
-    else:  # High intensity
-        reading.interpretation = "High conflict risk. Arguments, confrontations, or aggression likely."
-        reading.advice = [
-            "Conflict potential is elevated",
-            "Practice patience and restraint",
-            "Count to ten before reacting",
-            "Avoid volatile people or situations",
-            "Channel anger into exercise or productive action"
-        ]
-        reading.state_label = "High Risk"
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "conflict_risk")
 
     # Add retrograde note if applicable (after interpretation is set)
     if reading.additional_context.get("mars_retrograde", False):
@@ -1321,10 +921,11 @@ def calculate_motivation_drive_meter(
     Motivation Drive Meter - ambition, initiative, pushing forward.
 
     Spec: Section 5.6.3
-    Planets: Mars (drive), Jupiter (expansion), Saturn (discipline)
+    Planets: Mars (drive), Jupiter (expansion/enthusiasm)
     Modifier: Mars retrograde (drive may feel stalled or require redirection)
+    Note: Saturn removed - discipline/structure belongs in decision_quality, not motivation
     """
-    motivation_planets = [Planet.MARS, Planet.JUPITER, Planet.SATURN]
+    motivation_planets = [Planet.MARS, Planet.JUPITER]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, motivation_planets)
 
     reading = calculate_meter_score(filtered_aspects, "motivation_drive", date, MeterGroup.BODY)
@@ -1338,83 +939,9 @@ def calculate_motivation_drive_meter(
         reading.harmony *= 0.65
         reading.additional_context["mars_retrograde"] = True
 
-    if reading.intensity < 40:
-        reading.interpretation = "Normal motivation levels. No special push or drag."
-        reading.advice = ["Standard productivity applies"]
-        reading.state_label = "Normal"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Strong motivation and focus. You feel driven and capable."
-            reading.advice = [
-                "Great time to advance goals",
-                "Productivity is high",
-                "Tackle important projects"
-            ]
-            reading.state_label = "Driven"
-        elif reading.harmony < 30:
-            reading.interpretation = "Low motivation or blocked drive. Procrastination, frustration, or obstacles."
-            reading.advice = [
-                "Lower your expectations temporarily",
-                "Focus on small wins",
-                "Address what's blocking you",
-                "Be patient with yourself"
-            ]
-            reading.state_label = "Blocked"
-        else:
-            reading.interpretation = "Mixed motivation. Some drive, some resistance."
-            reading.advice = [
-                "Work with your natural rhythms",
-                "Progress is possible but requires effort",
-                "Stay consistent"
-            ]
-            reading.state_label = "Mixed"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = "Exceptional drive and ambition. Major goal achievement window."
-            reading.advice = [
-                "Peak productivity period",
-                "Major goals are achievable",
-                "Capitalize on this exceptional drive",
-                "Set ambitious targets"
-            ]
-            reading.state_label = "Peak Drive"
-        elif reading.harmony < 15:  # Severe depletion zone
-            reading.state_label = "Severely Strained"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme = truly severe burnout risk
-                reading.interpretation = "Motivation severely depleted. Possible burnout, depression, or fundamental misalignment with goals."
-                reading.advice = [
-                    "This depletion is serious - rest is not optional",
-                    "Professional support may be beneficial",
-                    "Reevaluate your fundamental goals and direction",
-                    "Something needs to change - listen to this signal"
-                ]
-            else:
-                # High intensity but not catastrophic
-                reading.interpretation = "Significant motivational challenges. Major blocks, exhaustion, or goal misalignment."
-                reading.advice = [
-                    "Motivation struggles are significant",
-                    "Take time to rest and recharge",
-                    "Examine what's causing resistance",
-                    "Small steps forward are still progress"
-                ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.interpretation = "Low motivation or blocked drive. Procrastination, frustration, or significant obstacles."
-            reading.advice = [
-                "Lower your expectations temporarily",
-                "Focus on small achievable wins",
-                "Address what's blocking your progress",
-                "Be patient and compassionate with yourself"
-            ]
-            reading.state_label = "Blocked"
-        else:  # Mixed zone (30-70 harmony)
-            reading.interpretation = "Intense push with mixed effectiveness. High drive but resistance is present."
-            reading.advice = [
-                "High drive but manage it wisely",
-                "Avoid burning out in pursuit of goals",
-                "Balance sustained effort with adequate rest"
-            ]
-            reading.state_label = "Intense Push"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "motivation_drive")
 
     # Add retrograde note if applicable (after interpretation is set)
     if reading.additional_context.get("mars_retrograde", False):
@@ -1429,115 +956,33 @@ def calculate_motivation_drive_meter(
 
 def calculate_career_ambition_meter(
     all_aspects: List[TransitAspect],
-    date: datetime,
-    transit_chart: dict
+    date: datetime
 ) -> MeterReading:
     """
-    Career Ambition Meter - professional drive, status, achievement.
+    Career Ambition Meter - professional drive, status-seeking, public recognition.
 
     Spec: Section 5.7.1
-    Focus: Saturn aspects + 10th house + Capricorn placements
-    Modifier: Saturn retrograde (delays, internal restructuring)
+    Focus: 10th house planets, but ONLY transiting Saturn/Mars/Sun
+
+    Rationale: 10th house = Midheaven, career, public life, professional reputation
+    Transit filter prevents overlap with opportunity_window (Jupiter):
+    - Transit Saturn = career structure, ambition, achievement
+    - Transit Mars = career drive, action, competition
+    - Transit Sun = career recognition, visibility, leadership
+
+    Note: Separated from opportunity_window (which uses Jupiter for general luck/expansion).
     """
-    # Saturn aspects
-    saturn_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.SATURN])
-    # 10th house
+    # 10th house (career/public status arena)
     tenth_house = filter_aspects_by_natal_house(all_aspects, [10])
-    # Combine (simple concatenation - duplicates don't matter for scoring)
-    combined = saturn_aspects + tenth_house
 
-    reading = calculate_meter_score(combined, "career_ambition", date, MeterGroup.CAREER)
+    # Filter by transiting Saturn/Mars/Sun only (career-specific transits)
+    career_transits = [Planet.SATURN, Planet.MARS, Planet.SUN]
+    filtered_career = filter_aspects_by_transit_planet(tenth_house, career_transits)
 
-    # Apply Saturn retrograde modifier (affects harmony calculation)
-    saturn_data = next(
-        (p for p in transit_chart["planets"] if p["name"] == Planet.SATURN),
-        None
-    )
-    if saturn_data and saturn_data.get("retrograde", False):
-        reading.harmony *= 0.7
-        reading.additional_context["saturn_retrograde"] = True
+    reading = calculate_meter_score(filtered_career, "career_ambition", date, MeterGroup.CAREER)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Normal career activity. No special pressure or opportunity."
-        reading.advice = ["Maintain steady progress"]
-        reading.state_label = "Steady"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Strong career momentum. Recognition, advancement, or achievement."
-            reading.advice = [
-                "Excellent time for career moves",
-                "Your efforts are recognized",
-                "Push for what you want"
-            ]
-            reading.state_label = "Advancing"
-        elif reading.harmony < 30:
-            reading.interpretation = "Career challenges or setbacks. Obstacles, criticism, or delays."
-            reading.advice = [
-                "Patience and persistence required",
-                "Learn from setbacks",
-                "Reevaluate strategy if needed",
-                "Long-term thinking"
-            ]
-            reading.state_label = "Challenged"
-        else:
-            reading.interpretation = "Mixed career dynamics. Progress and obstacles coexist."
-            reading.advice = [
-                "Navigate carefully",
-                "Celebrate small wins",
-                "Stay professional"
-            ]
-            reading.state_label = "Mixed"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = "Major career breakthrough window. Peak achievement and recognition."
-            reading.advice = [
-                "Career-defining opportunities present",
-                "Go for major goals",
-                "Your reputation shines",
-                "Leadership opportunities"
-            ]
-            reading.state_label = "Breakthrough"
-        elif reading.harmony < 15:  # Severe challenges zone
-            reading.state_label = "Major Challenges"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme intensity AND extreme disharmony = truly severe
-                reading.interpretation = "Career under severe pressure. Job security threats, major setbacks, or organizational restructuring."
-                reading.advice = [
-                    "Career obstacles are significant but navigable",
-                    "Seek guidance and support from trusted advisors",
-                    "This challenge can forge new professional strengths",
-                    "Maintain professional networks - they matter now"
-                ]
-            else:
-                # High intensity but not catastrophic
-                reading.interpretation = "Significant career challenges. Tests, obstacles, or setbacks require strategic response."
-                reading.advice = [
-                    "Career hurdles require focused effort",
-                    "Patience and persistence are essential",
-                    "Seek mentorship or professional advice",
-                    "This difficulty builds valuable resilience"
-                ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.interpretation = "Career friction or stagnation. Progress requires extra effort and strategy."
-            reading.advice = [
-                "Patience and persistence required",
-                "Not the time for bold career moves",
-                "Address root issues causing friction",
-                "Build resilience through small wins"
-            ]
-            reading.state_label = "Friction"
-        else:  # Mixed zone (30-70 harmony)
-            reading.interpretation = "Intense career activity with both opportunities and obstacles."
-            reading.advice = [
-                "High-stakes career period",
-                "Stay strategic and professional",
-                "Major changes underway - navigate carefully"
-            ]
-            reading.state_label = "High Stakes"
-
-    # Add retrograde note if applicable (after interpretation is set)
-    if reading.additional_context.get("saturn_retrograde", False):
-        reading.interpretation += "\n\nNote: Saturn retrograde - career progress may be delayed or require internal restructuring."
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "career_ambition")
 
     return reading
 
@@ -1567,64 +1012,9 @@ def calculate_opportunity_window_meter(
         reading.harmony *= 0.7
         reading.additional_context["jupiter_retrograde"] = True
 
-    if reading.intensity < 40:
-        reading.interpretation = "Normal opportunity baseline. No special luck or expansion."
-        reading.advice = ["Create your own opportunities"]
-        reading.state_label = "Normal"
-    elif reading.intensity < 70:
-        if reading.harmony > 70:
-            reading.interpretation = "Good opportunities present. Things fall into place more easily."
-            reading.advice = [
-                "Be open to opportunities",
-                "Say yes to invitations",
-                "Network and connect",
-                "Optimism is justified"
-            ]
-            reading.state_label = "Favorable"
-        elif reading.harmony < 30:
-            reading.interpretation = "False opportunities or overextension risk. Beware excess."
-            reading.advice = [
-                "Scrutinize opportunities carefully",
-                "Avoid overcommitment",
-                "Check the fine print",
-                "Realistic expectations"
-            ]
-            reading.state_label = "Caution"
-        else:
-            reading.interpretation = "Mixed opportunities. Some are real, some may disappoint."
-            reading.advice = [
-                "Evaluate opportunities on merit",
-                "Don't rush into commitments",
-                "Trust your discernment"
-            ]
-            reading.state_label = "Mixed"
-    else:  # High intensity
-        if reading.harmony > 70:
-            reading.interpretation = "Major opportunity window. Rare doors are opening. Peak luck."
-            reading.advice = [
-                "Exceptional opportunity period",
-                "Be bold and say yes",
-                "Expansion is favored",
-                "This is your time - seize it"
-            ]
-            reading.state_label = "Peak Opportunity"
-        elif reading.harmony < 30:
-            reading.interpretation = "Major overextension or false promise risk. Beware excess."
-            reading.advice = [
-                "Too much too fast - slow down",
-                "Major reality check needed",
-                "Avoid grandiose schemes",
-                "Get grounded"
-            ]
-            reading.state_label = "Excess Risk"
-        else:
-            reading.interpretation = "Major opportunities with complexity. Discernment required."
-            reading.advice = [
-                "Big possibilities are present",
-                "Evaluate carefully",
-                "Balance optimism with realism"
-            ]
-            reading.state_label = "Big Complex"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "opportunity_window")
 
     # Add retrograde note if applicable (after interpretation is set)
     if reading.additional_context.get("jupiter_retrograde", False):
@@ -1638,39 +1028,34 @@ def calculate_challenge_intensity_meter(
     date: datetime
 ) -> MeterReading:
     """
-    Challenge Intensity Meter - tests, lessons, hard work required.
+    Challenge Intensity Meter - growth challenges, internal friction, tests requiring action.
 
     Spec: Section 5.7.3
-    Focus: Saturn + outer planets (Uranus, Neptune, Pluto)
+    Focus: SQUARES ONLY from Saturn/Uranus/Pluto transits to Saturn/Mars natal
+
+    Rationale:
+    - Squares = internal friction, challenges requiring action (not external conflict)
+    - Natal Saturn/Mars = areas of hardship and frustration
+    - Transit Saturn/Uranus/Pluto = outer planet pressure for growth
+    - Saturn squares = structural tests, limits
+    - Uranus squares = disruption, forced change
+    - Pluto squares = transformation pressure, death/rebirth
     """
-    challenge_planets = [Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO]
-    filtered_aspects = filter_aspects_by_natal_planet(all_aspects, challenge_planets)
+    # Filter by natal planets: Saturn, Mars (hardship + frustration)
+    natal_challenge = [Planet.SATURN, Planet.MARS]
+    filtered_natal = filter_aspects_by_natal_planet(all_aspects, natal_challenge)
 
-    reading = calculate_meter_score(filtered_aspects, "challenge_intensity", date, MeterGroup.EVOLUTION)
+    # Filter by transit planets: Saturn, Uranus, Pluto (outer planet pressure)
+    transit_challenge = [Planet.SATURN, Planet.URANUS, Planet.PLUTO]
+    filtered_transit = filter_aspects_by_transit_planet(filtered_natal, transit_challenge)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Low challenge level. Life flows relatively easily."
-        reading.advice = ["Appreciate the ease", "Build reserves for future challenges"]
-        reading.state_label = "Easy"
-    elif reading.intensity < 70:
-        reading.interpretation = "Moderate challenges present. Growth through effort."
-        reading.advice = [
-            "Embrace the lessons",
-            "Persistence pays off",
-            "You're building character and skill",
-            "Ask for help when needed"
-        ]
-        reading.state_label = "Moderate"
-    else:  # High intensity
-        reading.interpretation = "Major challenges active. Life is testing you significantly."
-        reading.advice = [
-            "You're in the crucible",
-            "These tests are shaping who you're becoming",
-            "Seek support and guidance",
-            "One day at a time",
-            "This difficulty serves your growth"
-        ]
-        reading.state_label = "Intense"
+    # Filter to squares only (internal friction)
+    squares = [a for a in filtered_transit if a.aspect_type == AspectType.SQUARE]
+
+    reading = calculate_meter_score(squares, "challenge_intensity", date, MeterGroup.EVOLUTION)
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "challenge_intensity")
 
     return reading
 
@@ -1690,29 +1075,9 @@ def calculate_transformation_pressure_meter(
 
     reading = calculate_meter_score(filtered_aspects, "transformation_pressure", date, MeterGroup.EVOLUTION)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Low transformation pressure. Relative stability."
-        reading.advice = ["Integrate recent changes", "Stability is okay"]
-        reading.state_label = "Stable"
-    elif reading.intensity < 70:
-        reading.interpretation = "Moderate transformation underway. Evolution is present."
-        reading.advice = [
-            "You're changing and that's good",
-            "Release what no longer serves",
-            "Embrace becoming",
-            "Trust the process"
-        ]
-        reading.state_label = "Evolving"
-    else:  # High intensity
-        reading.interpretation = "Major transformation underway. Your life is fundamentally changing."
-        reading.advice = [
-            "Profound metamorphosis is happening",
-            "Death and rebirth themes active",
-            "You won't be the same person after this",
-            "Surrender to the transformation",
-            "Support is crucial - don't isolate"
-        ]
-        reading.state_label = "Metamorphosis"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "transformation_pressure")
 
     return reading
 
@@ -1825,44 +1190,9 @@ def calculate_fire_energy_meter(
     else:
         emphasis = "Fire is balanced in your chart."
 
-    if reading.intensity < 40:
-        reading.interpretation = f"Low fire activation. Initiative and enthusiasm are quiet. {emphasis}"
-        reading.advice = ["Rest from action", "Inner reflection time"]
-        reading.state_label = "Low Fire"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = f"Good fire energy. Enthusiasm, confidence, and initiative flow. {emphasis}"
-            reading.advice = [
-                "Take initiative",
-                "Start new projects",
-                "Express passion"
-            ]
-            reading.state_label = "Good Fire"
-        else:
-            reading.interpretation = f"Challenging fire energy. Anger, impatience, or recklessness risk. {emphasis}"
-            reading.advice = [
-                "Channel fire constructively",
-                "Avoid impulsive actions",
-                "Patience required"
-            ]
-            reading.state_label = "Difficult Fire"
-    else:  # High intensity
-        if reading.harmony > 60:
-            reading.interpretation = f"Peak fire energy. Exceptional drive, passion, and courage. {emphasis}"
-            reading.advice = [
-                "Harness this powerful fire",
-                "Be bold and take action",
-                "Leadership opportunities"
-            ]
-            reading.state_label = "Peak Fire"
-        else:
-            reading.interpretation = f"Explosive fire energy. Anger, conflict, or burnout risk. {emphasis}"
-            reading.advice = [
-                "Manage fire carefully",
-                "Avoid confrontations",
-                "Channel into exercise"
-            ]
-            reading.state_label = "Explosive"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "fire_energy")
 
     return reading
 
@@ -1894,64 +1224,9 @@ def calculate_earth_energy_meter(
     else:
         emphasis = "Earth is balanced in your chart."
 
-    if reading.intensity < 40:
-        reading.interpretation = f"Low earth activation. Grounding and practical matters are quiet. {emphasis}"
-        reading.advice = ["Routine maintenance", "Basic stability"]
-        reading.state_label = "Low Earth"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = f"Good earth energy. Practicality, stability, and productivity flow. {emphasis}"
-            reading.advice = [
-                "Build and stabilize",
-                "Financial planning favored",
-                "Create tangible results"
-            ]
-            reading.state_label = "Grounded"
-        else:
-            reading.interpretation = f"Challenging earth energy. Rigidity, limitation, or material stress. {emphasis}"
-            reading.advice = [
-                "Don't cling to false security",
-                "Flexibility needed",
-                "Address practical concerns"
-            ]
-            reading.state_label = "Stuck"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = f"Peak earth energy. Exceptional productivity and manifestation power. {emphasis}"
-            reading.advice = [
-                "Build something lasting",
-                "Major material gains possible",
-                "Create solid foundations"
-            ]
-            reading.state_label = "Peak Manifestation"
-        elif reading.harmony < 15:  # Severe pressure zone
-            reading.state_label = "Severe Pressure"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme intensity AND extreme disharmony = truly severe
-                reading.interpretation = f"Material circumstances under severe pressure. Possible financial/practical crisis. {emphasis}"
-            else:
-                reading.interpretation = f"Significant practical challenges. Major material constraints or limitations. {emphasis}"
-            reading.advice = [
-                "Major practical challenges",
-                "Address material reality",
-                "Seek concrete solutions"
-            ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.state_label = "Material Friction"
-            reading.interpretation = f"Material friction. Practical obstacles or resource constraints. {emphasis}"
-            reading.advice = [
-                "Address practical concerns",
-                "Don't cling to false security",
-                "Flexibility needed"
-            ]
-        else:  # Mixed zone (30-70 harmony)
-            reading.state_label = "Heavy"
-            reading.interpretation = f"Heavy earth pressure with mixed quality. Strong practical focus required. {emphasis}"
-            reading.advice = [
-                "Address material reality",
-                "Work through constraints",
-                "Build tangible solutions"
-            ]
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "earth_energy")
 
     return reading
 
@@ -1983,44 +1258,9 @@ def calculate_air_energy_meter(
     else:
         emphasis = "Air is balanced in your chart."
 
-    if reading.intensity < 40:
-        reading.interpretation = f"Low air activation. Mental activity and communication are quiet. {emphasis}"
-        reading.advice = ["Mental rest", "Intuition over logic"]
-        reading.state_label = "Mental Quiet"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = f"Good air energy. Ideas flow, communication is clear, connections form. {emphasis}"
-            reading.advice = [
-                "Intellectual pursuits favored",
-                "Network and communicate",
-                "Learn and teach"
-            ]
-            reading.state_label = "Clear Thinking"
-        else:
-            reading.interpretation = f"Challenging air energy. Anxiety, overthinking, or disconnection. {emphasis}"
-            reading.advice = [
-                "Get out of your head",
-                "Ground in body and feelings",
-                "Limit information overload"
-            ]
-            reading.state_label = "Scattered Mind"
-    else:  # High intensity
-        if reading.harmony > 60:
-            reading.interpretation = f"Peak air energy. Brilliant ideas, exceptional communication, breakthroughs. {emphasis}"
-            reading.advice = [
-                "Genius-level thinking",
-                "Share your ideas widely",
-                "Intellectual breakthroughs"
-            ]
-            reading.state_label = "Genius Air"
-        else:
-            reading.interpretation = f"Extreme mental pressure. Severe anxiety, confusion, or information overload. {emphasis}"
-            reading.advice = [
-                "Serious mental overwhelm",
-                "Unplug and rest your mind",
-                "Seek support if spiraling"
-            ]
-            reading.state_label = "Mental Overload"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "air_energy")
 
     return reading
 
@@ -2052,74 +1292,9 @@ def calculate_water_energy_meter(
     else:
         emphasis = "Water is balanced in your chart."
 
-    if reading.intensity < 40:
-        reading.interpretation = f"Low water activation. Emotions and intuition are calm. {emphasis}"
-        reading.advice = ["Emotional stability", "Logic and structure emphasized"]
-        reading.state_label = "Calm Waters"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = f"Good water energy. Emotions flow, intuition is clear, empathy is high. {emphasis}"
-            reading.advice = [
-                "Trust your intuition",
-                "Connect emotionally",
-                "Creative and spiritual pursuits"
-            ]
-            reading.state_label = "Flowing Water"
-        else:
-            reading.interpretation = f"Challenging water energy. Emotional overwhelm, confusion, or boundary issues. {emphasis}"
-            reading.advice = [
-                "Protect your emotional space",
-                "Set boundaries",
-                "Ground and center",
-                "Avoid escapism"
-            ]
-            reading.state_label = "Turbulent"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = f"Peak water energy. Profound emotional depth, spiritual connection, empathic gifts. {emphasis}"
-            reading.advice = [
-                "Deep healing available",
-                "Spiritual breakthroughs",
-                "Profound compassion",
-                "Trust the mystery"
-            ]
-            reading.state_label = "Deep Water Magic"
-        elif reading.harmony < 15:  # Severe overwhelm zone
-            reading.state_label = "Severe Overwhelm"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme intensity AND extreme disharmony = truly severe
-                reading.interpretation = f"Emotional boundaries severely strained. Possible overwhelm or dissolution. {emphasis}"
-                reading.advice = [
-                    "Emotional emergency - seek support",
-                    "Don't go through this alone",
-                    "Professional help may be needed",
-                    "You will surface again"
-                ]
-            else:
-                reading.interpretation = f"Significant emotional intensity. Deep feelings or boundary challenges. {emphasis}"
-                reading.advice = [
-                    "Seek support",
-                    "Protect your emotional space",
-                    "Ground and center",
-                    "This too shall pass"
-                ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.state_label = "Emotional Turbulence"
-            reading.interpretation = f"Emotional turbulence. Overwhelm, confusion, or boundary issues. {emphasis}"
-            reading.advice = [
-                "Protect your emotional space",
-                "Set boundaries",
-                "Ground and center",
-                "Avoid escapism"
-            ]
-        else:  # Mixed zone (30-70 harmony)
-            reading.state_label = "Deep Waters"
-            reading.interpretation = f"Deep water activation with mixed quality. Strong emotional currents. {emphasis}"
-            reading.advice = [
-                "Navigate emotional depths carefully",
-                "Stay grounded",
-                "Trust your intuition"
-            ]
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "water_energy")
 
     return reading
 
@@ -2145,74 +1320,9 @@ def calculate_intuition_spirituality_meter(
 
     reading = calculate_meter_score(combined, "intuition_spirituality", date, MeterGroup.SPIRITUAL)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Normal spiritual baseline. Intuition is quiet."
-        reading.advice = ["Routine spiritual practices"]
-        reading.state_label = "Baseline"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = "Heightened intuition and spiritual connection. The veil is thin."
-            reading.advice = [
-                "Trust your intuition",
-                "Meditation and prayer favored",
-                "Pay attention to dreams",
-                "Spiritual guidance is available"
-            ]
-            reading.state_label = "Connected"
-        else:
-            reading.interpretation = "Spiritual confusion or false guidance. Discernment compromised."
-            reading.advice = [
-                "Be wary of delusion",
-                "Ground your spiritual practice",
-                "Avoid gurus or cults",
-                "Trust your common sense"
-            ]
-            reading.state_label = "Confused"
-    else:  # High intensity (70-100)
-        if reading.harmony > 70:
-            reading.interpretation = "Peak spiritual opening. Mystical experiences, profound insights, divine connection."
-            reading.advice = [
-                "Rare spiritual opportunity",
-                "The cosmos speaks directly",
-                "Document your revelations",
-                "Sacred experiences are unfolding"
-            ]
-            reading.state_label = "Mystical"
-        elif reading.harmony < 15:  # Severe overwhelm zone
-            reading.state_label = "Severe Spiritual Strain"
-            if reading.intensity > 90 and reading.harmony < 10:
-                # BOTH extreme intensity AND extreme disharmony = truly severe
-                reading.interpretation = "Psychic boundaries severely strained. Possible spiritual crisis or ego dissolution."
-                reading.advice = [
-                    "Spiritual emergency - seek grounded guidance",
-                    "This is part of the path but get support",
-                    "The dark night leads to dawn"
-                ]
-            else:
-                reading.interpretation = "Significant spiritual intensity. Discernment challenged, boundaries tested."
-                reading.advice = [
-                    "Seek grounded guidance",
-                    "Ground your spiritual practice",
-                    "Trust your common sense",
-                    "This too shall pass"
-                ]
-        elif reading.harmony < 30:  # Friction zone
-            reading.state_label = "Spiritual Confusion"
-            reading.interpretation = "Spiritual confusion or false guidance. Discernment compromised."
-            reading.advice = [
-                "Be wary of delusion",
-                "Ground your spiritual practice",
-                "Avoid gurus or cults",
-                "Trust your common sense"
-            ]
-        else:  # Mixed zone (30-70 harmony)
-            reading.state_label = "Deep Spiritual Work"
-            reading.interpretation = "Intense spiritual activation with mixed quality. Profound but challenging."
-            reading.advice = [
-                "Navigate spiritual depths carefully",
-                "Seek experienced guidance",
-                "Trust the process"
-            ]
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "intuition_spirituality")
 
     return reading
 
@@ -2222,57 +1332,26 @@ def calculate_innovation_breakthrough_meter(
     date: datetime
 ) -> MeterReading:
     """
-    Innovation/Breakthrough Meter - eureka moments, revolutionary thinking.
+    Innovation/Breakthrough Meter - eureka moments, revolutionary thinking, sudden insights.
 
     Spec: Section 5.8.2
-    Focus: Uranus aspects (the Awakener)
+    Focus: Uranus + Mercury natal, but ONLY transiting Uranus
+    Transit filter: ONLY Uranus transits = breakthrough moments (not daily thinking)
+
+    Rationale: Mercury-Uranus aspects represent breakthrough ideas and "aha!" moments,
+    but only when Uranus is transiting (sudden paradigm shifts).
+    Note: Separated from mental_clarity by using Uranus transits vs fast transits
     """
-    uranus_aspects = filter_aspects_by_natal_planet(all_aspects, [Planet.URANUS])
+    innovation_planets = [Planet.URANUS, Planet.MERCURY]
+    filtered_aspects = filter_aspects_by_natal_planet(all_aspects, innovation_planets)
 
-    reading = calculate_meter_score(uranus_aspects, "innovation_breakthrough", date, MeterGroup.EVOLUTION)
+    # Filter to Uranus transits only (breakthrough moments, not daily thinking)
+    uranus_transits = filter_aspects_by_transit_planet(filtered_aspects, [Planet.URANUS])
 
-    if reading.intensity < 40:
-        reading.interpretation = "Low innovation activation. Status quo prevails."
-        reading.advice = ["Routine thinking", "Incremental change"]
-        reading.state_label = "Status Quo"
-    elif reading.intensity < 70:
-        if reading.harmony > 60:
-            reading.interpretation = "Good innovation energy. Fresh perspectives, creative solutions, breakthroughs."
-            reading.advice = [
-                "Think outside the box",
-                "Try new approaches",
-                "Innovation is favored",
-                "Embrace the unconventional"
-            ]
-            reading.state_label = "Innovative"
-        else:
-            reading.interpretation = "Disruptive change or rebellion. Chaos, instability, or forced change."
-            reading.advice = [
-                "Change is happening whether you like it or not",
-                "Stay flexible",
-                "Don't resist necessary evolution",
-                "Chaos precedes new order"
-            ]
-            reading.state_label = "Disruptive"
-    else:  # High intensity
-        if reading.harmony > 60:
-            reading.interpretation = "Major breakthrough window. Revolutionary insights, paradigm shifts, liberation."
-            reading.advice = [
-                "Breakthrough potential is massive",
-                "Break free from limitations",
-                "Revolutionary changes possible",
-                "Authentic self emerges"
-            ]
-            reading.state_label = "Revolutionary"
-        else:
-            reading.interpretation = "Extreme disruption or upheaval. Life is being radically restructured."
-            reading.advice = [
-                "Major upheaval underway",
-                "Old structures are collapsing",
-                "This breakdown enables breakthrough",
-                "Stay grounded through chaos"
-            ]
-            reading.state_label = "Upheaval"
+    reading = calculate_meter_score(uranus_transits, "innovation_breakthrough", date, MeterGroup.EVOLUTION)
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "innovation_breakthrough")
 
     return reading
 
@@ -2282,39 +1361,27 @@ def calculate_karmic_lessons_meter(
     date: datetime
 ) -> MeterReading:
     """
-    Karmic Lessons Meter - soul growth, destiny themes, life lessons.
+    Karmic Lessons Meter - soul growth, destiny themes, spiritual evolution.
 
     Spec: Section 5.8.3
-    Focus: Saturn (the Teacher) + North Node
+    Focus: Saturn (the Teacher) + North Node (destiny) + 12th house (karma/past life)
+
+    Rationale: ALL aspects matter for karmic lessons (not just hard ones).
+    12th house = karma, past life patterns, hidden spiritual themes.
     """
     karmic_planets = [Planet.SATURN, Planet.NORTH_NODE]
     filtered_aspects = filter_aspects_by_natal_planet(all_aspects, karmic_planets)
 
-    reading = calculate_meter_score(filtered_aspects, "karmic_lessons", date, MeterGroup.SPIRITUAL)
+    # KEY CHANGE: Add 12th house planets for distinctiveness
+    twelfth_house = filter_aspects_by_natal_house(all_aspects, [12])
 
-    if reading.intensity < 40:
-        reading.interpretation = "Low karmic pressure. No major life lessons active."
-        reading.advice = ["Integration period", "Apply past lessons"]
-        reading.state_label = "Integration"
-    elif reading.intensity < 70:
-        reading.interpretation = "Active life lessons. The universe is teaching important themes."
-        reading.advice = [
-            "Pay attention to recurring patterns",
-            "These lessons are gifts",
-            "Growth through experience",
-            "Wisdom is being forged"
-        ]
-        reading.state_label = "Learning"
-    else:  # High intensity
-        reading.interpretation = "Major karmic themes active. Soul-level lessons and destiny work."
-        reading.advice = [
-            "You're in soul school right now",
-            "These lessons are profound and necessary",
-            "Your evolution is accelerating",
-            "Embrace the growth even when it's hard",
-            "This is what you came here to learn"
-        ]
-        reading.state_label = "Soul Lessons"
+    # Combine (simple concatenation - duplicates handled by scoring algorithm)
+    combined = filtered_aspects + twelfth_house
+
+    reading = calculate_meter_score(combined, "karmic_lessons", date, MeterGroup.SPIRITUAL)
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "karmic_lessons")
 
     return reading
 
@@ -2336,28 +1403,9 @@ def calculate_social_collective_meter(
 
     reading = calculate_meter_score(combined, "social_collective", date, MeterGroup.COLLECTIVE)
 
-    if reading.intensity < 40:
-        reading.interpretation = "Low collective activation. Personal themes dominate."
-        reading.advice = ["Focus on personal life", "Individual concerns"]
-        reading.state_label = "Personal Focus"
-    elif reading.intensity < 70:
-        reading.interpretation = "Moderate collective themes. Community, society, or group dynamics are active."
-        reading.advice = [
-            "Engage with community",
-            "Group activities favored",
-            "Your role in the collective",
-            "Social consciousness"
-        ]
-        reading.state_label = "Social"
-    else:  # High intensity
-        reading.interpretation = "Major collective themes. You're connected to larger social/cultural movements."
-        reading.advice = [
-            "Your life is connected to bigger forces",
-            "Collective themes are personal for you now",
-            "You may have a role in social change",
-            "Individual and collective intertwine"
-        ]
-        reading.state_label = "Collective Actor"
+
+    # Apply labels from JSON
+    apply_labels_to_reading(reading, "social_collective")
 
     return reading
 
@@ -2744,7 +1792,7 @@ def get_meters(
         motivation_drive=calculate_motivation_drive_meter(all_aspects, date, transit_chart),
 
         # Life Domain Meters
-        career_ambition=calculate_career_ambition_meter(all_aspects, date, transit_chart),
+        career_ambition=calculate_career_ambition_meter(all_aspects, date),
         opportunity_window=calculate_opportunity_window_meter(all_aspects, date, transit_chart),
         challenge_intensity=calculate_challenge_intensity_meter(all_aspects, date),
         transformation_pressure=calculate_transformation_pressure_meter(all_aspects, date),

@@ -43,7 +43,7 @@ from models import (
     UserProfile,
     ActionableAdvice
 )
-from astrometers import get_meters, group_meters_by_domain
+from astrometers import get_meters, group_meters_by_domain, daily_meters_summary, get_meter_list
 
 
 # Initialize Jinja2 environment
@@ -234,8 +234,8 @@ def generate_daily_horoscope(
         birth_time="12:00"  # Use noon for transits
     )
 
-    # Calculate astrometers
-    from datetime import datetime as dt
+    # Calculate TODAY'S astrometers
+    from datetime import datetime as dt, timedelta
     date_obj = dt.fromisoformat(date) if isinstance(date, str) else date
     astrometers = get_meters(
         natal_chart=user_profile.natal_chart,
@@ -243,8 +243,21 @@ def generate_daily_horoscope(
         date=date_obj
     )
 
-    # Group meters by domain
-    domain_meters = group_meters_by_domain(astrometers)
+    # Calculate YESTERDAY'S astrometers for trend data
+    yesterday_date = date_obj - timedelta(days=1)
+    yesterday_date_str = yesterday_date.strftime('%Y-%m-%d')
+    yesterday_transit_chart, _ = compute_birth_chart(
+        birth_date=yesterday_date_str,
+        birth_time="12:00"
+    )
+    astrometers_yesterday = get_meters(
+        natal_chart=user_profile.natal_chart,
+        transit_chart=yesterday_transit_chart,
+        date=yesterday_date
+    )
+
+    # Generate smart summary (replaces verbose dump in template)
+    meters_summary = daily_meters_summary(astrometers, astrometers_yesterday)
 
     # Prepare helper data
     chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
@@ -255,28 +268,28 @@ def generate_daily_horoscope(
     moon_sign_profile = get_sun_sign_profile(transit_data.moon_sign)
     moon_sign_keywords = ", ".join(moon_sign_profile.keywords[:3]).lower() if moon_sign_profile else "emotional coloring"
 
-    # Render templates valid for 24 hours
-    static_template = jinja_env.get_template("daily_static.j2")
-    static_prompt = static_template.render()
+    # Render static template with meter metadata for reference
+    # fixme cache static
+    cache_content = None
 
+    static_template = jinja_env.get_template("daily_static.j2")
+    meter_list = get_meter_list(astrometers)
+    static_prompt = static_template.render(
+        meter_list=meter_list  # Pass all meters as list for iteration
+    )
+
+    # astrometers summary is now passed separately
     dynamic_template = jinja_env.get_template("daily_dynamic.j2")
     dynamic_prompt = dynamic_template.render(
         date=date,
+        user_profile=user_profile,
+        sun_sign_profile=sun_sign_profile,
         transits=transit_data,
         lunar_moon_interpretation=lunar_moon_interpretation,
         moon_sign_emotional_description=moon_sign_keywords,
-        astrometers=astrometers,
-        domain_meters=domain_meters
+        meters_summary=meters_summary,  # NEW: Smart filtered summary
+        astrometers=astrometers  # Keep for overall stats in template
     )
-
-    daily_prompt = f"{static_prompt}\n\n{dynamic_prompt}"
-
-    # print("\n\n--- Daily Prompt ---\n")
-    # print(daily_prompt)
-    # print("\n--- End of Daily Prompt ---\n\n")
-
-    # fixme cache dynamic + static
-    cache_content = None
 
     # this is user specific can't be cached
     personalization_template = jinja_env.get_template("personalization.j2")
@@ -287,12 +300,12 @@ def generate_daily_horoscope(
         chart_emphasis=chart_emphasis
     )
 
-    # Compose final prompt
-    prompt = f"{daily_prompt}\n\n{personalization_prompt}"
+    # Compose final
+    prompt = f"{static_prompt}\n\n{personalization_prompt}\n\n{dynamic_prompt}"
 
-    # console.print(f"\n[yellow]Generated Daily Horoscope Prompt:[/yellow]")
-    # console.print(prompt)
-    # console.print("\n[yellow]End of Prompt[/yellow]\n")
+    print(f"\n[yellow]Generated Daily Horoscope Prompt:[/yellow]")
+    print(prompt)
+    print("\n[yellow]End of Prompt[/yellow]\n")
 
     # Define response schema
     class DailyHoroscopeResponse(BaseModel):

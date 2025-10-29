@@ -204,7 +204,7 @@ def main():
     # Create user profile
     user_profile = UserProfile(
         user_id="test_user_001",
-        name="Test User",
+        name="Jane",
         email="test@example.com",
         birth_date=birth_date,
         birth_time=None,
@@ -214,6 +214,8 @@ def main():
         sun_sign=sun_sign.value,
         natal_chart=natal_chart,
         exact_chart=is_exact,
+        is_premium=False,
+        premium_expiry="",
         created_at=datetime.now().isoformat(),
         last_active=datetime.now().isoformat()
     )
