@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter shows how easily you express yourself and share information today.",
-    "detailed": "It tracks Mercury's transits, which rule how you think, speak, and exchange information. Venus aspects can make your words charming, while Mars adds directness and drive. Challenging Saturn aspects might bring delays or misunderstandings to your communication.",
+    "overview": "This meter measures how easily you express yourself and exchange information with others.",
+    "detailed": "Mercury transits are key, shaping how you think and speak. Venus adds charm, Mars brings directness, and Saturn can cause delays in expressing yourself clearly.",
     "keywords": [
-      "Talking",
-      "Writing",
-      "Thinking",
-      "Sharing",
-      "Understanding"
+      "expression",
+      "clarity",
+      "messages",
+      "dialogue",
+      "understanding"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Quiet Thoughts",
+      "quiet": "Low Flow",
       "mild": "Gentle Buzz",
-      "moderate": "Active Mind",
-      "high": "Busy Chatter",
-      "extreme": "Info Overload"
+      "moderate": "Active Talk",
+      "high": "Strong Voice",
+      "extreme": "Peak Chatter"
     },
     "harmony_only": {
       "challenging": "Blocked Flow",
       "mixed": "Mixed Signals",
-      "harmonious": "Clear Flow"
+      "harmonious": "Clear Path"
     },
     "combined": {
       "quiet": {
-        "challenging": "Silent Struggle",
-        "mixed": "Subtle Blocks",
-        "harmonious": "Inner Calm"
+        "challenging": "Quiet Struggle",
+        "mixed": "Low Static",
+        "harmonious": "Calm Exchange"
       },
       "mild": {
-        "challenging": "Gentle Friction",
-        "mixed": "Slight Hiccups",
-        "harmonious": "Easy Whisper"
+        "challenging": "Mild Misread",
+        "mixed": "Lightly Mixed",
+        "harmonious": "Gentle Talks"
       },
       "moderate": {
-        "challenging": "Talk Trouble",
-        "mixed": "Complex Exchange",
+        "challenging": "Tense Chat",
+        "mixed": "Active Mix",
         "harmonious": "Smooth Talk"
       },
       "high": {
-        "challenging": "Heated Debate",
-        "mixed": "Intense Dialogue",
-        "harmonious": "Vibrant Exchange"
+        "challenging": "Loud Conflict",
+        "mixed": "Strong Buzz",
+        "harmonious": "Open Dialogue"
       },
       "extreme": {
-        "challenging": "Communication Crisis",
-        "mixed": "Chaotic Messages",
-        "harmonious": "Fluent Expression"
+        "challenging": "Verbal Storm",
+        "mixed": "Intense Mix",
+        "harmonious": "Fluent Express"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Internal reflection",
-      "mixed": "Careful listening",
-      "harmonious": "Quiet contemplation"
+      "challenging": "Silent reflection",
+      "mixed": "Careful wording",
+      "harmonious": "Listen actively"
     },
     "mild": {
-      "challenging": "Gentle assertiveness",
-      "mixed": "Clarifying intent",
-      "harmonious": "Subtle communication"
+      "challenging": "Clarify points",
+      "mixed": "Gentle negotiation",
+      "harmonious": "Easy sharing"
     },
     "moderate": {
-      "challenging": "Problem solving",
+      "challenging": "Address friction",
       "mixed": "Balanced discussion",
-      "harmonious": "Productive talks"
+      "harmonious": "Express freely"
     },
     "high": {
-      "challenging": "Conflict resolution",
-      "mixed": "Managing dynamics",
-      "harmonious": "Expressing freely"
+      "challenging": "Direct confrontation",
+      "mixed": "Strategic speaking",
+      "harmonious": "Bold expression"
     },
     "extreme": {
-      "challenging": "Crisis management",
-      "mixed": "Navigating complexity",
-      "harmonious": "Bold declaration"
+      "challenging": "De-escalate conflict",
+      "mixed": "Focused debate",
+      "harmonious": "Impactful message"
     }
   }
 }

@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter shows your capacity to handle emotional pressure and maintain inner stability.",
-    "detailed": "This meter tracks how well you can handle emotional stress by looking at the Moon and Saturn aspects. Saturn helps build emotional strength and resilience, while Moon aspects highlight your direct emotional state.",
+    "overview": "This meter measures how well you handle your emotions and stressful situations, showing your inner resilience.",
+    "detailed": "It measures the dynamic interplay of the Moon and Saturn in your chart, influencing your emotional fortitude. This indicates your ability to manage emotional pressure and inner challenges. Saturn provides a grounding effect, while Neptune's influence might soften personal boundaries.",
     "keywords": [
-      "Emotional strength",
-      "Inner peace",
-      "Stress coping",
-      "Stability",
-      "Adaptability"
+      "resilience",
+      "emotions",
+      "pressure",
+      "boundaries",
+      "coping"
     ]
   },
   "experience_labels": {
     "intensity_only": {
       "quiet": "Calm Heart",
-      "mild": "Gentle Flow",
+      "mild": "Gentle Feelings",
       "moderate": "Steady Pulse",
-      "high": "Strong Will",
-      "extreme": "Deep Pressure"
+      "high": "Strong Emotions",
+      "extreme": "Deeply Moved"
     },
     "harmony_only": {
-      "challenging": "Inner Strain",
-      "mixed": "Shifting Feelings",
+      "challenging": "Strained Nerves",
+      "mixed": "Shifting Moods",
       "harmonious": "Inner Peace"
     },
     "combined": {
       "quiet": {
-        "challenging": "Inner Nerves",
-        "mixed": "Quiet Shift",
-        "harmonious": "Deep Calm"
+        "challenging": "Quiet Strain",
+        "mixed": "Soft Shifts",
+        "harmonious": "Peaceful Calm"
       },
       "mild": {
         "challenging": "Mild Stress",
-        "mixed": "Gentle Swings",
-        "harmonious": "Easy Flow"
+        "mixed": "Gentle Flux",
+        "harmonious": "Mild Ease"
       },
       "moderate": {
-        "challenging": "Inner Tension",
-        "mixed": "Active Feelings",
-        "harmonious": "Balanced State"
+        "challenging": "Moderate Pressure",
+        "mixed": "Balanced Flow",
+        "harmonious": "Steady Harmony"
       },
       "high": {
-        "challenging": "Intense Pressure",
-        "mixed": "Strong Emotions",
-        "harmonious": "Firm Ground"
+        "challenging": "High Tension",
+        "mixed": "Intense Mix",
+        "harmonious": "Strong Flow"
       },
       "extreme": {
-        "challenging": "Crisis Point",
-        "mixed": "Overwhelmed",
-        "harmonious": "Resilient Core"
+        "challenging": "Extreme Stress",
+        "mixed": "Turbulent Depths",
+        "harmonious": "Profound Peace"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Self-soothing",
-      "mixed": "Gentle processing",
-      "harmonious": "Rest/recharge"
+      "challenging": "Self-care focus",
+      "mixed": "Gentle reflection",
+      "harmonious": "Enjoy serenity"
     },
     "mild": {
-      "challenging": "Identify triggers",
-      "mixed": "Emotional check-in",
-      "harmonious": "Nurture self"
+      "challenging": "Navigate subtly",
+      "mixed": "Observe feelings",
+      "harmonious": "Embrace calm"
     },
     "moderate": {
-      "challenging": "Stress management",
-      "mixed": "Process feelings",
-      "harmonious": "Lean into support"
+      "challenging": "Address issues",
+      "mixed": "Process emotions",
+      "harmonious": "Build stability"
     },
     "high": {
-      "challenging": "Seek support",
-      "mixed": "Active management",
-      "harmonious": "Grounding practices"
+      "challenging": "Deep coping",
+      "mixed": "Adapt swiftly",
+      "harmonious": "Utilize strength"
     },
     "extreme": {
-      "challenging": "Crisis intervention",
-      "mixed": "Urgent coping",
-      "harmonious": "Strategic endurance"
+      "challenging": "Seek support",
+      "mixed": "Crisis management",
+      "harmonious": "Embrace breakthroughs"
     }
   }
 }

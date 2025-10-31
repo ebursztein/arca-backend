@@ -16,8 +16,20 @@ from io import StringIO
 from rich.console import Console
 from rich.table import Table
 
-from .meters import AllMetersReading, MeterReading, QualityLabel
-from .normalization import get_intensity_label, get_harmony_label
+from .meters import AllMetersReading, MeterReading, QualityLabel, MetricTrend, ChangeRate
+
+
+def _symbol_for_trend(trend: MetricTrend) -> str:
+    """Convert MetricTrend to visual symbol."""
+    if trend.change_rate == ChangeRate.STABLE:
+        return "→"
+
+    if trend.direction.value in ["improving", "increasing"]:
+        return "↑↑" if trend.change_rate == ChangeRate.RAPID else "↑"
+    elif trend.direction.value in ["worsening", "decreasing"]:
+        return "↓↓" if trend.change_rate == ChangeRate.RAPID else "↓"
+    else:
+        return "→"
 
 
 def _calculate_trend_indicator(delta: float) -> str:
@@ -94,7 +106,7 @@ def _get_all_meter_readings(meters: AllMetersReading) -> List[MeterReading]:
 
 def daily_meters_summary(
     meters_today: AllMetersReading,
-    meters_yesterday: AllMetersReading
+    meters_yesterday: AllMetersReading = None  # DEPRECATED: trends now built-in
 ) -> str:
     """
     Generate compact markdown summary table for daily horoscope LLM prompt.
@@ -111,53 +123,81 @@ def daily_meters_summary(
     - Quiet meters (very low activity)
 
     Args:
-        meters_today: Today's complete meter readings
-        meters_yesterday: Yesterday's complete meter readings
+        meters_today: Today's complete meter readings (with trends already calculated)
+        meters_yesterday: DEPRECATED - no longer needed, trends are built into meters_today
 
     Returns:
         str: Formatted markdown tables ready for LLM prompt
+
+    Note:
+        As of Oct 2025, trends are automatically calculated by get_meters() and included
+        in each MeterReading as TrendData objects. The meters_yesterday parameter is
+        kept for backward compatibility but is not used.
     """
 
     today_readings = _get_all_meter_readings(meters_today)
-    yesterday_readings = _get_all_meter_readings(meters_yesterday)
 
-    # Build lookup for yesterday's scores
-    yesterday_map = {m.meter_name: m for m in yesterday_readings}
-
-    # Calculate deltas and trends for each meter
+    # Build meter data using built-in TrendData objects
     meter_data = []
     for today in today_readings:
-        yesterday = yesterday_map.get(today.meter_name)
+        # Use built-in trend data (calculated by get_meters automatically)
+        if today.trend:
+            # Get rich trend data
+            harmony_t = today.trend.harmony
+            intensity_t = today.trend.intensity
+            unified_t = today.trend.unified_score
 
-        # Calculate deltas for all three scores
-        unified_delta = today.unified_score - yesterday.unified_score if yesterday else 0
-        intensity_delta = today.intensity - yesterday.intensity if yesterday else 0
-        harmony_delta = today.harmony - yesterday.harmony if yesterday else 0
+            # Deltas
+            unified_delta = unified_t.delta
+            intensity_delta = intensity_t.delta
+            harmony_delta = harmony_t.delta
 
-        # Use existing label functions from normalization module
-        intensity_label = get_intensity_label(today.intensity)
-        harmony_label = get_harmony_label(today.harmony)
+            # Text descriptions (for LLM)
+            harmony_trend_text = f"{harmony_t.direction.value} ({harmony_t.change_rate.value})"
+            intensity_trend_text = f"{intensity_t.direction.value} ({intensity_t.change_rate.value})"
+            unified_trend_text = f"{unified_t.direction.value} ({unified_t.change_rate.value})"
+
+            # Symbols (for visual scanning)
+            harmony_trend = _symbol_for_trend(harmony_t)
+            intensity_trend = _symbol_for_trend(intensity_t)
+            unified_trend = _symbol_for_trend(unified_t)
+
+            # Change rate (use harmony as primary)
+            change_rate = harmony_t.change_rate.value
+
+            # Previous values
+            yesterday_unified = unified_t.previous
+            yesterday_intensity = intensity_t.previous
+            yesterday_harmony = harmony_t.previous
+        else:
+            # Fallback if no trend data (shouldn't happen with new implementation)
+            unified_delta = intensity_delta = harmony_delta = 0
+            harmony_trend_text = intensity_trend_text = unified_trend_text = "stable (stable)"
+            unified_trend = intensity_trend = harmony_trend = "→"
+            change_rate = "stable"
+            yesterday_unified = yesterday_intensity = yesterday_harmony = 0
 
         meter_data.append({
             'name': today.meter_name,
             'unified_score': today.unified_score,
             'intensity': today.intensity,
             'harmony': today.harmony,
-            'intensity_label': intensity_label,
-            'harmony_label': harmony_label,
-            'quality': today.unified_quality.value,
             'state': today.state_label,
             'interpretation': today.interpretation,
             'unified_delta': unified_delta,
             'intensity_delta': intensity_delta,
             'harmony_delta': harmony_delta,
-            'unified_trend': _calculate_trend_indicator(unified_delta),
-            'intensity_trend': _calculate_trend_indicator(intensity_delta),
-            'harmony_trend': _calculate_trend_indicator(harmony_delta),
-            'change_rate': _calculate_change_rate(intensity_delta),
-            'yesterday_unified_score': yesterday.unified_score if yesterday else 0,
-            'yesterday_intensity': yesterday.intensity if yesterday else 0,
-            'yesterday_harmony': yesterday.harmony if yesterday else 0,
+            'unified_trend': unified_trend,
+            'intensity_trend': intensity_trend,
+            'harmony_trend': harmony_trend,
+            # Text descriptions for LLM understanding
+            'unified_trend_text': unified_trend_text,
+            'intensity_trend_text': intensity_trend_text,
+            'harmony_trend_text': harmony_trend_text,
+            'change_rate': change_rate,
+            'yesterday_unified_score': yesterday_unified,
+            'yesterday_intensity': yesterday_intensity,
+            'yesterday_harmony': yesterday_harmony,
         })
 
     # ========================================================================
@@ -165,24 +205,27 @@ def daily_meters_summary(
     # ========================================================================
     def build_meter_row(rank: str, meter: dict) -> list:
         """Build a consistent row format for all meter tables."""
-        # Use pre-calculated unified trend from meter_data
-        unified_trend = f"{meter['unified_trend']} {meter['unified_delta']:+.1f}"
+        # Extract just the change_rate (pace) from trend text
+        # "improving (rapid)" -> "rapid"
+        def extract_pace(trend_text: str) -> str:
+            if '(' in trend_text and ')' in trend_text:
+                return trend_text.split('(')[1].split(')')[0]
+            return "stable"
+
+        unified_pace = extract_pace(meter['unified_trend_text'])
+        intensity_pace = extract_pace(meter['intensity_trend_text'])
+        harmony_pace = extract_pace(meter['harmony_trend_text'])
 
         return [
             rank,
             meter['name'],
-            f"{meter['unified_score']:.1f}",  # Overall value
-            unified_trend,                     # Overall trend
-            meter['quality'].upper(),          # Overall quality
-            meter['state'],
-            # Intensity section: Value | Trend | Label
-            f"{meter['intensity']:.1f}",
-            f"{meter['intensity_trend']} {meter['intensity_delta']:+.1f}",
-            meter['intensity_label'],
-            # Harmony section: Value | Trend | Label
-            f"{meter['harmony']:.1f}",
-            f"{meter['harmony_trend']} {meter['harmony_delta']:+.1f}",
-            meter['harmony_label'],
+            meter['state'],                                                   # State label (moved next to meter)
+            f"{meter['unified_score']:.1f}",                                 # Unified value
+            f"{meter['unified_delta']:+.1f} {unified_pace}",                 # Unified trend: delta + pace
+            f"{meter['intensity']:.1f}",                                     # Intensity value
+            f"{meter['intensity_delta']:+.1f} {intensity_pace}",            # Intensity trend: delta + pace
+            f"{meter['harmony']:.1f}",                                       # Harmony value
+            f"{meter['harmony_delta']:+.1f} {harmony_pace}",                # Harmony trend: delta + pace
         ]
 
     # Build hierarchical header using rich with section headers
@@ -192,35 +235,37 @@ def daily_meters_summary(
         # Build custom header with merged cells
         output = ""
         if section_title:
-            output += f"\n{'═' * 160}\n"
-            output += f"{section_title.center(160)}\n"
-            output += f"{'═' * 160}\n"
+            output += f"\n{'═' * 130}\n"
+            output += f"{section_title.center(130)}\n"
+            output += f"{'═' * 130}\n"
 
-        # Top header row (merged section headers for Overall and sub-sections)
-        top_line = "┌" + "─" * 6 + "┬" + "─" * 24 + "┬" + "─" * 30 + "┬" + "─" * 20 + "┬"
-        top_line += "─" * 31 + "┬" + "─" * 31 + "┐\n"
+        # Top header row (9 columns: Rank, Meter, State, Overall, Overall Trend, I, I Trend, H, H Trend)
+        top_line = "┌" + "─" * 6 + "┬" + "─" * 24 + "┬" + "─" * 20 + "┬"
+        top_line += "─" * 23 + "┬" + "─" * 23 + "┬" + "─" * 23 + "┐\n"
 
-        merged_header = "│" + " Rank ".center(6) + "│" + " Meter ".center(24) + "│"
-        merged_header += " ────── OVERALL ────── ".center(30) + "│" + " State ".center(20) + "│"
-        merged_header += " ──── INTENSITY ──── ".center(31) + "│"
-        merged_header += " ──── HARMONY ──── ".center(31) + "│\n"
+        merged_header = "│" + " Rank ".center(6) + "│" + " Meter ".center(24) + "│" + " State ".center(20) + "│"
+        merged_header += " ──── OVERALL ──── ".center(23) + "│"
+        merged_header += " ──── INTENSITY ──── ".center(23) + "│"
+        merged_header += " ──── HARMONY ──── ".center(23) + "│\n"
 
         # Sub-header row
-        sub_line = "├" + "─" * 6 + "┼" + "─" * 24 + "┼" + "─" * 7 + "┬" + "─" * 12 + "┬" + "─" * 9 + "┼" + "─" * 20 + "┼"
-        sub_line += "─" * 7 + "┬" + "─" * 12 + "┬" + "─" * 10 + "┼"
-        sub_line += "─" * 7 + "┬" + "─" * 12 + "┬" + "─" * 10 + "┤\n"
+        sub_line = "├" + "─" * 6 + "┼" + "─" * 24 + "┼" + "─" * 20 + "┼"
+        sub_line += "─" * 7 + "┬" + "─" * 15 + "┼"
+        sub_line += "─" * 7 + "┬" + "─" * 15 + "┼"
+        sub_line += "─" * 7 + "┬" + "─" * 15 + "┤\n"
 
-        sub_header = "│" + " " * 6 + "│" + " " * 24 + "│"
-        sub_header += " Value ".center(7) + "│" + " Trend ".center(12) + "│" + " Quality ".center(9) + "│" + " " * 20 + "│"
-        sub_header += " Val ".center(7) + "│" + " Trend ".center(12) + "│" + " Label ".center(10) + "│"
-        sub_header += " Val ".center(7) + "│" + " Trend ".center(12) + "│" + " Label ".center(10) + "│\n"
+        sub_header = "│" + " " * 6 + "│" + " " * 24 + "│" + " " * 20 + "│"
+        sub_header += " Val ".center(7) + "│" + " Trend ".center(15) + "│"
+        sub_header += " Val ".center(7) + "│" + " Trend ".center(15) + "│"
+        sub_header += " Val ".center(7) + "│" + " Trend ".center(15) + "│\n"
 
         output += top_line + merged_header + sub_line + sub_header
 
         # Data rows
-        data_line = "├" + "─" * 6 + "┼" + "─" * 24 + "┼" + "─" * 7 + "┼" + "─" * 12 + "┼" + "─" * 9 + "┼" + "─" * 20 + "┼"
-        data_line += "─" * 7 + "┼" + "─" * 12 + "┼" + "─" * 10 + "┼"
-        data_line += "─" * 7 + "┼" + "─" * 12 + "┼" + "─" * 10 + "┤\n"
+        data_line = "├" + "─" * 6 + "┼" + "─" * 24 + "┼" + "─" * 20 + "┼"
+        data_line += "─" * 7 + "┼" + "─" * 15 + "┼"
+        data_line += "─" * 7 + "┼" + "─" * 15 + "┼"
+        data_line += "─" * 7 + "┼" + "─" * 15 + "┤\n"
 
         output += data_line
 
@@ -228,73 +273,38 @@ def daily_meters_summary(
             row_str = "│"
             row_str += str(row[0]).center(6) + "│"   # Rank
             row_str += f" {str(row[1]):<23}│"        # Meter (left-aligned)
-            row_str += str(row[2]).rjust(7) + "│"    # Overall Value
-            row_str += f" {str(row[3]):<11}│"        # Overall Trend
-            row_str += f" {str(row[4]):<8}│"         # Overall Quality
-            row_str += f" {str(row[5]):<19}│"        # State (left-aligned)
-            row_str += str(row[6]).rjust(7) + "│"    # I-Val
-            row_str += f" {str(row[7]):<11}│"        # I-Trend
-            row_str += f" {str(row[8]):<9}│"         # I-Label
-            row_str += str(row[9]).rjust(7) + "│"    # H-Val
-            row_str += f" {str(row[10]):<11}│"       # H-Trend
-            row_str += f" {str(row[11]):<9}│\n"      # H-Label
+            row_str += f" {str(row[2]):<19}│"        # State (left-aligned)
+            row_str += str(row[3]).rjust(7) + "│"    # Overall Value
+            row_str += f" {str(row[4]):<14}│"        # Overall Trend (delta + pace)
+            row_str += str(row[5]).rjust(7) + "│"    # I-Val
+            row_str += f" {str(row[6]):<14}│"        # I-Trend (delta + pace)
+            row_str += str(row[7]).rjust(7) + "│"    # H-Val
+            row_str += f" {str(row[8]):<14}│\n"      # H-Trend (delta + pace)
             output += row_str
 
         # Bottom border
-        bottom_line = "└" + "─" * 6 + "┴" + "─" * 24 + "┴" + "─" * 7 + "┴" + "─" * 12 + "┴" + "─" * 9 + "┴" + "─" * 20 + "┴"
-        bottom_line += "─" * 7 + "┴" + "─" * 12 + "┴" + "─" * 10 + "┴"
-        bottom_line += "─" * 7 + "┴" + "─" * 12 + "┴" + "─" * 10 + "┘\n"
+        bottom_line = "└" + "─" * 6 + "┴" + "─" * 24 + "┴" + "─" * 20 + "┴"
+        bottom_line += "─" * 7 + "┴" + "─" * 15 + "┴"
+        bottom_line += "─" * 7 + "┴" + "─" * 15 + "┴"
+        bottom_line += "─" * 7 + "┴" + "─" * 15 + "┘\n"
         output += bottom_line
 
         return output
 
+    # Start with empty output (legend moved to static prompt for caching)
+    output = ""
+
     # ========================================================================
-    # TABLE 1: OVERALL SCORE
+    # TABLE 1: OVERALL SCORE (Using built-in TrendData)
     # ========================================================================
 
-    overall_delta = meters_today.overall_unified_score - (
-        meters_yesterday.overall_unified_score if meters_yesterday else 0
-    )
-    overall_trend = _calculate_trend_indicator(overall_delta)
-    overall_change_rate = _calculate_change_rate(overall_delta)
+    # Find overall_intensity and overall_harmony in meter_data
+    overall_meters = [m for m in meter_data if m['name'] in ['overall_intensity', 'overall_harmony']]
 
-    # Build overall score table with rich
-    overall_table = Table(title="OVERALL SCORE", show_header=True, header_style="bold yellow", border_style="yellow")
-    overall_table.add_column("Metric", style="cyan", width=25)
-    overall_table.add_column("Value", style="yellow", width=50)
-
-    overall_table.add_row('Today Score', f"{meters_today.overall_unified_score:.1f}/100")
-    overall_table.add_row('Yesterday Score', f"{meters_yesterday.overall_unified_score:.1f}/100")
-    overall_table.add_row('Change', f"{overall_trend} {overall_delta:+.1f} ({overall_change_rate})")
-    overall_table.add_row('Quality', meters_today.overall_unified_quality.value.upper())
-    overall_table.add_row('Date', meters_today.date.strftime('%Y-%m-%d'))
-
-    # Add separator and breakdown
-    overall_table.add_row('', '')  # Empty row as separator
-
-    # Overall Intensity breakdown
-    intensity_today = meters_today.overall_intensity.intensity
-    intensity_yesterday = meters_yesterday.overall_intensity.intensity if meters_yesterday else 0
-    intensity_delta = intensity_today - intensity_yesterday
-    intensity_trend = _calculate_trend_indicator(intensity_delta)
-    overall_table.add_row(
-        '  Intensity',
-        f"{intensity_today:.1f}/100 ({meters_today.overall_intensity.state_label}) {intensity_trend} {intensity_delta:+.1f}"
-    )
-
-    # Overall Harmony breakdown
-    harmony_today = meters_today.overall_harmony.harmony
-    harmony_yesterday = meters_yesterday.overall_harmony.harmony if meters_yesterday else 0
-    harmony_delta = harmony_today - harmony_yesterday
-    harmony_trend = _calculate_trend_indicator(harmony_delta)
-    overall_table.add_row(
-        '  Harmony',
-        f"{harmony_today:.1f}/100 ({meters_today.overall_harmony.state_label}) {harmony_trend} {harmony_delta:+.1f}"
-    )
-
-    console = Console(file=StringIO(), width=200)
-    console.print(overall_table)
-    output = "\n" + console.file.getvalue() + "\n"
+    if overall_meters:
+        overall_rows = [build_meter_row("", m) for m in overall_meters]
+        output += build_table_with_section_headers(overall_rows, "OVERALL SCORE")
+        output += "\n"
 
     # ========================================================================
     # TABLE 2: TOP 5 MOST ACTIVE (Highest Intensity)

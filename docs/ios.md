@@ -824,6 +824,7 @@ struct DailyHoroscope {
     let areaActivated: String
     let lunarUpdate: String
     let advice: ActionableAdvice
+    let astrometers: AllMetersReading  // NEW: Complete meter readings with trends
 }
 
 struct ActionableAdvice {
@@ -903,11 +904,39 @@ Task {
     "avoid": "What to be cautious of",
     "affirmation": "Affirmation for the day"
   },
+  "astrometers": {
+    "date": "2025-10-19T00:00:00",
+    "aspect_count": 34,
+    "overall_unified_score": 49.0,
+    "overall_unified_quality": "mixed",
+    "overall_intensity": {
+      "meter_name": "overall_intensity",
+      "unified_score": 49.0,
+      "unified_quality": "mixed",
+      "intensity": 56.3,
+      "harmony": 48.2,
+      "state_label": "Lively Mix",
+      "trend": "worsening",  // NEW: "improving", "stable", or "worsening"
+      "interpretation": "This meter shows how much cosmic energy...",
+      "advice": ["Advice 1", "Advice 2"]
+    },
+    // ... 22 more individual meters (all with trend field)
+    // ... 5 super-group aggregate meters (also with trend field)
+  },
   "model_used": "gemini-2.5-flash-lite",
   "generation_time_ms": 9255,
   "usage": { ... }
 }
 ```
+
+**NEW in October 2025: Trend Analysis**
+
+All 28 meters (23 individual + 5 super-groups) now include a `trend` field that shows how each area is changing compared to yesterday:
+- `"improving"` - Quality/harmony increasing (↑ green in UI)
+- `"stable"` - No significant change (→ blue in UI)
+- `"worsening"` - Quality/harmony decreasing (↓ red in UI)
+
+This allows you to show users not just the current state, but whether things are getting better or worse.
 
 ### Step 2: Get Detailed Horoscope (Prompt 2)
 

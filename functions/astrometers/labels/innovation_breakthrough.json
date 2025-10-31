@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks sudden shifts and revolutionary insights that bring personal freedom.",
-    "detailed": "This meter tracks Uranus transits, highlighting periods of unexpected change and awakening. It focuses on themes of liberation, personal revolution, and groundbreaking ideas associated with Aquarian energy.",
+    "overview": "This meter tracks sudden changes and innovative ideas shaking things up in your life.",
+    "detailed": "This meter reflects Uranus transits, which bring unexpected shifts and opportunities for liberation. It highlights periods when revolutionary ideas or breakthroughs can suddenly emerge. It's about shaking free from old patterns.",
     "keywords": [
       "Change",
-      "Breakthrough",
-      "Freedom",
       "Innovation",
+      "Freedom",
+      "Breakthrough",
       "Awakening"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Gentle Shifts",
-      "mild": "Subtle Shifts",
-      "moderate": "Notable Shifts",
-      "high": "Strong Shifts",
-      "extreme": "Radical Change"
+      "quiet": "Gentle Buzz",
+      "mild": "Low Activity",
+      "moderate": "Clear Movement",
+      "high": "Strong Current",
+      "extreme": "Power Surge"
     },
     "harmony_only": {
-      "challenging": "Disruptive",
-      "mixed": "Uncertain Future",
-      "harmonious": "Clear Path"
+      "challenging": "Disruptive Force",
+      "mixed": "Mixed Signals",
+      "harmonious": "Flowing Ideas"
     },
     "combined": {
       "quiet": {
-        "challenging": "Gentle Friction",
-        "mixed": "Quiet Stirrings",
-        "harmonious": "Calm Insight"
+        "challenging": "Minor Jolt",
+        "mixed": "Soft Stir",
+        "harmonious": "Quiet Discovery"
       },
       "mild": {
-        "challenging": "Minor Disruptions",
-        "mixed": "Mild Changes",
-        "harmonious": "Easy Progress"
+        "challenging": "Gentle Friction",
+        "mixed": "Mild Shifts",
+        "harmonious": "Easy Awakening"
       },
       "moderate": {
-        "challenging": "Active Friction",
-        "mixed": "Dynamic Shifts",
-        "harmonious": "Smooth Changes"
+        "challenging": "Active Resistance",
+        "mixed": "Notable Change",
+        "harmonious": "Clear Innovation"
       },
       "high": {
-        "challenging": "Intense Disruptions",
+        "challenging": "Major Conflicts",
         "mixed": "Big Shifts",
-        "harmonious": "Major Progress"
+        "harmonious": "Rapid Progress"
       },
       "extreme": {
-        "challenging": "Total Overhaul",
-        "mixed": "Wild Swings",
-        "harmonious": "Sudden Freedom"
+        "challenging": "Intense Upheaval",
+        "mixed": "Wild Card",
+        "harmonious": "Radical Harmony"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Observe patterns",
-      "mixed": "Reflect internally",
-      "harmonious": "Gentle exploration"
+      "challenging": "Observe Shifts",
+      "mixed": "Gentle Exploration",
+      "harmonious": "Casual Brainstorming"
     },
     "mild": {
-      "challenging": "Adapt to change",
-      "mixed": "Consider options",
-      "harmonious": "Embrace new ideas"
+      "challenging": "Adapt Gradually",
+      "mixed": "Soft Adjustments",
+      "harmonious": "Explore Ideas"
     },
     "moderate": {
-      "challenging": "Problem-solving focus",
-      "mixed": "Strategic adjustments",
-      "harmonious": "Implement new ideas"
+      "challenging": "Address Resistance",
+      "mixed": "Embrace Change",
+      "harmonious": "Implement Ideas"
     },
     "high": {
-      "challenging": "Manage upheaval",
-      "mixed": "Bold decision-making",
-      "harmonious": "Seize opportunities"
+      "challenging": "Strategic Response",
+      "mixed": "Bold Adaptations",
+      "harmonious": "Drive Innovation"
     },
     "extreme": {
-      "challenging": "Radical reevaluation",
-      "mixed": "Navigate chaos",
-      "harmonious": "Revolutionary action"
+      "challenging": "Crisis Navigation",
+      "mixed": "Radical Reassessment",
+      "harmonious": "Seize Revolution"
     }
   }
 }

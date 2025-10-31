@@ -235,7 +235,7 @@ class DailyHoroscope(BaseModel):
     Daily horoscope - Prompt 1 fields shown immediately (<2s).
 
     Provides core transit analysis and immediate actionable guidance.
-    Based on astrometers quantitative analysis (23 specialized meters).
+    Based on astrometers quantitative analysis (28 meters: 23 individual + 5 super-group aggregates).
     """
     date: str = Field(description="ISO date of horoscope")
     sun_sign: str = Field(description="Sun sign (e.g., 'taurus')")
@@ -258,7 +258,7 @@ class DailyHoroscope(BaseModel):
 
     # Astrometers data (quantitative foundation)
     astrometers: Any = Field(
-        description="Complete astrometers reading with 23 meters, key aspects, and interpretations (AllMetersReading object)"
+        description="Complete astrometers reading with 28 meters (23 individual + 5 super-group), key aspects, and interpretations (AllMetersReading object)"
     )
 
     # Metadata

@@ -17,7 +17,7 @@ from typing import Dict, List, TypedDict
 # =============================================================================
 
 class Meter(str, Enum):
-    """Level 3: Individual meter identifiers (23 total)"""
+    """Level 3: Individual meter identifiers (23 total) + 5 super-group aggregates"""
     # OVERVIEW
     OVERALL_INTENSITY = "overall_intensity"
     OVERALL_HARMONY = "overall_harmony"
@@ -58,6 +58,14 @@ class Meter(str, Enum):
 
     # COLLECTIVE
     SOCIAL_COLLECTIVE = "social_collective"
+
+    # SUPER-GROUP AGGREGATES (5 total)
+    # These are calculated by aggregating all meters within their super-group
+    OVERVIEW_SUPER_GROUP = "overview_super_group"
+    INNER_WORLD_SUPER_GROUP = "inner_world_super_group"
+    OUTER_WORLD_SUPER_GROUP = "outer_world_super_group"
+    EVOLUTION_SUPER_GROUP = "evolution_super_group"
+    DEEPER_DIMENSIONS_SUPER_GROUP = "deeper_dimensions_super_group"
 
 
 # =============================================================================
@@ -287,6 +295,33 @@ for super_def in HIERARCHY:
         for meter in meters:
             METER_TO_GROUP[meter] = (group, super_group)
 
+# Super-group aggregate meters (5 total)
+SUPER_GROUP_METERS = {
+    Meter.OVERVIEW_SUPER_GROUP,
+    Meter.INNER_WORLD_SUPER_GROUP,
+    Meter.OUTER_WORLD_SUPER_GROUP,
+    Meter.EVOLUTION_SUPER_GROUP,
+    Meter.DEEPER_DIMENSIONS_SUPER_GROUP,
+}
+
+# Mapping: SuperGroup → aggregate Meter
+SUPER_GROUP_TO_METER: Dict[SuperGroup, Meter] = {
+    SuperGroup.OVERVIEW: Meter.OVERVIEW_SUPER_GROUP,
+    SuperGroup.INNER_WORLD: Meter.INNER_WORLD_SUPER_GROUP,
+    SuperGroup.OUTER_WORLD: Meter.OUTER_WORLD_SUPER_GROUP,
+    SuperGroup.EVOLUTION: Meter.EVOLUTION_SUPER_GROUP,
+    SuperGroup.DEEPER_DIMENSIONS: Meter.DEEPER_DIMENSIONS_SUPER_GROUP,
+}
+
+# Reverse mapping: Aggregate Meter → SuperGroup
+METER_TO_SUPER_GROUP: Dict[Meter, SuperGroup] = {
+    Meter.OVERVIEW_SUPER_GROUP: SuperGroup.OVERVIEW,
+    Meter.INNER_WORLD_SUPER_GROUP: SuperGroup.INNER_WORLD,
+    Meter.OUTER_WORLD_SUPER_GROUP: SuperGroup.OUTER_WORLD,
+    Meter.EVOLUTION_SUPER_GROUP: SuperGroup.EVOLUTION,
+    Meter.DEEPER_DIMENSIONS_SUPER_GROUP: SuperGroup.DEEPER_DIMENSIONS,
+}
+
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -314,21 +349,57 @@ def get_groups_in_super(super_group: SuperGroup) -> List[MeterGroup]:
     return SUPER_GROUPS[super_group]
 
 
+def get_meters_in_super_group(super_group: SuperGroup) -> List[Meter]:
+    """Get all individual meters in a given super-group (excludes aggregate meter)"""
+    meters = []
+    for group in get_groups_in_super(super_group):
+        meters.extend(get_meters_in_group(group))
+    return meters
+
+
+def is_super_group_meter(meter: Meter) -> bool:
+    """Check if a meter is a super-group aggregate meter"""
+    return meter in SUPER_GROUP_METERS
+
+
+def get_super_group_for_aggregate(meter: Meter) -> SuperGroup:
+    """Get the super-group for a super-group aggregate meter"""
+    if meter not in METER_TO_SUPER_GROUP:
+        raise ValueError(f"{meter} is not a super-group aggregate meter")
+    return METER_TO_SUPER_GROUP[meter]
+
+
 def validate_hierarchy_complete() -> bool:
-    """Validate that all 23 meters are accounted for"""
+    """Validate that all 23 individual meters are accounted for + 5 super-group aggregates"""
     all_meters = set(Meter)
     mapped_meters = set(METER_TO_GROUP.keys())
 
-    if all_meters != mapped_meters:
-        missing = all_meters - mapped_meters
-        extra = mapped_meters - all_meters
+    # Super-group meters should NOT be in METER_TO_GROUP
+    individual_meters = all_meters - SUPER_GROUP_METERS
+
+    if individual_meters != mapped_meters:
+        missing = individual_meters - mapped_meters
+        extra = mapped_meters - individual_meters
         if missing:
             print(f"Missing meters: {missing}")
         if extra:
             print(f"Extra meters: {extra}")
         return False
 
-    return len(METER_TO_GROUP) == 23
+    # Validate counts
+    if len(mapped_meters) != 23:
+        print(f"Expected 23 individual meters, got {len(mapped_meters)}")
+        return False
+
+    if len(SUPER_GROUP_METERS) != 5:
+        print(f"Expected 5 super-group meters, got {len(SUPER_GROUP_METERS)}")
+        return False
+
+    if len(all_meters) != 28:
+        print(f"Expected 28 total meters (23 individual + 5 super-group), got {len(all_meters)}")
+        return False
+
+    return True
 
 
 # Validate on import

@@ -811,9 +811,11 @@ def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
 @https_fn.on_call()
 def get_astrometers(req: https_fn.CallableRequest) -> dict:
     """
-    Calculate all 23 astrological meters for a user on a given date.
+    Calculate all 28 astrological meters for a user on a given date.
 
-    This provides quantitative analysis of:
+    Returns 23 individual meters + 5 super-group aggregate meters:
+
+    INDIVIDUAL METERS (23):
     - Overall intensity and harmony of transits
     - Element energies (fire, earth, air, water)
     - Cognitive state (mental clarity, decision quality, communication)
@@ -821,6 +823,13 @@ def get_astrometers(req: https_fn.CallableRequest) -> dict:
     - Physical/action state (energy, conflict risk, motivation)
     - Life domains (career, opportunity, challenge, transformation)
     - Specialized areas (intuition, innovation, karmic lessons, collective)
+
+    SUPER-GROUP AGGREGATES (5):
+    - overview_super_group: Dashboard summary (2 meters)
+    - inner_world_super_group: Thoughts + feelings (6 meters)
+    - outer_world_super_group: Action + career (5 meters)
+    - evolution_super_group: Transformation (3 meters)
+    - deeper_dimensions_super_group: Elements + spiritual (7 meters)
 
     Expected request data:
     {
@@ -840,7 +849,12 @@ def get_astrometers(req: https_fn.CallableRequest) -> dict:
         "overall_intensity": {...},  // MeterReading with intensity, harmony, interpretation, advice
         "overall_harmony": {...},
         "fire_energy": {...},
-        ... // All 23 meters
+        ... // All 23 individual meters
+        "overview_super_group": {...},  // Super-group aggregate meters
+        "inner_world_super_group": {...},
+        "outer_world_super_group": {...},
+        "evolution_super_group": {...},
+        "deeper_dimensions_super_group": {...}
     }
     """
     try:

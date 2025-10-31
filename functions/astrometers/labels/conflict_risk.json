@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter shows the potential for arguments, accidents, or aggressive encounters today.",
-    "detailed": "This meter tracks the challenging interactions of Mars, especially squares and oppositions, which indicate potential for friction. Aspects involving Uranus can amplify this into sudden, explosive situations.",
+    "overview": "This meter shows the potential for arguments, accidents, and aggressive interactions today.",
+    "detailed": "This meter tracks challenging aspects to Mars, especially squares and oppositions. When Mars interacts with Uranus, expect sudden, explosive energy. It highlights areas prone to friction and confrontation.",
     "keywords": [
+      "Conflict",
       "Arguments",
       "Accidents",
       "Aggression",
-      "Friction",
       "Confrontation"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Calm",
-      "mild": "Mild Tension",
-      "moderate": "Noticeable Friction",
-      "high": "High Tension",
+      "quiet": "Calm Space",
+      "mild": "Low Friction",
+      "moderate": "Some Tension",
+      "high": "High Friction",
       "extreme": "Explosive Risk"
     },
     "harmony_only": {
-      "challenging": "Difficult Conflict",
-      "mixed": "Unsettled Tensions",
-      "harmonious": "Managed Conflict"
+      "challenging": "Stirring Up",
+      "mixed": "Uncertain Ground",
+      "harmonious": "Keeping Peace"
     },
     "combined": {
       "quiet": {
-        "challenging": "Suppressed Friction",
-        "mixed": "Latent Tension",
-        "harmonious": "Peaceful Calm"
+        "challenging": "Minor Irks",
+        "mixed": "Peaceful Mix",
+        "harmonious": "All Calm"
       },
       "mild": {
-        "challenging": "Slight Disagreement",
-        "mixed": "Minor Friction",
-        "harmonious": "Gentle Resolution"
+        "challenging": "Small Issues",
+        "mixed": "Gentle Unrest",
+        "harmonious": "Peaceful Flow"
       },
       "moderate": {
-        "challenging": "Direct Confrontation",
-        "mixed": "Ongoing Tensions",
-        "harmonious": "Navigable Disputes"
+        "challenging": "Rising Friction",
+        "mixed": "Mixed Signals",
+        "harmonious": "Stable Ground"
       },
       "high": {
-        "challenging": "Intense Conflict",
-        "mixed": "Escalating Friction",
-        "harmonious": "Controlled Confrontation"
+        "challenging": "Major Conflict",
+        "mixed": "Charged Air",
+        "harmonious": "Assertive Flow"
       },
       "extreme": {
-        "challenging": "Volatile Situation",
-        "mixed": "Unpredictable Clashes",
-        "harmonious": "Urgent De-escalation"
+        "challenging": "Explosive Clash",
+        "mixed": "Volatile Energy",
+        "harmonious": "Powerful Resolve"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Proactive Measures",
-      "mixed": "Gentle Awareness",
-      "harmonious": "Enjoy Peace"
+      "challenging": "Spot Friction",
+      "mixed": "Maintain Calm",
+      "harmonious": "Embrace Peace"
     },
     "mild": {
-      "challenging": "Prevent Escalation",
-      "mixed": "Careful Navigation",
-      "harmonious": "Diplomatic Approach"
+      "challenging": "Gentle Talk",
+      "mixed": "Stay Open",
+      "harmonious": "Seek Harmony"
     },
     "moderate": {
-      "challenging": "Direct Communication",
-      "mixed": "Address Issues",
-      "harmonious": "Seek Common Ground"
+      "challenging": "Address Tension",
+      "mixed": "Navigate Carefully",
+      "harmonious": "Calm Assertions"
     },
     "high": {
-      "challenging": "Boundary Setting",
-      "mixed": "Strategic Retreat",
-      "harmonious": "Conflict Resolution"
+      "challenging": "Avoid Clash",
+      "mixed": "De-escalate",
+      "harmonious": "Direct Force"
     },
     "extreme": {
-      "challenging": "Avoid Conflict",
-      "mixed": "Crisis Management",
-      "harmonious": "Rapid De-escalation"
+      "challenging": "Ensure Safety",
+      "mixed": "Extreme Caution",
+      "harmonious": "Focused Power"
     }
   }
 }

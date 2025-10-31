@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks your daily emotional flow and how sensitive you're feeling.",
-    "detailed": "It measures the influence of the Moon's transits and its connections to your birth chart's Moon. This shows how strong and sensitive your feelings are day-to-day, often shifting quickly.",
+    "overview": "This meter tracks your daily emotional flow and how sensitive you're feeling as the Moon moves.",
+    "detailed": "This meter reflects the Moon's daily movements and its connections to your birth chart's Moon. It shows your current emotional volume and sensitivity level. These feelings can shift quickly throughout the day.",
     "keywords": [
-      "Feelings",
-      "Sensitivity",
-      "Moods",
-      "Relationships",
-      "Inner world"
+      "emotions",
+      "sensitivity",
+      "feelings",
+      "mood",
+      "connections"
     ]
   },
   "experience_labels": {
     "intensity_only": {
       "quiet": "Calm Heart",
-      "mild": "Gentle Flow",
+      "mild": "Soft Feelings",
       "moderate": "Active Emotions",
-      "high": "Strong Feelings",
-      "extreme": "Intense Feels"
+      "high": "Deep Feelings",
+      "extreme": "Intense Mood"
     },
     "harmony_only": {
-      "challenging": "Rough Patch",
-      "mixed": "Mixed Bag",
-      "harmonious": "Easy Flow"
+      "challenging": "Inner Friction",
+      "mixed": "Shifting Mood",
+      "harmonious": "Gentle Flow"
     },
     "combined": {
       "quiet": {
-        "challenging": "Quiet Strain",
+        "challenging": "Quiet Struggle",
         "mixed": "Subtle Shifts",
-        "harmonious": "Peaceful Mood"
+        "harmonious": "Inner Peace"
       },
       "mild": {
-        "challenging": "Mild Tension",
-        "mixed": "Gentle Flux",
-        "harmonious": "Calm Vibes"
+        "challenging": "Mild Stress",
+        "mixed": "Gentle Undulations",
+        "harmonious": "Comfortable Flow"
       },
       "moderate": {
-        "challenging": "Emotional Stress",
-        "mixed": "Active Mix",
-        "harmonious": "Warm Feelings"
+        "challenging": "Emotional Tangle",
+        "mixed": "Noticeable Swings",
+        "harmonious": "Smooth Emotions"
       },
       "high": {
-        "challenging": "High Pressure",
-        "mixed": "Strong Currents",
-        "harmonious": "Deep Connection"
+        "challenging": "Raw Nerves",
+        "mixed": "Turbulent Depth",
+        "harmonious": "Warm Connection"
       },
       "extreme": {
-        "challenging": "Crisis Point",
-        "mixed": "Turbulent Feels",
-        "harmonious": "Full Heart"
+        "challenging": "Overwhelmed State",
+        "mixed": "Stormy Core",
+        "harmonious": "Profound Bliss"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Self-care focus",
-      "mixed": "Inner reflection",
-      "harmonious": "Enjoy peace"
+      "challenging": "Self-soothing",
+      "mixed": "Gentle reflection",
+      "harmonious": "Inner quiet"
     },
     "mild": {
-      "challenging": "Acknowledge feelings",
-      "mixed": "Mindful processing",
-      "harmonious": "Nurture connections"
+      "challenging": "Mindful coping",
+      "mixed": "Emotional check-in",
+      "harmonious": "Enjoy comfort"
     },
     "moderate": {
-      "challenging": "Stress management",
-      "mixed": "Emotional balancing",
-      "harmonious": "Express warmth"
+      "challenging": "Process feelings",
+      "mixed": "Adapt emotions",
+      "harmonious": "Connect openly"
     },
     "high": {
       "challenging": "Seek support",
-      "mixed": "Deep emotional work",
-      "harmonious": "Share vulnerability"
+      "mixed": "Deep introspection",
+      "harmonious": "Embrace feelings"
     },
     "extreme": {
-      "challenging": "Intense coping",
-      "mixed": "Build resilience",
-      "harmonious": "Embrace profound joy"
+      "challenging": "Prioritize calm",
+      "mixed": "Contain emotions",
+      "harmonious": "Full expression"
     }
   }
 }

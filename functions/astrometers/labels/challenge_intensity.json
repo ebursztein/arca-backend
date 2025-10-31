@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter shows how much cosmic friction is pushing you to grow and transform.",
-    "detailed": "It tracks challenging astrological aspects, like squares and oppositions, indicating areas where tension creates pressure. This pressure, though sometimes uncomfortable, is key for personal evolution and breakthrough.",
+    "overview": "This meter shows how much pressure you're feeling for growth and change, highlighting astrological friction.",
+    "detailed": "This meter specifically tracks square and opposition aspects between planets. These alignments create tension and push you out of your comfort zone. It highlights areas where you'll encounter friction and opportunities for personal evolution.",
     "keywords": [
-      "Challenge",
-      "Growth",
-      "Pressure",
-      "Transformation",
-      "Evolution"
+      "growth",
+      "pressure",
+      "tension",
+      "friction",
+      "evolution"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Minimal Tension",
-      "mild": "Gentle Pressure",
-      "moderate": "Clear Hurdles",
-      "high": "Strong Challenge",
-      "extreme": "Intense Friction"
+      "quiet": "Low Pressure",
+      "mild": "Gentle Nudges",
+      "moderate": "Notable Pressure",
+      "high": "Strong Push",
+      "extreme": "Intense Challenge"
     },
     "harmony_only": {
-      "challenging": "Difficult Strain",
-      "mixed": "Growth Pressure",
-      "harmonious": "Constructive Shift"
+      "challenging": "High Friction",
+      "mixed": "Some Friction",
+      "harmonious": "Low Friction"
     },
     "combined": {
       "quiet": {
-        "challenging": "Quiet Strain",
-        "mixed": "Gentle Nudge",
-        "harmonious": "Subtle Growth"
+        "challenging": "Minimal Friction",
+        "mixed": "Gentle Tension",
+        "harmonious": "Calm Flow"
       },
       "mild": {
         "challenging": "Mild Friction",
-        "mixed": "Mild Push",
-        "harmonious": "Easy Adaptation"
+        "mixed": "Soft Tension",
+        "harmonious": "Easy Flow"
       },
       "moderate": {
-        "challenging": "Clear Obstacles",
-        "mixed": "Steady Pressure",
-        "harmonious": "Focused Growth"
+        "challenging": "Clear Challenge",
+        "mixed": "Focused Tension",
+        "harmonious": "Steady Progress"
       },
       "high": {
-        "challenging": "Strong Resistance",
-        "mixed": "Active Tension",
-        "harmonious": "Driven Progress"
+        "challenging": "Strong Challenge",
+        "mixed": "Intense Tension",
+        "harmonious": "Dynamic Growth"
       },
       "extreme": {
-        "challenging": "Extreme Conflict",
-        "mixed": "Overwhelming Force",
-        "harmonious": "Breakthrough Point"
+        "challenging": "Extreme Challenge",
+        "mixed": "Crisis Point",
+        "harmonious": "Breakthrough Moment"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Gentle reflection",
-      "mixed": "Subtle adjustments",
-      "harmonious": "Nurture seeds"
+      "challenging": "Self-reflection, introspection",
+      "mixed": "Gentle adjustments, mindful pacing",
+      "harmonious": "Enjoy peace, appreciate calm"
     },
     "mild": {
-      "challenging": "Address small issues",
-      "mixed": "Careful observation",
-      "harmonious": "Embrace easy changes"
+      "challenging": "Address minor issues, careful consideration",
+      "mixed": "Navigate small hurdles, flexible approach",
+      "harmonious": "Embrace ease, simple tasks"
     },
     "moderate": {
-      "challenging": "Strategic planning",
-      "mixed": "Manage expectations",
-      "harmonious": "Focused development"
+      "challenging": "Problem-solving, direct engagement",
+      "mixed": "Strategic planning, balanced action",
+      "harmonious": "Seize opportunities, focused effort"
     },
     "high": {
-      "challenging": "Direct action",
-      "mixed": "Build resilience",
-      "harmonious": "Seize opportunity"
+      "challenging": "Confront challenges, decisive action",
+      "mixed": "Adapt quickly, re-evaluate strategy",
+      "harmonious": "Leverage intensity, purposeful drive"
     },
     "extreme": {
-      "challenging": "Crisis response",
-      "mixed": "Seek external help",
-      "harmonious": "Initiate major change"
+      "challenging": "Radical change, endure pressure",
+      "mixed": "Crisis management, seek support",
+      "harmonious": "Transformative action, celebrate breakthroughs"
     }
   }
 }

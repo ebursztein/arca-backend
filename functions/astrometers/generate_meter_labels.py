@@ -135,6 +135,34 @@ def _determine_meter_type(meter: Meter) -> str:
 
 def get_meter_metadata(meter: Meter) -> Dict:
     """Extract metadata for a specific meter."""
+    from hierarchy import is_super_group_meter, get_super_group_for_aggregate, METER_TO_SUPER_GROUP
+
+    # Check if this is a super-group aggregate meter
+    if is_super_group_meter(meter):
+        # Super-group meters have special metadata
+        super_group = get_super_group_for_aggregate(meter)
+
+        # Find description from HIERARCHY
+        super_group_description = ""
+        for super_def in HIERARCHY:
+            if super_def["super_group"] == super_group:
+                super_group_description = super_def["description"]
+                break
+
+        # Generate human-readable name
+        name = meter.value.replace("_super_group", "").replace("_", " ").title()
+
+        return {
+            "meter_id": meter.value,
+            "display_name": f"{name} (Aggregate)",
+            "group": "overview",  # Super-groups use overview for organization
+            "super_group": super_group.value,
+            "group_description": f"Aggregate meter for {name} super-group",
+            "super_group_description": super_group_description,
+            "measures": _determine_meter_type(meter)
+        }
+
+    # Regular individual meters
     group = get_group(meter)
     super_group = get_super_group(meter)
 
@@ -198,7 +226,18 @@ def get_meter_context(meter: Meter) -> str:
         Meter.INTUITION_SPIRITUALITY: "Neptune transits enhancing spiritual sensitivity. Mystical awareness, dreams, psychic openings. Piscean themes.",
         Meter.KARMIC_LESSONS: "North Node transits showing soul growth direction. Destiny points, life lessons, evolutionary themes.",
 
-        Meter.SOCIAL_COLLECTIVE: "Outer planet transits (Jupiter/Saturn/Uranus/Neptune/Pluto) reflecting collective currents and societal themes."
+        Meter.SOCIAL_COLLECTIVE: "Outer planet transits (Jupiter/Saturn/Uranus/Neptune/Pluto) reflecting collective currents and societal themes.",
+
+        # Super-Group Aggregate Meters
+        Meter.OVERVIEW_SUPER_GROUP: "Weighted aggregate of overall_intensity and overall_harmony meters. Provides the highest-level dashboard summary of total cosmic activity and quality. Answers 'How much is happening overall?' and 'Is it generally supportive or challenging?' Combines all transit influences into one unified reading.",
+
+        Meter.INNER_WORLD_SUPER_GROUP: "Weighted aggregate of 6 meters: Mental Clarity, Decision Quality, Communication Flow (MIND group) + Emotional Intensity, Relationship Harmony, Emotional Resilience (EMOTIONS group). Measures your internal subjective experience—thoughts, feelings, psychological state. Shows how clear your thinking is and how you're feeling emotionally.",
+
+        Meter.OUTER_WORLD_SUPER_GROUP: "Weighted aggregate of 5 meters: Physical Energy, Conflict Risk, Motivation Drive (BODY group) + Career Ambition, Opportunity Window (CAREER group). Measures your engagement with external reality—action-taking, physical vitality, professional drive, opportunities. Shows what you can DO in the world right now.",
+
+        Meter.EVOLUTION_SUPER_GROUP: "Weighted aggregate of 3 meters: Challenge Intensity, Transformation Pressure, Innovation Breakthrough (EVOLUTION group). Measures growth through difficulty—friction that creates diamonds, forced transformation, breakthroughs. The hero's journey challenges. Shows where pressure is catalyzing your evolution.",
+
+        Meter.DEEPER_DIMENSIONS_SUPER_GROUP: "Weighted aggregate of 7 meters: Fire/Earth/Air/Water Energy (ELEMENTS group) + Intuition/Spirituality, Karmic Lessons (SPIRITUAL group) + Social Collective (COLLECTIVE group). Measures foundational energies—elemental temperament balance, spiritual awareness, karmic themes, collective currents. The deeper transpersonal layers beneath daily experience."
     }
 
     return meter_contexts.get(meter, "Context not available")
@@ -377,7 +416,7 @@ def main():
 
     for i, meter in enumerate(Meter, 1):
         try:
-            print(f"[{i}/23] Generating {meter.value}...", end=" ", flush=True)
+            print(f"[{i}/28] Generating {meter.value}...", end=" ", flush=True)
 
             # Call Gemini to generate labels
             labels = generate_labels_with_gemini(meter, client)
@@ -403,8 +442,8 @@ def main():
 
     # Print summary
     print(f"\n📊 Summary:")
-    print(f"   Successful: {successful}/23")
-    print(f"   Failed: {len(failed)}/23")
+    print(f"   Successful: {successful}/28 (23 individual + 5 super-group)")
+    print(f"   Failed: {len(failed)}/28")
     print(f"   Location: {output_dir}/")
 
     if failed:

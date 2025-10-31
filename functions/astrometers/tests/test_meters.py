@@ -573,7 +573,7 @@ class TestMeterOrganization:
         )
 
         trend = today.calculate_trend(yesterday)
-        assert trend == TrendDirection.IMPROVING
+        assert trend.harmony.direction == TrendDirection.IMPROVING
 
     def test_calculate_trend_worsening(self):
         """Test trend calculation for worsening harmony."""
@@ -610,11 +610,11 @@ class TestMeterOrganization:
         )
 
         trend = today.calculate_trend(yesterday)
-        assert trend == TrendDirection.WORSENING
+        assert trend.harmony.direction == TrendDirection.WORSENING
 
     def test_calculate_trend_stable(self):
         """Test trend calculation for stable harmony."""
-        from astrometers.meters import MeterReading, MeterGroup, QualityLabel, TrendDirection
+        from astrometers.meters import MeterReading, MeterGroup, QualityLabel, TrendDirection, ChangeRate
 
         yesterday = MeterReading(
             meter_name="test",
@@ -638,7 +638,7 @@ class TestMeterOrganization:
             unified_score=50,
             unified_quality=QualityLabel.MIXED,
             intensity=50,
-            harmony=55,  # +5 points (within stable range)
+            harmony=51,  # +1 point (truly stable)
             state_label="Test",
             interpretation="Test",
             advice=[],
@@ -647,7 +647,7 @@ class TestMeterOrganization:
         )
 
         trend = today.calculate_trend(yesterday)
-        assert trend == TrendDirection.STABLE
+        assert trend.harmony.change_rate == ChangeRate.STABLE
 
     def test_overall_unified_score_in_all_meters(self):
         """Test that AllMetersReading includes top-level overall unified score."""
@@ -664,3 +664,122 @@ class TestMeterOrganization:
         # Check that it matches the overall_intensity meter
         assert meters.overall_unified_score == meters.overall_intensity.unified_score
         assert meters.overall_unified_quality == meters.overall_intensity.unified_quality
+
+
+# ============================================================================
+# Super-Group Meter Tests
+# ============================================================================
+
+class TestSuperGroupMeters:
+    """Test super-group aggregate meter calculations."""
+
+    def test_all_super_group_meters_calculated(self):
+        """Test that all 5 super-group meters are calculated and populated."""
+        natal_chart, _ = compute_birth_chart("1990-06-15")
+        transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+
+        meters = get_meters(natal_chart, transit_chart)
+
+        # Check all 5 super-group meters exist
+        assert meters.overview_super_group is not None
+        assert meters.inner_world_super_group is not None
+        assert meters.outer_world_super_group is not None
+        assert meters.evolution_super_group is not None
+        assert meters.deeper_dimensions_super_group is not None
+
+    def test_super_group_meter_structure(self):
+        """Test that super-group meters have complete MeterReading structure."""
+        natal_chart, _ = compute_birth_chart("1990-06-15")
+        transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+
+        meters = get_meters(natal_chart, transit_chart)
+        sg_meter = meters.inner_world_super_group
+
+        # Check required fields
+        assert hasattr(sg_meter, 'meter_name')
+        assert sg_meter.meter_name == "inner_world_super_group"
+        assert hasattr(sg_meter, 'intensity')
+        assert hasattr(sg_meter, 'harmony')
+        assert hasattr(sg_meter, 'unified_score')
+        assert hasattr(sg_meter, 'unified_quality')
+        assert hasattr(sg_meter, 'top_aspects')
+        assert hasattr(sg_meter, 'state_label')
+        assert hasattr(sg_meter, 'interpretation')
+        assert hasattr(sg_meter, 'advice')
+
+    def test_super_group_meter_value_ranges(self):
+        """Test that super-group meters have valid intensity/harmony values."""
+        natal_chart, _ = compute_birth_chart("1990-06-15")
+        transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+
+        meters = get_meters(natal_chart, transit_chart)
+
+        # Test all 5 super-group meters
+        for sg_meter in [
+            meters.overview_super_group,
+            meters.inner_world_super_group,
+            meters.outer_world_super_group,
+            meters.evolution_super_group,
+            meters.deeper_dimensions_super_group
+        ]:
+            assert 0 <= sg_meter.intensity <= 100
+            assert 0 <= sg_meter.harmony <= 100
+            assert 0 <= sg_meter.unified_score <= 100
+
+    def test_super_group_has_aggregated_aspects(self):
+        """Test that super-group meters contain aggregated top aspects."""
+        natal_chart, _ = compute_birth_chart("1990-06-15")
+        transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+
+        meters = get_meters(natal_chart, transit_chart)
+        sg_meter = meters.inner_world_super_group
+
+        # Should have top aspects from all member meters
+        assert len(sg_meter.top_aspects) > 0
+        assert len(sg_meter.top_aspects) <= 5  # Max 5 as specified
+
+        # Each aspect should be properly formed
+        for aspect in sg_meter.top_aspects:
+            assert hasattr(aspect, 'transit_planet')
+            assert hasattr(aspect, 'natal_planet')
+            assert hasattr(aspect, 'aspect_type')
+            assert hasattr(aspect, 'dti_contribution')
+
+    def test_super_group_metadata(self):
+        """Test that super-group meters contain metadata about aggregation."""
+        natal_chart, _ = compute_birth_chart("1990-06-15")
+        transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+
+        meters = get_meters(natal_chart, transit_chart)
+        sg_meter = meters.inner_world_super_group
+
+        # Check additional_context has aggregation info
+        assert 'super_group' in sg_meter.additional_context
+        assert 'member_meters' in sg_meter.additional_context
+        assert 'aggregation_method' in sg_meter.additional_context
+
+        # Inner World should have 6 member meters
+        assert len(sg_meter.additional_context['member_meters']) == 6
+        assert sg_meter.additional_context['aggregation_method'] == 'weighted_average'
+
+    def test_super_group_member_counts(self):
+        """Test that each super-group has the correct number of member meters."""
+        natal_chart, _ = compute_birth_chart("1990-06-15")
+        transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+
+        meters = get_meters(natal_chart, transit_chart)
+
+        # Overview: 2 meters
+        assert len(meters.overview_super_group.additional_context['member_meters']) == 2
+
+        # Inner World: 6 meters (3 Mind + 3 Emotions)
+        assert len(meters.inner_world_super_group.additional_context['member_meters']) == 6
+
+        # Outer World: 5 meters (3 Body + 2 Career)
+        assert len(meters.outer_world_super_group.additional_context['member_meters']) == 5
+
+        # Evolution: 3 meters
+        assert len(meters.evolution_super_group.additional_context['member_meters']) == 3
+
+        # Deeper Dimensions: 7 meters (4 Elements + 2 Spiritual + 1 Collective)
+        assert len(meters.deeper_dimensions_super_group.additional_context['member_meters']) == 7

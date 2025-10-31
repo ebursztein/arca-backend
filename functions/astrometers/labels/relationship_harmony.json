@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks how smoothly your relationships are flowing and your connections with others.",
-    "detailed": "This meter primarily measures Venus transits to your natal Venus, Moon, and Sun, indicating the quality of relating and harmony in your connections. Challenging aspects from Mars and Saturn can introduce friction or difficulties in your interactions.",
+    "overview": "This meter shows how smooth or bumpy your relationships and emotional connections might feel today.",
+    "detailed": "It tracks Venus transits to your natal Venus, Moon, and Sun, indicating the overall quality of your relating. Challenging aspects from Mars or Saturn can create friction and tension in your connections.",
     "keywords": [
-      "Connection",
+      "Relationships",
       "Harmony",
-      "Love",
-      "Relating",
-      "Dynamics"
+      "Connection",
+      "Emotions",
+      "Relating"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Calm Still",
+      "quiet": "Calm Relating",
       "mild": "Gentle Flow",
       "moderate": "Active Connections",
       "high": "Strong Bonds",
-      "extreme": "Deeply Felt"
+      "extreme": "Intense Interactions"
     },
     "harmony_only": {
-      "challenging": "Tense Dynamics",
-      "mixed": "Varied Feelings",
-      "harmonious": "Smooth Relating"
+      "challenging": "Relationship Friction",
+      "mixed": "Mixed Feelings",
+      "harmonious": "Smooth Connections"
     },
     "combined": {
       "quiet": {
-        "challenging": "Subtle Strain",
-        "mixed": "Gentle Shifts",
-        "harmonious": "Peaceful Flow"
+        "challenging": "Subtle Tension",
+        "mixed": "Quietly Mixed",
+        "harmonious": "Gentle Harmony"
       },
       "mild": {
-        "challenging": "Minor Friction",
-        "mixed": "Mildly Unsettled",
-        "harmonious": "Easygoing Bonds"
+        "challenging": "Mild Friction",
+        "mixed": "Softly Unsure",
+        "harmonious": "Easy Connections"
       },
       "moderate": {
-        "challenging": "Relationship Tension",
-        "mixed": "Complex Dynamics",
-        "harmonious": "Balanced Connections"
+        "challenging": "Relationship Strain",
+        "mixed": "Complex Bonds",
+        "harmonious": "Flowing Connections"
       },
       "high": {
-        "challenging": "High Conflict",
-        "mixed": "Intense Mix",
-        "harmonious": "Strong Unity"
+        "challenging": "Major Friction",
+        "mixed": "Intense Fluctuations",
+        "harmonious": "Deep Harmony"
       },
       "extreme": {
         "challenging": "Crisis Point",
-        "mixed": "Volatile Energy",
-        "harmonious": "Profound Harmony"
+        "mixed": "Emotional Whirlwind",
+        "harmonious": "Blissful Union"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Subtle adjustments",
-      "mixed": "Gentle observation",
-      "harmonious": "Enjoy quiet time"
+      "challenging": "Small adjustments",
+      "mixed": "Quiet observation",
+      "harmonious": "Enjoy calm"
     },
     "mild": {
-      "challenging": "Address small issues",
-      "mixed": "Navigate nuances",
-      "harmonious": "Nurture connections"
+      "challenging": "Gentle resolution",
+      "mixed": "Navigating nuances",
+      "harmonious": "Nurturing bonds"
     },
     "moderate": {
-      "challenging": "Direct communication",
-      "mixed": "Consider all sides",
-      "harmonious": "Deepen bonds"
+      "challenging": "Addressing issues",
+      "mixed": "Balancing needs",
+      "harmonious": "Strengthening ties"
     },
     "high": {
-      "challenging": "Strategic resolution",
-      "mixed": "Manage intensity",
-      "harmonious": "Celebrate unity"
+      "challenging": "Conflict resolution",
+      "mixed": "Managing dynamics",
+      "harmonious": "Celebrating connections"
     },
     "extreme": {
-      "challenging": "Crisis management",
-      "mixed": "Careful de-escalation",
-      "harmonious": "Embrace connection"
+      "challenging": "Crisis intervention",
+      "mixed": "Intense processing",
+      "harmonious": "Deepening intimacy"
     }
   }
 }

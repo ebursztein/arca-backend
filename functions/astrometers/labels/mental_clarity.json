@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks how sharp your mind is for thinking, talking, and making daily decisions.",
-    "detailed": "This meter focuses on how Mercury's current movements interact with your birth chart's Mercury. It also considers Mercury's connections to your Sun and Moon, which shape your core thinking and communication style.",
+    "overview": "This meter tracks your mental sharpness, how clearly you think, and how easily you communicate.",
+    "detailed": "This meter focuses on how Mercury transits interact with your birth chart's Mercury, which governs thinking and communication. Aspects from Mercury to your Sun and Moon also highlight your overall cognitive function and mental processing.",
     "keywords": [
       "Thinking",
       "Communication",
-      "Decisions",
       "Focus",
-      "Ideas"
+      "Decisions",
+      "Learning"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Mental calm",
-      "mild": "Gentle focus",
-      "moderate": "Active mind",
-      "high": "Sharp thinking",
-      "extreme": "Intense thoughts"
+      "quiet": "Calm Mind",
+      "mild": "Gentle Thoughts",
+      "moderate": "Clear Focus",
+      "high": "Active Mind",
+      "extreme": "Intense Thinking"
     },
     "harmony_only": {
-      "challenging": "Muddled thoughts",
-      "mixed": "Mixed signals",
-      "harmonious": "Clear thought"
+      "challenging": "Mental Friction",
+      "mixed": "Varied Thoughts",
+      "harmonious": "Easy Flow"
     },
     "combined": {
       "quiet": {
-        "challenging": "Quiet confusion",
-        "mixed": "Subtle shifts",
-        "harmonious": "Inner peace"
+        "challenging": "Confused Stillness",
+        "mixed": "Quiet Reflection",
+        "harmonious": "Calm Clarity"
       },
       "mild": {
-        "challenging": "Slight fuzziness",
-        "mixed": "Gentle blend",
-        "harmonious": "Easy flow"
+        "challenging": "Mild Distraction",
+        "mixed": "Gentle Processing",
+        "harmonious": "Easy Thought"
       },
       "moderate": {
-        "challenging": "Mental friction",
-        "mixed": "Active processing",
-        "harmonious": "Focused clarity"
+        "challenging": "Moderate Struggle",
+        "mixed": "Deliberate Thought",
+        "harmonious": "Clear Insight"
       },
       "high": {
-        "challenging": "Overwhelmed mind",
-        "mixed": "Dynamic thinking",
-        "harmonious": "Sharp insights"
+        "challenging": "High Pressure",
+        "mixed": "Busy Mind",
+        "harmonious": "Sharp Focus"
       },
       "extreme": {
-        "challenging": "Mental overload",
-        "mixed": "Intense debate",
-        "harmonious": "Peak clarity"
+        "challenging": "Overwhelmed Mind",
+        "mixed": "Intense Processing",
+        "harmonious": "Brilliant Insight"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Mindful rest",
-      "mixed": "Gentle reflection",
-      "harmonious": "Relaxed thinking"
+      "challenging": "Pause/Review",
+      "mixed": "Gentle Introspection",
+      "harmonious": "Restful Reflection"
     },
     "mild": {
-      "challenging": "Slow down",
-      "mixed": "Consider options",
-      "harmonious": "Easy communication"
+      "challenging": "Recheck Details",
+      "mixed": "Mindful Planning",
+      "harmonious": "Easy Learning"
     },
     "moderate": {
-      "challenging": "Problem solve",
-      "mixed": "Process actively",
-      "harmonious": "Decision making"
+      "challenging": "Break Down",
+      "mixed": "Focused Analysis",
+      "harmonious": "Express Clearly"
     },
     "high": {
-      "challenging": "Prioritize tasks",
-      "mixed": "Debate ideas",
-      "harmonious": "Strategize plans"
+      "challenging": "Strategic Pause",
+      "mixed": "Active Problem-solve",
+      "harmonious": "Direct Communication"
     },
     "extreme": {
-      "challenging": "Declutter thoughts",
-      "mixed": "Intense brainstorming",
-      "harmonious": "Breakthrough ideas"
+      "challenging": "Simplify/Delegate",
+      "mixed": "Deep Dive",
+      "harmonious": "Inventive Solutions"
     }
   }
 }

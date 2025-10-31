@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter reveals how much practical, grounded energy is influencing your day.",
-    "detailed": "This meter tracks transits through the Earth signs: Taurus, Virgo, and Capricorn. It indicates the cosmic focus on grounding, practical matters, and building solid structures. Expect influences related to your material world, work, and tangible achievements.",
+    "overview": "This meter shows how much practical, grounded energy is active in your day to get things done.",
+    "detailed": "It measures planetary activity in earth signs like Taurus, Virgo, and Capricorn. This highlights your focus on the material world, structure, and getting things done. It influences your ability to manifest ideas into reality.",
     "keywords": [
-      "grounded",
+      "grounding",
       "practical",
-      "stable",
-      "structured",
-      "tangible"
+      "stability",
+      "resources",
+      "production"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Calm Ground",
-      "mild": "Mild Focus",
-      "moderate": "Steady Drive",
+      "quiet": "Earth Still",
+      "mild": "Gentle Ground",
+      "moderate": "Steady Focus",
       "high": "Strong Build",
-      "extreme": "Deeply Rooted"
+      "extreme": "Solid Impact"
     },
     "harmony_only": {
-      "challenging": "Rocky Ground",
-      "mixed": "Mixed Soil",
-      "harmonious": "Fertile Ground"
+      "challenging": "Rough Terrain",
+      "mixed": "Shifting Ground",
+      "harmonious": "Firm Footing"
     },
     "combined": {
       "quiet": {
-        "challenging": "Weak Base",
-        "mixed": "Shifty Ground",
-        "harmonious": "Calm Base"
+        "challenging": "Quiet Struggle",
+        "mixed": "Gentle Shift",
+        "harmonious": "Calm Foundation"
       },
       "mild": {
-        "challenging": "Slight Rub",
-        "mixed": "Gentle Wobble",
-        "harmonious": "Gentle Support"
+        "challenging": "Mild Friction",
+        "mixed": "Gentle Adjust",
+        "harmonious": "Easy Flow"
       },
       "moderate": {
-        "challenging": "Tough Work",
-        "mixed": "Steady Mix",
-        "harmonious": "Smooth Progress"
+        "challenging": "Key Obstacles",
+        "mixed": "Stable Mix",
+        "harmonious": "Productive Flow"
       },
       "high": {
-        "challenging": "Hard Pressure",
-        "mixed": "Intense Mix",
-        "harmonious": "Solid Build"
+        "challenging": "Major Blocks",
+        "mixed": "Strong Push",
+        "harmonious": "Peak Output"
       },
       "extreme": {
-        "challenging": "Stuck Force",
-        "mixed": "Big Shake",
-        "harmonious": "Rock Solid"
+        "challenging": "Hard Confront",
+        "mixed": "Big Shifts",
+        "harmonious": "Solid Gains"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Assess Foundation",
-      "mixed": "Check Resources",
-      "harmonious": "Rest/Recharge"
+      "challenging": "Reassess basics",
+      "mixed": "Gentle planning",
+      "harmonious": "Cultivate stillness"
     },
     "mild": {
-      "challenging": "Address Issues",
-      "mixed": "Adapt Plans",
-      "harmonious": "Gentle Nurturing"
+      "challenging": "Minor adjustments",
+      "mixed": "Flexible approach",
+      "harmonious": "Steady maintenance"
     },
     "moderate": {
-      "challenging": "Problem Solving",
-      "mixed": "Balanced Action",
-      "harmonious": "Consistent Effort"
+      "challenging": "Problem solving",
+      "mixed": "Practical action",
+      "harmonious": "Focused work"
     },
     "high": {
-      "challenging": "Manage Obstacles",
-      "mixed": "Strategic Adjustment",
-      "harmonious": "Build/Develop"
+      "challenging": "Overcome hurdles",
+      "mixed": "Strategic persistence",
+      "harmonious": "Materialize goals"
     },
     "extreme": {
-      "challenging": "Overcome Blocks",
-      "mixed": "Major Reevaluation",
-      "harmonious": "Solidify Gains"
+      "challenging": "Direct repair",
+      "mixed": "Adapt to change",
+      "harmonious": "Maximize results"
     }
   }
 }

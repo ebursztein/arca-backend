@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter shows when doors open for growth, luck, and new possibilities in your life.",
-    "detailed": "It tracks Jupiter's expansive transits to your Sun, Moon, and Ascendant. These alignments indicate periods where growth opportunities and good fortune are more likely to appear. Pay attention to sudden chances for advancement.",
+    "overview": "This meter tracks periods when doors open, bringing expansion and luck to your professional life and ambitions.",
+    "detailed": "This meter measures transits involving Jupiter, the planet of good fortune, growth, and abundance. It highlights times when Jupiter forms supportive connections to your Sun, Moon, or Ascendant, signaling prime opportunities. These alignments often bring fortunate timing, making it easier to pursue new ventures and expand your horizons.",
     "keywords": [
       "Growth",
       "Luck",
       "Expansion",
-      "Chances",
-      "Progress"
+      "Opportunity",
+      "Advancement"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Slow Pace",
-      "mild": "Gentle Flow",
-      "moderate": "Openings Arise",
-      "high": "Doors Open",
-      "extreme": "Peak Chances"
+      "quiet": "Low Activity",
+      "mild": "Gentle Push",
+      "moderate": "Active Growth",
+      "high": "Strong Opening",
+      "extreme": "Major Leaps"
     },
     "harmony_only": {
-      "challenging": "Hurdles Present",
-      "mixed": "Unsure Path",
-      "harmonious": "Clear Path"
+      "challenging": "Blocked Path",
+      "mixed": "Mixed Bag",
+      "harmonious": "Open Doors"
     },
     "combined": {
       "quiet": {
-        "challenging": "Stalled Hurdles",
-        "mixed": "Slow Unsure",
-        "harmonious": "Gentle Start"
+        "challenging": "Few Hurdles",
+        "mixed": "Minor Shifts",
+        "harmonious": "Subtle Flow"
       },
       "mild": {
-        "challenging": "Minor Block",
-        "mixed": "Mild Mix",
+        "challenging": "Gentle Blocks",
+        "mixed": "Mild Swings",
         "harmonious": "Easy Flow"
       },
       "moderate": {
-        "challenging": "Obstacles Emerge",
-        "mixed": "Mixed Prospects",
-        "harmonious": "Good Prospects"
+        "challenging": "Tough Decisions",
+        "mixed": "Active But",
+        "harmonious": "Good Progress"
       },
       "high": {
-        "challenging": "Big Hurdles",
-        "mixed": "Uncertain Gain",
-        "harmonious": "Wide Open"
+        "challenging": "Big Obstacles",
+        "mixed": "Dynamic But",
+        "harmonious": "Major Wins"
       },
       "extreme": {
-        "challenging": "Major Test",
-        "mixed": "High Stakes",
-        "harmonious": "Golden Gate"
+        "challenging": "Huge Roadblocks",
+        "mixed": "Intense Blend",
+        "harmonious": "Peak Opportunity"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Patient Waiting",
-      "mixed": "Observe Options",
-      "harmonious": "Gentle Exploring"
+      "challenging": "Review Plans",
+      "mixed": "Small Adjustments",
+      "harmonious": "Prepare Ground"
     },
     "mild": {
-      "challenging": "Resolve Issues",
-      "mixed": "Evaluate Carefully",
-      "harmonious": "Easy Progression"
+      "challenging": "Gentle Pushback",
+      "mixed": "Navigate Carefully",
+      "harmonious": "Explore Options"
     },
     "moderate": {
-      "challenging": "Address Blocks",
-      "mixed": "Weigh Choices",
+      "challenging": "Strategic Focus",
+      "mixed": "Weigh Pros",
       "harmonious": "Seize Chances"
     },
     "high": {
       "challenging": "Overcome Obstacles",
-      "mixed": "Strategic Action",
-      "harmonious": "Bold Moves"
+      "mixed": "Bold Strategy",
+      "harmonious": "Act Decisively"
     },
     "extreme": {
-      "challenging": "Major Challenge",
-      "mixed": "Calculated Risks",
-      "harmonious": "Maximize Gain"
+      "challenging": "Breakthrough Needed",
+      "mixed": "Intense Action",
+      "harmonious": "Maximize Gains"
     }
   }
 }

@@ -184,28 +184,10 @@ def calculate_unified_score(
     harmony: float
 ) -> Tuple[float, QualityLabel]:
     """
-    Calculate unified score that combines intensity and harmony.
+    Calculate unified score and quality label.
 
-    Approach:
-    - Harmony determines the SIGN (positive/negative direction)
-    - Intensity determines the MAGNITUDE (how strong)
-    - Unified score combines both dimensions into 0-100 scale
-
-    Formula:
-    1. Calculate harmony sign factor: (harmony - 50) / 50  → range [-1, +1]
-       - harmony=0   → sign=-1 (fully negative)
-       - harmony=50  → sign=0  (neutral)
-       - harmony=100 → sign=+1 (fully positive)
-
-    2. Calculate signed score: intensity × sign  → range [-100, +100]
-       - High intensity + high harmony = high positive score
-       - High intensity + low harmony = high negative score
-       - Low intensity = low magnitude (regardless of harmony)
-
-    3. Normalize to 0-100: (signed_score / 2) + 50
-       - -100 → 0  (worst: high intensity, terrible harmony)
-       - 0    → 50 (neutral: either no intensity or balanced harmony)
-       - +100 → 100 (best: high intensity, excellent harmony)
+    Design: unified_score = intensity (bar length in UI).
+    Quality label is derived from intensity + harmony combination.
 
     Args:
         intensity: Intensity meter (0-100) - how much is happening
@@ -213,45 +195,44 @@ def calculate_unified_score(
 
     Returns:
         Tuple of (unified_score, quality_label):
-        - unified_score: Combined score (0-100)
-        - quality_label: QualityLabel enum for semantic interpretation
+        - unified_score: Always equals intensity (bar length)
+        - quality_label: QualityLabel enum based on intensity + harmony combination
 
     Examples:
+        >>> calculate_unified_score(20, 90)
+        (20, QualityLabel.QUIET)  # Low intensity = quiet
+
+        >>> calculate_unified_score(35, 80)
+        (35, QualityLabel.PEACEFUL)  # Low intensity + high harmony = peaceful
+
         >>> calculate_unified_score(80, 90)
-        (82.0, QualityLabel.HARMONIOUS)  # High intensity, high harmony → 80*0.8=64 → 82
+        (80, QualityLabel.HARMONIOUS)  # High intensity + high harmony = harmonious
 
         >>> calculate_unified_score(80, 30)
-        (34.0, QualityLabel.CHALLENGING)  # High intensity, low harmony → 80*(-0.4)=-32 → 34
+        (80, QualityLabel.CHALLENGING)  # High intensity + low harmony = challenging
 
-        >>> calculate_unified_score(20, 90)
-        (58.0, QualityLabel.QUIET)  # Low intensity, high harmony → 20*0.8=16 → 58
-
-        >>> calculate_unified_score(80, 50)
-        (50.0, QualityLabel.MIXED)  # High intensity, neutral harmony → 80*0=0 → 50
+        >>> calculate_unified_score(70, 50)
+        (70, QualityLabel.MIXED)  # Moderate intensity + moderate harmony = mixed
     """
-    # Calculate harmony sign factor: maps 0-100 to -1 to +1
-    harmony_sign = (harmony - 50) / 50
+    # Unified score equals intensity (this is the bar length in UI)
+    unified_score = intensity
 
-    # Calculate signed score: intensity magnitude with harmony direction
-    signed_score = intensity * harmony_sign
-
-    # Normalize from [-100, +100] to [0, 100]
-    unified_score = (signed_score / 2) + 50
-
-    # Determine quality label based on unified score
-    if unified_score < 25:
-        quality = QualityLabel.CHALLENGING  # Very bad energy
-    elif unified_score < 40:
-        quality = QualityLabel.MIXED  # Somewhat challenging
-    elif unified_score < 60:
-        if intensity < 25:
-            quality = QualityLabel.QUIET  # Low activity
-        else:
-            quality = QualityLabel.MIXED  # Neutral
-    elif unified_score < 75:
-        quality = QualityLabel.PEACEFUL  # Good but moderate
+    # Determine quality label based on intensity + harmony combination
+    if intensity < 25:
+        # Very low intensity = quiet regardless of harmony
+        quality = QualityLabel.QUIET
+    elif intensity < 40 and harmony >= 70:
+        # Low intensity + high harmony = peaceful
+        quality = QualityLabel.PEACEFUL
+    elif harmony >= 70:
+        # High harmony = harmonious
+        quality = QualityLabel.HARMONIOUS
+    elif harmony <= 30:
+        # Low harmony = challenging
+        quality = QualityLabel.CHALLENGING
     else:
-        quality = QualityLabel.HARMONIOUS  # Excellent energy
+        # Everything else = mixed
+        quality = QualityLabel.MIXED
 
     return unified_score, quality
 
@@ -260,11 +241,89 @@ def calculate_unified_score(
 # MeterReading Model (Spec Section 7.4.2)
 # ============================================================================
 
+class ChangeRate(str, Enum):
+    """Rate of change magnitude (quantile-based from empirical analysis of 855K transitions)."""
+    STABLE = "stable"      # Below 50th percentile (most common daily changes)
+    SLOW = "slow"          # 50th-75th percentile (typical noticeable shifts)
+    MODERATE = "moderate"  # 75th-90th percentile (clear significant changes)
+    RAPID = "rapid"        # Above 90th percentile (dramatic shifts, top 10%)
+
+
 class TrendDirection(str, Enum):
-    """Trend direction for comparing readings across time."""
-    IMPROVING = "improving"     # Harmony increasing (≥10 points)
-    STABLE = "stable"           # Harmony within ±10 points
-    WORSENING = "worsening"     # Harmony decreasing (≥10 points)
+    """Direction of change for specific metric."""
+    IMPROVING = "improving"      # Harmony: increasing (getting better)
+    STABLE = "stable"            # No significant change
+    WORSENING = "worsening"      # Harmony: decreasing (getting worse)
+    INCREASING = "increasing"    # Intensity/Unified: going up
+    DECREASING = "decreasing"    # Intensity/Unified: going down
+
+
+class MetricTrend(BaseModel):
+    """Trend data for a single metric (harmony, intensity, or unified_score)."""
+    previous: float = Field(description="Yesterday's value")
+    delta: float = Field(description="Change from yesterday (positive = increase, negative = decrease)")
+    direction: TrendDirection = Field(description="Direction of change")
+    change_rate: ChangeRate = Field(description="Magnitude classification")
+
+
+class TrendData(BaseModel):
+    """
+    Complete trend analysis comparing today vs yesterday.
+
+    Tracks all three key scores separately with metric-specific empirical thresholds
+    based on analysis of 855,000 daily transitions across 2,500 diverse birth charts.
+
+    Each metric has its own thresholds because they change at different rates:
+    - Harmony changes most (quality shifts)
+    - Intensity changes similarly to harmony (activity shifts)
+    - Unified score changes less (it's a combined metric)
+    """
+    harmony: MetricTrend = Field(description="Quality trend (most meaningful for users)")
+    intensity: MetricTrend = Field(description="Activity level trend")
+    unified_score: MetricTrend = Field(description="Combined score trend")
+
+
+# Empirically-derived thresholds for change_rate classification
+# Based on quantile analysis: 50th, 75th, 90th percentiles
+HARMONY_THRESHOLDS = {
+    'stable': 2.0,     # < 2.0 points (50% of changes)
+    'slow': 5.5,       # 2.0-5.5 points (50th-75th percentile)
+    'moderate': 10.5   # 5.5-10.5 points (75th-90th percentile)
+    # rapid: > 10.5 points (top 10%)
+}
+
+INTENSITY_THRESHOLDS = {
+    'stable': 2.0,
+    'slow': 5.0,
+    'moderate': 9.5
+}
+
+UNIFIED_THRESHOLDS = {
+    'stable': 0.5,
+    'slow': 2.5,
+    'moderate': 5.5
+}
+
+
+def classify_change_rate(abs_delta: float, thresholds: dict) -> ChangeRate:
+    """
+    Classify magnitude of change based on metric-specific thresholds.
+
+    Args:
+        abs_delta: Absolute value of change
+        thresholds: Dict with 'stable', 'slow', 'moderate' keys
+
+    Returns:
+        ChangeRate enum
+    """
+    if abs_delta < thresholds['stable']:
+        return ChangeRate.STABLE
+    elif abs_delta < thresholds['slow']:
+        return ChangeRate.SLOW
+    elif abs_delta < thresholds['moderate']:
+        return ChangeRate.MODERATE
+    else:
+        return ChangeRate.RAPID
 
 
 class MeterReading(BaseModel):
@@ -295,40 +354,80 @@ class MeterReading(BaseModel):
     additional_context: Dict[str, Any] = Field(default_factory=dict)
 
     # Trend (optional) - set via calculate_trend() when comparing with previous day
-    trend: Optional[TrendDirection] = Field(
+    trend: Optional[TrendData] = Field(
         None,
-        description="Trend direction vs previous reading (optional, calculated on-demand)"
+        description="Complete trend analysis vs previous reading (optional, calculated on-demand)"
     )
 
-    def calculate_trend(self, previous_reading: "MeterReading") -> TrendDirection:
+    def calculate_trend(self, previous_reading: "MeterReading") -> TrendData:
         """
-        Calculate trend direction by comparing harmony scores.
+        Calculate complete trend analysis by comparing all three key scores.
 
-        Uses harmony (not intensity) because harmony represents "quality"
-        which is more meaningful for trend analysis. A day can have high
-        intensity but improving quality (getting better) or high intensity
-        with worsening quality (getting harder).
+        Tracks harmony (quality), intensity (activity), and unified_score (combined)
+        with metric-specific empirical thresholds.
 
         Args:
             previous_reading: Yesterday's reading for same meter
 
         Returns:
-            TrendDirection enum (improving, stable, worsening)
+            TrendData with separate trend analysis for each metric
 
         Example:
-            >>> today.harmony = 75
-            >>> yesterday.harmony = 60
-            >>> today.calculate_trend(yesterday)
-            TrendDirection.IMPROVING
+            >>> today.harmony = 75, yesterday.harmony = 60
+            >>> trend = today.calculate_trend(yesterday)
+            >>> trend.harmony.direction  # TrendDirection.IMPROVING
+            >>> trend.harmony.change_rate  # ChangeRate.MODERATE (delta=15)
         """
-        delta = self.harmony - previous_reading.harmony
+        # Harmony trend (quality)
+        harmony_delta = self.harmony - previous_reading.harmony
+        harmony_abs = abs(harmony_delta)
+        harmony_direction = (
+            TrendDirection.IMPROVING if harmony_delta >= 2.0
+            else TrendDirection.WORSENING if harmony_delta <= -2.0
+            else TrendDirection.STABLE
+        )
+        harmony_rate = classify_change_rate(harmony_abs, HARMONY_THRESHOLDS)
 
-        if delta >= 10:
-            return TrendDirection.IMPROVING
-        elif delta <= -10:
-            return TrendDirection.WORSENING
-        else:
-            return TrendDirection.STABLE
+        # Intensity trend (activity)
+        intensity_delta = self.intensity - previous_reading.intensity
+        intensity_abs = abs(intensity_delta)
+        intensity_direction = (
+            TrendDirection.INCREASING if intensity_delta >= 2.0
+            else TrendDirection.DECREASING if intensity_delta <= -2.0
+            else TrendDirection.STABLE
+        )
+        intensity_rate = classify_change_rate(intensity_abs, INTENSITY_THRESHOLDS)
+
+        # Unified score trend (combined)
+        unified_delta = self.unified_score - previous_reading.unified_score
+        unified_abs = abs(unified_delta)
+        unified_direction = (
+            TrendDirection.INCREASING if unified_delta >= 0.5
+            else TrendDirection.DECREASING if unified_delta <= -0.5
+            else TrendDirection.STABLE
+        )
+        unified_rate = classify_change_rate(unified_abs, UNIFIED_THRESHOLDS)
+
+        return TrendData(
+            harmony=MetricTrend(
+                previous=previous_reading.harmony,
+                delta=harmony_delta,
+                direction=harmony_direction,
+                change_rate=harmony_rate
+            ),
+            intensity=MetricTrend(
+                previous=previous_reading.intensity,
+                delta=intensity_delta,
+                direction=intensity_direction,
+                change_rate=intensity_rate
+            ),
+            unified_score=MetricTrend(
+                previous=previous_reading.unified_score,
+                delta=unified_delta,
+                direction=unified_direction,
+                change_rate=unified_rate
+            )
+        )
 
 
 class KeyAspect(BaseModel):
@@ -956,7 +1055,8 @@ def calculate_motivation_drive_meter(
 
 def calculate_career_ambition_meter(
     all_aspects: List[TransitAspect],
-    date: datetime
+    date: datetime,
+    transit_chart: dict
 ) -> MeterReading:
     """
     Career Ambition Meter - professional drive, status-seeking, public recognition.
@@ -981,8 +1081,18 @@ def calculate_career_ambition_meter(
 
     reading = calculate_meter_score(filtered_career, "career_ambition", date, MeterGroup.CAREER)
 
+    # Apply Saturn retrograde modifier
+    saturn_data = next((p for p in transit_chart.get("planets", []) if p["name"] == Planet.SATURN), None)
+    if saturn_data and saturn_data.get("retrograde", False):
+        reading.harmony *= 0.70  # Saturn Rx delays career progress
+        reading.additional_context["saturn_retrograde"] = True
+
     # Apply labels from JSON
     apply_labels_to_reading(reading, "career_ambition")
+
+    # Add retrograde note if applicable (after interpretation is set)
+    if reading.additional_context.get("saturn_retrograde", False):
+        reading.interpretation += "\n\nNote: Saturn is retrograde - career progress may feel delayed or require internal restructuring."
 
     return reading
 
@@ -1541,6 +1651,13 @@ class AllMetersReading(BaseModel):
     karmic_lessons: MeterReading
     social_collective: MeterReading
 
+    # Super-Group Aggregate Meters (5) - Optional, calculated on-demand
+    overview_super_group: Optional[MeterReading] = None
+    inner_world_super_group: Optional[MeterReading] = None
+    outer_world_super_group: Optional[MeterReading] = None
+    evolution_super_group: Optional[MeterReading] = None
+    deeper_dimensions_super_group: Optional[MeterReading] = None
+
 
 def group_meters_by_domain(all_meters: AllMetersReading) -> Dict[str, Dict[str, MeterReading]]:
     """
@@ -1697,35 +1814,206 @@ def extract_key_aspects(
     return key_aspects[:top_n]
 
 
-def get_meters(
-    natal_chart: dict,
-    transit_chart: dict,
-    date: Optional[datetime] = None
-) -> AllMetersReading:
+# ============================================================================
+# Super-Group Aggregation Functions
+# ============================================================================
+
+def aggregate_meter_scores(
+    meters: List[MeterReading],
+    weights: Optional[Dict[Meter, float]] = None
+) -> Tuple[float, float]:
     """
-    Calculate all 23 astrological meters for a given date.
+    Calculate weighted average of intensity and harmony across multiple meters.
 
     Args:
-        natal_chart: User's natal chart from compute_birth_chart()
-        transit_chart: Transit chart for target date from compute_birth_chart()
-        date: Date for calculation (defaults to today)
+        meters: List of MeterReading objects to aggregate
+        weights: Optional weights dict (Meter -> float). If None, uses equal weighting.
 
     Returns:
-        AllMetersReading with all 23 meters calculated
+        Tuple of (avg_intensity, avg_harmony)
 
     Example:
-        >>> from astro import compute_birth_chart
-        >>> from datetime import datetime
-        >>> natal_chart, _ = compute_birth_chart("1990-06-15")
-        >>> transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
-        >>> meters = get_meters(natal_chart, transit_chart)
-        >>> print(f"Overall Intensity: {meters.overall_intensity.intensity:.1f}/100")
+        >>> meters = [mental_clarity, decision_quality, communication_flow]
+        >>> intensity, harmony = aggregate_meter_scores(meters, METER_IMPORTANCE_WEIGHTS)
+        >>> # Returns weighted average intensity and harmony for Mind super-group
     """
-    # Import find_natal_transit_aspects here to avoid circular import
-    from astro import find_natal_transit_aspects
+    from .constants import METER_IMPORTANCE_WEIGHTS
 
-    if date is None:
-        date = datetime.now()
+    if not meters:
+        return 0.0, 50.0  # No meters = neutral
+
+    if weights is None:
+        # Equal weighting
+        weights = {Meter(m.meter_name): 1.0 for m in meters}
+
+    total_intensity = 0.0
+    total_harmony = 0.0
+    total_weight = 0.0
+
+    for meter in meters:
+        meter_enum = Meter(meter.meter_name)
+        weight = weights.get(meter_enum, 1.0)
+
+        total_intensity += meter.intensity * weight
+        total_harmony += meter.harmony * weight
+        total_weight += weight
+
+    if total_weight == 0:
+        return 0.0, 50.0
+
+    avg_intensity = total_intensity / total_weight
+    avg_harmony = total_harmony / total_weight
+
+    return avg_intensity, avg_harmony
+
+
+def aggregate_top_aspects(
+    meters: List[MeterReading],
+    top_n: int = 5
+) -> List[AspectContribution]:
+    """
+    Merge and rank top contributing aspects from multiple meters.
+
+    Deduplicates aspects that appear in multiple meters and ranks by
+    maximum DTI contribution across all meters.
+
+    Args:
+        meters: List of MeterReading objects
+        top_n: Number of top aspects to return
+
+    Returns:
+        List of top N AspectContribution objects, sorted by DTI (descending)
+
+    Example:
+        >>> meters = [emotional_intensity, relationship_harmony, emotional_resilience]
+        >>> top_aspects = aggregate_top_aspects(meters, top_n=5)
+        >>> # Returns top 5 aspects affecting the Emotions super-group
+    """
+    # Map: (transit_planet, natal_planet, aspect_type) -> AspectContribution
+    aspect_map: Dict[Tuple, AspectContribution] = {}
+
+    for meter in meters:
+        for aspect in meter.top_aspects:
+            key = (
+                aspect.transit_planet,
+                aspect.natal_planet,
+                aspect.aspect_type
+            )
+
+            # Keep the aspect with highest DTI
+            if key not in aspect_map or aspect.dti_contribution > aspect_map[key].dti_contribution:
+                aspect_map[key] = aspect
+
+    # Convert to list and sort by DTI
+    aspects = list(aspect_map.values())
+    aspects.sort(key=lambda a: a.dti_contribution, reverse=True)
+
+    return aspects[:top_n]
+
+
+def calculate_super_group_meter(
+    super_group: SuperGroup,
+    meters: List[MeterReading],
+    date: datetime
+) -> MeterReading:
+    """
+    Calculate aggregate meter for a super-group by combining all member meters.
+
+    Uses weighted aggregation based on METER_IMPORTANCE_WEIGHTS to calculate
+    intensity and harmony, then generates a complete MeterReading with
+    unified score, quality label, and aggregated top aspects.
+
+    Args:
+        super_group: The SuperGroup enum (e.g., SuperGroup.INNER_WORLD)
+        meters: List of individual MeterReading objects in this super-group
+        date: Date for the reading
+
+    Returns:
+        Complete MeterReading for the super-group
+
+    Example:
+        >>> inner_world_meters = [
+        ...     mental_clarity, decision_quality, communication_flow,
+        ...     emotional_intensity, relationship_harmony, emotional_resilience
+        ... ]
+        >>> inner_world_sg = calculate_super_group_meter(
+        ...     SuperGroup.INNER_WORLD,
+        ...     inner_world_meters,
+        ...     datetime.now()
+        ... )
+        >>> print(f"Inner World: {inner_world_sg.unified_score:.1f}/100")
+    """
+    from .constants import METER_IMPORTANCE_WEIGHTS
+    from .hierarchy import SUPER_GROUP_TO_METER, get_meters_in_super_group
+
+    # Get super-group aggregate meter enum
+    meter_enum = SUPER_GROUP_TO_METER[super_group]
+    meter_name = meter_enum.value
+
+    # Calculate weighted aggregates
+    avg_intensity, avg_harmony = aggregate_meter_scores(meters, METER_IMPORTANCE_WEIGHTS)
+
+    # Aggregate top aspects
+    top_aspects = aggregate_top_aspects(meters, top_n=5)
+
+    # Calculate unified score and quality
+    unified_score, unified_quality = calculate_unified_score(avg_intensity, avg_harmony)
+
+    # Get state label (using first member meter's labels as template)
+    # Super-group meters will have their own JSON labels generated
+    intensity_level = get_intensity_level(avg_intensity)
+    harmony_level = get_harmony_level(avg_harmony)
+
+    # Try to load super-group-specific labels, fallback to generic
+    try:
+        state_label = get_state_label_from_json(meter_name, avg_intensity, avg_harmony)
+        description = get_meter_description_from_json(meter_name)
+        interpretation = f"{description['overview']} {description['detailed']}"
+        advice_category = get_advice_category_from_json(meter_name, avg_intensity, avg_harmony)
+        advice = [f"Advice type: {advice_category}"]
+    except FileNotFoundError:
+        # Fallback if JSON labels don't exist yet
+        state_label = f"{intensity_level.title()} & {harmony_level.title()}"
+        interpretation = f"Aggregate reading for {super_group.value.replace('_', ' ').title()}"
+        advice = [f"Based on {len(meters)} meters in this super-group"]
+
+    # Create MeterReading
+    return MeterReading(
+        meter_name=meter_name,
+        date=date,
+        group=MeterGroup.OVERVIEW,  # Super-groups use OVERVIEW group for now
+        unified_score=unified_score,
+        unified_quality=unified_quality,
+        intensity=avg_intensity,
+        harmony=avg_harmony,
+        state_label=state_label,
+        interpretation=interpretation,
+        advice=advice,
+        top_aspects=top_aspects,
+        raw_scores={
+            "dti": sum(a.dti_contribution for a in top_aspects[:3]),
+            "hqs": sum(a.hqs_contribution for a in top_aspects[:3]) / len(top_aspects[:3]) if top_aspects else 0.0,
+            "member_count": len(meters),
+        },
+        additional_context={
+            "super_group": super_group.value,
+            "member_meters": [m.meter_name for m in meters],
+            "aggregation_method": "weighted_average",
+        }
+    )
+
+
+def _calculate_meters_no_trends(
+    natal_chart: dict,
+    transit_chart: dict,
+    date: datetime
+) -> AllMetersReading:
+    """
+    Internal helper: Calculate all meters WITHOUT trend analysis.
+    Used by get_meters() to avoid infinite recursion.
+    """
+    # Import here to avoid circular import
+    from astro import find_natal_transit_aspects
 
     # Find all natal-transit aspects
     natal_transit_aspects = find_natal_transit_aspects(
@@ -1792,7 +2080,7 @@ def get_meters(
         motivation_drive=calculate_motivation_drive_meter(all_aspects, date, transit_chart),
 
         # Life Domain Meters
-        career_ambition=calculate_career_ambition_meter(all_aspects, date),
+        career_ambition=calculate_career_ambition_meter(all_aspects, date, transit_chart),
         opportunity_window=calculate_opportunity_window_meter(all_aspects, date, transit_chart),
         challenge_intensity=calculate_challenge_intensity_meter(all_aspects, date),
         transformation_pressure=calculate_transformation_pressure_meter(all_aspects, date),
@@ -1806,5 +2094,140 @@ def get_meters(
 
     # Extract key aspects (major transits affecting multiple meters)
     all_meters.key_aspects = extract_key_aspects(all_meters, top_n=5, min_dti_threshold=100.0)
+
+    # Calculate super-group aggregate meters
+    # Overview Super-Group (2 meters)
+    all_meters.overview_super_group = calculate_super_group_meter(
+        SuperGroup.OVERVIEW,
+        [all_meters.overall_intensity, all_meters.overall_harmony],
+        date
+    )
+
+    # Inner World Super-Group (6 meters: 3 Mind + 3 Emotions)
+    all_meters.inner_world_super_group = calculate_super_group_meter(
+        SuperGroup.INNER_WORLD,
+        [
+            all_meters.mental_clarity,
+            all_meters.decision_quality,
+            all_meters.communication_flow,
+            all_meters.emotional_intensity,
+            all_meters.relationship_harmony,
+            all_meters.emotional_resilience,
+        ],
+        date
+    )
+
+    # Outer World Super-Group (5 meters: 3 Body + 2 Career)
+    all_meters.outer_world_super_group = calculate_super_group_meter(
+        SuperGroup.OUTER_WORLD,
+        [
+            all_meters.physical_energy,
+            all_meters.conflict_risk,
+            all_meters.motivation_drive,
+            all_meters.career_ambition,
+            all_meters.opportunity_window,
+        ],
+        date
+    )
+
+    # Evolution Super-Group (3 meters)
+    all_meters.evolution_super_group = calculate_super_group_meter(
+        SuperGroup.EVOLUTION,
+        [
+            all_meters.challenge_intensity,
+            all_meters.transformation_pressure,
+            all_meters.innovation_breakthrough,
+        ],
+        date
+    )
+
+    # Deeper Dimensions Super-Group (7 meters: 4 Elements + 2 Spiritual + 1 Collective)
+    all_meters.deeper_dimensions_super_group = calculate_super_group_meter(
+        SuperGroup.DEEPER_DIMENSIONS,
+        [
+            all_meters.fire_energy,
+            all_meters.earth_energy,
+            all_meters.air_energy,
+            all_meters.water_energy,
+            all_meters.intuition_spirituality,
+            all_meters.karmic_lessons,
+            all_meters.social_collective,
+        ],
+        date
+    )
+
+    return all_meters
+
+
+def get_meters(
+    natal_chart: dict,
+    transit_chart: dict,
+    date: Optional[datetime] = None
+) -> AllMetersReading:
+    """
+    Calculate all 28 astrological meters (23 individual + 5 super-groups) with automatic trend analysis.
+
+    This function automatically calculates yesterday's transits and populates trend fields
+    for all meters, showing whether each area is improving, stable, or worsening.
+
+    Args:
+        natal_chart: User's natal chart from compute_birth_chart()
+        transit_chart: Transit chart for target date from compute_birth_chart()
+        date: Date for calculation (defaults to today)
+
+    Returns:
+        AllMetersReading with all 28 meters calculated and all trend fields populated
+
+    Example:
+        >>> from astro import compute_birth_chart
+        >>> from datetime import datetime
+        >>> natal_chart, _ = compute_birth_chart("1990-06-15")
+        >>> transit_chart, _ = compute_birth_chart("2025-10-26", birth_time="12:00")
+        >>> meters = get_meters(natal_chart, transit_chart)
+        >>> print(f"Overall Intensity: {meters.overall_intensity.intensity:.1f}/100")
+        >>> print(f"Trend: {meters.overall_intensity.trend}")  # Always populated!
+    """
+    # Import here to avoid circular import
+    from astro import compute_birth_chart
+    from datetime import timedelta
+
+    if date is None:
+        date = datetime.now()
+
+    # Calculate today's meters (without trends)
+    all_meters = _calculate_meters_no_trends(natal_chart, transit_chart, date)
+
+    # Calculate yesterday's meters for trend comparison
+    yesterday_date = date - timedelta(days=1)
+    yesterday_date_str = yesterday_date.strftime('%Y-%m-%d')
+    yesterday_transit_chart, _ = compute_birth_chart(
+        birth_date=yesterday_date_str,
+        birth_time="12:00"  # Use noon for transits
+    )
+    yesterday_meters = _calculate_meters_no_trends(natal_chart, yesterday_transit_chart, yesterday_date)
+
+    # Populate trend fields for all 28 meters
+    meter_names = [
+        'overall_intensity', 'overall_harmony',
+        'mental_clarity', 'decision_quality', 'communication_flow',
+        'emotional_intensity', 'relationship_harmony', 'emotional_resilience',
+        'physical_energy', 'conflict_risk', 'motivation_drive',
+        'career_ambition', 'opportunity_window', 'challenge_intensity',
+        'transformation_pressure', 'fire_energy', 'earth_energy',
+        'air_energy', 'water_energy', 'intuition_spirituality',
+        'innovation_breakthrough', 'karmic_lessons', 'social_collective',
+        'overview_super_group', 'inner_world_super_group',
+        'outer_world_super_group', 'evolution_super_group',
+        'deeper_dimensions_super_group'
+    ]
+
+    # Calculate trends by comparing with yesterday
+    for meter_name in meter_names:
+        today_meter = getattr(all_meters, meter_name)
+        yesterday_meter = getattr(yesterday_meters, meter_name)
+
+        # Super-group meters might be None if not calculated
+        if today_meter and yesterday_meter:
+            today_meter.trend = today_meter.calculate_trend(yesterday_meter)
 
     return all_meters

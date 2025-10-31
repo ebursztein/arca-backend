@@ -12,14 +12,14 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks your energy to start projects and achieve goals.",
-    "detailed": "This meter analyzes Mars and Sun aspects, showing your drive to initiate and achieve. Mars with Jupiter expands ambition, while Mars with Saturn brings restraint or structure.",
+    "overview": "This meter measures your energy and drive to start new things and effectively reach your goals.",
+    "detailed": "This meter tracks the interplay between your personal drive (Mars) and core identity (Sun). Expansive aspects from Jupiter can boost your ambition, while challenging links from Saturn might test your perseverance.",
     "keywords": [
       "Drive",
-      "Ambition",
       "Action",
+      "Ambition",
       "Energy",
-      "Progress"
+      "Goals"
     ]
   },
   "experience_labels": {
@@ -28,66 +28,66 @@
       "mild": "Gentle Push",
       "moderate": "Steady Drive",
       "high": "Strong Drive",
-      "extreme": "Peak Drive"
+      "extreme": "Intense Drive"
     },
     "harmony_only": {
-      "challenging": "Blocked Drive",
-      "mixed": "Mixed Drive",
-      "harmonious": "Smooth Drive"
+      "challenging": "Pushing Limits",
+      "mixed": "Mixed Efforts",
+      "harmonious": "Easy Flow"
     },
     "combined": {
       "quiet": {
-        "challenging": "Restricted Will",
-        "mixed": "Quiet Potential",
-        "harmonious": "Calm Flow"
+        "challenging": "Low Friction",
+        "mixed": "Gentle Start",
+        "harmonious": "Easy Pace"
       },
       "mild": {
-        "challenging": "Gentle Obstacle",
-        "mixed": "Mild Ambition",
-        "harmonious": "Easy Progress"
+        "challenging": "Mild Friction",
+        "mixed": "Gentle Push",
+        "harmonious": "Smooth Start"
       },
       "moderate": {
-        "challenging": "Push & Pull",
-        "mixed": "Active Mix",
-        "harmonious": "Steady Flow"
+        "challenging": "Obstacles Ahead",
+        "mixed": "Steady Progress",
+        "harmonious": "Good Momentum"
       },
       "high": {
-        "challenging": "Strong Friction",
-        "mixed": "Bold Efforts",
-        "harmonious": "Powerful Advance"
+        "challenging": "High Resistance",
+        "mixed": "Strong Push",
+        "harmonious": "Powerful Flow"
       },
       "extreme": {
-        "challenging": "Intense Clash",
-        "mixed": "Urgent Efforts",
+        "challenging": "Intense Battle",
+        "mixed": "Extreme Efforts",
         "harmonious": "Unstoppable Force"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Restraint/Pause",
+      "challenging": "Conserve Energy",
       "mixed": "Gentle Planning",
-      "harmonious": "Relaxed Pace"
+      "harmonious": "Rest & Recharge"
     },
     "mild": {
       "challenging": "Small Steps",
-      "mixed": "Moderate Efforts",
-      "harmonious": "Easy Starts"
+      "mixed": "Deliberate Action",
+      "harmonious": "Steady Growth"
     },
     "moderate": {
-      "challenging": "Navigate Obstacles",
-      "mixed": "Focused Action",
-      "harmonious": "Consistent Work"
+      "challenging": "Overcome Obstacles",
+      "mixed": "Focused Effort",
+      "harmonious": "Seize Opportunities"
     },
     "high": {
-      "challenging": "Strategic Push",
-      "mixed": "Direct Action",
-      "harmonious": "Seize Opportunity"
+      "challenging": "Strategic Confrontation",
+      "mixed": "Assertive Action",
+      "harmonious": "Bold Initiatives"
     },
     "extreme": {
-      "challenging": "Careful Confrontation",
-      "mixed": "Urgent Action",
-      "harmonious": "Full Steam"
+      "challenging": "Directed Energy",
+      "mixed": "Maximize Effort",
+      "harmonious": "Unstoppable Progress"
     }
   }
 }

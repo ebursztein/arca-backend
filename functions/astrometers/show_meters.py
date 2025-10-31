@@ -82,15 +82,31 @@ def display_key_aspects(key_aspects: list[KeyAspect], console):
 def display_meter_reading(reading, console):
     """Display a single meter reading with rich formatting."""
 
-    # Trend indicator
+    # Trend indicator (harmony is primary metric)
     trend_indicator = ""
     if reading.trend:
-        trend_symbols = {
+        # Map direction to symbols and colors
+        direction_map = {
             "improving": "↑ [green]Improving[/green]",
+            "worsening": "↓ [red]Worsening[/red]",
             "stable": "→ [blue]Stable[/blue]",
-            "worsening": "↓ [red]Worsening[/red]"
+            "increasing": "↑ [cyan]Increasing[/cyan]",
+            "decreasing": "↓ [yellow]Decreasing[/yellow]"
         }
-        trend_indicator = f" {trend_symbols.get(reading.trend.value, '')}"
+
+        # Rate intensity indicators
+        rate_map = {
+            "rapid": "↑↑",
+            "moderate": "↑",
+            "slow": "⟶",
+            "stable": "→"
+        }
+
+        harmony_trend = reading.trend.harmony
+        symbol = direction_map.get(harmony_trend.direction.value, "")
+        rate_symbol = rate_map.get(harmony_trend.change_rate.value, "")
+
+        trend_indicator = f" {symbol} ({harmony_trend.change_rate.value}, Δ{harmony_trend.delta:+.1f})"
 
     # Create header with unified score and trend
     header = (
@@ -108,14 +124,25 @@ def display_meter_reading(reading, console):
     table.add_row("Group", reading.group.value.replace('_', ' ').title())
     table.add_row("Unified Score", f"{reading.unified_score:.1f}/100")
     table.add_row("Quality", reading.unified_quality.value.title())
+
+    # Detailed trend breakdown
     if reading.trend:
-        table.add_row("Trend", reading.trend.value.title())
+        table.add_row("", "")  # Separator
+        table.add_row("[bold cyan]TRENDS vs Yesterday[/bold cyan]", "")
+        table.add_row("  Harmony", f"{reading.trend.harmony.direction.value.title()} ({reading.trend.harmony.change_rate.value}, Δ{reading.trend.harmony.delta:+.1f})")
+        table.add_row("  Intensity", f"{reading.trend.intensity.direction.value.title()} ({reading.trend.intensity.change_rate.value}, Δ{reading.trend.intensity.delta:+.1f})")
+        table.add_row("  Unified", f"{reading.trend.unified_score.direction.value.title()} ({reading.trend.unified_score.change_rate.value}, Δ{reading.trend.unified_score.delta:+.1f})")
+
     table.add_row("", "")  # Separator
     table.add_row("Intensity", f"{reading.intensity:.1f}/100")
     table.add_row("Harmony", f"{reading.harmony:.1f}/100")
     table.add_row("State", reading.state_label)
     table.add_row("Raw DTI", f"{reading.raw_scores['dti']:.2f}")
     table.add_row("Raw HQS", f"{reading.raw_scores['hqs']:.2f}")
+
+    # Show member count for super-group meters
+    if 'member_count' in reading.raw_scores:
+        table.add_row("Members", f"{reading.raw_scores['member_count']} meters")
 
     # Build content
     content_parts = []
@@ -174,34 +201,12 @@ def main():
     natal_chart, is_exact = compute_birth_chart(birth_date)
     console.print(f"[green]✓[/green] Natal chart computed (exact: {is_exact})")
 
-    # Get yesterday's meters
-    console.print("[yellow]Calculating yesterday's transits...[/yellow]")
-    yesterday_transit, _ = compute_birth_chart(yesterday_date.strftime("%Y-%m-%d"), birth_time="12:00")
-    yesterday_meters = get_meters(natal_chart, yesterday_transit)
-    console.print(f"[green]✓[/green] Yesterday computed ({yesterday_meters.aspect_count} aspects)")
-
-    # Get today's meters
-    console.print("[yellow]Calculating today's transits...[/yellow]")
+    # Get today's meters (trends are automatically calculated)
+    console.print("[yellow]Calculating today's transits and trends...[/yellow]")
     today_transit, _ = compute_birth_chart(today_date.strftime("%Y-%m-%d"), birth_time="12:00")
-    all_meters = get_meters(natal_chart, today_transit)
-    console.print(f"[green]✓[/green] Today computed ({all_meters.aspect_count} aspects)\n")
-
-    # Calculate and set trends for all meters
-    console.print("[yellow]Calculating trends...[/yellow]")
-    meter_names = [
-        'overall_intensity', 'overall_harmony',
-        'mental_clarity', 'decision_quality', 'communication_flow',
-        'emotional_intensity', 'relationship_harmony', 'emotional_resilience',
-        'physical_energy', 'conflict_risk', 'motivation_drive',
-        'career_ambition', 'opportunity_window', 'challenge_intensity', 'transformation_pressure',
-        'fire_energy', 'earth_energy', 'air_energy', 'water_energy',
-        'intuition_spirituality', 'innovation_breakthrough', 'karmic_lessons', 'social_collective'
-    ]
-    for meter_name in meter_names:
-        today_meter = getattr(all_meters, meter_name)
-        yesterday_meter = getattr(yesterday_meters, meter_name)
-        today_meter.trend = today_meter.calculate_trend(yesterday_meter)
-    console.print(f"[green]✓[/green] Trends calculated\n")
+    all_meters = get_meters(natal_chart, today_transit, date=today_date)
+    console.print(f"[green]✓[/green] Today computed ({all_meters.aspect_count} aspects)")
+    console.print(f"[green]✓[/green] Trends automatically calculated (vs {yesterday_date.strftime('%Y-%m-%d')})\n")
 
     # Display overall unified score at the top
     console.print("[bold magenta]═══════════════════════════════════════════[/bold magenta]")
@@ -297,11 +302,25 @@ def main():
 
     display_meter_reading(all_meters.social_collective, console)
 
+    # SUPER-GROUP AGGREGATE METERS
+    console.print("[bold magenta]═══════════════════════════════════════════[/bold magenta]")
+    console.print("[bold magenta]   SUPER-GROUP AGGREGATES - iOS Dashboard (5)[/bold magenta]")
+    console.print("[bold magenta]═══════════════════════════════════════════[/bold magenta]\n")
+    console.print("[dim italic]These aggregate meters combine multiple individual meters[/dim italic]")
+    console.print("[dim italic]for high-level iOS dashboard display.[/dim italic]\n")
+
+    display_meter_reading(all_meters.overview_super_group, console)
+    display_meter_reading(all_meters.inner_world_super_group, console)
+    display_meter_reading(all_meters.outer_world_super_group, console)
+    display_meter_reading(all_meters.evolution_super_group, console)
+    display_meter_reading(all_meters.deeper_dimensions_super_group, console)
+
     # Summary
     console.print("[bold blue]═══════════════════════════════════════════[/bold blue]")
     console.print("[bold blue]               DEMO COMPLETE               [/bold blue]")
     console.print("[bold blue]═══════════════════════════════════════════[/bold blue]\n")
-    console.print(f"[green]✓[/green] All 23 meters calculated successfully")
+    console.print(f"[green]✓[/green] All 23 individual meters calculated successfully")
+    console.print(f"[green]✓[/green] All 5 super-group aggregate meters calculated successfully")
     console.print(f"[green]✓[/green] Identified {len(all_meters.key_aspects)} major transits affecting multiple domains\n")
 
 

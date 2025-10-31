@@ -12,8 +12,8 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks your mental activity, communication, and social connections, showing how much air energy is around.",
-    "detailed": "It reflects astrological transits involving Gemini, Libra, and Aquarius signs, highlighting your intellectual engagement and social exchanges. This indicates periods of heightened thought processes, verbal interactions, and the need for connection.",
+    "overview": "This meter tracks how active your mental energy, communication, and social connections are.",
+    "detailed": "It measures planetary transits through the air signs of Gemini, Libra, and Aquarius. These energies influence your thinking, ideas, conversations, and how you connect with others. Expect shifts in your intellectual and social life.",
     "keywords": [
       "Ideas",
       "Communication",
@@ -24,70 +24,70 @@
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Mental Calm",
-      "mild": "Gentle Breeze",
-      "moderate": "Active Mind",
-      "high": "Bustling Thoughts",
-      "extreme": "Mental Rush"
+      "quiet": "Low Air",
+      "mild": "Gentle Air",
+      "moderate": "Active Air",
+      "high": "Strong Air",
+      "extreme": "Intense Air"
     },
     "harmony_only": {
-      "challenging": "Mental Friction",
-      "mixed": "Shifting Ideas",
-      "harmonious": "Clear Flow"
+      "challenging": "Tricky Flow",
+      "mixed": "Mixed Flow",
+      "harmonious": "Easy Flow"
     },
     "combined": {
       "quiet": {
-        "challenging": "Muted Stress",
-        "mixed": "Quiet Nuance",
-        "harmonious": "Inner Peace"
+        "challenging": "Stuck Thoughts",
+        "mixed": "Calm Mixed",
+        "harmonious": "Peaceful Mind"
       },
       "mild": {
-        "challenging": "Gentle Jitters",
-        "mixed": "Mildly Complex",
-        "harmonious": "Easy Flow"
+        "challenging": "Gentle Friction",
+        "mixed": "Mildly Shifting",
+        "harmonious": "Smooth Talk"
       },
       "moderate": {
-        "challenging": "Mental Strain",
-        "mixed": "Active Nuance",
-        "harmonious": "Fluent Ideas"
+        "challenging": "Mental Jitters",
+        "mixed": "Active Shifting",
+        "harmonious": "Clear Ideas"
       },
       "high": {
-        "challenging": "Intense Debate",
-        "mixed": "Lively Mix",
-        "harmonious": "Bright Connections"
+        "challenging": "Overthinking Chaos",
+        "mixed": "Busy Mix",
+        "harmonious": "Sparkling Mind"
       },
       "extreme": {
-        "challenging": "Overloaded Mind",
-        "mixed": "Busy Flux",
-        "harmonious": "Peak Ideas"
+        "challenging": "Info Overload",
+        "mixed": "Intense Unsettled",
+        "harmonious": "Brilliant Insight"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Address small worries",
-      "mixed": "Reflect quietly",
-      "harmonious": "Enjoy solitude"
+      "challenging": "Quiet Reflection",
+      "mixed": "Gentle Pondering",
+      "harmonious": "Mindful Peace"
     },
     "mild": {
-      "challenging": "Resolve minor conflicts",
-      "mixed": "Observe and learn",
-      "harmonious": "Casual conversation"
+      "challenging": "Clarify Views",
+      "mixed": "Observe Thoughts",
+      "harmonious": "Easy Conversations"
     },
     "moderate": {
-      "challenging": "Clear communication",
-      "mixed": "Adapt ideas",
-      "harmonious": "Collaborative planning"
+      "challenging": "Manage Stress",
+      "mixed": "Process Ideas",
+      "harmonious": "Share Thoughts"
     },
     "high": {
-      "challenging": "Debate carefully",
-      "mixed": "Navigate discussions",
-      "harmonious": "Share widely"
+      "challenging": "Ground Thinking",
+      "mixed": "Filter Information",
+      "harmonious": "Brainstorming Session"
     },
     "extreme": {
-      "challenging": "De-escalate talks",
-      "mixed": "Manage information",
-      "harmonious": "Brainstorm breakthroughs"
+      "challenging": "Declutter Mind",
+      "mixed": "Focused Debate",
+      "harmonious": "Express Freely"
     }
   }
 }

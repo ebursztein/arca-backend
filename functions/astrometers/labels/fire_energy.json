@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter measures the amount of active, passionate, and inspiring energy present in your life right now.",
-    "detailed": "This meter tracks planetary activity within the fire signs: Aries, Leo, and Sagittarius. It indicates how much drive, passion, and creative inspiration is currently available to you. Strong fire energy often ignites a sense of courage and a call to action.",
+    "overview": "This meter measures your energy for action, passion, and creative drive.",
+    "detailed": "Fire energy comes from planets transiting Aries, Leo, or Sagittarius. It fuels your courage, initiative, and the drive to start new things. High fire energy means you'll feel a strong urge to act and express yourself boldly.",
     "keywords": [
       "Action",
       "Passion",
       "Courage",
-      "Inspiration",
-      "Drive"
+      "Drive",
+      "Inspiration"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Low Energy",
+      "quiet": "Low Burn",
       "mild": "Gentle Spark",
-      "moderate": "Active Flow",
-      "high": "Strong Drive",
-      "extreme": "Fiery Burst"
+      "moderate": "Steady Flame",
+      "high": "Strong Blaze",
+      "extreme": "Wildfire Energy"
     },
     "harmony_only": {
-      "challenging": "Intense Friction",
-      "mixed": "Unpredictable Heat",
-      "harmonious": "Creative Flow"
+      "challenging": "Heated Friction",
+      "mixed": "Variable Heat",
+      "harmonious": "Smooth Flow"
     },
     "combined": {
       "quiet": {
-        "challenging": "Suppressed Fire",
-        "mixed": "Wavering Spark",
+        "challenging": "Dormant Tension",
+        "mixed": "Faint Glow",
         "harmonious": "Gentle Warmth"
       },
       "mild": {
-        "challenging": "Mild Friction",
-        "mixed": "Flickering Flame",
-        "harmonious": "Easy Energy"
+        "challenging": "Mild Stress",
+        "mixed": "Flickering Hope",
+        "harmonious": "Easy Flow"
       },
       "moderate": {
-        "challenging": "Building Tension",
+        "challenging": "Friction Points",
         "mixed": "Active Mix",
-        "harmonious": "Steady Glow"
+        "harmonious": "Creative Surge"
       },
       "high": {
-        "challenging": "High Conflict",
+        "challenging": "Intense Pressure",
         "mixed": "Potent Mix",
-        "harmonious": "Strong Momentum"
+        "harmonious": "Bold Action"
       },
       "extreme": {
-        "challenging": "Volatile Force",
-        "mixed": "Intense Drive",
-        "harmonious": "Pure Power"
+        "challenging": "Overheated Stress",
+        "mixed": "Dynamic Swirl",
+        "harmonious": "Peak Drive"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Inner reflection",
-      "mixed": "Careful ignition",
-      "harmonious": "Gentle exploration"
+      "challenging": "Reflective Pause",
+      "mixed": "Gentle Exploration",
+      "harmonious": "Rest/Recharge"
     },
     "mild": {
-      "challenging": "Navigate subtly",
-      "mixed": "Adaptable action",
-      "harmonious": "Flow with ease"
+      "challenging": "Small Adjustments",
+      "mixed": "Conscious Choice",
+      "harmonious": "Follow Instincts"
     },
     "moderate": {
-      "challenging": "Address friction",
-      "mixed": "Strategic moves",
-      "harmonious": "Confidant action"
+      "challenging": "Problem Solving",
+      "mixed": "Balanced Initiative",
+      "harmonious": "Creative Pursuit"
     },
     "high": {
-      "challenging": "Direct approach",
-      "mixed": "Channel energy",
-      "harmonious": "Seize opportunity"
+      "challenging": "Strategic Action",
+      "mixed": "Focused Effort",
+      "harmonious": "Confident Leaps"
     },
     "extreme": {
-      "challenging": "Contain impulsivity",
-      "mixed": "Focused intensity",
-      "harmonious": "Unleash potential"
+      "challenging": "Manage Impulse",
+      "mixed": "Channel Energy",
+      "harmonious": "Seize Opportunity"
     }
   }
 }

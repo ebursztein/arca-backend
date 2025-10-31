@@ -12,82 +12,82 @@
     "measures": "both"
   },
   "description": {
-    "overview": "This meter tracks your professional drive, career opportunities, and how you show up in the public eye.",
-    "detailed": "This meter measures the impact of Saturn transits to your natal Sun, Saturn, and Midheaven. It highlights themes related to your professional ambition, authority, and public image, often reflecting energies associated with Capricorn or the 10th house.",
+    "overview": "This meter shows how active your professional life and ambitions are right now.",
+    "detailed": "This meter tracks Saturn's influence on your career drive, professional authority, and long-term goals. It highlights themes related to Capricorn and your 10th house, indicating periods of significant professional focus.",
     "keywords": [
-      "Career",
-      "Ambition",
-      "Professional",
-      "Public Image",
-      "Authority"
+      "career",
+      "ambition",
+      "professional",
+      "goals",
+      "authority"
     ]
   },
   "experience_labels": {
     "intensity_only": {
-      "quiet": "Low Key",
-      "mild": "Gentle Pace",
-      "moderate": "Active Drive",
-      "high": "Strong Push",
+      "quiet": "Low Drive",
+      "mild": "Gentle Push",
+      "moderate": "Active Goals",
+      "high": "Strong Drive",
       "extreme": "Peak Ambition"
     },
     "harmony_only": {
-      "challenging": "Career Hurdles",
-      "mixed": "Mixed Progress",
-      "harmonious": "Smooth Path"
+      "challenging": "Career Friction",
+      "mixed": "Mixed Path",
+      "harmonious": "Smooth Progress"
     },
     "combined": {
       "quiet": {
-        "challenging": "Quiet Snags",
-        "mixed": "Subtle Shifts",
-        "harmonious": "Calm Growth"
+        "challenging": "Slow Obstacles",
+        "mixed": "Quiet Adjustments",
+        "harmonious": "Calm Progress"
       },
       "mild": {
-        "challenging": "Mild Obstacles",
-        "mixed": "Steady Progress",
-        "harmonious": "Gentle Flow"
+        "challenging": "Mild Blocks",
+        "mixed": "Gentle Tweaks",
+        "harmonious": "Easy Flow"
       },
       "moderate": {
-        "challenging": "Ambitious Blocks",
-        "mixed": "Active Development",
-        "harmonious": "Strong Forward"
+        "challenging": "Work Challenges",
+        "mixed": "Notable Shifts",
+        "harmonious": "Steady Growth"
       },
       "high": {
-        "challenging": "Major Hurdles",
-        "mixed": "High Demands",
-        "harmonious": "Peak Success"
+        "challenging": "Intense Pressure",
+        "mixed": "Big Decisions",
+        "harmonious": "Strong Momentum"
       },
       "extreme": {
-        "challenging": "Crisis Point",
-        "mixed": "Intense Pressure",
-        "harmonious": "Breakthrough Win"
+        "challenging": "Major Hurdles",
+        "mixed": "Pivotal Changes",
+        "harmonious": "Career Peak"
       }
     }
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Review plans",
-      "mixed": "Subtle adjustments",
-      "harmonious": "Consolidate gains"
+      "challenging": "Re-evaluation",
+      "mixed": "Gentle Planning",
+      "harmonious": "Rest & Reflect"
     },
     "mild": {
-      "challenging": "Address small issues",
-      "mixed": "Flexible strategy",
-      "harmonious": "Nurture connections"
+      "challenging": "Problem Solving",
+      "mixed": "Flexible Strategy",
+      "harmonious": "Nurture Growth"
     },
     "moderate": {
-      "challenging": "Problem solving",
-      "mixed": "Strategic action",
-      "harmonious": "Seize opportunities"
+      "challenging": "Strategic Action",
+      "mixed": "Adapt & Adjust",
+      "harmonious": "Seize Opportunity"
     },
     "high": {
-      "challenging": "Overcome obstacles",
-      "mixed": "Manage workload",
-      "harmonious": "Maximize potential"
+      "challenging": "Overcome Obstacles",
+      "mixed": "Critical Choices",
+      "harmonious": "Bold Advancement"
     },
     "extreme": {
-      "challenging": "Crisis management",
-      "mixed": "Intense focus",
-      "harmonious": "Capitalize breakthrough"
+      "challenging": "Confront Barriers",
+      "mixed": "Transformative Decisions",
+      "harmonious": "Maximize Potential"
     }
   }
 }

@@ -11,6 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from astro import Planet, AspectType, ZodiacSign
 
+# Import after path setup to avoid circular imports
+from astrometers.hierarchy import Meter
+
 # =============================================================================
 # Planet Base Scores (Section 2.3.A - Weightage Factor)
 # =============================================================================
@@ -376,3 +379,54 @@ INTENSITY_HIGH_THRESHOLD = 86        # 71-85: High
 HARMONY_CHALLENGING_THRESHOLD = 31   # 0-30: Challenging
 HARMONY_HARMONIOUS_THRESHOLD = 70    # 70-100: Harmonious
 # 31-69: Mixed/Neutral
+
+# =============================================================================
+# Meter Importance Weights (for Super-Group Aggregation)
+# =============================================================================
+
+# Weight individual meters for super-group calculations
+# Higher weights indicate meters that users engage with more or are more impactful
+# Weights are normalized during aggregation, so these are relative importance
+
+METER_IMPORTANCE_WEIGHTS: Dict[Meter, float] = {
+    # OVERVIEW - Highest importance (dashboard summary)
+    Meter.OVERALL_INTENSITY: 2.0,
+    Meter.OVERALL_HARMONY: 2.0,
+
+    # MIND - High importance (daily cognitive function)
+    Meter.MENTAL_CLARITY: 2.0,
+    Meter.DECISION_QUALITY: 1.5,
+    Meter.COMMUNICATION_FLOW: 1.5,
+
+    # EMOTIONS - High importance (emotional well-being)
+    Meter.EMOTIONAL_INTENSITY: 2.0,
+    Meter.RELATIONSHIP_HARMONY: 1.5,
+    Meter.EMOTIONAL_RESILIENCE: 1.5,
+
+    # BODY - High importance (physical energy and action)
+    Meter.PHYSICAL_ENERGY: 2.0,
+    Meter.MOTIVATION_DRIVE: 1.5,
+    Meter.CONFLICT_RISK: 1.0,
+
+    # CAREER - High importance (professional life)
+    Meter.CAREER_AMBITION: 2.0,
+    Meter.OPPORTUNITY_WINDOW: 1.5,
+
+    # EVOLUTION - Medium-high importance (personal growth)
+    Meter.CHALLENGE_INTENSITY: 1.5,
+    Meter.TRANSFORMATION_PRESSURE: 1.5,
+    Meter.INNOVATION_BREAKTHROUGH: 1.0,
+
+    # ELEMENTS - Medium importance (temperament patterns)
+    Meter.FIRE_ENERGY: 0.7,
+    Meter.EARTH_ENERGY: 0.7,
+    Meter.AIR_ENERGY: 0.7,
+    Meter.WATER_ENERGY: 0.7,
+
+    # SPIRITUAL - Medium importance (spiritual awareness)
+    Meter.INTUITION_SPIRITUALITY: 1.0,
+    Meter.KARMIC_LESSONS: 1.0,
+
+    # COLLECTIVE - Lower importance (less personally immediate)
+    Meter.SOCIAL_COLLECTIVE: 0.5,
+}

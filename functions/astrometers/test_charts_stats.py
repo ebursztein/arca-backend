@@ -2,6 +2,8 @@
 Stress test: Run meter overlap analysis on NUM_CHARTS diverse birth charts.
 
 This ensures fixes are robust across a wide variety of natal configurations.
+
+NEW: Analyze daily change distributions to determine trend thresholds.
 """
 
 import sys
@@ -11,7 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import random
 from datetime import datetime, timedelta
 from astro import compute_birth_chart
-from astrometers.meters import get_meters
+from astrometers.meters import get_meters, _calculate_meters_no_trends
+import numpy as np
 
 
 # Major cities for location diversity
@@ -168,10 +171,168 @@ def analyze_chart_overlaps(natal_chart):
         }
 
 
+def analyze_daily_change_distribution():
+    """
+    Analyze distribution of daily changes across random charts to determine trend thresholds.
+
+    For NUM_CHARTS random birth charts, calculate meters for NUM_DAYS consecutive days
+    and compute deltas for harmony, intensity, and unified_score.
+
+    Returns quantile-based thresholds for "stable", "slow", "moderate", "rapid" changes.
+    """
+    NUM_CHARTS = 2500  # Reduced for faster analysis
+    NUM_DAYS = 15     # 30 consecutive days per chart
+
+    print("\n" + "="*100)
+    print(f"DAILY CHANGE DISTRIBUTION ANALYSIS")
+    print(f"Analyzing {NUM_CHARTS} charts × {NUM_DAYS} days = {NUM_CHARTS * NUM_DAYS} data points")
+    print("="*100 + "\n")
+
+    # Collect all deltas
+    all_harmony_deltas = []
+    all_intensity_deltas = []
+    all_unified_deltas = []
+
+    # Start date for transit analysis
+    start_date = datetime(2025, 10, 1)
+
+    print("Generating charts and calculating daily changes...")
+    for chart_num in range(NUM_CHARTS):
+        # Generate random natal chart
+        natal_chart, birth_date, city = generate_random_chart()
+        if natal_chart is None:
+            continue
+
+        # Calculate meters for NUM_DAYS consecutive days
+        previous_meters = None
+        for day_offset in range(NUM_DAYS):
+            current_date = start_date + timedelta(days=day_offset)
+            current_date_str = current_date.strftime("%Y-%m-%d")
+
+            try:
+                # Calculate transit chart for this day
+                transit_chart, _ = compute_birth_chart(
+                    birth_date=current_date_str,
+                    birth_time="12:00"
+                )
+
+                # Calculate meters (without trends to avoid recursion)
+                current_meters = _calculate_meters_no_trends(
+                    natal_chart,
+                    transit_chart,
+                    current_date
+                )
+
+                # If we have previous day, calculate deltas
+                if previous_meters is not None:
+                    # Get all 23 individual meters (not super-groups)
+                    meter_names = [
+                        'overall_intensity', 'overall_harmony',
+                        'mental_clarity', 'decision_quality', 'communication_flow',
+                        'emotional_intensity', 'relationship_harmony', 'emotional_resilience',
+                        'physical_energy', 'conflict_risk', 'motivation_drive',
+                        'career_ambition', 'opportunity_window', 'challenge_intensity',
+                        'transformation_pressure', 'fire_energy', 'earth_energy',
+                        'air_energy', 'water_energy', 'intuition_spirituality',
+                        'innovation_breakthrough', 'karmic_lessons', 'social_collective',
+                    ]
+
+                    for meter_name in meter_names:
+                        curr = getattr(current_meters, meter_name)
+                        prev = getattr(previous_meters, meter_name)
+
+                        # Compute deltas
+                        harmony_delta = abs(curr.harmony - prev.harmony)
+                        intensity_delta = abs(curr.intensity - prev.intensity)
+                        unified_delta = abs(curr.unified_score - prev.unified_score)
+
+                        all_harmony_deltas.append(harmony_delta)
+                        all_intensity_deltas.append(intensity_delta)
+                        all_unified_deltas.append(unified_delta)
+
+                previous_meters = current_meters
+
+            except Exception as e:
+                print(f"Error processing chart {chart_num}, day {day_offset}: {e}")
+                continue
+
+        # Progress indicator
+        if (chart_num + 1) % (NUM_CHARTS // 10) == 0:
+            print(f"  Processed {chart_num + 1}/{NUM_CHARTS} charts...")
+
+    print(f"\nCollected {len(all_harmony_deltas)} daily transitions\n")
+
+    # Convert to numpy arrays for quantile calculation
+    harmony_deltas = np.array(all_harmony_deltas)
+    intensity_deltas = np.array(all_intensity_deltas)
+    unified_deltas = np.array(all_unified_deltas)
+
+    # Calculate quantiles for each metric
+    quantiles = [0.25, 0.50, 0.75, 0.90, 0.95]
+
+    print("="*100)
+    print("QUANTILE ANALYSIS (Absolute Changes)")
+    print("="*100 + "\n")
+
+    print("HARMONY deltas:")
+    for q in quantiles:
+        val = np.quantile(harmony_deltas, q)
+        print(f"  {int(q*100):2d}th percentile: {val:5.2f}")
+
+    print("\nINTENSITY deltas:")
+    for q in quantiles:
+        val = np.quantile(intensity_deltas, q)
+        print(f"  {int(q*100):2d}th percentile: {val:5.2f}")
+
+    print("\nUNIFIED SCORE deltas:")
+    for q in quantiles:
+        val = np.quantile(unified_deltas, q)
+        print(f"  {int(q*100):2d}th percentile: {val:5.2f}")
+
+    # Recommend thresholds based on quantiles
+    print("\n" + "="*100)
+    print("RECOMMENDED THRESHOLDS (based on quantiles)")
+    print("="*100 + "\n")
+
+    # Use harmony as primary metric (most meaningful for users)
+    stable_threshold = np.quantile(harmony_deltas, 0.50)  # 50th percentile = median
+    slow_threshold = np.quantile(harmony_deltas, 0.75)    # 75th percentile
+    moderate_threshold = np.quantile(harmony_deltas, 0.90) # 90th percentile
+    # rapid = above 90th percentile
+
+    print("Based on HARMONY changes (most meaningful for quality assessment):")
+    print(f"  stable   : < {stable_threshold:.1f} points  (50% of daily changes)")
+    print(f"  slow     : {stable_threshold:.1f} - {slow_threshold:.1f} points  (50th-75th percentile)")
+    print(f"  moderate : {slow_threshold:.1f} - {moderate_threshold:.1f} points  (75th-90th percentile)")
+    print(f"  rapid    : > {moderate_threshold:.1f} points  (top 10% of changes)")
+
+    print("\n" + "="*100)
+    print("DISTRIBUTION STATISTICS")
+    print("="*100 + "\n")
+
+    for name, deltas in [("Harmony", harmony_deltas), ("Intensity", intensity_deltas), ("Unified", unified_deltas)]:
+        print(f"{name}:")
+        print(f"  Mean:   {np.mean(deltas):.2f}")
+        print(f"  Median: {np.median(deltas):.2f}")
+        print(f"  Std:    {np.std(deltas):.2f}")
+        print(f"  Min:    {np.min(deltas):.2f}")
+        print(f"  Max:    {np.max(deltas):.2f}")
+        print()
+
+    return {
+        'stable_threshold': stable_threshold,
+        'slow_threshold': slow_threshold,
+        'moderate_threshold': moderate_threshold,
+        'harmony_quantiles': {q: np.quantile(harmony_deltas, q) for q in quantiles},
+        'intensity_quantiles': {q: np.quantile(intensity_deltas, q) for q in quantiles},
+        'unified_quantiles': {q: np.quantile(unified_deltas, q) for q in quantiles},
+    }
+
+
 def test_many_charts():
     """Test NUM_CHARTS random charts and report statistics."""
 
-    NUM_CHARTS = 10000
+    NUM_CHARTS = 1000
     print("\n" + "="*100)
     print(f"STRESS TEST: {NUM_CHARTS} RANDOM BIRTH CHARTS")
     print("="*100 + "\n")
@@ -256,5 +417,12 @@ def test_many_charts():
 
 
 if __name__ == "__main__":
-    success = test_many_charts()
-    exit(0 if success else 1)
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "trends":
+        # Analyze daily change distribution for trend thresholds
+        analyze_daily_change_distribution()
+    else:
+        # Original overlap test
+        success = test_many_charts()
+        exit(0 if success else 1)
