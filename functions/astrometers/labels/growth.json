@@ -1,0 +1,100 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "growth",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "growth",
+    "display_name": "Growth",
+    "group": "growth",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Growth represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.",
+    "detailed": "This meter tracks Jupiter and Uranus transits to your natal Jupiter, Uranus, and key houses (5th = creative evolution, 8th = transformational growth, 11th = future self). Jupiter brings expansion and philosophical growth. Uranus creates breakthrough evolution and liberation from old patterns. When these planets form supportive aspects, you grow naturally and feel excited about becoming who you're meant to be. Challenging aspects create growing pains, resistance to change, or overwhelming transformation. Both retrograde reduce growth pressure by 20% while deepening internal evolution.",
+    "keywords": ["personal evolution", "transformation", "life chapters", "becoming", "change"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "jupiter": "Expansion, philosophical growth, becoming more of who you are",
+      "uranus": "Breakthrough evolution, liberation from old patterns, quantum leaps"
+    },
+    "secondary_planets": {
+      "pluto": "Deep transformational growth through death/rebirth cycles",
+      "saturn": "Growth through maturation and discipline"
+    },
+    "natal_planets_tracked": ["jupiter", "uranus"],
+    "transit_planets_tracked": ["jupiter", "uranus", "pluto", "saturn", "neptune"],
+    "key_houses": {
+      "5": "Creative self-expression and playful evolution",
+      "8": "Transformational growth and psychological depth",
+      "11": "Future self and evolutionary direction"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum growth impact - major life chapter transitions",
+      "opposition": "High impact - tension between old and new self",
+      "trine": "High flow - natural evolution and easy growth",
+      "square": "Moderate friction - growing pains that require work",
+      "sextile": "Moderate flow - opportunities for personal development"
+    },
+    "planetary_dignities": {
+      "jupiter": {
+        "strong_in": ["sagittarius", "pisces", "cancer"],
+        "weak_in": ["gemini", "virgo", "capricorn"]
+      },
+      "uranus": {
+        "strong_in": ["aquarius", "scorpio"],
+        "weak_in": ["taurus", "leo"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Integrating lessons",
+        "mixed": "Quiet integration",
+        "harmonious": "Peaceful growth"
+      },
+      "mild": {
+        "challenging": "Working edges",
+        "mixed": "Soft shifts",
+        "harmonious": "Easy evolution"
+      },
+      "moderate": {
+        "challenging": "Deep processing",
+        "mixed": "Active evolution",
+        "harmonious": "Natural expansion"
+      },
+      "high": {
+        "challenging": "Deep transformation",
+        "mixed": "Intense change",
+        "harmonious": "Major breakthrough"
+      },
+      "extreme": {
+        "challenging": "Total transformation",
+        "mixed": "Massive shift",
+        "harmonious": "Peak evolution"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Evolutionary and transition-focused - talk about becoming, chapters, transformation",
+    "focus_when_high": "Emphasize leaning into growth, embracing change, stepping into new versions of self",
+    "focus_when_low": "Normalize integration periods after growth, rest is part of evolution, dormancy isn't stuckness",
+    "focus_when_challenging": "Validate growing pains and resistance - growth is uncomfortable but worth it",
+    "avoid": ["Toxic positivity about change", "Forcing growth before readiness", "Shaming resistance to transformation"],
+    "phrasing_examples": {
+      "high_harmonious": "Growth is flowing naturally today - lean into becoming the next version of yourself and trust this evolutionary process.",
+      "moderate_mixed": "You're in active transformation but it's uncomfortable - growing pains are real, and resistance is part of the process.",
+      "low_challenging": "Growth feels blocked or you're resisting change today - honor the integration period after recent evolution before pushing for more."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["jupiter", "uranus"],
+    "natal_houses": [5, 8, 11],
+    "retrograde_modifiers": {
+      "jupiter": 0.8,
+      "uranus": 0.8
+    }
+  }
+}

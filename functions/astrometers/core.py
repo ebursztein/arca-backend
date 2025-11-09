@@ -57,16 +57,35 @@ class TransitAspect:
 
 @dataclass
 class AspectContribution:
-    """Breakdown of a single aspect's contribution to DTI and HQS."""
+    """
+    Breakdown of a single aspect's contribution to DTI and HQS.
+
+    Includes full explainability data for iOS client.
+    """
+    # Basic aspect info
     label: str
     natal_planet: Planet
     transit_planet: Planet
     aspect_type: AspectType
-    weightage: float
-    transit_power: float
-    quality_factor: float
+
+    # Calculation components
+    weightage: float  # W_i
+    transit_power: float  # P_i
+    quality_factor: float  # Q_i (-1 to +1)
     dti_contribution: float  # W_i × P_i
     hqs_contribution: float  # W_i × P_i × Q_i
+
+    # Explainability - strength indicators (for iOS)
+    orb_deviation: float = 0.0  # Exact orb in degrees
+    max_orb: float = 6.0  # Maximum orb for this aspect type
+
+    # Explainability - phase/timing (for iOS)
+    today_deviation: Optional[float] = None  # Today's orb
+    tomorrow_deviation: Optional[float] = None  # Tomorrow's orb (for phase calculation)
+
+    # Explainability - context (for iOS)
+    natal_planet_house: int = 1  # House containing natal planet
+    natal_planet_sign: ZodiacSign = ZodiacSign.ARIES  # Sign of natal planet
 
 
 @dataclass
@@ -160,7 +179,14 @@ def calculate_aspect_contribution(aspect: TransitAspect) -> AspectContribution:
         transit_power=transit_power,
         quality_factor=quality_factor,
         dti_contribution=dti_contribution,
-        hqs_contribution=hqs_contribution
+        hqs_contribution=hqs_contribution,
+        # Explainability fields
+        orb_deviation=aspect.orb_deviation,
+        max_orb=aspect.max_orb,
+        today_deviation=aspect.today_deviation,
+        tomorrow_deviation=aspect.tomorrow_deviation,
+        natal_planet_house=aspect.natal_house,
+        natal_planet_sign=aspect.natal_sign
     )
 
 
@@ -220,6 +246,57 @@ def calculate_astrometers(aspects: List[TransitAspect]) -> AstrometerScore:
         aspect_count=len(contributions),
         contributions=contributions
     )
+
+
+def calculate_all_aspects(natal_chart: dict, transit_chart: dict, orb: float = 8.0) -> List[TransitAspect]:
+    """
+    Calculate all natal-transit aspects.
+
+    Wraps astro.find_natal_transit_aspects() and converts to TransitAspect format.
+
+    Args:
+        natal_chart: Natal chart dict
+        transit_chart: Transit chart dict
+        orb: Maximum orb in degrees (default 8.0 for astrometers)
+
+    Returns:
+        List of TransitAspect objects for DTI/HQS calculation
+    """
+    from astro import find_natal_transit_aspects, Planet, ZodiacSign
+
+    # Get aspects from astro.py
+    natal_transit_aspects = find_natal_transit_aspects(natal_chart, transit_chart, orb=orb)
+
+    # Convert to TransitAspect format
+    transit_aspects = []
+    ascendant_sign = None
+    if "angles" in natal_chart and "asc" in natal_chart["angles"]:
+        ascendant_sign = ZodiacSign(natal_chart["angles"]["asc"]["sign"])
+
+    for nta in natal_transit_aspects:
+        # Get natal planet info from chart
+        natal_planet_info = next((p for p in natal_chart["planets"] if p["name"] == nta.natal_planet), None)
+        if not natal_planet_info:
+            continue
+
+        transit_aspect = TransitAspect(
+            natal_planet=Planet(nta.natal_planet),
+            natal_sign=ZodiacSign(nta.natal_sign),
+            natal_house=nta.natal_house,
+            transit_planet=Planet(nta.transit_planet),
+            aspect_type=nta.aspect_type,
+            orb_deviation=nta.orb,
+            max_orb=orb,
+            natal_degree_in_sign=natal_planet_info.get("signed_deg", 0),
+            ascendant_sign=ascendant_sign,
+            today_deviation=nta.orb,  # Simplified - no tomorrow data yet
+            tomorrow_deviation=None,
+            days_from_station=None,
+            label=f"Transit {nta.transit_planet} {nta.aspect_type.value} Natal {nta.natal_planet}"
+        )
+        transit_aspects.append(transit_aspect)
+
+    return transit_aspects
 
 
 def get_score_breakdown_text(score: AstrometerScore) -> str:

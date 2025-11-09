@@ -1,3 +1,7 @@
+*.csv
+*.parquet
+tmp/
+
 # js
 
 node_modules/

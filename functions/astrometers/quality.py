@@ -25,6 +25,8 @@ from .constants import (
     BENEFIC_PLANETS,
     MALEFIC_PLANETS,
     TRANSFORMATIONAL_PLANETS,
+    BENEFIC_QUALITY_MULTIPLIER,
+    MALEFIC_QUALITY_MULTIPLIER,
     CONJUNCTION_DOUBLE_BENEFIC,
     CONJUNCTION_DOUBLE_MALEFIC,
     CONJUNCTION_BENEFIC_MALEFIC,
@@ -45,11 +47,14 @@ def calculate_quality_factor(
     transit_planet: Planet
 ) -> float:
     """
-    Calculate the quality factor for an aspect.
+    Calculate the FLAT BASELINE quality factor for an aspect.
 
-    Fixed values for non-conjunction aspects:
+    This function returns the base astrological quality without planetary nature adjustments.
+    Planetary nature multipliers (benefic/malefic) are applied separately via harmonic_boost().
+
+    Fixed values for non-conjunction aspects (BASELINE):
     - Trine: +1.0 (flow, ease, natural talent expression)
-    - Sextile: +1.0 (opportunity, requires some initiative)
+    - Sextile: +1.0 (opportunity, requires initiative)
     - Square: -1.0 (friction, growth through challenge)
     - Opposition: -1.0 (tension, awareness through polarity)
 
@@ -66,17 +71,17 @@ def calculate_quality_factor(
         transit_planet: The transiting planet
 
     Returns:
-        float: Quality factor (-1.0 to +1.0)
+        float: Base quality factor (no planetary nature multipliers)
 
     Examples:
         >>> calculate_quality_factor(AspectType.TRINE, Planet.SUN, Planet.JUPITER)
-        1.0
+        1.0  # Flat baseline
         >>> calculate_quality_factor(AspectType.SQUARE, Planet.MOON, Planet.SATURN)
-        -1.0
+        -1.0  # Flat baseline
         >>> calculate_quality_factor(AspectType.CONJUNCTION, Planet.VENUS, Planet.JUPITER)
-        0.8  # Double benefic
+        0.8  # Double benefic conjunction
     """
-    # Fixed quality scores for non-conjunction aspects
+    # Calculate base quality score (flat baseline, no multipliers)
     if aspect_type == AspectType.TRINE:
         return QUALITY_TRINE
     elif aspect_type == AspectType.SEXTILE:
@@ -85,11 +90,8 @@ def calculate_quality_factor(
         return QUALITY_SQUARE
     elif aspect_type == AspectType.OPPOSITION:
         return QUALITY_OPPOSITION
-
-    # Dynamic conjunction quality based on planet combination
     elif aspect_type == AspectType.CONJUNCTION:
         return _calculate_conjunction_quality(natal_planet, transit_planet)
-
     else:
         raise ValueError(f"Unknown aspect type: {aspect_type}")
 
@@ -129,6 +131,78 @@ def _calculate_conjunction_quality(planet1: Planet, planet2: Planet) -> float:
 
     # Default: Luminaries (Sun/Moon), Mercury, or any other combination
     return CONJUNCTION_DEFAULT
+
+
+def harmonic_boost(
+    raw_hqs: float,
+    contributions: list,
+    benefic_multiplier: float = None,
+    malefic_multiplier: float = None
+) -> float:
+    """
+    Apply planetary nature multipliers to HQS score.
+
+    Called AFTER raw score calculation, BEFORE normalization.
+
+    Based on 2,000+ years of observational astrology:
+    - Benefics (Venus, Jupiter) bring resources, grace, opportunity
+    - Malefics (Mars, Saturn) bring testing, friction, maturation
+
+    Adjustments:
+    - Benefic + harmonious aspect: benefic_multiplier enhancement (default 1.1x)
+      (Venus trine feels MORE supportive than Mercury trine)
+    - Malefic + challenging aspect: malefic_multiplier softening (default 0.85x)
+      (Saturn square is challenging but developmental, not catastrophic)
+
+    Args:
+        raw_hqs: Raw HQS score calculated with flat baseline quality factors
+        contributions: List of AspectContribution objects from calculate_astrometers()
+        benefic_multiplier: Multiplier for benefic+harmonious (default: from constants)
+        malefic_multiplier: Multiplier for malefic+challenging (default: from constants)
+
+    Returns:
+        float: Boosted HQS score with planetary nature adjustments applied
+
+    Example:
+        >>> # Venus trine (harmonious): boost from 1.0 to 1.1
+        >>> harmonic_boost(100, contributions, benefic_multiplier=1.1)
+        >>> # Saturn square (challenging): soften from -1.0 to -0.85
+        >>> harmonic_boost(100, contributions, malefic_multiplier=0.85)
+        >>> # Test stronger boost
+        >>> harmonic_boost(100, contributions, benefic_multiplier=1.5, malefic_multiplier=0.6)
+
+    Technical note: This function recalculates HQS contributions with multipliers.
+    It does NOT modify the original contributions list.
+    """
+    # Use defaults from constants if not specified
+    if benefic_multiplier is None:
+        benefic_multiplier = BENEFIC_QUALITY_MULTIPLIER
+    if malefic_multiplier is None:
+        malefic_multiplier = MALEFIC_QUALITY_MULTIPLIER
+
+    boosted_hqs = 0.0
+
+    for contrib in contributions:
+        transit_planet = contrib.transit_planet
+        quality = contrib.quality_factor
+        base_hqs_contribution = contrib.hqs_contribution
+
+        # Determine multiplier based on planetary nature and aspect quality
+        multiplier = 1.0  # Default: no adjustment
+
+        # Benefic + harmonious aspect: enhance positive energy
+        if transit_planet in BENEFIC_PLANETS and quality > 0:
+            multiplier = benefic_multiplier
+
+        # Malefic + challenging aspect: soften negative impact
+        elif transit_planet in MALEFIC_PLANETS and quality < 0:
+            multiplier = malefic_multiplier
+
+        # Apply multiplier to this contribution
+        boosted_contribution = base_hqs_contribution * multiplier
+        boosted_hqs += boosted_contribution
+
+    return boosted_hqs
 
 
 def get_quality_label(quality: float) -> str:

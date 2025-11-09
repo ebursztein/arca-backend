@@ -1,0 +1,71 @@
+{
+  "_schema_version": "2.0",
+  "_group": "growth",
+  "_last_updated": "2025-01-08",
+  "metadata": {
+    "group_id": "growth",
+    "display_name": "Growth",
+    "description": "Opportunities, career, personal growth, and social life"
+  },
+  "description": {
+    "overview": "Growth represents your external expansion - opportunities, career momentum, personal evolution, and social connections.",
+    "detailed": "This group combines four growth dimensions: Opportunities (favorable timing and doors opening), Career (professional momentum and recognition), Growth (personal evolution and life transitions), and Social Life (friendships and community connections). Together they show your overall external growth and expansion. High scores mean doors are opening, career is flowing, you're evolving naturally, and social connections feel easy. Low scores suggest closed doors, career obstacles, resistance to change, or social isolation.",
+    "keywords": ["opportunities", "career", "evolution", "community", "expansion"]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Building foundation",
+        "mixed": "Quiet preparation",
+        "harmonious": "Peaceful stability"
+      },
+      "mild": {
+        "challenging": "Slow building",
+        "mixed": "Gentle shifts",
+        "harmonious": "Easy progress"
+      },
+      "moderate": {
+        "challenging": "Growth friction",
+        "mixed": "Active development",
+        "harmonious": "Natural expansion"
+      },
+      "high": {
+        "challenging": "Growth pressure",
+        "mixed": "Rapid change",
+        "harmonious": "Strong momentum"
+      },
+      "extreme": {
+        "challenging": "Major transformation",
+        "mixed": "Growth chaos",
+        "harmonious": "Peak expansion"
+      }
+    }
+  },
+  "advice_templates": {
+    "quiet": {
+      "challenging": "Doors feel closed - focus on internal foundation building",
+      "mixed": "External activity is minimal - quiet preparation happening",
+      "harmonious": "Peaceful stability - rest before next growth phase"
+    },
+    "mild": {
+      "challenging": "Progress is slow - be patient with the pace",
+      "mixed": "Gentle shifts happening - both stagnation and small movement",
+      "harmonious": "Easy progress flowing - doors opening naturally"
+    },
+    "moderate": {
+      "challenging": "Growth requires effort - push through obstacles",
+      "mixed": "Active development in multiple areas - both progress and setbacks",
+      "harmonious": "Natural expansion - career, opportunities, social life all flowing"
+    },
+    "high": {
+      "challenging": "Major growth demands - intense pressure to evolve",
+      "mixed": "Rapid change in all directions - exciting but overwhelming",
+      "harmonious": "Strong momentum - doors opening, career advancing, connections thriving"
+    },
+    "extreme": {
+      "challenging": "Life-altering transformation - massive growth or major obstacles",
+      "mixed": "Total upheaval - simultaneous expansion and chaos",
+      "harmonious": "Peak expansion - exceptional opportunities and recognition"
+    }
+  }
+}

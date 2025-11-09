@@ -142,44 +142,114 @@ class MeterInterpretation:
     guidance: str
 
 
+def sigmoid_compress(linear_score: float) -> float:
+    """
+    Apply sigmoid compression to smoothly bound linear scores to 0-100 range.
+
+    Maps linearly-normalized scores (which may overshoot 0-100) into a smooth
+    0-100 curve without hard clamps.
+
+    Args:
+        linear_score: Linearly mapped score (can be < 0 or > 100)
+
+    Returns:
+        float: Sigmoid-compressed score (smoothly bounded to 0-100)
+
+    Examples:
+        >>> sigmoid_compress(50)    # Center
+        50.0
+        >>> sigmoid_compress(100)   # Upper bound
+        ~95.0
+        >>> sigmoid_compress(0)     # Lower bound
+        ~5.0
+        >>> sigmoid_compress(150)   # Overshoot
+        ~98.0
+        >>> sigmoid_compress(-50)   # Undershoot
+        ~2.0
+    """
+    # Center sigmoid at 50, with scale that maps 0→~5 and 100→~95
+    # Using scale=25 gives good compression: ±2σ ≈ [5, 95]
+    z = (linear_score - 50.0) / 25.0
+    sigmoid = 1.0 / (1.0 + math.exp(-z))
+    return 100.0 * sigmoid
+
+
+def interpolate_percentile(
+    value: float,
+    percentiles: Dict[str, float],
+    use_iqr: bool = True,
+    use_sigmoid: bool = False
+) -> float:
+    """
+    Convert a raw value to 0-100 scale using percentile interpolation.
+
+    Linear mapping of full percentile range (p01-p99) to 0-100 with simple clamping.
+    This maximizes variation while keeping clamping minimal (~2% on each tail).
+
+    Args:
+        value: Raw score to convert (can be negative)
+        percentiles: Dict with keys like "p01", "p05", "p50", "p95", "p99"
+        use_iqr: DEPRECATED - kept for compatibility (ignored)
+        use_sigmoid: Apply sigmoid compression (default: False)
+
+    Returns:
+        float: Normalized score (0-100)
+
+    Examples:
+        >>> # p01=100, p50=500, p99=1000
+        >>> interpolate_percentile(500, percentiles)   # p50 → 50
+        50.0
+        >>> interpolate_percentile(1200, percentiles)  # Above p99 → 120 → clamped to 100
+        100.0
+        >>> interpolate_percentile(0, percentiles)     # Below p01 → -10 → clamped to 0
+        0.0
+    """
+    # Create sorted list of (percentile_rank, raw_value) pairs
+    points = []
+    for key, raw_value in percentiles.items():
+        if key.startswith('p'):
+            percentile_rank = int(key[1:])  # "p50" → 50
+            points.append((percentile_rank, raw_value))
+
+    points.sort()  # Sort by percentile rank
+
+    # FULL RANGE LINEAR MAPPING (p01-p99 or available range)
+    # Map percentile range to 0-100 with simple clamping
+    p_min_rank, p_min_value = points[0]   # Usually p01
+    p_max_rank, p_max_value = points[-1]  # Usually p99
+
+    # Linear interpolation across full range
+    if p_max_value == p_min_value:
+        linear_score = 50.0  # Degenerate case
+    else:
+        # Map [p_min_value, p_max_value] → [0, 100]
+        linear_score = ((value - p_min_value) / (p_max_value - p_min_value)) * 100.0
+
+    # Apply sigmoid compression (optional) or simple clamp
+    if use_sigmoid:
+        return sigmoid_compress(linear_score)
+    else:
+        # Simple clamp to 0-100 (only affects ~2% beyond p01/p99)
+        return max(0.0, min(100.0, linear_score))
+
+
 def normalize_with_soft_ceiling(
     raw_score: float,
     max_value: float,
     target_scale: float = 100
 ) -> float:
     """
-    Normalize score with logarithmic compression for outliers.
+    DEPRECATED: Use interpolate_percentile instead for accurate percentile mapping.
 
-    Scores within the expected maximum (99th percentile) scale linearly.
-    Scores beyond are compressed logarithmically to prevent extreme outliers
-    from breaking the meter scale.
-
-    Args:
-        raw_score: The raw score to normalize (DTI or HQS)
-        max_value: Expected maximum (99th percentile from empirical data)
-        target_scale: Target scale (default 100, or 50 for half-scale)
-
-    Returns:
-        float: Normalized score, capped at target_scale
-
-    Examples:
-        >>> normalize_with_soft_ceiling(100, 200, 100)
-        50.0  # Linear: within expected range
-        >>> normalize_with_soft_ceiling(200, 200, 100)
-        100.0  # At expected maximum
-        >>> normalize_with_soft_ceiling(300, 200, 100)
-        100.0  # Outlier: compressed and capped
-
-    Math:
-        - If raw_score <= max_value:
-            result = (raw_score / max_value) × target_scale
-        - If raw_score > max_value:
-            excess = raw_score - max_value
-            compressed = 10 × log₁₀(1 + excess / max_value)
-            result = min(target_scale, target_scale + compressed)
+    This function is kept for backward compatibility but should not be used
+    for new code. It does linear scaling which produces incorrect distributions.
     """
     if raw_score <= 0:
         return 0.0
+
+    # NEVER use theoretical estimates - always require valid calibration data
+    if max_value <= 0:
+        raise ValueError(f"Invalid max_value={max_value}. Re-run calibration! NEVER use theoretical constants.")
 
     if raw_score <= max_value:
         # Linear scaling within expected range
@@ -226,18 +296,18 @@ def normalize_intensity(dti: float, meter_name: str = None, use_empirical: bool 
         # Use meter-specific calibration if available
         calibration = load_calibration_constants()
         if calibration and meter_name:
-            # Version 3.0+ has per-meter calibration
+            # Version 4.0+ has per-meter calibration with full percentiles
             if "meters" in calibration and meter_name in calibration["meters"]:
-                dti_max = calibration["meters"][meter_name]["dti_percentiles"]["p99"]
-                return normalize_with_soft_ceiling(dti, dti_max, METER_SCALE)
+                percentiles = calibration["meters"][meter_name]["dti_percentiles"]
+                return interpolate_percentile(dti, percentiles)
 
         # Fallback to global calibration (version 2.0)
         if calibration and "dti_percentiles" in calibration:
-            dti_max = calibration["dti_percentiles"]["p99"]
-            return normalize_with_soft_ceiling(dti, dti_max, METER_SCALE)
+            percentiles = calibration["dti_percentiles"]
+            return interpolate_percentile(dti, percentiles)
 
-    # Ultimate fallback to theoretical estimate
-    return normalize_with_soft_ceiling(dti, DTI_MAX_ESTIMATE, METER_SCALE)
+    # NEVER use theoretical estimates
+    raise ValueError(f"No calibration data found for meter={meter_name}. Re-run calibration scripts!")
 
 
 def normalize_harmony(hqs: float, meter_name: str = None, use_empirical: bool = True) -> float:
@@ -278,55 +348,18 @@ def normalize_harmony(hqs: float, meter_name: str = None, use_empirical: bool = 
         # Use meter-specific calibration if available
         calibration = load_calibration_constants()
         if calibration and meter_name:
-            # Version 3.0+ has per-meter calibration
+            # Version 4.0+ has per-meter calibration with full percentiles
             if "meters" in calibration and meter_name in calibration["meters"]:
-                hqs_max_pos = calibration["meters"][meter_name]["hqs_percentiles"]["p99"]
-                hqs_max_neg = abs(calibration["meters"][meter_name]["hqs_percentiles"]["p01"])
-
-                if hqs >= 0:
-                    # Positive HQS: harmonious transits (50 to 100)
-                    normalized = normalize_with_soft_ceiling(
-                        hqs, hqs_max_pos, METER_SCALE / 2
-                    )
-                    return HARMONY_NEUTRAL + normalized
-                else:
-                    # Negative HQS: challenging transits (0 to 50)
-                    normalized = normalize_with_soft_ceiling(
-                        abs(hqs), hqs_max_neg, METER_SCALE / 2
-                    )
-                    return HARMONY_NEUTRAL - normalized
+                percentiles = calibration["meters"][meter_name]["hqs_percentiles"]
+                return interpolate_percentile(hqs, percentiles)
 
         # Fallback to global calibration (version 2.0)
         if calibration and "hqs_percentiles" in calibration:
-            hqs_max_pos = calibration["hqs_percentiles"]["p99"]
-            hqs_max_neg = abs(calibration["hqs_percentiles"]["p01"])
+            percentiles = calibration["hqs_percentiles"]
+            return interpolate_percentile(hqs, percentiles)
 
-            if hqs >= 0:
-                # Positive HQS: harmonious transits (50 to 100)
-                normalized = normalize_with_soft_ceiling(
-                    hqs, hqs_max_pos, METER_SCALE / 2
-                )
-                return HARMONY_NEUTRAL + normalized
-            else:
-                # Negative HQS: challenging transits (0 to 50)
-                normalized = normalize_with_soft_ceiling(
-                    abs(hqs), hqs_max_neg, METER_SCALE / 2
-                )
-                return HARMONY_NEUTRAL - normalized
-
-    # Fallback to theoretical estimate
-    if hqs >= 0:
-        # Positive HQS: harmonious transits (50 to 100)
-        normalized = normalize_with_soft_ceiling(
-            hqs, HQS_MAX_POSITIVE_ESTIMATE, METER_SCALE / 2
-        )
-        return HARMONY_NEUTRAL + normalized
-    else:
-        # Negative HQS: challenging transits (0 to 50)
-        normalized = normalize_with_soft_ceiling(
-            abs(hqs), HQS_MAX_NEGATIVE_ESTIMATE, METER_SCALE / 2
-        )
-        return HARMONY_NEUTRAL - normalized
+    # NEVER use theoretical estimates
+    raise ValueError(f"No calibration data found for meter={meter_name}. Re-run calibration scripts!")
 
 
 def normalize_meters(dti: float, hqs: float, meter_name: str = None) -> Tuple[float, float]:

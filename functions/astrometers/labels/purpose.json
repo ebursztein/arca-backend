@@ -1,0 +1,98 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "purpose",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "purpose",
+    "display_name": "Purpose",
+    "group": "spirit",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Purpose represents your sense of meaning, life direction, and connection to what you're here to do.",
+    "detailed": "This meter tracks Jupiter and Sun transits to your natal Jupiter, Sun, and key houses (9th = life philosophy and meaning, 10th = public calling and career purpose). Jupiter brings expansion, growth, and the search for meaning. The Sun represents your core identity and life direction. When these planets form supportive aspects, you feel aligned with your path and clear about your purpose. Challenging aspects create existential questioning, feeling lost, or disconnection from meaning. Jupiter retrograde reduces clarity by 20% but can deepen internal wisdom.",
+    "keywords": ["meaning", "direction", "calling", "growth", "alignment"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "jupiter": "Expansion, growth, search for meaning and higher purpose",
+      "sun": "Core identity, life direction, and ego-driven sense of calling"
+    },
+    "secondary_planets": {
+      "saturn": "Long-term purpose building through discipline",
+      "neptune": "Spiritual purpose and transcendent meaning"
+    },
+    "natal_planets_tracked": ["jupiter", "sun"],
+    "transit_planets_tracked": ["jupiter", "sun", "saturn", "neptune", "pluto"],
+    "key_houses": {
+      "9": "Life philosophy, higher meaning, spiritual and educational growth",
+      "10": "Public calling, career purpose, what you're meant to contribute"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum purpose impact - intense alignment or crisis of meaning",
+      "opposition": "High impact - tension between different life directions",
+      "trine": "High flow - purpose clarity comes naturally",
+      "square": "Moderate friction - questioning and growth through challenge",
+      "sextile": "Moderate flow - opportunities for meaningful growth"
+    },
+    "planetary_dignities": {
+      "jupiter": {
+        "strong_in": ["sagittarius", "pisces", "cancer"],
+        "weak_in": ["gemini", "virgo", "capricorn"]
+      },
+      "sun": {
+        "strong_in": ["leo", "aries"],
+        "weak_in": ["aquarius", "libra"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Finding direction",
+        "mixed": "Inner exploration",
+        "harmonious": "Peaceful clarity"
+      },
+      "mild": {
+        "challenging": "Gently questioning",
+        "mixed": "Soft exploration",
+        "harmonious": "Mostly aligned"
+      },
+      "moderate": {
+        "challenging": "Exploring paths",
+        "mixed": "Active discovery",
+        "harmonious": "Clear direction"
+      },
+      "high": {
+        "challenging": "Deep questions",
+        "mixed": "Major questioning",
+        "harmonious": "Strong purpose"
+      },
+      "extreme": {
+        "challenging": "Total redefining",
+        "mixed": "Radical shift",
+        "harmonious": "Absolute clarity"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Philosophical and meaning-focused - talk about life direction, calling, growth",
+    "focus_when_high": "Emphasize clarity of direction, alignment with values, meaningful growth opportunities",
+    "focus_when_low": "Normalize existential questioning, emphasize that meaning comes and goes, gentle exploration",
+    "focus_when_challenging": "Validate crisis of meaning as growth opportunity - questioning leads to deeper purpose",
+    "avoid": ["Toxic positivity about purpose", "Suggesting there's one right path", "Dismissing legitimate existential doubt"],
+    "phrasing_examples": {
+      "high_harmonious": "Your sense of purpose is clear today - you feel aligned with your path and know what you're working toward.",
+      "moderate_mixed": "You're questioning your direction, which is actually growth - let yourself explore without needing immediate answers.",
+      "low_challenging": "Feeling lost about your purpose is valid - this questioning phase is part of finding deeper meaning, not a sign you're off track."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["jupiter", "sun"],
+    "natal_houses": [9, 10],
+    "retrograde_modifiers": {
+      "jupiter": 0.8
+    }
+  }
+}

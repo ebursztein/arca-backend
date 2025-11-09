@@ -2,23 +2,70 @@
 TODAY'S ASTROMETERS DATA ({{ date }})
 ═══════════════════════════════════════════════════════════════════
 
+[METER GROUPS - 5 LIFE AREAS]
+{{ groups_summary }}
+
+[INDIVIDUAL METERS DETAIL]
 {{ meters_summary }}
 
-[LUNAR CYCLE GUIDANCE]
-- Moon Phase: {{ transits.lunar_phase.phase_name.replace('_', ' ').title() }} {{ transits.lunar_phase.phase_emoji }} ({{ transits.lunar_phase.illumination_percent }}% illuminated)
-- Moon in {{ transits.moon_sign.value.title() }} - transiting user's {{ transits.moon_house.ordinal }} house ({{ transits.moon_house.meaning }})
-- Phase Energy: {{ transits.lunar_phase.energy }}
-- Emotional Tone: {{ transits.moon_sign.value.title() }} brings {{ moon_sign_emotional_description }}
-- Ritual/Practice: {{ transits.lunar_phase.ritual_suggestion }}
-- The Moon {{ lunar_moon_interpretation }} and colors how the user experiences the key transit.
+[PRIORITY NATAL-TRANSIT ASPECTS TODAY]
+{% if transit_summary.priority_transits %}
+The most significant transits to YOUR natal chart today:
 
-[GENERAL TRANSIT POSITIONS]
-{{ transits.basic_transit_summary }}
+{% for transit in transit_summary.priority_transits %}
+{{ loop.index }}. {{ transit.description }}
+   {{ transit.meaning }}
+   {% if transit.house_context %}{{ transit.house_context }}{% endif %}
+   {% if transit.speed_timing %}Timing: {{ transit.speed_timing.timing_impact }}{% endif %}
+   {% if transit.critical_degrees %}⚠️ {{ transit.critical_degrees|join(' | ') }}{% endif %}
 
-{% if transits.retrograde_planets %}
-🔄 Currently Retrograde: {{ transits.retrograde_planets|map(attribute='value')|map('title')|join(', ') }} - themes of review, revision, and internal processing dominate.
+{% endfor %}
+{% else %}
+No significant natal-transit aspects today (all beyond 3° orb).
 {% endif %}
 
-{% if transits.applying_aspects_count > 3 %}
-⚡ HIGH ACTIVITY PERIOD: {{ transits.applying_aspects_count }} transits building to exact in the next 48 hours. Expect acceleration.
+[OVERALL TRANSIT THEME]
+{{ transit_summary.theme_synthesis.theme_synthesis }}
+{% if transit_summary.theme_synthesis.convergence_pattern %}
+
+Convergence Pattern: {{ transit_summary.theme_synthesis.convergence_pattern }}
 {% endif %}
+{% if transit_summary.theme_synthesis.timing_note %}
+Timing Note: {{ transit_summary.theme_synthesis.timing_note }}
+{% endif %}
+
+{% if transit_summary.critical_degree_alerts %}
+[CRITICAL DEGREE ALERTS]
+{% for alert in transit_summary.critical_degree_alerts %}
+⚠️ {{ alert.planet }} at {{ alert.degree }}° {{ alert.sign }}: {{ alert.description }}
+{% endfor %}
+
+{{ transit_summary.critical_degree_synthesis.interpretation }}
+{% endif %}
+
+{% if transit_summary.retrograde_planets %}
+[RETROGRADE PLANETS & YOUR NATAL CHART]
+{% for rx in transit_summary.retrograde_planets %}
+🔄 {{ rx.planet }} retrograde in {{ rx.sign }} ({{ rx.speed_description }})
+{% if rx.natal_connection %}   {{ rx.natal_connection.message }}{% endif %}
+{% if rx.natal_aspects %}   Aspecting: {% for asp in rx.natal_aspects %}{{ asp.message }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+Total aspects analyzed: {{ transit_summary.total_aspects_found }} natal-transit connections found today.
+
+[TRANSIT TIMELINE - NEXT 7 DAYS]
+{% if upcoming_transits -%}
+{% for day_group in upcoming_transits -%}
+{{ day_group.header }}
+{% for transit in day_group.transits -%}
+  • [{{ transit.priority.value.upper() }}] {{ transit.description }} - {{ transit.status.value.upper() }}, orb {{ transit.orb_today|round(2) }}°{% if transit.status.value == 'exact' %} ⭐ EXACT{% endif %}
+{% endfor %}
+
+{% endfor -%}
+{% else -%}
+No major transits found in next 7 days (using 2° orb).
+{% endif -%}
+
+{{ moon_summary }}

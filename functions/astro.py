@@ -1107,6 +1107,439 @@ def summarize_transits(transit_chart: dict, sun_sign: str) -> str:
 
 
 # =============================================================================
+# Critical Degrees and Transit Speed Analysis
+# =============================================================================
+
+class CriticalDegree(str, Enum):
+    """Types of critical degrees in astrology."""
+    ANARETIC = "anaretic"  # 29° - crisis/completion point
+    AVATAR = "avatar"      # 0° - new beginnings
+    CRITICAL_CARDINAL = "critical_cardinal"  # 0°, 13°, 26° of cardinal signs
+
+
+class TransitSpeed(str, Enum):
+    """Speed classification for transiting planets."""
+    STATIONARY = "stationary"  # Preparing to turn retrograde/direct
+    SLOW = "slow"             # Moving slower than average
+    AVERAGE = "average"       # Normal speed
+    FAST = "fast"            # Moving faster than average
+
+
+def check_critical_degrees(degree_in_sign: float, sign: ZodiacSign) -> list[tuple[CriticalDegree, str]]:
+    """
+    Identify critical degree positions with astrological significance.
+
+    Critical degrees mark turning points, intensity, and significance:
+    - 29° (Anaretic): Crisis, completion, urgency. Last degree before sign change.
+    - 0° (Avatar): Pure essence, new beginning, potent fresh energy.
+    - 0°, 13°, 26° of Cardinal signs: Action points, cardinal cross activation.
+
+    Args:
+        degree_in_sign: Degree within sign (0-29.999)
+        sign: ZodiacSign enum
+
+    Returns:
+        List of (CriticalDegree enum, description) tuples
+
+    Examples:
+        >>> check_critical_degrees(29.2, ZodiacSign.SCORPIO)
+        [(CriticalDegree.ANARETIC, "Crisis/completion point - urgent energy")]
+
+        >>> check_critical_degrees(0.5, ZodiacSign.ARIES)
+        [(CriticalDegree.AVATAR, "Pure beginning - potent fresh energy"),
+         (CriticalDegree.CRITICAL_CARDINAL, "Cardinal point - action/initiative")]
+    """
+    flags = []
+
+    # Anaretic degree (29°00' to 29°59')
+    if 29.0 <= degree_in_sign < 30.0:
+        flags.append((
+            CriticalDegree.ANARETIC,
+            f"Crisis/completion point - urgent {sign.value} energy culminating"
+        ))
+
+    # Avatar degree (0°00' to 0°59')
+    if degree_in_sign < 1.0:
+        flags.append((
+            CriticalDegree.AVATAR,
+            f"Pure beginning - potent fresh {sign.value} energy"
+        ))
+
+    # Critical degrees in cardinal signs (0°, 13°, 26°)
+    cardinal_signs = {ZodiacSign.ARIES, ZodiacSign.CANCER, ZodiacSign.LIBRA, ZodiacSign.CAPRICORN}
+    if sign in cardinal_signs:
+        critical_points = [
+            (0, 1, "initiation"),
+            (13, 1, "crisis of action"),
+            (26, 1, "completion/preparation")
+        ]
+        for critical_deg, orb, meaning in critical_points:
+            if abs(degree_in_sign - critical_deg) < orb:
+                flags.append((
+                    CriticalDegree.CRITICAL_CARDINAL,
+                    f"Cardinal point ({critical_deg}°) - {meaning}"
+                ))
+                break  # Only report one cardinal critical degree
+
+    return flags
+
+
+# Average daily motion for planets (degrees per day)
+PLANET_AVERAGE_SPEEDS = {
+    Planet.MOON: 13.2,
+    Planet.SUN: 0.986,
+    Planet.MERCURY: 1.0,
+    Planet.VENUS: 1.0,
+    Planet.MARS: 0.5,
+    Planet.JUPITER: 0.083,
+    Planet.SATURN: 0.033,
+    Planet.URANUS: 0.014,
+    Planet.NEPTUNE: 0.008,
+    Planet.PLUTO: 0.006,
+}
+
+
+def analyze_planet_speed(planet: Planet, daily_motion: float) -> tuple[TransitSpeed, str]:
+    """
+    Analyze transit planet speed relative to average motion.
+
+    Speed matters for timing:
+    - Stationary: Major turning point, maximum impact
+    - Slow: Lingering influence, drawn-out process
+    - Fast: Quick-moving energy, brief window
+
+    Args:
+        planet: Planet enum
+        daily_motion: Degrees traveled per day (negative if retrograde)
+
+    Returns:
+        Tuple of (TransitSpeed enum, description)
+
+    Examples:
+        >>> analyze_planet_speed(Planet.MARS, 0.1)
+        (TransitSpeed.SLOW, "Slow Mars (0.1°/day) - lingering intensity")
+
+        >>> analyze_planet_speed(Planet.MERCURY, -0.05)
+        (TransitSpeed.STATIONARY, "Stationary Mercury (near station) - pivotal")
+    """
+    avg_speed = PLANET_AVERAGE_SPEEDS.get(planet, 0.5)
+    abs_motion = abs(daily_motion)
+
+    # Stationary (within 20% of zero motion)
+    if abs_motion < avg_speed * 0.2:
+        return (
+            TransitSpeed.STATIONARY,
+            f"Stationary {planet.value.title()} (near station) - pivotal turning point"
+        )
+
+    # Slow (less than 70% of average)
+    elif abs_motion < avg_speed * 0.7:
+        return (
+            TransitSpeed.SLOW,
+            f"Slow {planet.value.title()} ({abs_motion:.2f}°/day) - lingering influence"
+        )
+
+    # Fast (more than 130% of average)
+    elif abs_motion > avg_speed * 1.3:
+        return (
+            TransitSpeed.FAST,
+            f"Fast {planet.value.title()} ({abs_motion:.2f}°/day) - brief window"
+        )
+
+    # Average speed
+    else:
+        return (
+            TransitSpeed.AVERAGE,
+            f"Normal {planet.value.title()} motion ({abs_motion:.2f}°/day)"
+        )
+
+
+def calculate_aspect_priority(
+    transit_planet: Planet,
+    natal_planet: Planet,
+    aspect_type: AspectType,
+    orb: float,
+    applying: bool,
+    transit_speed: Optional[TransitSpeed] = None,
+    natal_house: Optional[int] = None,
+    transit_house: Optional[int] = None,
+    transit_retrograde: bool = False,
+    transit_sign: Optional[ZodiacSign] = None
+) -> int:
+    """
+    Calculate priority score for a natal-transit aspect (0-100).
+
+    Higher scores = more significant transits that deserve attention.
+
+    Scoring factors (expert-calibrated with 9 layers):
+
+    1. Transit planet transformation power (base points):
+       - Pluto → personal: 45 points (deepest transformation)
+       - Neptune/Uranus → personal: 42 points (spiritual/revolutionary)
+       - Saturn → personal: 40 points (structure/lessons)
+       - Jupiter → personal: 38 points (expansion/opportunity)
+       - Personal → personal: 20 points (brief but impactful)
+       - Moon → personal: 12 points (fleeting emotional window)
+
+    2. Orb tightness:
+       - < 0.5°: +25 points (nearly exact)
+       - < 1.0°: +20 points (very tight)
+       - < 2.0°: +10 points (tight)
+       - < 3.0°: +5 points (moderate)
+
+    3. Aspect type:
+       - Conjunction/Square/Opposition: +15 points (hard aspects)
+       - Trine: +8 points (harmonious flow)
+       - Sextile: +5 points (opportunity)
+
+    4. Applying/Separating:
+       - Applying: +10 points (building energy)
+       - Separating <1°: +5 points (shadow period)
+       - Separating >1°: 0 points (waning)
+
+    5. Speed classification:
+       - Stationary: +15 points (major turning point)
+       - Slow: +10 points (lingering influence)
+
+    6. Retrograde context:
+       - Rx hard aspects: +8 points (internalized intensity)
+
+    7. Natal planet importance (multiplier):
+       - Sun: ×1.3 (identity/ego - ego death potential)
+       - Moon: ×1.25 (emotions/security - emotional core)
+       - Mars: ×1.1 (action/drive)
+       - Saturn: ×1.05 (structure)
+       - Others: ×1.0
+
+    8. House placement impact (multiplier):
+       - Angular houses (1,4,7,10): ×1.2 (public/visible)
+       - Intensity houses (8,12): ×1.15
+       - Others: ×1.0
+
+    9. Sign dignity (multiplier):
+       - Rulership: ×1.1 (strongest expression)
+       - Exaltation: ×1.05 (elevated)
+       - Detriment: ×0.9 (challenging)
+       - Fall: ×0.85 (weakest)
+
+    Args:
+        transit_planet: Transiting planet
+        natal_planet: Natal planet being aspected
+        aspect_type: Type of aspect
+        orb: Orb in degrees
+        applying: True if applying
+        transit_speed: Optional speed classification
+        natal_house: House of natal planet (for angular house bonus)
+        transit_house: House of transit planet (optional)
+        transit_retrograde: True if transit planet is retrograde
+        transit_sign: Sign of transit planet (for dignity modifier)
+
+    Returns:
+        Priority score (0-100, with all modifiers applied)
+
+    Examples:
+        >>> # Pluto square Sun in 10th house (angular)
+        >>> calculate_aspect_priority(
+        ...     Planet.PLUTO, Planet.SUN, AspectType.SQUARE, 0.5, True,
+        ...     natal_house=10
+        ... )
+        100  # Pluto(45) + exact(25) + hard(15) + applying(10) + Rx(8)
+             # × Sun(1.3) × 10th house(1.2) = capped at 100
+
+        >>> # Jupiter trine Saturn in Cancer (exalted)
+        >>> calculate_aspect_priority(
+        ...     Planet.JUPITER, Planet.SATURN, AspectType.TRINE, 0.2, True,
+        ...     transit_sign=ZodiacSign.CANCER
+        ... )
+        88  # Jupiter(38) + exact(25) + trine(8) + applying(10)
+            # × exaltation(1.05) = 85
+    """
+    score = 0
+
+    # Natal planet importance weights (identity/core planets weighted higher)
+    NATAL_PLANET_WEIGHT = {
+        Planet.SUN: 1.3,      # Identity/life force - ego death potential
+        Planet.MOON: 1.25,    # Emotions/security - emotional core
+        Planet.MARS: 1.1,     # Action/drive - willpower
+        Planet.MERCURY: 1.0,  # Base weight
+        Planet.VENUS: 1.0,
+        Planet.JUPITER: 1.0,
+        Planet.SATURN: 1.05,  # Structure - slightly elevated
+        Planet.URANUS: 0.95,
+        Planet.NEPTUNE: 0.95,
+        Planet.PLUTO: 0.95,
+        Planet.NORTH_NODE: 0.9
+    }
+
+    # House placement impact (angular houses = public/visible)
+    HOUSE_IMPACT = {
+        1: 1.2,   # Angular houses (1st, 4th, 7th, 10th)
+        4: 1.2,   # Foundation/roots
+        7: 1.2,   # Partnerships/relationships
+        10: 1.2,  # Career/public image
+        8: 1.15,  # Transformation/intensity
+        12: 1.15, # Spirituality/subconscious
+        # All others default to 1.0
+    }
+
+    # Sign dignity modifiers (traditional + modern rulerships)
+    DIGNITY = {
+        # Traditional Rulerships (strongest expression)
+        (Planet.SUN, ZodiacSign.LEO): 1.1,
+        (Planet.MOON, ZodiacSign.CANCER): 1.1,
+        (Planet.MERCURY, ZodiacSign.GEMINI): 1.1,
+        (Planet.MERCURY, ZodiacSign.VIRGO): 1.1,
+        (Planet.VENUS, ZodiacSign.TAURUS): 1.1,
+        (Planet.VENUS, ZodiacSign.LIBRA): 1.1,
+        (Planet.MARS, ZodiacSign.ARIES): 1.1,
+        (Planet.MARS, ZodiacSign.SCORPIO): 1.1,  # Traditional (Pluto modern)
+        (Planet.JUPITER, ZodiacSign.SAGITTARIUS): 1.1,
+        (Planet.JUPITER, ZodiacSign.PISCES): 1.1,  # Traditional (Neptune modern)
+        (Planet.SATURN, ZodiacSign.CAPRICORN): 1.1,
+        (Planet.SATURN, ZodiacSign.AQUARIUS): 1.1,  # Traditional (Uranus modern)
+
+        # Modern Rulerships (outer planets)
+        (Planet.URANUS, ZodiacSign.AQUARIUS): 1.1,
+        (Planet.NEPTUNE, ZodiacSign.PISCES): 1.1,
+        (Planet.PLUTO, ZodiacSign.SCORPIO): 1.1,
+
+        # Exaltations (elevated expression)
+        (Planet.SUN, ZodiacSign.ARIES): 1.05,
+        (Planet.MOON, ZodiacSign.TAURUS): 1.05,
+        (Planet.VENUS, ZodiacSign.PISCES): 1.05,
+        (Planet.MARS, ZodiacSign.CAPRICORN): 1.05,
+        (Planet.JUPITER, ZodiacSign.CANCER): 1.05,
+        (Planet.SATURN, ZodiacSign.LIBRA): 1.05,
+
+        # Detriment (challenging expression - opposite rulership)
+        (Planet.SUN, ZodiacSign.AQUARIUS): 0.9,
+        (Planet.MOON, ZodiacSign.CAPRICORN): 0.9,
+        (Planet.MERCURY, ZodiacSign.SAGITTARIUS): 0.9,
+        (Planet.VENUS, ZodiacSign.ARIES): 0.9,
+        (Planet.VENUS, ZodiacSign.SCORPIO): 0.9,
+        (Planet.MARS, ZodiacSign.LIBRA): 0.9,
+        (Planet.MARS, ZodiacSign.TAURUS): 0.9,
+        (Planet.JUPITER, ZodiacSign.GEMINI): 0.9,
+        (Planet.JUPITER, ZodiacSign.VIRGO): 0.9,
+        (Planet.SATURN, ZodiacSign.CANCER): 0.9,
+        (Planet.SATURN, ZodiacSign.LEO): 0.9,
+        (Planet.URANUS, ZodiacSign.LEO): 0.9,  # Modern
+        (Planet.NEPTUNE, ZodiacSign.VIRGO): 0.9,  # Modern
+        (Planet.PLUTO, ZodiacSign.TAURUS): 0.9,  # Modern
+
+        # Fall (weakest expression - opposite exaltation)
+        (Planet.SUN, ZodiacSign.LIBRA): 0.85,
+        (Planet.MOON, ZodiacSign.SCORPIO): 0.85,
+        (Planet.MERCURY, ZodiacSign.PISCES): 0.85,  # Fall (not detriment)
+        (Planet.VENUS, ZodiacSign.VIRGO): 0.85,
+        (Planet.MARS, ZodiacSign.CANCER): 0.85,
+        (Planet.JUPITER, ZodiacSign.CAPRICORN): 0.85,
+        (Planet.SATURN, ZodiacSign.ARIES): 0.85,
+    }
+
+    # Define planet groups with transformation power hierarchy
+    transformation_planets = {Planet.PLUTO, Planet.NEPTUNE}  # Deepest transformation
+    structural_planets = {Planet.SATURN, Planet.URANUS}      # Major life shifts
+    personal_planets = {Planet.SUN, Planet.MOON, Planet.MERCURY, Planet.VENUS, Planet.MARS}
+    outer_planets = transformation_planets | structural_planets
+    slow_moving = {Planet.JUPITER} | outer_planets
+
+    # 1. Transit planet significance (weighted by transformation power)
+    if transit_planet == Planet.PLUTO:
+        # Pluto = most transformative, highest priority
+        if natal_planet in personal_planets:
+            score += 45  # Pluto → personal = deepest transformation
+        else:
+            score += 35  # Pluto → outer (generational)
+
+    elif transit_planet in {Planet.NEPTUNE, Planet.URANUS}:
+        # Neptune/Uranus = spiritual/revolutionary change
+        if natal_planet in personal_planets:
+            score += 42
+        else:
+            score += 32
+
+    elif transit_planet == Planet.SATURN:
+        # Saturn = structure, lessons, maturity
+        if natal_planet in personal_planets:
+            score += 40  # Saturn → personal = major lessons
+        else:
+            score += 30  # Saturn → outer
+
+    elif transit_planet == Planet.JUPITER:
+        # Jupiter transits mark expansion/opportunity windows
+        if natal_planet in personal_planets:
+            score += 38  # Benefic boost - important opportunities
+        else:
+            score += 28
+
+    elif transit_planet == Planet.MOON:
+        # Moon moves fast - brief but potent emotional windows
+        if natal_planet in personal_planets:
+            score += 12  # Reduced: fleeting influence
+        else:
+            score += 8
+
+    elif transit_planet in personal_planets:
+        # Other personal planets (Sun, Mercury, Venus, Mars)
+        if natal_planet in personal_planets:
+            score += 20  # Personal → personal
+        else:
+            score += 15  # Personal → outer
+
+    # 2. Orb tightness (closer = more significant)
+    if orb < 0.5:
+        score += 25  # Nearly exact
+    elif orb < 1.0:
+        score += 20  # Very tight
+    elif orb < 2.0:
+        score += 10  # Tight
+    elif orb < 3.0:
+        score += 5   # Moderate
+
+    # 3. Aspect type (hard aspects create more transformation)
+    if aspect_type in {AspectType.CONJUNCTION, AspectType.SQUARE, AspectType.OPPOSITION}:
+        score += 15  # Hard aspects demand action/awareness
+    elif aspect_type == AspectType.TRINE:
+        score += 8   # Harmonious flow
+    elif aspect_type == AspectType.SEXTILE:
+        score += 5   # Opportunity
+
+    # 4. Applying vs separating (with shadow period)
+    if applying:
+        score += 10  # Building energy is more noticeable
+    elif not applying and orb < 1.0:
+        score += 5   # Still in shadow (separating but within 1°)
+
+    # 5. Speed classification
+    if transit_speed == TransitSpeed.STATIONARY:
+        score += 15  # Stations are major turning points
+    elif transit_speed == TransitSpeed.SLOW:
+        score += 10  # Slow = lingering influence
+
+    # 6. Retrograde context (internalized intensity)
+    if transit_retrograde:
+        if aspect_type in {AspectType.CONJUNCTION, AspectType.SQUARE, AspectType.OPPOSITION}:
+            score += 8  # Retrograde hard aspects = internal work/revision
+
+    # 7. Natal planet importance multiplier
+    natal_weight = NATAL_PLANET_WEIGHT.get(natal_planet, 1.0)
+    score = int(score * natal_weight)
+
+    # 8. House placement impact (apply to natal house if provided)
+    if natal_house:
+        house_multiplier = HOUSE_IMPACT.get(natal_house, 1.0)
+        score = int(score * house_multiplier)
+
+    # 9. Sign dignity modifier (transit planet's strength in its sign)
+    if transit_sign:
+        dignity_multiplier = DIGNITY.get((transit_planet, transit_sign), 1.0)
+        score = int(score * dignity_multiplier)
+
+    return min(100, score)  # Cap at 100
+
+
+# =============================================================================
 # Natal-Transit Aspect Analysis (Personalization Core)
 # =============================================================================
 
@@ -1116,6 +1549,9 @@ class NatalTransitAspect(BaseModel):
 
     This is THE KEY to true personalization - shows what's happening
     to the user's specific chart today.
+
+    Enhanced with priority scoring, speed analysis, and critical degree flags
+    for expert-level transit interpretation.
     """
     natal_planet: Planet = Field(description="Natal planet being aspected")
     natal_sign: ZodiacSign = Field(description="Sign of natal planet")
@@ -1125,6 +1561,8 @@ class NatalTransitAspect(BaseModel):
     transit_planet: Planet = Field(description="Transiting planet")
     transit_sign: ZodiacSign = Field(description="Sign of transiting planet")
     transit_degree: float = Field(ge=0, lt=360, description="Absolute degree of transiting planet")
+    transit_speed: Optional[TransitSpeed] = Field(default=None, description="Speed classification (stationary/slow/average/fast)")
+    transit_speed_description: Optional[str] = Field(default=None, description="Human-readable speed analysis")
 
     aspect_type: AspectType = Field(description="Type of aspect")
     exact_degree: int = Field(description="Exact degree of aspect (0, 60, 90, 120, 180)")
@@ -1132,6 +1570,17 @@ class NatalTransitAspect(BaseModel):
     applying: bool = Field(description="True if applying (building), False if separating (waning)")
 
     meaning: str = Field(description="Interpretation key for this aspect")
+    priority_score: int = Field(default=0, ge=0, le=100, description="Importance score (0-100, higher = more significant)")
+
+    # Critical degree flags
+    transit_critical_degrees: list[tuple[str, str]] = Field(
+        default_factory=list,
+        description="Critical degrees for transit planet: [(degree_type, description), ...]"
+    )
+    natal_critical_degrees: list[tuple[str, str]] = Field(
+        default_factory=list,
+        description="Critical degrees for natal planet: [(degree_type, description), ...]"
+    )
 
     @field_validator('natal_planet', 'transit_planet', mode='before')
     @classmethod
@@ -1161,7 +1610,8 @@ class NatalTransitAspect(BaseModel):
 def find_natal_transit_aspects(
     natal_chart: dict,
     transit_chart: dict,
-    orb: float = 3.0
+    orb: float = 3.0,
+    sort_by_priority: bool = True
 ) -> list[NatalTransitAspect]:
     """
     Find aspects between natal planets and transiting planets.
@@ -1169,21 +1619,28 @@ def find_natal_transit_aspects(
     This is THE KEY to personalization - shows what's actually happening
     to the user's specific chart today.
 
+    Enhanced with:
+    - Priority scoring (importance ranking)
+    - Speed analysis (stationary/slow/average/fast)
+    - Critical degree detection (29°, 0°, cardinal points)
+
     Args:
         natal_chart: Natal chart dict from compute_birth_chart()
         transit_chart: Transit chart dict from compute_birth_chart()
         orb: Maximum orb in degrees (default 3.0)
+        sort_by_priority: If True, sort by priority score (default). If False, sort by orb.
 
     Returns:
-        List of NatalTransitAspect objects, sorted by orb (tightest first)
+        List of NatalTransitAspect objects, sorted by priority (or orb if sort_by_priority=False)
 
     Example:
         >>> natal, _ = compute_birth_chart("1985-05-15")
         >>> transit, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
         >>> aspects = find_natal_transit_aspects(natal, transit)
         >>> if aspects:
-        ...     print(f"{aspects[0].transit_planet.value} {aspects[0].aspect_type.value} natal {aspects[0].natal_planet.value}")
-        'saturn square natal sun'
+        ...     top = aspects[0]
+        ...     print(f"Priority {top.priority_score}: {top.transit_planet.value} {top.aspect_type.value} natal {top.natal_planet.value}")
+        'Priority 85: saturn square natal sun'
     """
     aspects_found = []
 
@@ -1218,6 +1675,42 @@ def find_natal_transit_aspects(
                     # Simplified: if transit is moving faster, it's applying
                     applying = transit_planet["speed"] > natal_planet.get("speed", 0)
 
+                    # Analyze transit speed
+                    transit_planet_enum = Planet(transit_name)
+                    speed_enum, speed_desc = analyze_planet_speed(
+                        transit_planet_enum,
+                        transit_planet["speed"]
+                    )
+
+                    # Calculate priority score with all modifiers
+                    natal_planet_enum = Planet(natal_name)
+                    transit_sign_enum = ZodiacSign(transit_planet["sign"])
+                    priority = calculate_aspect_priority(
+                        transit_planet_enum,
+                        natal_planet_enum,
+                        aspect_type,
+                        angle_diff,
+                        applying,
+                        speed_enum,
+                        natal_house=natal_planet["house"],
+                        transit_house=transit_planet["house"],
+                        transit_retrograde=transit_planet["retrograde"],
+                        transit_sign=transit_sign_enum
+                    )
+
+                    # Check critical degrees
+                    natal_deg_in_sign = natal_planet["degree_in_sign"]
+                    natal_sign_enum = ZodiacSign(natal_planet["sign"])
+                    natal_critical = check_critical_degrees(natal_deg_in_sign, natal_sign_enum)
+
+                    transit_deg_in_sign = transit_planet["degree_in_sign"]
+                    transit_sign_enum = ZodiacSign(transit_planet["sign"])
+                    transit_critical = check_critical_degrees(transit_deg_in_sign, transit_sign_enum)
+
+                    # Convert critical degree tuples to serializable format
+                    natal_critical_list = [(cd.value, desc) for cd, desc in natal_critical]
+                    transit_critical_list = [(cd.value, desc) for cd, desc in transit_critical]
+
                     aspects_found.append(
                         NatalTransitAspect(
                             natal_planet=natal_name,
@@ -1227,16 +1720,681 @@ def find_natal_transit_aspects(
                             transit_planet=transit_name,
                             transit_sign=transit_planet["sign"],
                             transit_degree=transit_deg,
+                            transit_speed=speed_enum,
+                            transit_speed_description=speed_desc,
                             aspect_type=aspect_type,
                             exact_degree=exact_deg,
                             orb=round(angle_diff, 2),
                             applying=applying,
-                            meaning=meaning
+                            meaning=meaning,
+                            priority_score=priority,
+                            natal_critical_degrees=natal_critical_list,
+                            transit_critical_degrees=transit_critical_list
                         )
                     )
 
-    # Sort by orb (tightest aspects first)
-    return sorted(aspects_found, key=lambda x: x.orb)
+    # Sort by priority (highest first) or orb (tightest first)
+    if sort_by_priority:
+        return sorted(aspects_found, key=lambda x: (-x.priority_score, x.orb))
+    else:
+        return sorted(aspects_found, key=lambda x: x.orb)
+
+
+def synthesize_critical_degrees(transit_chart: dict) -> dict:
+    """
+    Synthesize critical degree patterns across all transit planets.
+
+    Identifies major timing alerts when multiple planets are at crisis points
+    (29° anaretic) or new beginnings (0° avatar) simultaneously.
+
+    Args:
+        transit_chart: Transit chart dict
+
+    Returns:
+        Dict with synthesis, anaretic_planets, avatar_planets, and interpretation
+
+    Example:
+        >>> transit, _ = compute_birth_chart("2025-11-03", birth_time="12:00")
+        >>> synthesis = synthesize_critical_degrees(transit)
+        >>> print(synthesis["major_timing_alert"])
+        "Three planets at crisis points simultaneously"
+    """
+    anaretic_planets = []
+    avatar_planets = []
+    cardinal_critical = []
+
+    for planet in transit_chart["planets"]:
+        degree_in_sign = planet["degree_in_sign"]
+        sign = ZodiacSign(planet["sign"])
+        critical_list = check_critical_degrees(degree_in_sign, sign)
+
+        for deg_type, desc in critical_list:
+            planet_name = planet["name"].title()
+            if deg_type == CriticalDegree.ANARETIC:
+                anaretic_planets.append({
+                    "planet": planet_name,
+                    "sign": sign.value.title(),
+                    "degree": round(degree_in_sign, 1),
+                    "description": desc
+                })
+            elif deg_type == CriticalDegree.AVATAR:
+                avatar_planets.append({
+                    "planet": planet_name,
+                    "sign": sign.value.title(),
+                    "degree": round(degree_in_sign, 1),
+                    "description": desc
+                })
+            elif deg_type == CriticalDegree.CRITICAL_CARDINAL:
+                cardinal_critical.append({
+                    "planet": planet_name,
+                    "sign": sign.value.title(),
+                    "degree": round(degree_in_sign, 1),
+                    "description": desc
+                })
+
+    # Synthesize interpretation - count total planets across all critical degree types
+    total_critical = len(anaretic_planets) + len(avatar_planets) + len(cardinal_critical)
+    anaretic_count = len(anaretic_planets)
+    avatar_count = len(avatar_planets)
+    cardinal_count = len(cardinal_critical)
+
+    if total_critical >= 5:
+        intensity = "MAJOR TIMING ALERT"
+        interpretation = (
+            f"{total_critical} planets across critical degrees simultaneously "
+            f"({anaretic_count} anaretic, {avatar_count} avatar, {cardinal_count} cardinal critical). "
+            "This convergence is rare and marks a profound transition week. "
+        )
+
+        if anaretic_planets:
+            endings = ", ".join([f"{p['planet']} in {p['sign']}" for p in anaretic_planets])
+            interpretation += f"Old patterns dying ({endings}). "
+
+        if avatar_planets:
+            beginnings = ", ".join([f"{p['planet']} in {p['sign']}" for p in avatar_planets])
+            interpretation += f"New energy emerging ({beginnings}). "
+
+        interpretation += "Navigate with awareness of endings enabling new beginnings."
+
+    elif total_critical >= 3:
+        intensity = "Significant Timing"
+        interpretation = (
+            f"{total_critical} planets at critical points "
+            f"({anaretic_count} anaretic, {avatar_count} avatar, {cardinal_count} cardinal). "
+            "Important threshold week - heightened sensitivity to timing."
+        )
+
+    elif total_critical >= 1:
+        intensity = "Notable Timing"
+        critical_planet = (anaretic_planets + avatar_planets + cardinal_critical)[0]
+        interpretation = (
+            f"{critical_planet['planet']} at {critical_planet['degree']}° "
+            f"{critical_planet['sign']} marks a turning point."
+        )
+
+    else:
+        intensity = None
+        interpretation = "No critical degree patterns at this time."
+
+    return {
+        "intensity": intensity,
+        "major_timing_alert": total_critical >= 3,
+        "anaretic_planets": anaretic_planets,
+        "avatar_planets": avatar_planets,
+        "cardinal_critical": cardinal_critical,
+        "total_count": total_critical,
+        "interpretation": interpretation
+    }
+
+
+def ordinal_suffix(n: int) -> str:
+    """
+    Get proper ordinal suffix for a number.
+
+    Args:
+        n: Number (1-12 for houses)
+
+    Returns:
+        Ordinal string (1st, 2nd, 3rd, 4th, etc.)
+
+    Examples:
+        >>> ordinal_suffix(1)
+        '1st'
+        >>> ordinal_suffix(3)
+        '3rd'
+        >>> ordinal_suffix(11)
+        '11th'
+    """
+    if 11 <= n <= 13:  # Special case: 11th, 12th, 13th
+        return f"{n}th"
+
+    last_digit = n % 10
+    suffix_map = {1: 'st', 2: 'nd', 3: 'rd'}
+    suffix = suffix_map.get(last_digit, 'th')
+    return f"{n}{suffix}"
+
+
+def get_house_context(transit_house: int, natal_house: int) -> str:
+    """
+    Generate house-to-house context for transit aspects.
+
+    Describes the dynamic between the life area activated by transit
+    and the natal life area being aspected.
+
+    Args:
+        transit_house: House number where transit planet is located (1-12)
+        natal_house: House number where natal planet is located (1-12)
+
+    Returns:
+        Human-readable description of house-to-house dynamic
+
+    Example:
+        >>> get_house_context(11, 2)
+        "Friendship/group energy (11th) influences financial security/values (2nd)"
+    """
+    house_meanings = {
+        1: ("identity/self", "how you appear"),
+        2: ("resources/values", "what you own/value"),
+        3: ("communication/learning", "how you think/connect locally"),
+        4: ("home/family", "your foundation/roots"),
+        5: ("creativity/pleasure", "self-expression/joy"),
+        6: ("health/work", "daily routines/service"),
+        7: ("relationships/partnerships", "one-on-one connections"),
+        8: ("transformation/shared resources", "deep change/intimacy"),
+        9: ("beliefs/expansion", "philosophy/travel"),
+        10: ("career/public life", "reputation/achievements"),
+        11: ("community/ideals", "friendships/future vision"),
+        12: ("spirituality/subconscious", "hidden realms/release")
+    }
+
+    transit_theme, transit_detail = house_meanings.get(transit_house, ("unknown", ""))
+    natal_theme, natal_detail = house_meanings.get(natal_house, ("unknown", ""))
+
+    if transit_house == natal_house:
+        return f"Activating your {natal_theme} - direct impact on {natal_detail}"
+    else:
+        return f"{transit_theme.title()} ({ordinal_suffix(transit_house)}) influences {natal_theme} ({ordinal_suffix(natal_house)})"
+
+
+def synthesize_transit_themes(aspects: list[NatalTransitAspect], top_n: int = 5) -> dict:
+    """
+    Synthesize themes across multiple related transits with actionable timing windows.
+
+    Identifies patterns like:
+    - Multiple planets aspecting same natal planet (convergence)
+    - Same transit planet aspecting multiple natal planets (broadcast)
+    - Complementary aspects (harmony vs tension themes)
+    - Related house activations
+    - Timing windows and peak influence periods
+
+    Args:
+        aspects: List of NatalTransitAspect objects (should be prioritized)
+        top_n: Number of top aspects to analyze for themes
+
+    Returns:
+        Dict with enhanced theme_synthesis, convergence_patterns, timing_windows
+
+    Example:
+        >>> aspects = find_natal_transit_aspects(natal, transit)
+        >>> themes = synthesize_transit_themes(aspects[:5])
+        >>> print(themes["theme_synthesis"])
+        "JUPITER MEGA-BLESSING WEEK: Jupiter sextile Sun + Jupiter trine Saturn..."
+    """
+    top_aspects = aspects[:top_n]
+
+    if not top_aspects:
+        return {
+            "theme_synthesis": "No major aspects at this time.",
+            "convergence_patterns": [],
+            "harmony_tension_balance": "neutral",
+            "timing_windows": []
+        }
+
+    # Count natal planets being aspected
+    natal_planet_count = {}
+    transit_planet_count = {}
+
+    for aspect in top_aspects:
+        natal_planet_count[aspect.natal_planet] = natal_planet_count.get(aspect.natal_planet, 0) + 1
+        transit_planet_count[aspect.transit_planet] = transit_planet_count.get(aspect.transit_planet, 0) + 1
+
+    # Find convergence (multiple transits to same natal planet)
+    convergence_patterns = []
+    for natal_planet, count in natal_planet_count.items():
+        if count >= 2:
+            related_aspects = [a for a in top_aspects if a.natal_planet == natal_planet]
+            aspecting_transits = [a.transit_planet.value.title() for a in related_aspects]
+
+            # Enhanced convergence interpretation with specific planet meanings
+            planet_meanings = {
+                Planet.SUN: "identity/vitality",
+                Planet.MOON: "emotions/comfort needs",
+                Planet.MERCURY: "thinking/communication",
+                Planet.VENUS: "relationships/values",
+                Planet.MARS: "action/desire",
+                Planet.JUPITER: "growth/optimism",
+                Planet.SATURN: "structure/discipline"
+            }
+
+            natal_meaning = planet_meanings.get(natal_planet, natal_planet.value)
+
+            # Analyze aspect types for convergence
+            aspect_qualities = []
+            for asp in related_aspects:
+                if asp.aspect_type in {AspectType.TRINE, AspectType.SEXTILE}:
+                    aspect_qualities.append(("harmonious", asp.transit_planet))
+                elif asp.aspect_type in {AspectType.SQUARE, AspectType.OPPOSITION}:
+                    aspect_qualities.append(("challenging", asp.transit_planet))
+                else:
+                    aspect_qualities.append(("fusion", asp.transit_planet))
+
+            # Build detailed interpretation
+            detailed_interp = f"Natal {natal_planet.value.title()} ({natal_meaning}) receiving:\n"
+            for qual, tplanet in aspect_qualities:
+                detailed_interp += f"  • Transit {tplanet.value.title()} {aspects[0].aspect_type.value} ({qual})\n"
+
+            convergence_patterns.append({
+                "focal_planet": f"Natal {natal_planet.value.title()}",
+                "focal_meaning": natal_meaning,
+                "aspecting_planets": aspecting_transits,
+                "aspect_details": [{"planet": tp.value, "quality": q} for q, tp in aspect_qualities],
+                "count": count,
+                "interpretation": f"Multiple forces converging on your {natal_meaning} - heightened focus on this life area",
+                "detailed_interpretation": detailed_interp.strip()
+            })
+
+    # Analyze harmony vs tension
+    harmonious = 0
+    challenging = 0
+
+    for aspect in top_aspects:
+        if aspect.aspect_type in {AspectType.TRINE, AspectType.SEXTILE}:
+            harmonious += 1
+        elif aspect.aspect_type in {AspectType.SQUARE, AspectType.OPPOSITION}:
+            challenging += 1
+
+    if harmonious > challenging * 1.5:
+        balance = "harmonious"
+        balance_desc = "Flow and ease dominate - opportunities unfold naturally"
+    elif challenging > harmonious * 1.5:
+        balance = "challenging"
+        balance_desc = "Tension and friction dominate - growth through effort required"
+    else:
+        balance = "mixed"
+        balance_desc = "Balance of ease and challenge - navigate complexity skillfully"
+
+    # Enhanced synthesis with specific action windows
+    if len(top_aspects) >= 3:
+        first = top_aspects[0]
+        second = top_aspects[1]
+        third = top_aspects[2]
+
+        outer_planets = {Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO, Planet.JUPITER}
+
+        # Check for special "mega" patterns (same transit planet multiple harmonious aspects)
+        jupiter_harmonious = [a for a in top_aspects if a.transit_planet == Planet.JUPITER
+                             and a.aspect_type in {AspectType.TRINE, AspectType.SEXTILE}]
+
+        if len(jupiter_harmonious) >= 2:
+            # JUPITER MEGA-BLESSING pattern
+            aspects_str = " + ".join([
+                f"Jupiter {a.aspect_type.value} {a.natal_planet.value.title()} ({a.natal_planet.value})"
+                for a in jupiter_harmonious[:2]
+            ])
+
+            theme_synthesis = f"JUPITER MEGA-BLESSING WEEK\n{aspects_str}\n"
+            theme_synthesis += "Perfect timing for: job negotiations, launching projects, making commitments that expand your world with solid foundation"
+
+        else:
+            # Regular theme synthesis
+            themes = []
+            for aspect in [first, second, third]:
+                if aspect.transit_planet in outer_planets:
+                    if aspect.aspect_type in {AspectType.TRINE, AspectType.SEXTILE}:
+                        themes.append(f"{aspect.transit_planet.value.title()}-{aspect.natal_planet.value.title()} harmony")
+                    elif aspect.aspect_type in {AspectType.SQUARE, AspectType.OPPOSITION}:
+                        themes.append(f"{aspect.transit_planet.value.title()}-{aspect.natal_planet.value.title()} tension")
+                    else:
+                        themes.append(f"{aspect.transit_planet.value.title()}-{aspect.natal_planet.value.title()} fusion")
+
+            if themes:
+                theme_synthesis = " + ".join(themes[:2])
+
+                # Add interpretation based on combination
+                if "harmony" in theme_synthesis and "tension" in theme_synthesis:
+                    theme_synthesis += " = Opportunity for structured growth through manageable challenge"
+                elif "harmony" in theme_synthesis:
+                    theme_synthesis += " = Prime time for expansion and manifestation with natural support"
+                elif "tension" in theme_synthesis:
+                    theme_synthesis += " = Transformation through confronting limitations and pushing boundaries"
+            else:
+                theme_synthesis = f"{len(top_aspects)} aspects active - complex multi-faceted period"
+    else:
+        # Simple case
+        top = top_aspects[0]
+        theme_synthesis = (
+            f"Primary focus: {top.transit_planet.value.title()} {top.aspect_type.value} "
+            f"natal {top.natal_planet.value.title()} - {top.meaning}"
+        )
+
+    return {
+        "theme_synthesis": theme_synthesis,
+        "convergence_patterns": convergence_patterns,
+        "harmony_tension_balance": balance,
+        "balance_description": balance_desc,
+        "total_harmonious": harmonious,
+        "total_challenging": challenging
+    }
+
+
+def get_intensity_indicator(priority_score: int, orb: float) -> str:
+    """
+    Generate visual intensity indicator based on priority and orb tightness.
+
+    Returns emoji indicators showing transit strength:
+    - ⚡⚡⚡ (3 bolts) = Priority 90+ OR orb < 0.5° (PEAK INFLUENCE)
+    - ⚡⚡ (2 bolts) = Priority 70-89 OR orb 0.5-1.0° (STRONG)
+    - ⚡ (1 bolt) = Priority 50-69 OR orb 1.0-2.0° (MODERATE)
+    - · (dot) = Priority < 50 OR orb > 2.0° (BACKGROUND)
+
+    Args:
+        priority_score: Aspect priority (0-100)
+        orb: Orb in degrees
+
+    Returns:
+        Intensity indicator string
+
+    Example:
+        >>> get_intensity_indicator(95, 0.35)
+        '⚡⚡⚡'
+        >>> get_intensity_indicator(75, 0.8)
+        '⚡⚡'
+    """
+    if priority_score >= 90 or orb < 0.5:
+        return "⚡⚡⚡"
+    elif priority_score >= 70 or orb < 1.0:
+        return "⚡⚡"
+    elif priority_score >= 50 or orb < 2.0:
+        return "⚡"
+    else:
+        return "·"
+
+
+def get_speed_timing_details(planet: Planet, daily_motion: float, orb: float) -> dict:
+    """
+    Enhanced speed analysis with specific timing windows and influence duration.
+
+    Args:
+        planet: Planet enum
+        daily_motion: Degrees per day
+        orb: Current orb in degrees
+
+    Returns:
+        Dict with speed classification, timing description, and influence window
+
+    Example:
+        >>> get_speed_timing_details(Planet.JUPITER, 0.05, 0.35)
+        {
+            "speed_enum": "slow",
+            "speed_description": "SLOW (Jupiter at 0.05°/day vs average 0.08°/day)",
+            "timing_impact": "3-week influence window instead of normal 2 weeks",
+            "peak_window": "Now through Nov 15",
+            "best_use": "Long-term decisions, big commitments"
+        }
+    """
+    from datetime import datetime, timedelta
+
+    speed_enum, base_desc = analyze_planet_speed(planet, daily_motion)
+    avg_speed = PLANET_AVERAGE_SPEEDS.get(planet, 0.5)
+
+    # Calculate influence duration based on orb and speed
+    if abs(daily_motion) > 0:
+        days_to_exact = orb / abs(daily_motion)
+        days_total_influence = (2.0) / abs(daily_motion)  # Assuming 2° total orb
+    else:
+        days_to_exact = 999  # Stationary
+        days_total_influence = 999
+
+    # Calculate dates
+    today = datetime.now()
+    peak_end_date = today + timedelta(days=min(days_total_influence, 60))
+
+    result = {
+        "speed_enum": speed_enum.value,
+        "speed_description": base_desc,
+        "timing_impact": None,
+        "peak_window": None,
+        "best_use": None
+    }
+
+    if speed_enum == TransitSpeed.STATIONARY:
+        result["timing_impact"] = "Maximum impact - station point marks major turning point"
+        result["peak_window"] = "Critical 2-week window around station"
+        result["best_use"] = "Life-changing decisions, major commitments, transformation work"
+
+    elif speed_enum == TransitSpeed.SLOW:
+        # Calculate extended window
+        ratio = abs(daily_motion) / avg_speed if avg_speed > 0 else 1
+        normal_weeks = 2
+        extended_weeks = int(normal_weeks / ratio) if ratio > 0 else normal_weeks * 2
+
+        result["timing_impact"] = f"{extended_weeks}-week influence window instead of normal {normal_weeks} weeks"
+        result["peak_window"] = f"Now through {peak_end_date.strftime('%b %d')}"
+        result["best_use"] = "Long-term decisions, big commitments, sustained efforts"
+
+    elif speed_enum == TransitSpeed.FAST:
+        # Distinguish between truly fast planets and slow outer planets labeled "fast" relative to their average
+        if abs(daily_motion) < 0.03:  # Very slow outer planets (Pluto, Neptune)
+            # Even though "fast" for them, still moves slowly in absolute terms
+            result["timing_impact"] = "Slow-burn transformation - effects unfold over weeks"
+            result["peak_window"] = f"Integration window: {today.strftime('%b %d')} - {(today + timedelta(days=21)).strftime('%b %d')}"
+            result["best_use"] = "Process insights, integrate changes, deep psychological work"
+        else:
+            result["timing_impact"] = "Brief but intense - act within days"
+            result["peak_window"] = f"{today.strftime('%b %d')} - {(today + timedelta(days=7)).strftime('%b %d')}"
+            result["best_use"] = "Quick opportunities, immediate actions, time-sensitive matters"
+
+    else:  # AVERAGE
+        result["timing_impact"] = "Standard influence duration"
+        result["peak_window"] = f"Active through {peak_end_date.strftime('%b %d')}"
+        result["best_use"] = "Normal pacing, balanced approach"
+
+    return result
+
+
+def format_transit_summary_for_ui(
+    natal_chart: dict,
+    transit_chart: dict,
+    max_aspects: int = 5
+) -> dict:
+    """
+    Create a formatted transit summary perfect for UI display with enhanced visuals.
+
+    Returns a structured dict with:
+    - Priority transits with intensity indicators (⚡⚡⚡)
+    - Critical degree alerts
+    - Retrograde status with natal chart connections
+    - Speed classifications with timing windows
+    - Transit positions with house meanings
+    - Enhanced convergence patterns
+
+    Args:
+        natal_chart: Natal chart dict
+        transit_chart: Transit chart dict
+        max_aspects: Maximum number of aspects to return (default 5)
+
+    Returns:
+        Dict with formatted transit data ready for JSON serialization
+
+    Example:
+        >>> natal, _ = compute_birth_chart("1985-05-15")
+        >>> transit, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
+        >>> summary = format_transit_summary_for_ui(natal, transit)
+        >>> print(summary["priority_transits"][0]["description"])
+        "⚡⚡⚡ Saturn square natal Sun (0.5° orb) - PEAK INFLUENCE"
+    """
+    # Find all natal-transit aspects
+    aspects = find_natal_transit_aspects(natal_chart, transit_chart, orb=3.0, sort_by_priority=True)
+
+    # Top priority transits with enhanced visuals and timing
+    priority_transits = []
+    for aspect in aspects[:max_aspects]:
+        # Visual intensity indicator
+        intensity_indicator = get_intensity_indicator(aspect.priority_score, aspect.orb)
+
+        orb_label = "exact" if aspect.orb < 0.5 else "tight" if aspect.orb < 1.5 else "moderate"
+        applying_label = "applying" if aspect.applying else "separating"
+
+        # Enhanced description with intensity indicator
+        transit_desc = f"{intensity_indicator} {aspect.transit_planet.value.title()} {aspect.aspect_type.value} natal {aspect.natal_planet.value.title()}"
+
+        # Add intensity label for UI
+        if aspect.priority_score >= 90 or aspect.orb < 0.5:
+            intensity_label = "PEAK INFLUENCE"
+        elif aspect.priority_score >= 70:
+            intensity_label = "STRONG"
+        else:
+            intensity_label = None
+
+        # Get transit planet data for speed analysis
+        transit_planet_data = next(
+            (p for p in transit_chart["planets"] if p["name"] == aspect.transit_planet.value),
+            None
+        )
+
+        # Enhanced speed analysis with timing windows
+        speed_timing = None
+        if transit_planet_data:
+            speed_timing = get_speed_timing_details(
+                aspect.transit_planet,
+                transit_planet_data["speed"],
+                aspect.orb
+            )
+
+        # Add critical degree warnings
+        critical_notes = []
+        for deg_type, desc in aspect.transit_critical_degrees:
+            critical_notes.append(desc)
+        for deg_type, desc in aspect.natal_critical_degrees:
+            critical_notes.append(f"Natal: {desc}")
+
+        transit_house = transit_planet_data["house"] if transit_planet_data else None
+
+        # Generate house context
+        house_context = None
+        if transit_house:
+            house_context = get_house_context(transit_house, aspect.natal_house)
+
+        priority_transits.append({
+            "description": transit_desc,
+            "intensity_indicator": intensity_indicator,
+            "intensity_label": intensity_label,
+            "priority_score": aspect.priority_score,
+            "transit_planet": aspect.transit_planet.value,
+            "natal_planet": aspect.natal_planet.value,
+            "aspect_type": aspect.aspect_type.value,
+            "orb": aspect.orb,
+            "orb_label": orb_label,
+            "applying": aspect.applying,
+            "applying_label": applying_label,
+            "speed_timing": speed_timing,
+            "critical_degrees": critical_notes,
+            "meaning": aspect.meaning,
+            "natal_house": aspect.natal_house,
+            "transit_house": transit_house,
+            "house_context": house_context
+        })
+
+    # Critical degree alerts (any planet at 29° or 0°)
+    critical_alerts = []
+    for planet in transit_chart["planets"]:
+        degree_in_sign = planet["degree_in_sign"]
+        sign = ZodiacSign(planet["sign"])
+        critical_list = check_critical_degrees(degree_in_sign, sign)
+
+        for deg_type, desc in critical_list:
+            if deg_type in {CriticalDegree.ANARETIC, CriticalDegree.AVATAR}:
+                critical_alerts.append({
+                    "planet": planet["name"].title(),
+                    "type": deg_type.value,
+                    "degree": degree_in_sign,
+                    "sign": sign.value.title(),
+                    "description": desc
+                })
+
+    # Enhanced retrograde planets with natal chart connections
+    retrograde_planets = []
+    natal_sun_sign = ZodiacSign(natal_chart["planets"][0]["sign"])
+
+    for planet in transit_chart["planets"]:
+        if planet["retrograde"]:
+            planet_enum = Planet(planet["name"])
+            speed_enum, speed_desc = analyze_planet_speed(planet_enum, planet["speed"])
+            transit_sign = ZodiacSign(planet["sign"])
+
+            # Check if retrograde is in same sign as natal Sun
+            natal_connection = None
+            if transit_sign == natal_sun_sign:
+                natal_connection = {
+                    "type": "sun_sign",
+                    "message": f"⚠️ Your Sun is in {natal_sun_sign.value.title()}! This retrograde is reviewing your identity/self-expression."
+                }
+
+            # Check if retrograde is aspecting natal planets (within 3° orb)
+            natal_aspects_during_rx = []
+            for natal_planet in natal_chart["planets"]:
+                natal_deg = natal_planet["absolute_degree"]
+                transit_deg = planet["absolute_degree"]
+
+                diff = abs((transit_deg - natal_deg) % 360)
+                if diff > 180:
+                    diff = 360 - diff
+
+                if diff < 3.0:  # Within 3° orb
+                    natal_aspects_during_rx.append({
+                        "natal_planet": natal_planet["name"].title(),
+                        "orb": round(diff, 1),
+                        "message": f"Retrograde affecting your natal {natal_planet['name'].title()}"
+                    })
+
+            retrograde_planets.append({
+                "planet": planet["name"].title(),
+                "sign": planet["sign"].title(),
+                "degree": round(planet["degree_in_sign"], 1),
+                "speed_status": speed_enum.value,
+                "speed_description": speed_desc,
+                "natal_connection": natal_connection,
+                "natal_aspects": natal_aspects_during_rx if natal_aspects_during_rx else None
+            })
+
+    # Transit planet positions with speed
+    planet_positions = []
+    for planet in transit_chart["planets"]:
+        planet_enum = Planet(planet["name"])
+        speed_enum, speed_desc = analyze_planet_speed(planet_enum, planet["speed"])
+
+        planet_positions.append({
+            "planet": planet["name"].title(),
+            "sign": planet["sign"].title(),
+            "degree": round(planet["degree_in_sign"], 1),
+            "house": planet["house"],
+            "retrograde": planet["retrograde"],
+            "speed_status": speed_enum.value
+        })
+
+    # Generate synthesis
+    critical_synthesis = synthesize_critical_degrees(transit_chart)
+    theme_synthesis = synthesize_transit_themes(aspects, top_n=max_aspects)
+
+    return {
+        "priority_transits": priority_transits,
+        "critical_degree_alerts": critical_alerts,
+        "critical_degree_synthesis": critical_synthesis,
+        "theme_synthesis": theme_synthesis,
+        "retrograde_planets": retrograde_planets,
+        "planet_positions": planet_positions,
+        "total_aspects_found": len(aspects)
+    }
 
 
 # =============================================================================
@@ -1316,135 +2474,36 @@ def calculate_lunar_phase(sun_degree: float, moon_degree: float) -> LunarPhase:
 # =============================================================================
 # Enhanced Transit Summary with Natal Context
 # =============================================================================
-
-class EnhancedTransitSummary(BaseModel):
-    """
-    Comprehensive transit summary with natal chart context.
-
-    This is what powers truly personalized horoscopes.
-    """
-    primary_aspect: Optional[NatalTransitAspect] = Field(
-        None,
-        description="Most significant natal-transit aspect of the day"
-    )
-    all_natal_transit_aspects: list[NatalTransitAspect] = Field(
-        default_factory=list,
-        description="Top 5 natal-transit aspects by tightness"
-    )
-    lunar_phase: LunarPhase = Field(description="Current lunar phase with guidance")
-    moon_sign: ZodiacSign = Field(description="Current Moon sign")
-    moon_house: House = Field(description="Moon's solar house position")
-    retrograde_planets: list[Planet] = Field(
-        default_factory=list,
-        description="Planets currently retrograde"
-    )
-    sun_sign: ZodiacSign = Field(description="User's natal sun sign")
-    basic_transit_summary: str = Field(
-        description="Text summary of general transits (fallback/context)"
-    )
-    applying_aspects_count: int = Field(
-        default=0,
-        description="Count of aspects applying (building to exact) in next 48 hours"
-    )
-
-
-def summarize_transits_with_natal(
-    natal_chart: dict,
-    transit_chart: dict
-) -> EnhancedTransitSummary:
-    """
-    Enhanced transit summary with natal chart context.
-
-    Returns structured data perfect for LLM personalization.
-
-    Args:
-        natal_chart: Natal chart dict from compute_birth_chart()
-        transit_chart: Transit chart dict from compute_birth_chart()
-
-    Returns:
-        EnhancedTransitSummary with primary aspects, lunar phase, and context
-
-    Example:
-        >>> natal, _ = compute_birth_chart("1985-05-15")
-        >>> transit, _ = compute_birth_chart("2025-10-17", birth_time="12:00")
-        >>> summary = summarize_transits_with_natal(natal, transit)
-        >>> if summary.primary_aspect:
-        ...     print(f"Primary: {summary.primary_aspect.transit_planet.value} {summary.primary_aspect.aspect_type.value}")
-    """
-    # Extract sun sign from natal chart
-    sun_sign = ZodiacSign(natal_chart["planets"][0]["sign"])  # Sun is always first
-
-    # Get natal-transit aspects
-    personal_aspects = find_natal_transit_aspects(natal_chart, transit_chart)
-
-    # Find THE most important aspect of the day
-    primary_aspect = None
-    if personal_aspects:
-        # Prioritize: outer planet aspects > personal planet aspects
-        # and tighter orbs > wider orbs
-        outer_planets = {Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO}
-
-        for aspect in personal_aspects:
-            transit_planet = aspect.transit_planet
-            if transit_planet in outer_planets and aspect.orb < 2:
-                primary_aspect = aspect
-                break
-
-        # Fallback to tightest personal planet aspect
-        if not primary_aspect:
-            primary_aspect = personal_aspects[0]
-
-    # Get Moon data
-    transit_planets = {p["name"]: p for p in transit_chart["planets"]}
-    moon = transit_planets.get(Planet.MOON.value)
-    sun = transit_planets.get(Planet.SUN.value)
-    assert moon and sun
-
-    # Calculate lunar phase
-    lunar_phase = calculate_lunar_phase(
-        sun["absolute_degree"],
-        moon["absolute_degree"]
-    )
-
-    # Calculate Moon's solar house
-    moon_sign = ZodiacSign(moon["sign"])
-    moon_house = calculate_solar_house(sun_sign, moon_sign)
-
-    # Find retrograde planets
-    retrograde_planets = [
-        Planet(p["name"]) for p in transit_chart["planets"]
-        if p["retrograde"]
-    ]
-
-    # Get basic transit summary as text fallback
-    basic_summary = summarize_transits(transit_chart, sun_sign.value)
-
-    # Count applying aspects (building to exact)
-    applying_count = sum(1 for asp in personal_aspects if asp.applying)
-
-    return EnhancedTransitSummary(
-        primary_aspect=primary_aspect,
-        all_natal_transit_aspects=personal_aspects[:5],  # Top 5
-        lunar_phase=lunar_phase,
-        moon_sign=moon_sign,
-        moon_house=moon_house,
-        retrograde_planets=retrograde_planets,
-        sun_sign=sun_sign,
-        basic_transit_summary=basic_summary,
-        applying_aspects_count=applying_count
-    )
-
-
-# =============================================================================
 # Upcoming Transits (Look-Ahead)
 # =============================================================================
 
+class TransitStatus(str, Enum):
+    """Status of a transit relative to today."""
+    ACTIVE = "active"  # Already within orb, ongoing
+    ENTERING = "entering"  # Coming into orb (was not in orb yesterday)
+    EXACT = "exact"  # Becoming exact (within 0.2° orb)
+    LEAVING = "leaving"  # Moving out of orb soon
+
+
+class TransitPriority(str, Enum):
+    """Priority level based on planet speed and significance."""
+    HIGH = "high"  # Outer planets (Saturn, Uranus, Neptune, Pluto) - slow, major life themes
+    MEDIUM = "medium"  # Jupiter, Mars - intermediate speed, significant events
+    LOW = "low"  # Sun, Moon, Mercury, Venus - fast-moving, daily fluctuations
+
+
 class UpcomingTransit(BaseModel):
-    """An upcoming significant transit."""
+    """A significant transit (current or upcoming)."""
     date: str = Field(description="Date of transit (YYYY-MM-DD)")
-    days_away: int = Field(ge=1, description="Days until this transit")
+    days_away: int = Field(ge=0, description="Days until this transit (0=today)")
     aspect: NatalTransitAspect = Field(description="The aspect that will occur")
     description: str = Field(description="Human-readable description")
+    status: TransitStatus = Field(description="Current status of this transit")
+    orb_today: float = Field(description="Orb in degrees today")
+    orb_exact_date: Optional[str] = Field(default=None, description="Date when aspect becomes exact (closest orb)")
+    priority: TransitPriority = Field(description="Priority level based on planet speed")
+    transit_house: int = Field(ge=1, le=12, description="Solar house where transit is occurring")
+    natal_house: int = Field(ge=1, le=12, description="House of natal planet being aspected")
 
 
 def get_upcoming_transits(
@@ -1453,62 +2512,115 @@ def get_upcoming_transits(
     days_ahead: int = 7
 ) -> list[UpcomingTransit]:
     """
-    Calculate major transits coming in the next N days.
+    Calculate significant transits over the next N days, showing active and upcoming.
 
-    Critical for the "look_ahead_preview" field and creating daily engagement.
+    Returns transits with status indicators:
+    - ACTIVE: Already within orb today, ongoing
+    - ENTERING: New aspect coming into orb (wasn't active yesterday)
+    - EXACT: Becoming exact (within 0.2° orb)
+    - LEAVING: Moving out of orb (separating, orb > 1.5°)
 
     Args:
         natal_chart: Natal chart dict from compute_birth_chart()
-        start_date: Starting date for look-ahead (YYYY-MM-DD)
+        start_date: Starting date (YYYY-MM-DD) - typically today
         days_ahead: Number of days to look ahead (default 7)
 
     Returns:
-        List of UpcomingTransit objects (max 3 most significant)
+        List of all UpcomingTransit objects found in the period
 
     Example:
         >>> natal, _ = compute_birth_chart("1985-05-15")
-        >>> upcoming = get_upcoming_transits(natal, "2025-10-17", days_ahead=5)
-        >>> for transit in upcoming:
-        ...     print(f"In {transit.days_away} days: {transit.description}")
+        >>> transits = get_upcoming_transits(natal, "2025-10-17", days_ahead=7)
+        >>> for t in transits:
+        ...     print(f"Day {t.days_away}: {t.description} ({t.status.value})")
     """
     from datetime import datetime, timedelta
 
-    upcoming = []
     base_date = datetime.strptime(start_date, "%Y-%m-%d")
 
-    for day_offset in range(1, days_ahead + 1):
-        future_date = base_date + timedelta(days=day_offset)
-        future_date_str = future_date.strftime("%Y-%m-%d")
+    # Get yesterday's aspects to determine what's new vs ongoing
+    yesterday_date = base_date - timedelta(days=1)
+    yesterday_chart, _ = compute_birth_chart(
+        yesterday_date.strftime("%Y-%m-%d"),
+        birth_time="12:00"
+    )
+    yesterday_aspects = find_natal_transit_aspects(natal_chart, yesterday_chart, orb=2.0)
+    yesterday_keys = {
+        (a.transit_planet, a.aspect_type, a.natal_planet)
+        for a in yesterday_aspects
+    }
 
-        # Calculate future transit chart
-        future_chart, _ = compute_birth_chart(
-            future_date_str,
-            birth_time="12:00"  # Approximate
-        )
+    all_transits = []
+    seen_keys = set()
 
-        # Check for significant events (use tighter orb for "upcoming")
-        aspects = find_natal_transit_aspects(natal_chart, future_chart, orb=1.0)
+    # Scan all days from today through days_ahead
+    for day_offset in range(0, days_ahead + 1):
+        check_date = base_date + timedelta(days=day_offset)
+        check_date_str = check_date.strftime("%Y-%m-%d")
 
-        if aspects:
-            # Take the most significant aspect
-            aspect = aspects[0]
+        check_chart, _ = compute_birth_chart(check_date_str, birth_time="12:00")
+        aspects = find_natal_transit_aspects(natal_chart, check_chart, orb=2.0)
+
+        for aspect in aspects:
+            transit_key = (aspect.transit_planet, aspect.aspect_type, aspect.natal_planet, day_offset)
+
+            # Skip duplicates within same day
+            if transit_key in seen_keys:
+                continue
+            seen_keys.add(transit_key)
+
             description = (
                 f"{aspect.transit_planet.value.title()} "
                 f"{aspect.aspect_type.value} your natal "
                 f"{aspect.natal_planet.value.title()}"
             )
 
-            upcoming.append(
+            # Determine status
+            aspect_key = (aspect.transit_planet, aspect.aspect_type, aspect.natal_planet)
+
+            if aspect.orb <= 0.2:
+                status = TransitStatus.EXACT
+            elif day_offset == 0 and aspect_key not in yesterday_keys:
+                status = TransitStatus.ENTERING
+            elif day_offset > 0 and aspect_key not in yesterday_keys:
+                status = TransitStatus.ENTERING
+            elif aspect.orb > 1.5 and not aspect.applying:
+                status = TransitStatus.LEAVING
+            else:
+                status = TransitStatus.ACTIVE
+
+            # Determine priority based on transiting planet speed
+            outer_planets = {Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO}
+            medium_planets = {Planet.JUPITER, Planet.MARS}
+
+            if aspect.transit_planet in outer_planets:
+                priority = TransitPriority.HIGH
+            elif aspect.transit_planet in medium_planets:
+                priority = TransitPriority.MEDIUM
+            else:
+                priority = TransitPriority.LOW
+
+            # Calculate transit house (where the transiting planet is)
+            sun_sign = ZodiacSign(natal_chart["planets"][0]["sign"])
+            transit_house = calculate_solar_house(sun_sign, aspect.transit_sign)
+
+            all_transits.append(
                 UpcomingTransit(
-                    date=future_date_str,
+                    date=check_date_str,
                     days_away=day_offset,
                     aspect=aspect,
-                    description=description
+                    description=description,
+                    status=status,
+                    orb_today=aspect.orb,
+                    orb_exact_date=check_date_str if aspect.orb <= 0.2 else None,
+                    priority=priority,
+                    transit_house=transit_house.value,
+                    natal_house=aspect.natal_house
                 )
             )
 
-    # Return top 3 upcoming events
-    return upcoming[:3]
+    # Return all transits found
+    return all_transits
 
 
 # =============================================================================

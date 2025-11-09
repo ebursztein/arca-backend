@@ -8,8 +8,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime, timedelta
 from astro import compute_birth_chart
-from astrometers.meters import get_meters
-from astrometers.summary import daily_meters_summary
+from functions.astrometers.meters_v1 import get_meters
+from astrometers.summary import daily_meters_summary, meter_groups_summary
+from astrometers.meter_groups import build_all_meter_groups
 
 
 def test_daily_summary():
@@ -37,22 +38,38 @@ def test_daily_summary():
     transit_today, _ = compute_birth_chart(birth_date=today.strftime("%Y-%m-%d"))
     meters_today = get_meters(natal_chart, transit_today, today)
 
+    # Generate meter groups
+    print("Building meter groups...")
+    meter_groups = build_all_meter_groups(
+        meters_today,
+        llm_interpretations=None,  # No LLM interpretations yet
+        yesterday_all_meters_reading=meters_yesterday
+    )
+
     # Generate summary table
     print("\n" + "="*80)
     print("DAILY METER SUMMARY - MARKDOWN TABLE OUTPUT")
     print("="*80 + "\n")
 
+    # Show meter groups summary first
+    groups_summary = meter_groups_summary(meter_groups)
+    print(groups_summary)
+
+    # Then show individual meters summary
     summary = daily_meters_summary(meters_today, meters_yesterday)
     print(summary)
 
     # Show token estimate
-    token_estimate = len(summary.split())
+    combined_summary = groups_summary + summary
+    token_estimate = len(combined_summary.split())
     print(f"\n{'='*80}")
     print(f"SUMMARY STATISTICS")
     print(f"{'='*80}")
-    print(f"Total characters: {len(summary)}")
+    print(f"Total characters: {len(combined_summary)}")
     print(f"Estimated tokens: ~{token_estimate} tokens")
-    print(f"Lines: {len(summary.splitlines())}")
+    print(f"Lines: {len(combined_summary.splitlines())}")
+    print(f"\nMeter groups: {len(groups_summary)} chars, ~{len(groups_summary.split())} tokens")
+    print(f"Individual meters: {len(summary)} chars, ~{len(summary.split())} tokens")
     print(f"\nCompare to full meter dump: ~3000+ tokens")
     print(f"Token reduction: ~{((3000 - token_estimate) / 3000 * 100):.0f}%")
 

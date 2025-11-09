@@ -1,11 +1,11 @@
 """
-Two-prompt LLM integration for Arca Backend V1
+LLM integration for Arca Backend V1
 
-Implements split architecture:
-- Prompt 1 (daily_horoscope): Fast core analysis (<2s)
-- Prompt 2 (detailed_horoscope): Deep life domain predictions (~5s)
-
-With context caching for cost optimization.
+Generates personalized daily horoscopes using:
+- Gemini 2.5 Flash for fast, high-quality predictions
+- Template-based prompt system with personalization
+- PostHog integration for LLM observability
+- Astrometers quantitative analysis
 """
 
 import os
@@ -28,27 +28,347 @@ TEMPERATURE = 0.7
 from astro import (
     ZodiacSign,
     SunSignProfile,
-    EnhancedTransitSummary,
     describe_chart_emphasis,
-    lunar_house_interpretation,
-    format_primary_aspect_details,
     get_upcoming_transits,
     compute_birth_chart
 )
 from models import (
     DailyHoroscope,
-    DetailedHoroscope,
-    HoroscopeDetails,
     MemoryCollection,
     UserProfile,
-    ActionableAdvice
+    ActionableAdvice,
+    MeterForIOS,
+    MeterGroupForIOS,
+    AstrometersForIOS,
+    MeterAspect,
+    AstrologicalFoundation
 )
-from astrometers import get_meters, group_meters_by_domain, daily_meters_summary, get_meter_list
+from astrometers import get_meters, daily_meters_summary, get_meter_list
+from astrometers.meter_groups import build_all_meter_groups, get_group_state_label
+from astrometers.summary import meter_groups_summary
+from astrometers.core import AspectContribution
+from moon import get_moon_transit_detail, format_moon_summary_for_llm
+import json
 
 
 # Initialize Jinja2 environment
 TEMPLATE_DIR = Path(__file__).parent / "templates" / "horoscope"
 jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+
+
+# =============================================================================
+# Helper Functions for iOS Astrometers Conversion
+# =============================================================================
+
+METER_NAMES = [
+    "mental_clarity", "focus", "communication",
+    "love", "inner_stability", "sensitivity",
+    "vitality", "drive", "wellness",
+    "purpose", "connection", "intuition", "creativity",
+    "opportunities", "career", "growth", "social_life"
+]
+
+METER_GROUP_MAPPING = {
+    "mind": ["mental_clarity", "focus", "communication"],
+    "emotions": ["love", "inner_stability", "sensitivity"],
+    "body": ["vitality", "drive", "wellness"],
+    "spirit": ["purpose", "connection", "intuition", "creativity"],
+    "growth": ["opportunities", "career", "growth", "social_life"]
+}
+
+
+def load_meter_descriptions() -> dict[str, dict]:
+    """Load overview, detailed, and astrological_foundation from meter JSON files."""
+    descriptions = {}
+    base_path = Path(__file__).parent / "astrometers" / "labels"
+
+    for meter_name in METER_NAMES:
+        json_path = base_path / f"{meter_name}.json"
+        try:
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+                descriptions[meter_name] = {
+                    "overview": data["description"]["overview"],
+                    "detailed": data["description"]["detailed"],
+                    "astrological_foundation": data["astrological_foundation"]
+                }
+        except Exception as e:
+            print(f"Warning: Could not load {meter_name}.json: {e}")
+            descriptions[meter_name] = {
+                "overview": f"{meter_name.replace('_', ' ').title()}",
+                "detailed": "Meter description unavailable",
+                "astrological_foundation": {}
+            }
+
+    return descriptions
+
+
+def load_group_descriptions() -> dict[str, dict]:
+    """Load overview and detailed descriptions from group JSON files."""
+    descriptions = {}
+    base_path = Path(__file__).parent / "astrometers" / "labels" / "groups"
+
+    for group_name in ["mind", "emotions", "body", "spirit", "growth"]:
+        json_path = base_path / f"{group_name}.json"
+        try:
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+                descriptions[group_name] = {
+                    "overview": data["description"]["overview"],
+                    "detailed": data["description"]["detailed"]
+                }
+        except Exception as e:
+            print(f"Warning: Could not load {group_name}.json: {e}")
+            descriptions[group_name] = {
+                "overview": f"{group_name.title()}",
+                "detailed": "Group description unavailable"
+            }
+
+    return descriptions
+
+
+def convert_aspect_contribution_to_meter_aspect(
+    aspect: AspectContribution
+) -> MeterAspect:
+    """
+    Convert AspectContribution to MeterAspect with full explainability data.
+
+    All data now comes directly from the AspectContribution object (no guessing!).
+
+    Args:
+        aspect: AspectContribution from astrometers core (with explainability fields)
+
+    Returns:
+        MeterAspect with all fields populated from real data
+    """
+    # Calculate orb percentage (orb / max_orb * 100)
+    orb_percentage = (aspect.orb_deviation / aspect.max_orb * 100) if aspect.max_orb > 0 else 0.0
+
+    # Calculate phase (applying vs separating)
+    phase = "exact"
+    days_to_exact = None
+
+    if aspect.today_deviation is not None and aspect.tomorrow_deviation is not None:
+        if abs(aspect.tomorrow_deviation) < abs(aspect.today_deviation):
+            phase = "applying"
+            # Rough estimate: if orb changes by 1° per day, days = orb
+            daily_change = abs(aspect.today_deviation - aspect.tomorrow_deviation)
+            if daily_change > 0:
+                days_to_exact = abs(aspect.today_deviation) / daily_change
+        else:
+            phase = "separating"
+            # Already past exact
+            days_to_exact = -1 * (abs(aspect.today_deviation) / (abs(aspect.tomorrow_deviation - aspect.today_deviation)))
+
+    # Exact aspect (orb < 0.5°)
+    if aspect.orb_deviation < 0.5:
+        phase = "exact"
+        days_to_exact = 0.0
+
+    return MeterAspect(
+        label=aspect.label,
+        natal_planet=aspect.natal_planet.value,
+        transit_planet=aspect.transit_planet.value,
+        aspect_type=aspect.aspect_type.value,
+        orb=aspect.orb_deviation,
+        orb_percentage=orb_percentage,
+        phase=phase,
+        days_to_exact=days_to_exact,
+        contribution=aspect.dti_contribution,
+        quality_factor=aspect.quality_factor,
+        natal_planet_house=aspect.natal_planet_house,
+        natal_planet_sign=aspect.natal_planet_sign.value,
+        houses_involved=[aspect.natal_planet_house],  # Could expand if transit house available
+        natal_aspect_echo=None  # Would need natal chart aspect analysis
+    )
+
+
+def build_astrometers_for_ios(
+    all_meters_reading,
+    meter_interpretations: dict[str, str],
+    group_interpretations: dict[str, str]
+) -> AstrometersForIOS:
+    """
+    Convert AllMetersReading to clean iOS-optimized structure.
+
+    Args:
+        all_meters_reading: Complete AllMetersReading object
+        meter_interpretations: Dict of meter_name -> LLM interpretation
+        group_interpretations: Dict of group_name -> LLM interpretation
+
+    Returns:
+        AstrometersForIOS with complete explainability data
+    """
+    # Load descriptions once
+    meter_descriptions = load_meter_descriptions()
+    group_descriptions = load_group_descriptions()
+
+    # Build groups
+    groups = []
+    all_meters_list = []
+
+    for group_name in ["mind", "emotions", "body", "spirit", "growth"]:
+        meter_names = METER_GROUP_MAPPING[group_name]
+
+        # Build MeterForIOS for each meter in group
+        meters_for_ios = []
+        for meter_name in meter_names:
+            meter_reading = getattr(all_meters_reading, meter_name)
+            meter_desc = meter_descriptions.get(meter_name, {})
+
+            # Convert top aspects using real data from AspectContribution
+            top_aspects = [
+                convert_aspect_contribution_to_meter_aspect(asp)
+                for asp in meter_reading.top_aspects[:5]
+            ]
+
+            # Build astrological foundation from JSON
+            foundation_data = meter_desc.get("astrological_foundation", {})
+            astrological_foundation = AstrologicalFoundation(
+                natal_planets_tracked=foundation_data.get("natal_planets_tracked", []),
+                transit_planets_tracked=foundation_data.get("transit_planets_tracked", []),
+                key_houses={
+                    str(k): v for k, v in foundation_data.get("key_houses", {}).items()
+                },
+                primary_planets=foundation_data.get("primary_planets", {}),
+                secondary_planets=foundation_data.get("secondary_planets")
+            )
+
+            # Extract trend data
+            trend_delta = None
+            trend_direction = None
+            trend_change_rate = None
+            if meter_reading.trend:
+                trend_delta = meter_reading.trend.unified_score.delta
+                trend_direction = meter_reading.trend.unified_score.direction
+                trend_change_rate = meter_reading.trend.unified_score.change_rate
+
+            meter_for_ios = MeterForIOS(
+                meter_name=meter_name,
+                display_name=meter_reading.meter_name.replace('_', ' ').title(),
+                group=group_name,
+                unified_score=meter_reading.unified_score,
+                intensity=meter_reading.intensity,
+                harmony=meter_reading.harmony,
+                unified_quality=meter_reading.unified_quality.value,
+                state_label=meter_reading.state_label,
+                interpretation=meter_interpretations.get(meter_name, ""),
+                trend_delta=trend_delta,
+                trend_direction=trend_direction,
+                trend_change_rate=trend_change_rate,
+                overview=meter_desc.get("overview", ""),
+                detailed=meter_desc.get("detailed", ""),
+                astrological_foundation=astrological_foundation,
+                top_aspects=top_aspects
+            )
+            meters_for_ios.append(meter_for_ios)
+            all_meters_list.append(meter_for_ios)
+
+        # Calculate group aggregates
+        avg_unified = sum(m.unified_score for m in meters_for_ios) / len(meters_for_ios)
+        avg_intensity = sum(m.intensity for m in meters_for_ios) / len(meters_for_ios)
+        avg_harmony = sum(m.harmony for m in meters_for_ios) / len(meters_for_ios)
+
+        # Determine group quality (same logic as meter quality)
+        if avg_intensity < 25:
+            quality = "quiet"
+        elif avg_harmony >= 70:
+            quality = "harmonious"
+        elif avg_harmony < 40:
+            quality = "challenging"
+        else:
+            quality = "mixed"
+
+        # Get group state label from JSON (empowering energy-focused labels)
+        state_label = get_group_state_label(group_name, avg_intensity, avg_harmony)
+
+        # Extract group trend (calculate from member meter trends)
+        group_trend_delta = None
+        group_trend_direction = None
+        group_trend_change_rate = None
+        if all(m.trend_delta is not None for m in meters_for_ios):
+            group_trend_delta = sum(m.trend_delta for m in meters_for_ios) / len(meters_for_ios)
+            # Determine direction based on delta
+            if group_trend_delta > 5:
+                group_trend_direction = "improving"
+            elif group_trend_delta < -5:
+                group_trend_direction = "worsening"
+            else:
+                group_trend_direction = "stable"
+
+        group_desc = group_descriptions.get(group_name, {})
+
+        group_for_ios = MeterGroupForIOS(
+            group_name=group_name,
+            display_name=group_name.title(),
+            unified_score=avg_unified,
+            intensity=avg_intensity,
+            harmony=avg_harmony,
+            state_label=state_label,
+            quality=quality,
+            interpretation=group_interpretations.get(group_name, ""),
+            meters=meters_for_ios,
+            trend_delta=group_trend_delta,
+            trend_direction=group_trend_direction,
+            trend_change_rate=group_trend_change_rate,
+            overview=group_desc.get("overview", ""),
+            detailed=group_desc.get("detailed", "")
+        )
+        groups.append(group_for_ios)
+
+    # Calculate top meters
+    sorted_by_intensity = sorted(all_meters_list, key=lambda m: m.intensity, reverse=True)
+    sorted_by_harmony_low = sorted(all_meters_list, key=lambda m: m.harmony)
+    sorted_by_unified_high = sorted(all_meters_list, key=lambda m: m.unified_score, reverse=True)
+
+    top_active_meters = [m.meter_name for m in sorted_by_intensity[:5]]
+    top_challenging_meters = [m.meter_name for m in sorted_by_harmony_low[:5] if m.harmony < 50]
+    top_flowing_meters = [m.meter_name for m in sorted_by_unified_high[:5] if m.unified_score > 70]
+
+    # Load overall state label from JSON
+    overall_labels_path = Path(__file__).parent / "astrometers" / "labels" / "groups" / "overall.json"
+    with open(overall_labels_path, 'r') as f:
+        overall_labels = json.load(f)
+
+    # Calculate intensity and harmony for label lookup
+    intensity = all_meters_reading.overall_intensity.intensity
+    harmony = all_meters_reading.overall_harmony.harmony
+
+    # Determine intensity band
+    if intensity < 25:
+        intensity_band = "quiet"
+    elif intensity < 50:
+        intensity_band = "mild"
+    elif intensity < 75:
+        intensity_band = "moderate"
+    elif intensity < 90:
+        intensity_band = "high"
+    else:
+        intensity_band = "extreme"
+
+    # Determine quality band
+    if harmony >= 60:
+        quality_band = "harmonious"
+    elif harmony < 40:
+        quality_band = "challenging"
+    else:
+        quality_band = "mixed"
+
+    # Look up label
+    overall_state = overall_labels["experience_labels"]["combined"][intensity_band][quality_band]
+
+    return AstrometersForIOS(
+        date=all_meters_reading.date.isoformat(),
+        overall_unified_score=all_meters_reading.overall_intensity.unified_score,
+        overall_intensity=all_meters_reading.overall_intensity,
+        overall_harmony=all_meters_reading.overall_harmony,
+        overall_quality=all_meters_reading.overall_unified_quality.value,
+        overall_state=overall_state,
+        groups=groups,
+        top_active_meters=top_active_meters,
+        top_challenging_meters=top_challenging_meters,
+        top_flowing_meters=top_flowing_meters
+    )
 
 
 def capture_llm_generation(
@@ -71,7 +391,7 @@ def capture_llm_generation(
     Args:
         posthog_api_key: PostHog project API key
         distinct_id: User's distinct ID
-        model: Model name (e.g., "gemini-2.5-flash")
+        model: Model name (e.g., "gemini-2.5-flash-lite")
         provider: Provider name (e.g., "gemini")
         prompt: prompt messages
         output: model output
@@ -188,11 +508,11 @@ def generate_daily_horoscope(
     date: str,
     user_profile: UserProfile,
     sun_sign_profile: SunSignProfile,
-    transit_data: EnhancedTransitSummary,
+    transit_summary: dict,
     memory: MemoryCollection,
     api_key: Optional[str] = None,
     posthog_api_key: Optional[str] = None,
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-2.5-flash-lite",
 ) -> DailyHoroscope:
     """
     Generate daily horoscope (Prompt 1) - core transit analysis (async internal).
@@ -201,10 +521,10 @@ def generate_daily_horoscope(
         date: ISO date string (YYYY-MM-DD)
         user_profile: Complete user profile
         sun_sign_profile: Complete sun sign profile
-        transit_data: Enhanced transit summary with natal-transit aspects
+        transit_summary: Enhanced transit summary dict from format_transit_summary_for_ui()
         memory: User's memory collection
         api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
-        model_name: Model to use (default: gemini-2.5-flash)
+        model_name: Model to use (default: gemini-2.5-flash-lite)
 
     Returns:
         DailyHoroscope: Validated horoscope with 8 core fields
@@ -259,23 +579,75 @@ def generate_daily_horoscope(
     # Generate smart summary (replaces verbose dump in template)
     meters_summary = daily_meters_summary(astrometers, astrometers_yesterday)
 
+    # Build meter groups with empty interpretations (LLM will fill these)
+    meter_groups = build_all_meter_groups(
+        astrometers,
+        llm_interpretations=None,  # Will be filled from LLM response
+        yesterday_all_meters_reading=astrometers_yesterday
+    )
+    groups_summary = meter_groups_summary(meter_groups)
+
+    # Get comprehensive moon transit detail
+    moon_detail = get_moon_transit_detail(
+        natal_chart=user_profile.natal_chart,
+        transit_chart=transit_chart,
+        current_datetime=f"{date}T12:00:00"
+    )
+    moon_summary_for_llm = format_moon_summary_for_llm(moon_detail)
+
     # Prepare helper data
     chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
-    lunar_moon_interpretation = lunar_house_interpretation(transit_data.moon_house)
 
-    # Get moon sign profile for emotional description
-    from astro import get_sun_sign_profile
-    moon_sign_profile = get_sun_sign_profile(transit_data.moon_sign)
-    moon_sign_keywords = ", ".join(moon_sign_profile.keywords[:3]).lower() if moon_sign_profile else "emotional coloring"
+    # Get upcoming transits for look_ahead_preview
+    upcoming_transits_raw = get_upcoming_transits(user_profile.natal_chart, date, days_ahead=7)
+
+    # Group transits by day and add day names
+    from datetime import datetime as dt, timedelta
+    from collections import defaultdict
+    transits_by_day = defaultdict(list)
+    date_obj = dt.fromisoformat(date)
+
+    for transit in upcoming_transits_raw:
+        transits_by_day[transit.days_away].append(transit)
+
+    # Format for template with day names
+    upcoming_transits_formatted = []
+    for day_offset in sorted(transits_by_day.keys()):
+        target_date = date_obj + timedelta(days=day_offset)
+        day_name = target_date.strftime('%A')
+        date_str = target_date.strftime('%Y-%m-%d')
+
+        if day_offset == 0:
+            header = f"TODAY ({day_name}):"
+        else:
+            header = f"Day +{day_offset} - {day_name} ({date_str}):"
+
+        upcoming_transits_formatted.append({
+            'header': header,
+            'transits': transits_by_day[day_offset]
+        })
 
     # Render static template with meter metadata for reference
     # fixme cache static
     cache_content = None
 
     static_template = jinja_env.get_template("daily_static.j2")
-    meter_list = get_meter_list(astrometers)
+
+    # Load detailed meter descriptions from JSON files
+    meter_descriptions = load_meter_descriptions()
+
+    # Build enriched meter list with detailed descriptions
+    meter_list_enriched = []
+    for meter in get_meter_list(astrometers):
+        desc = meter_descriptions.get(meter.meter_name, {})
+        meter_list_enriched.append({
+            'meter_name': meter.meter_name,
+            'display_name': meter.meter_name.replace('_', ' ').title(),
+            'detailed': desc.get('detailed', f"Measures {meter.meter_name.replace('_', ' ')}")
+        })
+
     static_prompt = static_template.render(
-        meter_list=meter_list  # Pass all meters as list for iteration
+        meter_list=meter_list_enriched  # Pass enriched meter data with detailed descriptions
     )
 
     # astrometers summary is now passed separately
@@ -284,11 +656,12 @@ def generate_daily_horoscope(
         date=date,
         user_profile=user_profile,
         sun_sign_profile=sun_sign_profile,
-        transits=transit_data,
-        lunar_moon_interpretation=lunar_moon_interpretation,
-        moon_sign_emotional_description=moon_sign_keywords,
-        meters_summary=meters_summary,  # NEW: Smart filtered summary
-        astrometers=astrometers  # Keep for overall stats in template
+        transit_summary=transit_summary,  # NEW: Enhanced transit summary dict
+        meters_summary=meters_summary,  # Smart filtered summary
+        groups_summary=groups_summary,  # NEW: Meter groups aggregated data
+        upcoming_transits=upcoming_transits_formatted,  # NEW: For look_ahead_preview (grouped by day)
+        astrometers=astrometers,  # Keep for overall stats in template
+        moon_summary=moon_summary_for_llm  # NEW: Comprehensive moon transit detail
     )
 
     # this is user specific can't be cached
@@ -313,8 +686,50 @@ def generate_daily_horoscope(
         lunar_cycle_update: str
         daily_theme_headline: str
         daily_overview: str
-        summary: str
         actionable_advice: ActionableAdvice
+
+        # Meter group interpretations (2-3 sentences each, 150-300 chars)
+        mind_interpretation: str
+        emotions_interpretation: str
+        body_interpretation: str
+        spirit_interpretation: str
+        growth_interpretation: str
+
+        # Individual meter interpretations (1-2 sentences each, 80-150 chars)
+        # Mind group (3 meters)
+        mental_clarity_interpretation: str
+        focus_interpretation: str
+        communication_interpretation: str
+
+        # Emotions group (3 meters)
+        love_interpretation: str
+        inner_stability_interpretation: str
+        sensitivity_interpretation: str
+
+        # Body group (3 meters)
+        vitality_interpretation: str
+        drive_interpretation: str
+        wellness_interpretation: str
+
+        # Spirit group (4 meters)
+        purpose_interpretation: str
+        connection_interpretation: str
+        intuition_interpretation: str
+        creativity_interpretation: str
+
+        # Growth group (4 meters)
+        opportunities_interpretation: str
+        career_interpretation: str
+        growth_meter_interpretation: str  # Renamed to avoid conflict with group
+        social_life_interpretation: str
+
+        # Look ahead (merged from detailed horoscope)
+        look_ahead_preview: str
+
+        # Phase 1 Extensions
+        energy_rhythm: str
+        relationship_weather: str
+        collective_energy: str
 
     # Generate
     try:
@@ -343,7 +758,7 @@ def generate_daily_horoscope(
         print(f"[generate_daily_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
 
         # Manually capture to PostHog using HTTP API
-        output = f"Headline: {parsed.daily_theme_headline}\nOverview: {parsed.daily_overview}\nSummary: {parsed.summary}"
+        output = f"Headline: {parsed.daily_theme_headline}\nOverview: {parsed.daily_overview}"
         capture_llm_generation(
             posthog_api_key=posthog_api_key,
             distinct_id=user_profile.user_id,
@@ -359,16 +774,60 @@ def generate_daily_horoscope(
             thinking_budget=THINKING_BUDGET
         )
 
+        # Extract group interpretations (5 fields)
+        group_interpretations = {
+            "mind": parsed.mind_interpretation,
+            "emotions": parsed.emotions_interpretation,
+            "body": parsed.body_interpretation,
+            "spirit": parsed.spirit_interpretation,
+            "growth": parsed.growth_interpretation,
+        }
+
+        # Extract individual meter interpretations (17 fields)
+        meter_interpretations = {
+            "mental_clarity": parsed.mental_clarity_interpretation,
+            "focus": parsed.focus_interpretation,
+            "communication": parsed.communication_interpretation,
+            "love": parsed.love_interpretation,
+            "inner_stability": parsed.inner_stability_interpretation,
+            "sensitivity": parsed.sensitivity_interpretation,
+            "vitality": parsed.vitality_interpretation,
+            "drive": parsed.drive_interpretation,
+            "wellness": parsed.wellness_interpretation,
+            "purpose": parsed.purpose_interpretation,
+            "connection": parsed.connection_interpretation,
+            "intuition": parsed.intuition_interpretation,
+            "creativity": parsed.creativity_interpretation,
+            "opportunities": parsed.opportunities_interpretation,
+            "career": parsed.career_interpretation,
+            "growth": parsed.growth_meter_interpretation,
+            "social_life": parsed.social_life_interpretation,
+        }
+
+        # Build iOS-optimized astrometers structure
+        astrometers_for_ios = build_astrometers_for_ios(
+            astrometers,
+            meter_interpretations=meter_interpretations,
+            group_interpretations=group_interpretations
+        )
+
+        # Populate moon_detail.interpretation with LLM output
+        moon_detail.interpretation = parsed.lunar_cycle_update
+
         return DailyHoroscope(
             date=date,
             sun_sign=user_profile.sun_sign,
             technical_analysis=parsed.technical_analysis,
-            lunar_cycle_update=parsed.lunar_cycle_update,
             daily_theme_headline=parsed.daily_theme_headline,
             daily_overview=parsed.daily_overview,
-            summary=parsed.summary,
             actionable_advice=parsed.actionable_advice,
-            astrometers=astrometers,
+            astrometers=astrometers_for_ios,  # iOS-optimized with full explainability
+            transit_summary=transit_summary,
+            moon_detail=moon_detail,
+            look_ahead_preview=parsed.look_ahead_preview,
+            energy_rhythm=parsed.energy_rhythm,
+            relationship_weather=parsed.relationship_weather,
+            collective_energy=parsed.collective_energy,
             model_used=model_name,
             generation_time_ms=generation_time_ms,
             usage=usage
@@ -376,206 +835,3 @@ def generate_daily_horoscope(
 
     except Exception as e:
         raise RuntimeError(f"Error generating daily horoscope: {e}")
-
-
-def generate_detailed_horoscope(
-    date: str,
-    user_profile: UserProfile,
-    sun_sign_profile: SunSignProfile,
-    transit_data: EnhancedTransitSummary,
-    memory: MemoryCollection,
-    daily_horoscope: DailyHoroscope,
-    api_key: Optional[str] = None,
-    posthog_api_key: Optional[str] = None,
-    model_name: str = "gemini-2.5-flash",
-) -> DetailedHoroscope:
-    """
-    Generate detailed horoscope (Prompt 2) - life domain predictions.
-
-    Args:
-        date: ISO date string (YYYY-MM-DD)
-        user_profile: Complete user profile
-        sun_sign_profile: Complete sun sign profile
-        transit_data: Enhanced transit summary
-        memory: User's memory collection
-        daily_horoscope: Result from Prompt 1 (foundation)
-        api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
-        model_name: Model to use (default: gemini-2.5-flash)
-
-    Returns:
-        DetailedHoroscope: Validated horoscope with 8 life categories
-    """
-    THINKING_BUDGET = 0
-    MAX_TOKENS = 8192
-
-    if not api_key:
-        api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY not provided")
-
-    if not posthog_api_key:
-        posthog_api_key = os.environ.get("POSTHOG_API_KEY")
-    if not posthog_api_key:
-        print("WARNING: POSTHOG_API_KEY not provided in generate_detailed_horoscope")
-        raise ValueError("POSTHOG_API_KEY not provided")
-
-    # Initialize Gemini client (direct, no SDK wrapper)
-    client = genai.Client(api_key=api_key)
-
-    # Get astrometers from daily horoscope and group by domain
-    astrometers = daily_horoscope.astrometers
-    domain_meters = group_meters_by_domain(astrometers)
-
-    # Get upcoming transits
-    upcoming_transits = get_upcoming_transits(user_profile.natal_chart, date, days_ahead=5)
-
-    # Prepare helper data
-    chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
-
-    # Render templates
-    static_template = jinja_env.get_template("detailed_static.j2")
-    static_prompt = static_template.render()
-
-    # FIXME caching here - use generic function
-    cached_content = None
-
-    # FIXME: part of the dynamic prompt that can be cached as it is related to all user
-    # must be moved to static prompt
-    dynamic_template = jinja_env.get_template("detailed_dynamic.j2")
-    dynamic_prompt = dynamic_template.render(
-        date=date,
-        daily_horoscope=daily_horoscope,
-        group_meters=domain_meters,
-        upcoming_transits=upcoming_transits
-    )
-
-    # fixme use _render_personalization_prompt as it is used cross function
-    personalization_template = jinja_env.get_template("personalization.j2")
-    personalization_prompt = personalization_template.render(
-        user=user_profile,
-        sign=sun_sign_profile,
-        memory=memory,
-        chart_emphasis=chart_emphasis
-    )
-
-    # Compose final prompt
-    prompt = f"{static_prompt}\n\n{dynamic_prompt}\n\n{personalization_prompt}"
-
-    # console.print(f"\n[yellow]Generated Detailed Horoscope Prompt:[/yellow]")
-    # console.print(prompt)
-    # console.print("\n[yellow]End of Prompt[/yellow]\n")
-    # Define response schema
-    class DetailedHoroscopeResponse(BaseModel):
-        general_transits_overview: list[str]
-        look_ahead_preview: str
-        details: HoroscopeDetails
-
-    # Generate
-    try:
-        start_time = datetime.now()
-
-        config = types.GenerateContentConfig(
-            temperature=TEMPERATURE,
-            max_output_tokens=MAX_TOKENS,
-            response_mime_type="application/json",
-            response_schema=DetailedHoroscopeResponse,
-            thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
-            cached_content=cached_content if cached_content else None,
-        )
-
-        # Direct Gemini call (no SDK wrapper)
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt,
-            config=config
-        )
-
-        generation_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
-        usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
-        parsed: DetailedHoroscopeResponse = response.parsed
-
-        print(f"[generate_detailed_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
-
-        # Manually capture to PostHog using HTTP API
-        response_output = parsed.look_ahead_preview
-        capture_llm_generation(
-            posthog_api_key=posthog_api_key,
-            distinct_id=user_profile.user_id,
-            model=model_name,
-            provider="gemini",
-            prompt=prompt,
-            response=response_output,
-            usage=response.usage_metadata,
-            latency=generation_time_ms / 1000.0,
-            generation_type="detailed_horoscope",
-            temperature=TEMPERATURE,
-            max_tokens=MAX_TOKENS,
-            thinking_budget=THINKING_BUDGET
-        )
-        return DetailedHoroscope(
-            general_transits_overview=parsed.general_transits_overview,
-            look_ahead_preview=parsed.look_ahead_preview,
-            details=parsed.details,
-            model_used=model_name,
-            generation_time_ms=generation_time_ms,
-            usage=usage
-        )
-
-    except Exception as e:
-        raise RuntimeError(f"Error generating detailed horoscope: {e}")
-
-
-# Cache management functions
-# FIXME use a single cache function
-# def create_daily_static_cache(
-#     date: str,
-#     model_name: str = "gemini-2.5-flash",
-#     api_key: Optional[str] = None,
-#     ttl: str = "86400s"  # 24 hours
-# ) -> Optional[str]:
-#     """
-#     Create cache for daily horoscope static instructions (Prompt 1).
-
-#     Args:
-#         date: ISO date string (YYYY-MM-DD) - used as cache key prefix
-#         model_name: Model version (must include version suffix)
-#         api_key: Gemini API key
-#         ttl: Time to live (default: 24 hours)
-
-#     Returns:
-#         Cache name for use in generate_daily_horoscope
-#     """
-#     return None  # Disable caching for now
-#     if not api_key:
-#         api_key = os.environ.get("GEMINI_API_KEY")
-#     if not api_key:
-#         raise ValueError("GEMINI_API_KEY environment variable not found")
-
-#     client = genai.Client(api_key=api_key)
-
-#     # Check if cache already exists for this date
-#     cache_display_name = f"arca-daily-static-{date}-{model_name}"
-#     for existing_cache in client.caches.list():
-#         if existing_cache.display_name == cache_display_name:
-#             return existing_cache.name
-
-#     # Render daily static template
-#     daily_static = jinja_env.get_template("daily_static.j2").render()
-
-#     # Check token count (min 1024 for caching, use 2000 token safety margin)
-#     # Rough estimate: 1 token ~= 3-4 chars
-#     if len(daily_static) < 6000:  # ~2000 tokens minimum for safety
-#         return None  # Skip caching if too small
-
-#     cache = client.caches.create(
-#         model=f"models/{model_name}",
-#         config=types.CreateCachedContentConfig(
-#             display_name=cache_display_name,
-#             system_instruction=daily_static,
-#             ttl=ttl
-#         )
-#     )
-
-#     return cache.name
-
-

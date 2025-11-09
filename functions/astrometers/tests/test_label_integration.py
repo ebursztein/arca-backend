@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from datetime import datetime
 from astro import Planet, AspectType
-from astrometers.meters import (
+from functions.astrometers.meters_v1 import (
     load_meter_labels,
     get_state_label_from_json,
     get_advice_category_from_json,

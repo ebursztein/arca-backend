@@ -12,7 +12,10 @@ from astro import (
     compute_birth_chart,
     get_sun_sign,
     get_sun_sign_profile,
-    summarize_transits_with_natal,
+    format_transit_summary_for_ui,
+    synthesize_critical_degrees,
+    synthesize_transit_themes,
+    get_house_context,
     ChartType,
 )
 from models import (
@@ -22,7 +25,7 @@ from models import (
     create_empty_memory,
     update_memory_from_journal,
 )
-from llm import generate_daily_horoscope, generate_detailed_horoscope
+from llm import generate_daily_horoscope
 
 # Define secrets
 GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
@@ -217,11 +220,6 @@ def user_transit(req: https_fn.CallableRequest) -> dict:
             code=https_fn.FunctionsErrorCode.INTERNAL,
             message=f"Error generating user transit: {str(e)}"
         )
-
-
-# =============================================================================
-# Sprint 3: User Profile & Memory Operations
-# =============================================================================
 
 @https_fn.on_call()
 def create_user_profile(req: https_fn.CallableRequest) -> dict:
@@ -512,11 +510,6 @@ def add_journal_entry(req: https_fn.CallableRequest) -> dict:
             message=f"Error creating journal entry: {str(e)}"
         )
 
-
-# =============================================================================
-# Sprint 3.5: Sun Sign Utilities
-# =============================================================================
-
 @https_fn.on_call()
 def get_sun_sign_from_date(req: https_fn.CallableRequest) -> dict:
     """
@@ -578,21 +571,19 @@ def get_sun_sign_from_date(req: https_fn.CallableRequest) -> dict:
             message=f"Error calculating sun sign: {str(e)}"
         )
 
-
-# =============================================================================
-# Sprint 4: Horoscope Generation
-# =============================================================================
-
-@https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
+# The function run out of memory at 256MB, so increased to 512MB
+@https_fn.on_call(memory=512, secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
 def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
     """
-    Generate daily horoscope (Prompt 1) - fast, shown immediately.
+    Generate daily horoscope - complete reading with meter groups.
 
-    This is the two-prompt architecture's first prompt:
-    - Includes: technical_analysis, key_active_transit, area_of_life_activated,
-                daily_theme_headline, daily_overview, summary, actionable_advice,
-                lunar_cycle_update
-    - Returns in <2 seconds
+    Includes:
+    - Core fields: technical_analysis, daily_theme_headline, daily_overview,
+                   summary, actionable_advice, lunar_cycle_update
+    - Meter groups: 5 life areas (mind, emotions, body, spirit, growth) with
+                    aggregated scores and LLM interpretations
+    - Look ahead: Upcoming transits preview (next 7 days)
+    - Astrometers: Complete 28-meter reading
 
     Expected request data:
     {
@@ -640,13 +631,8 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
                 message=f"Sun sign profile not found: {sun_sign.value}"
             )
 
-        # Get memory collection
-        memory_doc = db.collection("memory").document(user_id).get()
-        if memory_doc.exists:
-            memory_data = memory_doc.to_dict()
-            memory = MemoryCollection(**memory_data)
-        else:
-            memory = create_empty_memory(user_id)
+        # Memory collection: Using empty memory for all users
+        memory = create_empty_memory(user_id)
 
         # Compute transit chart for today
         transit_chart, _ = compute_birth_chart(
@@ -658,14 +644,14 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         natal_chart = user_profile.natal_chart
 
         # Generate enhanced transit data with natal-transit aspects
-        transit_data = summarize_transits_with_natal(natal_chart, transit_chart)
+        transit_summary = format_transit_summary_for_ui(natal_chart, transit_chart, max_aspects=5)
 
         # Generate daily horoscope (Prompt 1)
         daily_horoscope = generate_daily_horoscope(
             date=date,
             user_profile=user_profile,
             sun_sign_profile=sun_sign_profile,
-            transit_data=transit_data,
+            transit_summary=transit_summary,
             memory=memory,
             api_key=GEMINI_API_KEY.value,
             posthog_api_key=POSTHOG_API_KEY.value,
@@ -690,117 +676,6 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
             message=f"Error generating daily horoscope: {str(e)}"
-        )
-
-
-@https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
-def get_detailed_horoscope(req: https_fn.CallableRequest) -> dict:
-    """
-    Generate detailed horoscope (Prompt 2) - loaded in background.
-
-    This is the two-prompt architecture's second prompt:
-    - Includes: general_transits_overview, look_ahead_preview, details (8 categories)
-    - Takes ~5 seconds
-    - Uses daily_horoscope output as context
-
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id",
-        "date": "2025-10-18",  // Optional, defaults to today
-        "daily_horoscope": { ... },  // Output from get_daily_horoscope()
-    }
-
-    Returns:
-        DetailedHoroscope model as dictionary
-    """
-    try:
-        data = req.data
-        user_id = data.get("user_id")
-        daily_horoscope_data = data.get("daily_horoscope")
-
-        if not user_id or not daily_horoscope_data:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, daily_horoscope"
-            )
-
-        # Optional parameters
-        date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
-        model_name = DEFAULT_MODEL
-
-        # Get user profile from Firestore
-        db = firestore.client(database_id=DATABASE_ID)
-        user_doc = db.collection("users").document(user_id).get()
-
-        if not user_doc.exists:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.NOT_FOUND,
-                message=f"User profile not found: {user_id}"
-            )
-
-        user_data = user_doc.to_dict()
-        user_profile = UserProfile(**user_data)
-
-        # Get sun sign profile
-        sun_sign = get_sun_sign(user_profile.birth_date)
-        sun_sign_profile = get_sun_sign_profile(sun_sign)
-
-        if not sun_sign_profile:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INTERNAL,
-                message=f"Sun sign profile not found: {sun_sign.value}"
-            )
-
-        # Get memory collection
-        memory_doc = db.collection("memory").document(user_id).get()
-        if memory_doc.exists:
-            memory_data = memory_doc.to_dict()
-            memory = MemoryCollection(**memory_data)
-        else:
-            memory = create_empty_memory(user_id)
-
-        # Compute transit chart for today
-        transit_chart, _ = compute_birth_chart(
-            birth_date=date,
-            birth_time="12:00"  # Use noon for transits
-        )
-
-        # Get natal chart from user profile
-        natal_chart = user_profile.natal_chart
-
-        # Generate enhanced transit data with natal-transit aspects
-        transit_data = summarize_transits_with_natal(natal_chart, transit_chart)
-
-        # Parse daily horoscope from request
-        from models import DailyHoroscope
-        daily_horoscope = DailyHoroscope(**daily_horoscope_data)
-
-        # Generate detailed horoscope (Prompt 2)
-        detailed_horoscope = generate_detailed_horoscope(
-            date=date,
-            user_profile=user_profile,
-            sun_sign_profile=sun_sign_profile,
-            transit_data=transit_data,
-            memory=memory,
-            daily_horoscope=daily_horoscope,
-            api_key=GEMINI_API_KEY.value,
-            posthog_api_key=POSTHOG_API_KEY.value,
-            model_name=model_name
-        )
-
-        return detailed_horoscope.model_dump()
-
-    except https_fn.HttpsError:
-        raise
-    except ValueError as e:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            message=f"Invalid parameter values: {str(e)}"
-        )
-    except Exception as e:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.INTERNAL,
-            message=f"Error generating detailed horoscope: {str(e)}"
         )
 
 

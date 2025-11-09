@@ -1,0 +1,333 @@
+{
+  "priority_transits": [
+    {
+      "description": "\u26a1\u26a1\u26a1 Saturn square natal Uranus",
+      "intensity_indicator": "\u26a1\u26a1\u26a1",
+      "intensity_label": "PEAK INFLUENCE",
+      "priority_score": 99,
+      "transit_planet": "saturn",
+      "natal_planet": "uranus",
+      "aspect_type": "square",
+      "orb": 0.2,
+      "orb_label": "exact",
+      "applying": true,
+      "applying_label": "applying",
+      "speed_timing": {
+        "speed_enum": "average",
+        "speed_description": "Normal Saturn motion (0.03\u00b0/day)",
+        "timing_impact": "Standard influence duration",
+        "peak_window": "Active through Jan 06",
+        "best_use": "Normal pacing, balanced approach"
+      },
+      "critical_degrees": [],
+      "meaning": "tension requiring action",
+      "natal_house": 4,
+      "transit_house": 2,
+      "house_context": "Resources/Values (2nd) influences home/family (4th)"
+    },
+    {
+      "description": "\u26a1\u26a1\u26a1 Sun square natal Moon",
+      "intensity_indicator": "\u26a1\u26a1\u26a1",
+      "intensity_label": "PEAK INFLUENCE",
+      "priority_score": 93,
+      "transit_planet": "sun",
+      "natal_planet": "moon",
+      "aspect_type": "square",
+      "orb": 0.25,
+      "orb_label": "exact",
+      "applying": false,
+      "applying_label": "separating",
+      "speed_timing": {
+        "speed_enum": "average",
+        "speed_description": "Normal Sun motion (1.00\u00b0/day)",
+        "timing_impact": "Standard influence duration",
+        "peak_window": "Active through Nov 10",
+        "best_use": "Normal pacing, balanced approach"
+      },
+      "critical_degrees": [],
+      "meaning": "tension requiring action",
+      "natal_house": 12,
+      "transit_house": 9,
+      "house_context": "Beliefs/Expansion (9th) influences spirituality/subconscious (12th)"
+    },
+    {
+      "description": "\u26a1 Mercury trine natal North Node",
+      "intensity_indicator": "\u26a1",
+      "intensity_label": null,
+      "priority_score": 55,
+      "transit_planet": "mercury",
+      "natal_planet": "north node",
+      "aspect_type": "trine",
+      "orb": 1.68,
+      "orb_label": "moderate",
+      "applying": true,
+      "applying_label": "applying",
+      "speed_timing": {
+        "speed_enum": "stationary",
+        "speed_description": "Stationary Mercury (near station) - pivotal turning point",
+        "timing_impact": "Maximum impact - station point marks major turning point",
+        "peak_window": "Critical 2-week window around station",
+        "best_use": "Life-changing decisions, major commitments, transformation work"
+      },
+      "critical_degrees": [],
+      "meaning": "natural flow",
+      "natal_house": 7,
+      "transit_house": 10,
+      "house_context": "Career/Public Life (10th) influences relationships/partnerships (7th)"
+    },
+    {
+      "description": "\u00b7 Venus trine natal Mercury",
+      "intensity_indicator": "\u00b7",
+      "intensity_label": null,
+      "priority_score": 45,
+      "transit_planet": "venus",
+      "natal_planet": "mercury",
+      "aspect_type": "trine",
+      "orb": 2.5,
+      "orb_label": "moderate",
+      "applying": true,
+      "applying_label": "applying",
+      "speed_timing": {
+        "speed_enum": "average",
+        "speed_description": "Normal Venus motion (1.25\u00b0/day)",
+        "timing_impact": "Standard influence duration",
+        "peak_window": "Active through Nov 10",
+        "best_use": "Normal pacing, balanced approach"
+      },
+      "critical_degrees": [],
+      "meaning": "natural flow",
+      "natal_house": 10,
+      "transit_house": 9,
+      "house_context": "Beliefs/Expansion (9th) influences career/public life (10th)"
+    },
+    {
+      "description": "\u00b7 Moon opposition natal Uranus",
+      "intensity_indicator": "\u00b7",
+      "intensity_label": null,
+      "priority_score": 43,
+      "transit_planet": "moon",
+      "natal_planet": "uranus",
+      "aspect_type": "opposition",
+      "orb": 2.79,
+      "orb_label": "moderate",
+      "applying": true,
+      "applying_label": "applying",
+      "speed_timing": {
+        "speed_enum": "average",
+        "speed_description": "Normal Moon motion (14.80\u00b0/day)",
+        "timing_impact": "Standard influence duration",
+        "peak_window": "Active through Nov 08",
+        "best_use": "Normal pacing, balanced approach"
+      },
+      "critical_degrees": [],
+      "meaning": "awareness through contrast",
+      "natal_house": 4,
+      "transit_house": 5,
+      "house_context": "Creativity/Pleasure (5th) influences home/family (4th)"
+    }
+  ],
+  "critical_degree_alerts": [
+    {
+      "planet": "Uranus",
+      "type": "anaretic",
+      "degree": 29.98,
+      "sign": "Taurus",
+      "description": "Crisis/completion point - urgent taurus energy culminating"
+    },
+    {
+      "planet": "Neptune",
+      "type": "anaretic",
+      "degree": 29.65,
+      "sign": "Pisces",
+      "description": "Crisis/completion point - urgent pisces energy culminating"
+    }
+  ],
+  "critical_degree_synthesis": {
+    "intensity": "Significant Timing",
+    "major_timing_alert": true,
+    "anaretic_planets": [
+      {
+        "planet": "Uranus",
+        "sign": "Taurus",
+        "degree": 30.0,
+        "description": "Crisis/completion point - urgent taurus energy culminating"
+      },
+      {
+        "planet": "Neptune",
+        "sign": "Pisces",
+        "degree": 29.6,
+        "description": "Crisis/completion point - urgent pisces energy culminating"
+      }
+    ],
+    "avatar_planets": [],
+    "cardinal_critical": [
+      {
+        "planet": "Jupiter",
+        "sign": "Cancer",
+        "degree": 25.1,
+        "description": "Cardinal point (26\u00b0) - completion/preparation"
+      }
+    ],
+    "total_count": 3,
+    "interpretation": "3 planets at critical points (2 anaretic, 0 avatar, 1 cardinal). Important threshold week - heightened sensitivity to timing."
+  },
+  "theme_synthesis": {
+    "theme_synthesis": "Saturn-Uranus tension = Transformation through confronting limitations and pushing boundaries",
+    "convergence_patterns": [
+      {
+        "focal_planet": "Natal Uranus",
+        "focal_meaning": "uranus",
+        "aspecting_planets": [
+          "Saturn",
+          "Moon"
+        ],
+        "aspect_details": [
+          {
+            "planet": "saturn",
+            "quality": "challenging"
+          },
+          {
+            "planet": "moon",
+            "quality": "challenging"
+          }
+        ],
+        "count": 2,
+        "interpretation": "Multiple forces converging on your uranus - heightened focus on this life area",
+        "detailed_interpretation": "Natal Uranus (uranus) receiving:\n  \u2022 Transit Saturn square (challenging)\n  \u2022 Transit Moon square (challenging)"
+      }
+    ],
+    "harmony_tension_balance": "mixed",
+    "balance_description": "Balance of ease and challenge - navigate complexity skillfully",
+    "total_harmonious": 2,
+    "total_challenging": 3
+  },
+  "retrograde_planets": [
+    {
+      "planet": "Saturn",
+      "sign": "Pisces",
+      "degree": 25.5,
+      "speed_status": "average",
+      "speed_description": "Normal Saturn motion (0.03\u00b0/day)",
+      "natal_connection": null,
+      "natal_aspects": null
+    },
+    {
+      "planet": "Uranus",
+      "sign": "Taurus",
+      "degree": 30.0,
+      "speed_status": "fast",
+      "speed_description": "Fast Uranus (0.04\u00b0/day) - brief window",
+      "natal_connection": null,
+      "natal_aspects": null
+    },
+    {
+      "planet": "Neptune",
+      "sign": "Pisces",
+      "degree": 29.6,
+      "speed_status": "fast",
+      "speed_description": "Fast Neptune (0.02\u00b0/day) - brief window",
+      "natal_connection": null,
+      "natal_aspects": null
+    },
+    {
+      "planet": "North Node",
+      "sign": "Pisces",
+      "degree": 15.0,
+      "speed_status": "stationary",
+      "speed_description": "Stationary North Node (near station) - pivotal turning point",
+      "natal_connection": null,
+      "natal_aspects": null
+    }
+  ],
+  "planet_positions": [
+    {
+      "planet": "Sun",
+      "sign": "Scorpio",
+      "degree": 16.3,
+      "house": 9,
+      "retrograde": false,
+      "speed_status": "average"
+    },
+    {
+      "planet": "Moon",
+      "sign": "Gemini",
+      "degree": 28.1,
+      "house": 5,
+      "retrograde": false,
+      "speed_status": "average"
+    },
+    {
+      "planet": "Mercury",
+      "sign": "Sagittarius",
+      "degree": 6.7,
+      "house": 10,
+      "retrograde": false,
+      "speed_status": "stationary"
+    },
+    {
+      "planet": "Venus",
+      "sign": "Scorpio",
+      "degree": 1.9,
+      "house": 9,
+      "retrograde": false,
+      "speed_status": "average"
+    },
+    {
+      "planet": "Mars",
+      "sign": "Sagittarius",
+      "degree": 2.8,
+      "house": 10,
+      "retrograde": false,
+      "speed_status": "fast"
+    },
+    {
+      "planet": "Jupiter",
+      "sign": "Cancer",
+      "degree": 25.1,
+      "house": 6,
+      "retrograde": false,
+      "speed_status": "stationary"
+    },
+    {
+      "planet": "Saturn",
+      "sign": "Pisces",
+      "degree": 25.5,
+      "house": 2,
+      "retrograde": true,
+      "speed_status": "average"
+    },
+    {
+      "planet": "Uranus",
+      "sign": "Taurus",
+      "degree": 30.0,
+      "house": 4,
+      "retrograde": true,
+      "speed_status": "fast"
+    },
+    {
+      "planet": "Neptune",
+      "sign": "Pisces",
+      "degree": 29.6,
+      "house": 2,
+      "retrograde": true,
+      "speed_status": "fast"
+    },
+    {
+      "planet": "Pluto",
+      "sign": "Aquarius",
+      "degree": 1.5,
+      "house": 12,
+      "retrograde": false,
+      "speed_status": "fast"
+    },
+    {
+      "planet": "North Node",
+      "sign": "Pisces",
+      "degree": 15.0,
+      "house": 1,
+      "retrograde": true,
+      "speed_status": "stationary"
+    }
+  ],
+  "total_aspects_found": 5
+}

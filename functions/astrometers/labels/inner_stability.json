@@ -1,0 +1,95 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "inner_stability",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "inner_stability",
+    "display_name": "Inner Stability",
+    "group": "emotions",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Inner Stability represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.",
+    "detailed": "This meter tracks Moon and Saturn transits to your natal Moon and 4th house (emotional foundation). The Moon shows your day-to-day emotional state and reactivity. Saturn brings structure and grounding but can create heaviness. When these planets form supportive aspects, you feel emotionally centered and resilient. Challenging aspects create emotional volatility, insecurity, or a shaky sense of self. Your 4th house (home, roots, foundation) is key to understanding where you find emotional safety.",
+    "keywords": ["resilience", "emotions", "pressure", "boundaries", "coping"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "moon": "Emotional state, reactivity, and sense of security",
+      "saturn": "Emotional structure, boundaries, and long-term stability"
+    },
+    "secondary_planets": {
+      "jupiter": "Can expand emotional resilience when supportive",
+      "neptune": "Can dissolve emotional boundaries for better or worse"
+    },
+    "natal_planets_tracked": ["moon"],
+    "transit_planets_tracked": ["moon", "saturn", "jupiter", "neptune", "uranus"],
+    "key_houses": {
+      "4": "Emotional foundation, home, roots, sense of safety"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum emotional impact - intense grounding or destabilization",
+      "opposition": "High impact - tension between inner and outer needs",
+      "trine": "High flow - emotional ease and natural resilience",
+      "square": "Moderate friction - emotional challenges requiring coping",
+      "sextile": "Moderate flow - opportunities to build stability"
+    },
+    "planetary_dignities": {
+      "moon": {
+        "strong_in": ["cancer", "taurus", "pisces"],
+        "weak_in": ["capricorn", "scorpio"]
+      },
+      "saturn": {
+        "strong_in": ["capricorn", "aquarius", "libra"],
+        "weak_in": ["cancer", "aries"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Finding ground",
+        "mixed": "Quietly uncertain",
+        "harmonious": "Peaceful calm"
+      },
+      "mild": {
+        "challenging": "Steadying self",
+        "mixed": "Gentle waves",
+        "harmonious": "Mostly steady"
+      },
+      "moderate": {
+        "challenging": "Building resilience",
+        "mixed": "Holding steady",
+        "harmonious": "Solid ground"
+      },
+      "high": {
+        "challenging": "Building Strength",
+        "mixed": "Intense waves",
+        "harmonious": "Strong center"
+      },
+      "extreme": {
+        "challenging": "Finding strength",
+        "mixed": "Deep turbulence",
+        "harmonious": "Rock solid"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Validating and supportive - acknowledge real emotional difficulty without minimizing",
+    "focus_when_high": "Emphasize trusting their resilience, handling challenges well, emotional strength",
+    "focus_when_low": "Emphasize self-care, asking for support, not judging emotional fragility",
+    "focus_when_challenging": "Validate that it's genuinely hard right now - offer concrete coping strategies",
+    "avoid": ["Toxic positivity", "Telling them to just be strong", "Dismissing emotional overwhelm as weakness"],
+    "phrasing_examples": {
+      "high_harmonious": "You're emotionally grounded today - your inner stability is strong and you can handle whatever comes your way with confidence.",
+      "moderate_mixed": "You're holding it together but it takes effort - be patient with yourself and take breaks when emotions feel overwhelming.",
+      "low_challenging": "Your emotional foundation feels shaky today - this is real, not weakness. Prioritize self-care and lean on support when you need it."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["moon"],
+    "natal_houses": [4],
+    "retrograde_modifiers": {}
+  }
+}

@@ -9,8 +9,11 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING, Any
 from enum import Enum
 
-# Import new hierarchy system
-from astrometers.hierarchy import MeterGroup, SuperGroup
+# Import new 17-meter hierarchy system
+from astrometers.hierarchy import MeterGroupV2
+
+if TYPE_CHECKING:
+    from astrometers.meters import MeterReading
 
 
 # =============================================================================
@@ -77,7 +80,7 @@ class CategoryViewed(BaseModel):
     """
     A category/group that was viewed in a reading.
     """
-    category: MeterGroup = Field(description="Meter group name")
+    category: MeterGroupV2 = Field(description="Meter group name")
     text: str = Field(description="Full text that was viewed")
 
 
@@ -103,8 +106,8 @@ class MemoryCollection(BaseModel):
     """
     user_id: str = Field(description="Firebase Auth user ID")
 
-    # Category engagement tracking (using MeterGroup hierarchy)
-    categories: dict[MeterGroup, CategoryEngagement] = Field(
+    # Category engagement tracking (using MeterGroupV2 hierarchy)
+    categories: dict[MeterGroupV2, CategoryEngagement] = Field(
         description="Engagement counts per meter group"
     )
 
@@ -203,24 +206,6 @@ class JournalEntry(BaseModel):
 # Horoscope Models
 # =============================================================================
 
-class HoroscopeDetails(BaseModel):
-    """
-    Detailed horoscope predictions for 9 life groups (new hierarchy system).
-
-    Based on 3-tier taxonomy: SuperGroup → MeterGroup → Meters
-    This model uses Level 2 (MeterGroup) for organizing predictions.
-    """
-    overview: str = Field(description="Overall synthesis (~50-70 words)")
-    mind: str = Field(description="Mental clarity, decisions, communication (~100-130 words)")
-    emotions: str = Field(description="Feelings, relationships, resilience (~100-130 words)")
-    body: str = Field(description="Physical energy, action, conflict (~100-130 words)")
-    career: str = Field(description="Professional ambition and opportunities (~100-130 words)")
-    evolution: str = Field(description="Growth, challenges, transformation (~100-130 words)")
-    elements: str = Field(description="Elemental balance and temperament (~100-130 words)")
-    spiritual: str = Field(description="Intuition, karmic lessons (~100-130 words)")
-    collective: str = Field(description="Social consciousness and collective currents (~100-130 words)")
-
-
 class ActionableAdvice(BaseModel):
     """
     Structured actionable guidance with do/don't/reflect format.
@@ -228,6 +213,67 @@ class ActionableAdvice(BaseModel):
     do: str = Field(description="Specific action aligned with transit energy")
     dont: str = Field(description="Specific thing to avoid (shadow/pitfall)")
     reflect_on: str = Field(description="Powerful journaling question for self-awareness")
+
+
+# =============================================================================
+# METER GROUPS MODELS (5-Group Simplified Structure)
+# =============================================================================
+
+class MeterGroupScores(BaseModel):
+    """
+    Aggregated scores for a meter group (arithmetic mean of member meters).
+    """
+    unified_score: float = Field(description="Primary display value (0-100), average of member meters")
+    harmony: float = Field(description="Supportive vs challenging quality (0-100)")
+    intensity: float = Field(description="Activity level (0-100)")
+
+
+class MeterGroupState(BaseModel):
+    """
+    Quality assessment for a meter group based on harmony and intensity.
+    """
+    label: str = Field(description="Human-readable state: Excellent, Supportive, Challenging, etc.")
+    quality: str = Field(description="Enum value: excellent, supportive, harmonious, peaceful, mixed, quiet, challenging, intense")
+
+
+class TrendMetric(BaseModel):
+    """
+    Trend data for a single metric comparing today vs yesterday.
+    """
+    previous: float = Field(description="Yesterday's value")
+    delta: float = Field(description="Change amount (can be negative)")
+    direction: str = Field(description="improving, worsening, stable, increasing, or decreasing")
+    change_rate: str = Field(description="rapid, moderate, or slow")
+
+
+class MeterGroupTrend(BaseModel):
+    """
+    Trend data for a meter group (aggregated from member meters).
+    Optional - only present if yesterday data available.
+    """
+    unified_score: TrendMetric
+    harmony: TrendMetric
+    intensity: TrendMetric
+
+
+class MeterGroupData(BaseModel):
+    """
+    Complete data for a single meter group.
+
+    Combines:
+    - Aggregated scores (from member meters)
+    - State/quality label (from JSON labels)
+    - LLM-generated interpretation (2-3 sentences)
+    - Trend data (if available)
+    - Member meter IDs (for drill-down)
+    """
+    group_name: str = Field(description="Group ID: mind, emotions, body, spirit, growth")
+    display_name: str = Field(description="Display name: Mind, Emotions, Body, Spirit, Growth")
+    scores: MeterGroupScores
+    state: MeterGroupState
+    interpretation: str = Field(description="LLM-generated 2-3 sentence interpretation (150-300 chars)")
+    trend: Optional[MeterGroupTrend] = Field(None, description="Trend data if yesterday available")
+    meter_ids: list[str] = Field(description="IDs of meters in this group")
 
 
 class DailyHoroscope(BaseModel):
@@ -242,95 +288,55 @@ class DailyHoroscope(BaseModel):
 
     # Ordered for optimal user experience
     technical_analysis: str = Field(description="Astronomical explanation (3-5 sentences)")
-    lunar_cycle_update: str = Field(
-        description="Ritual and wellness guidance based on Moon phase (3-4 sentences)"
-    )
     daily_theme_headline: str = Field(
         description="Shareable wisdom sentence (max 15 words, actionable)"
     )
     daily_overview: str = Field(
-        description="Emotional/energetic tone for the day (2-3 sentences)"
-    )
-    summary: str = Field(description="Main screen summary (2-3 sentences)")
-    actionable_advice: ActionableAdvice = Field(
-        description="Structured DO/DON'T/REFLECT guidance"
-    )
-
-    # Astrometers data (quantitative foundation)
-    astrometers: Any = Field(
-        description="Complete astrometers reading with 28 meters (23 individual + 5 super-group), key aspects, and interpretations (AllMetersReading object)"
-    )
-
-    # Metadata
-    model_used: Optional[str] = Field(None, description="LLM model used")
-    generation_time_ms: Optional[int] = Field(None, description="Generation time in milliseconds")
-    usage: dict = Field(default_factory=dict, description="Raw usage metadata from LLM API")
-
-
-class DetailedHoroscope(BaseModel):
-    """
-    Detailed horoscope - Prompt 2 fields loaded in background (~5s).
-
-    Provides collective context and detailed life category predictions.
-    """
-    general_transits_overview: list[str] = Field(
-        description="Brief notes on collective transits (2-4 bullet points)"
-    )
-    look_ahead_preview: str = Field(
-        description="Upcoming significant transits (2-3 sentences)"
-    )
-    details: HoroscopeDetails = Field(description="Detailed predictions for 8 categories")
-
-    # Metadata
-    model_used: Optional[str] = Field(None, description="LLM model used")
-    generation_time_ms: Optional[int] = Field(None, description="Generation time in milliseconds")
-    usage: dict = Field(default_factory=dict, description="Raw usage metadata from LLM API")
-
-
-class CompleteHoroscope(BaseModel):
-    """
-    Complete horoscope combining daily + detailed responses.
-
-    NOT stored in Firestore - generated on-demand per user.
-    Convenience model for full horoscope data.
-    """
-    date: str = Field(description="ISO date of horoscope")
-    sun_sign: str = Field(description="Sun sign (e.g., 'taurus')")
-
-    # Core fields (shown on main screen)
-    technical_analysis: str = Field(description="Astronomical explanation (3-5 sentences)")
-    summary: str = Field(description="Main screen summary (2-3 sentences)")
-
-    # Enhanced personalization fields
-    daily_theme_headline: str = Field(
-        description="Shareable wisdom sentence (max 15 words, profound and actionable)"
-    )
-    daily_overview: str = Field(
-        description="Emotional/energetic tone for the day (2-3 sentences)"
+        description="Opening overview combining emotional tone, key transits explanation, and sun sign connection (3-4 sentences, 60-80 words)"
     )
     actionable_advice: ActionableAdvice = Field(
         description="Structured DO/DON'T/REFLECT guidance"
     )
-    lunar_cycle_update: str = Field(
-        description="Ritual and wellness guidance based on Moon phase (3-4 sentences)"
+
+    # Astrometers data (iOS-optimized with full explainability)
+    astrometers: "AstrometersForIOS" = Field(
+        description="Complete astrometers: 17 meters nested in 5 groups with LLM interpretations, astrological foundations, and top aspects"
     )
-    general_transits_overview: list[str] = Field(
-        description="Brief notes on collective transits (2-4 bullet points)"
+
+    # Transit Summary (enhanced natal-transit analysis)
+    transit_summary: Optional[dict] = Field(
+        None,
+        description="Enhanced transit summary with priority transits, critical degrees, retrograde data, and theme synthesis from format_transit_summary_for_ui()"
     )
-    look_ahead_preview: str = Field(
+
+    # Moon Transit Detail (emotional climate & timing)
+    moon_detail: Optional[Any] = Field(
+        None,
+        description="Comprehensive moon transit detail: aspects to natal, void-of-course, dispositor, next events (MoonTransitDetail object from moon.py)"
+    )
+
+    # Look Ahead (merged from detailed horoscope)
+    look_ahead_preview: Optional[str] = Field(
+        None,
         description="Upcoming significant transits (2-3 sentences)"
     )
 
-    # Astrometers data (quantitative foundation)
-    astrometers: Any = Field(
-        description="Complete astrometers reading with 23 meters, key aspects, and interpretations (AllMetersReading object)"
+    # Phase 1 Extensions (leveraging existing astrometer data)
+    energy_rhythm: Optional[str] = Field(
+        None,
+        description="Energy pattern throughout day based on intensity curve and Moon movement (1-2 sentences)"
+    )
+    relationship_weather: Optional[str] = Field(
+        None,
+        description="Interpersonal dynamics (romantic, platonic, professional) from relationship meters (2-3 sentences)"
+    )
+    collective_energy: Optional[str] = Field(
+        None,
+        description="What everyone is feeling from outer planet context (1-2 sentences)"
     )
 
-    # Detailed predictions
-    details: HoroscopeDetails = Field(description="Detailed predictions for 8 categories")
-
-    # Metadata (optional)
-    model_used: Optional[str] = Field(None, description="LLM model used (e.g., 'gemini-2.0-flash-exp')")
+    # Metadata
+    model_used: Optional[str] = Field(None, description="LLM model used")
     generation_time_ms: Optional[int] = Field(None, description="Generation time in milliseconds")
     usage: dict = Field(default_factory=dict, description="Raw usage metadata from LLM API")
 
@@ -343,7 +349,7 @@ def create_empty_memory(user_id: str) -> MemoryCollection:
     """
     Create an empty memory collection for a new user.
 
-    Uses new 9-group hierarchy system (MeterGroup).
+    Uses new 17-meter / 5-category hierarchy system (MeterGroupV2).
 
     Args:
         user_id: Firebase Auth user ID
@@ -354,15 +360,11 @@ def create_empty_memory(user_id: str) -> MemoryCollection:
     return MemoryCollection(
         user_id=user_id,
         categories={
-            MeterGroup.OVERVIEW: CategoryEngagement(),
-            MeterGroup.MIND: CategoryEngagement(),
-            MeterGroup.EMOTIONS: CategoryEngagement(),
-            MeterGroup.BODY: CategoryEngagement(),
-            MeterGroup.CAREER: CategoryEngagement(),
-            MeterGroup.EVOLUTION: CategoryEngagement(),
-            MeterGroup.ELEMENTS: CategoryEngagement(),
-            MeterGroup.SPIRITUAL: CategoryEngagement(),
-            MeterGroup.COLLECTIVE: CategoryEngagement(),
+            MeterGroupV2.MIND: CategoryEngagement(),
+            MeterGroupV2.EMOTIONS: CategoryEngagement(),
+            MeterGroupV2.BODY: CategoryEngagement(),
+            MeterGroupV2.SPIRIT: CategoryEngagement(),
+            MeterGroupV2.GROWTH: CategoryEngagement(),
         },
         recent_readings=[],
         updated_at=datetime.now().isoformat()
@@ -410,3 +412,170 @@ def update_memory_from_journal(
     memory.updated_at = datetime.now().isoformat()
 
     return memory
+
+
+# =============================================================================
+# iOS-Optimized Astrometer Models (Clean, Explainable, Minimal)
+# =============================================================================
+
+class MeterAspect(BaseModel):
+    """
+    Single transit aspect contributing to this meter's score.
+
+    Provides complete explainability: what aspect is active, how strong it is,
+    when it will be exact, and how it contributes to the meter's score.
+    """
+    # Basic aspect info
+    label: str = Field(description="Human-readable: 'Transit Saturn square Natal Sun'")
+    natal_planet: str = Field(description="Natal planet name (e.g., 'sun', 'mars')")
+    transit_planet: str = Field(description="Transit planet name")
+    aspect_type: str = Field(description="Aspect type: conjunction, opposition, trine, square, sextile, quincunx")
+
+    # Strength indicators (critical for understanding impact)
+    orb: float = Field(description="Exact orb in degrees (e.g., 2.5°)")
+    orb_percentage: float = Field(ge=0, le=100, description="% of max orb - tighter = stronger (e.g., 31.25% if 2.5° out of 8° max)")
+    phase: str = Field(description="applying, exact, or separating")
+    days_to_exact: Optional[float] = Field(None, description="Days until exact (negative = past exact)")
+
+    # Scoring breakdown
+    contribution: float = Field(description="DTI contribution (W_i × P_i)")
+    quality_factor: float = Field(ge=-1, le=1, description="-1 (very challenging) to +1 (very harmonious)")
+
+    # Context (explains WHY this aspect matters for THIS meter)
+    natal_planet_house: int = Field(ge=1, le=12, description="House containing natal planet")
+    natal_planet_sign: str = Field(description="Sign of natal planet (for dignity assessment)")
+    houses_involved: list[int] = Field(description="Houses involved in this transit")
+    natal_aspect_echo: Optional[str] = Field(None, description="If echoes natal aspect: 'Echoes natal Mars-Saturn square'")
+
+
+class AstrologicalFoundation(BaseModel):
+    """
+    Explains what astrological factors drive this meter.
+
+    This is the 'why' behind the meter - what planets and houses are monitored,
+    and what each planet represents for this life area.
+    """
+    # What we're tracking
+    natal_planets_tracked: list[str] = Field(description="Natal planets monitored (e.g., ['sun', 'mars'])")
+    transit_planets_tracked: list[str] = Field(description="Transit planets that affect this (e.g., ['sun', 'mars', 'saturn', 'jupiter'])")
+    key_houses: dict[str, str] = Field(description="House numbers and their meanings for this meter (e.g., {'1': 'Physical body...', '5': 'Creative vitality...'})")
+
+    # Planetary meanings
+    primary_planets: dict[str, str] = Field(description="Primary planetary influences with explanations (e.g., {'sun': 'Core life force...', 'mars': 'Physical drive...'})")
+    secondary_planets: Optional[dict[str, str]] = Field(None, description="Secondary influences (e.g., {'saturn': 'Can temporarily deplete...'})")
+
+
+class MeterForIOS(BaseModel):
+    """
+    Simplified meter data for iOS client - only essential fields with full explainability.
+
+    Built from MeterReading but excludes internal fields like raw_scores.
+    Includes all data needed for user to understand:
+    - What this meter is (overview, detailed, foundation)
+    - What's happening today (scores, state_label, interpretation)
+    - Why it's happening (top_aspects with full context)
+    - How it's changing (trend)
+    """
+    # Identity
+    meter_name: str = Field(description="Internal meter ID (e.g., 'mental_clarity')")
+    display_name: str = Field(description="User-facing name (e.g., 'Mental Clarity')")
+    group: str = Field(description="Group ID: mind, emotions, body, spirit, growth")
+
+    # Scores (0-100, normalized via calibration)
+    unified_score: float = Field(ge=0, le=100, description="Primary display value (balanced view of intensity + harmony)")
+    intensity: float = Field(ge=0, le=100, description="Activity level - how much is happening")
+    harmony: float = Field(ge=0, le=100, description="Quality - supportive (high) vs challenging (low)")
+
+    # Labels (two different purposes!)
+    unified_quality: str = Field(description="Simple category: harmonious, challenging, mixed, quiet, peaceful")
+    state_label: str = Field(description="Rich contextual state from JSON: 'Peak Performance', 'Pushing Through', 'Sluggish', etc.")
+
+    # LLM-generated interpretation (1-2 sentences, 80-150 chars)
+    interpretation: str = Field(description="Personalized daily interpretation referencing today's transits")
+
+    # Trend (optional - only if yesterday data available)
+    trend_delta: Optional[float] = Field(None, description="Change in unified_score from yesterday")
+    trend_direction: Optional[str] = Field(None, description="improving, worsening, stable, increasing, decreasing")
+    trend_change_rate: Optional[str] = Field(None, description="rapid, moderate, slow, stable")
+
+    # Explainability - What is this meter? (static from JSON)
+    overview: str = Field(description="What this meter represents (1 sentence, user-facing)")
+    detailed: str = Field(description="How it's measured (2-3 sentences, explains calculation)")
+
+    # Explainability - What drives this meter? (static from JSON)
+    astrological_foundation: AstrologicalFoundation = Field(description="Planets, houses, and meanings")
+
+    # Explainability - What's affecting it TODAY? (dynamic, daily)
+    top_aspects: list[MeterAspect] = Field(description="Top 3-5 transit aspects driving today's score (sorted by contribution)")
+
+
+class MeterGroupForIOS(BaseModel):
+    """
+    Simplified meter group for iOS - aggregated data with nested meters.
+
+    Groups combine 3-4 related meters into life area categories.
+    Scores are arithmetic means of member meters.
+    """
+    # Identity
+    group_name: str = Field(description="Group ID: mind, emotions, body, spirit, growth")
+    display_name: str = Field(description="User-facing name: Mind, Emotions, Body, Spirit, Growth")
+
+    # Aggregated scores (arithmetic mean of member meters)
+    unified_score: float = Field(ge=0, le=100, description="Average unified score of member meters")
+    intensity: float = Field(ge=0, le=100, description="Average intensity of member meters")
+    harmony: float = Field(ge=0, le=100, description="Average harmony of member meters")
+
+    # State
+    state_label: str = Field(description="Aggregated state label from group JSON (contextual to group)")
+    quality: str = Field(description="Generic enum: excellent, supportive, harmonious, peaceful, mixed, quiet, challenging, intense")
+
+    # LLM interpretation (2-3 sentences, 150-300 chars)
+    interpretation: str = Field(description="Group-level interpretation from existing LLM flow")
+
+    # Member meters (simplified, nested for logical organization)
+    meters: list[MeterForIOS] = Field(description="Individual meters in this group (3-4 meters)")
+
+    # Trend (optional)
+    trend_delta: Optional[float] = Field(None, description="Change in group unified_score from yesterday")
+    trend_direction: Optional[str] = Field(None, description="improving, worsening, stable")
+    trend_change_rate: Optional[str] = Field(None, description="rapid, moderate, slow, stable")
+
+    # Group description (static from group JSON)
+    overview: str = Field(description="What this group represents")
+    detailed: str = Field(description="Which meters it combines + what it shows holistically")
+
+
+class AstrometersForIOS(BaseModel):
+    """
+    Complete astrometers data for iOS - clean, explainable, and minimal.
+
+    Replaces verbose AllMetersReading with iOS-optimized structure.
+    All 17 meters nested within 5 groups for logical organization.
+    """
+    date: str = Field(description="ISO date of reading")
+
+    # Overall stats (aggregated across all 17 meters)
+    overall_unified_score: float = Field(ge=0, le=100, description="Overall unified score across all meters")
+    overall_intensity: "MeterReading" = Field(description="Overall intensity meter with state_label")
+    overall_harmony: "MeterReading" = Field(description="Overall harmony meter with state_label")
+    overall_quality: str = Field(description="Overall quality: harmonious, challenging, mixed, quiet, peaceful")
+    overall_state: str = Field(description="Overall state label for the day (e.g., 'Quiet Reflection', 'Peak Energy', 'Under Pressure')")
+
+    # 5 meter groups with their member meters nested (17 total meters)
+    groups: list[MeterGroupForIOS] = Field(description="All 5 groups containing 17 total meters")
+
+    # Top insights (for quick scanning on main screen)
+    top_active_meters: list[str] = Field(description="Top 3-5 meter names by intensity (e.g., ['vitality', 'drive', 'communication'])")
+    top_challenging_meters: list[str] = Field(description="Top 3-5 meter names by low harmony (need attention)")
+    top_flowing_meters: list[str] = Field(description="Top 3-5 meter names by high unified_score (leverage these)")
+
+
+# =============================================================================
+# Rebuild forward references after all models are defined
+# =============================================================================
+
+# Import MeterReading now that we need it at runtime
+from astrometers.meters import MeterReading
+
+# Rebuild models that use forward references
+AstrometersForIOS.model_rebuild()

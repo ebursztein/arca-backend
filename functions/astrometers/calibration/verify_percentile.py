@@ -20,17 +20,25 @@ from astrometers.normalization import normalize_intensity, normalize_harmony
 def verify_percentile_normalization():
     """Verify that percentile-based normalization works correctly."""
 
-    # Load historical scores
-    scores_path = os.path.join(os.path.dirname(__file__), "historical_scores.parquet")
+    # Load historical scores - try v2 CSV first, then fall back to parquet
+    scores_path_v2 = os.path.join(os.path.dirname(__file__), "historical_scores_v2.csv")
+    scores_path_v1 = os.path.join(os.path.dirname(__file__), "historical_scores.parquet")
 
-    if not os.path.exists(scores_path):
-        print(f"ERROR: Historical scores not found at {scores_path}")
-        print("Please run calculate_historical.py first")
+    if os.path.exists(scores_path_v2):
+        print("Loading historical scores from v2 CSV...")
+        df = pd.read_csv(scores_path_v2)
+        print(f"Loaded {len(df):,} score records (v2 format)")
+    elif os.path.exists(scores_path_v1):
+        print("Loading historical scores from v1 parquet...")
+        df = pd.read_parquet(scores_path_v1)
+        print(f"Loaded {len(df):,} score records (v1 format)")
+    else:
+        print(f"ERROR: Historical scores not found at:")
+        print(f"  - {scores_path_v2} (v2)")
+        print(f"  - {scores_path_v1} (v1)")
+        print("Please run calculate_historical_v2.py first")
         return
 
-    print("Loading historical scores...")
-    df = pd.read_parquet(scores_path)
-    print(f"Loaded {len(df):,} score records")
     print()
 
     # Test DTI normalization

@@ -38,93 +38,56 @@ from .normalization import (
     get_harmony_label,
     get_meter_interpretation,
 )
+# Import new 17-meter system
 from .meters import (
     MeterReading,
     AllMetersReading,
     get_meters,
-    group_meters_by_domain,
-    calculate_overall_intensity_meter,
-    calculate_overall_harmony_meter,
-    calculate_mental_clarity_meter,
-    calculate_decision_quality_meter,
-    calculate_communication_flow_meter,
-    calculate_emotional_intensity_meter,
-    calculate_relationship_harmony_meter,
-    calculate_emotional_resilience_meter,
-    calculate_physical_energy_meter,
-    calculate_conflict_risk_meter,
-    calculate_motivation_drive_meter,
-    calculate_career_ambition_meter,
-    calculate_opportunity_window_meter,
-    calculate_challenge_intensity_meter,
-    calculate_transformation_pressure_meter,
-    calculate_element_distribution,
-    calculate_fire_energy_meter,
-    calculate_earth_energy_meter,
-    calculate_air_energy_meter,
-    calculate_water_energy_meter,
-    calculate_intuition_spirituality_meter,
-    calculate_innovation_breakthrough_meter,
-    calculate_karmic_lessons_meter,
-    calculate_social_collective_meter,
+    METER_CONFIGS,
 )
 from .summary import daily_meters_summary
 
 
 def get_meter_list(all_meters: AllMetersReading) -> list:
     """
-    Extract all 23 meters from AllMetersReading as a list.
+    Extract all 17 meters from AllMetersReading as a list.
 
-    Returns meters in consistent order (not alphabetical) matching the logical grouping:
-    - Overview (2): overall_intensity, overall_harmony
-    - Mind (3): mental_clarity, decision_quality, communication_flow
-    - Emotions (3): emotional_intensity, relationship_harmony, emotional_resilience
-    - Body (3): physical_energy, conflict_risk, motivation_drive
-    - Career (2): career_ambition, opportunity_window
-    - Evolution (3): challenge_intensity, transformation_pressure, innovation_breakthrough
-    - Elements (4): fire_energy, earth_energy, air_energy, water_energy
-    - Spiritual (2): intuition_spirituality, karmic_lessons
-    - Collective (1): social_collective
+    Returns meters in consistent order matching the 5-category grouping:
+    - Mind (3): mental_clarity, focus, communication
+    - Emotions (3): love, inner_stability, sensitivity
+    - Body (3): vitality, drive, wellness
+    - Spirit (4): purpose, connection, intuition, creativity
+    - Growth (4): opportunities, career, growth, social_life
 
     Args:
         all_meters: AllMetersReading object from get_meters()
 
     Returns:
-        List of 23 MeterReading objects
+        List of 17 MeterReading objects
     """
     return [
-        # Overview (2)
-        all_meters.overall_intensity,
-        all_meters.overall_harmony,
         # Mind (3)
         all_meters.mental_clarity,
-        all_meters.decision_quality,
-        all_meters.communication_flow,
+        all_meters.focus,
+        all_meters.communication,
         # Emotions (3)
-        all_meters.emotional_intensity,
-        all_meters.relationship_harmony,
-        all_meters.emotional_resilience,
+        all_meters.love,
+        all_meters.inner_stability,
+        all_meters.sensitivity,
         # Body (3)
-        all_meters.physical_energy,
-        all_meters.conflict_risk,
-        all_meters.motivation_drive,
-        # Career (2)
-        all_meters.career_ambition,
-        all_meters.opportunity_window,
-        # Evolution (3)
-        all_meters.challenge_intensity,
-        all_meters.transformation_pressure,
-        all_meters.innovation_breakthrough,
-        # Elements (4)
-        all_meters.fire_energy,
-        all_meters.earth_energy,
-        all_meters.air_energy,
-        all_meters.water_energy,
-        # Spiritual (2)
-        all_meters.intuition_spirituality,
-        all_meters.karmic_lessons,
-        # Collective (1)
-        all_meters.social_collective,
+        all_meters.vitality,
+        all_meters.drive,
+        all_meters.wellness,
+        # Spirit (4)
+        all_meters.purpose,
+        all_meters.connection,
+        all_meters.intuition,
+        all_meters.creativity,
+        # Growth (4)
+        all_meters.opportunities,
+        all_meters.career,
+        all_meters.growth,
+        all_meters.social_life,
     ]
 
 

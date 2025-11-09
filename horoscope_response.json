@@ -1,0 +1,2853 @@
+{
+  "result": {
+    "actionable_advice": {
+      "do": "Between 10 AM and 12 PM, take 15 minutes to do some light stretching or a brisk walk to harness the peak physical energy.",
+      "dont": "Don't ignore the intense emotional waves that Uranus square your Moon is bringing up; instead of resisting them, acknowledge them as signals for necessary change.",
+      "reflect_on": "How can you channel this urgent need for change into a healthy, sustainable practice for your physical and emotional well-being?"
+    },
+    "astrometers": {
+      "date": "2025-11-08T00:00:00",
+      "groups": [
+        {
+          "detailed": "This group combines three mental functions: Mental Clarity (how clearly you think), Focus (your ability to concentrate), and Communication (how easily you express ideas). Together they show whether your mind is sharp and flowing or foggy and scattered. High scores mean you're thinking clearly, staying focused, and communicating effectively. Low scores suggest mental fog, distractions, or difficulty finding words.",
+          "display_name": "Mind",
+          "group_name": "mind",
+          "harmony": 68.55684197568276,
+          "intensity": 18.01063603013342,
+          "interpretation": "Your mind is quietly reflecting today, with mental clarity and focus at rest. While communication is subdued, there's a subtle opportunity for deeper understanding through Pluto's gentle nudge.",
+          "meters": [
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "9": "Higher mind, philosophy, learning, and understanding"
+                },
+                "natal_planets_tracked": [
+                  "sun",
+                  "mercury"
+                ],
+                "primary_planets": {
+                  "mercury": "Rules thinking, communication, and information processing - core mental function"
+                },
+                "secondary_planets": {
+                  "moon": "Emotional intelligence and intuitive thinking",
+                  "sun": "Conscious awareness and mental vitality"
+                },
+                "transit_planets_tracked": [
+                  "mercury",
+                  "jupiter",
+                  "saturn",
+                  "uranus"
+                ]
+              },
+              "detailed": "This meter tracks how Mercury transits interact with your natal Mercury, Sun, and Moon, which govern thinking, communication, and mental processing. Mercury aspects to your Sun show overall cognitive function and mental clarity. Aspects to your Moon affect emotional intelligence and intuitive thinking. The 9th house (higher mind and learning) is also monitored. When Mercury forms harmonious aspects, your mind is sharp and communication flows. Challenging aspects create mental fog, miscommunication, or scattered thinking. Mercury retrograde reduces the impact of Mercury transits by 40%.",
+              "display_name": "Mental Clarity",
+              "group": "mind",
+              "harmony": 63.70090663658116,
+              "intensity": 15.782693988151179,
+              "interpretation": "Mental clarity is at rest today, encouraging quiet reflection. While focus is subdued, there's a subtle opportunity for deeper insight through supportive aspects.",
+              "meter_name": "mental_clarity",
+              "overview": "Mental Clarity represents your cognitive sharpness, how clearly you think, and how easily you process and communicate information.",
+              "state_label": "Quiet reflection",
+              "top_aspects": [
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 23.400000000000002,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.PLUTO square Natal Planet.SUN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "sun",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 6.8,
+                  "orb_percentage": 85.0,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 8.213399999999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 6.83,
+                  "orb_percentage": 85.375,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 69.5175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.MARS conjunction Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.87,
+                  "orb_percentage": 10.875,
+                  "phase": "exact",
+                  "quality_factor": 0.0,
+                  "transit_planet": "mars"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": 0.101029303421587,
+              "trend_direction": "increasing",
+              "unified_quality": "quiet",
+              "unified_score": 25.29759367494267
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "6": "Work routines and sustained attention to daily tasks",
+                  "8": "Deep concentration, research, penetrating focus"
+                },
+                "natal_planets_tracked": [
+                  "mercury"
+                ],
+                "primary_planets": {
+                  "mars": "Mental drive and urgency - can help or hinder focus",
+                  "saturn": "Mental discipline, structure, and sustained concentration"
+                },
+                "secondary_planets": {
+                  "mercury": "Base cognitive function affecting ability to concentrate"
+                },
+                "transit_planets_tracked": [
+                  "saturn",
+                  "mars",
+                  "mercury",
+                  "neptune"
+                ]
+              },
+              "detailed": "This meter monitors how Saturn and Mars transits interact with your natal Mercury, showing your capacity for sustained concentration and mental discipline. Saturn brings structure and focus but can feel restrictive. Mars adds mental drive and urgency but can create restlessness. The 6th house (work routines) and 8th house (deep concentration) are tracked. When these planets form supportive aspects, you can concentrate deeply and work productively. Challenging aspects scatter attention or create mental resistance to focused work.",
+              "display_name": "Focus",
+              "group": "mind",
+              "harmony": 78.1305850787042,
+              "intensity": 24.75391449633508,
+              "interpretation": "Your mind is in a restful state today, with focus being subdued. This quiet period allows for deeper integration rather than intense concentration.",
+              "meter_name": "focus",
+              "overview": "Focus represents your ability to concentrate, stay on task, and direct your attention without distraction.",
+              "state_label": "Restful mind",
+              "top_aspects": [
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 87.86249999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    6
+                  ],
+                  "label": "Transit Planet.JUPITER conjunction Natal Planet.JUPITER",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "jupiter",
+                  "natal_planet_house": 6,
+                  "natal_planet_sign": "cancer",
+                  "orb": 0.19,
+                  "orb_percentage": 2.375,
+                  "phase": "exact",
+                  "quality_factor": 0.8,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 8.213399999999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 6.83,
+                  "orb_percentage": 85.375,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 69.5175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.MARS conjunction Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.87,
+                  "orb_percentage": 10.875,
+                  "phase": "exact",
+                  "quality_factor": 0.0,
+                  "transit_planet": "mars"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -1.9829492075855129,
+              "trend_direction": "decreasing",
+              "unified_quality": "quiet",
+              "unified_score": 37.59629158085719
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "3": "Everyday communication, siblings, neighbors, short exchanges",
+                  "7": "One-on-one dialogue, partnerships, direct communication"
+                },
+                "natal_planets_tracked": [
+                  "mercury"
+                ],
+                "primary_planets": {
+                  "mercury": "Rules language, expression, and information exchange",
+                  "venus": "Social grace, harmony in communication, diplomatic expression"
+                },
+                "secondary_planets": {
+                  "mars": "Adds directness and assertiveness but can create bluntness",
+                  "saturn": "Can create communication blocks but adds gravitas when positive"
+                },
+                "transit_planets_tracked": [
+                  "mercury",
+                  "venus",
+                  "mars",
+                  "jupiter",
+                  "saturn"
+                ]
+              },
+              "detailed": "This meter tracks Mercury and Venus transits to your natal Mercury and key communication houses (3rd = everyday talk, 7th = one-on-one dialogue). Mercury governs how you express ideas and process language. Venus adds harmony and social grace to interactions. When these planets form supportive aspects, conversations flow naturally and you feel understood. Challenging aspects create miscommunication, social awkwardness, or difficulty finding the right words. Mercury retrograde cuts communication effectiveness in half.",
+              "display_name": "Communication",
+              "group": "mind",
+              "harmony": 63.839034211762915,
+              "intensity": 13.495299605913996,
+              "interpretation": "Communication is quiet today, leaning towards listening. While direct expression is low-key, there's potential for subtle insights and deeper understanding.",
+              "meter_name": "communication",
+              "overview": "Communication represents how easily you express yourself, connect through words, and understand others in conversations.",
+              "state_label": "Quiet listening",
+              "top_aspects": [
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 8.213399999999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 6.83,
+                  "orb_percentage": 85.375,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 69.5175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.MARS conjunction Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.87,
+                  "orb_percentage": 10.875,
+                  "phase": "exact",
+                  "quality_factor": 0.0,
+                  "transit_planet": "mars"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 49.842,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.NEPTUNE trine Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 2.32,
+                  "orb_percentage": 28.999999999999996,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "neptune"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -1.4161264128814395,
+              "trend_direction": "decreasing",
+              "unified_quality": "quiet",
+              "unified_score": 22.280579678130188
+            }
+          ],
+          "overview": "Mind represents your cognitive sharpness, ability to concentrate, and ease of expressing yourself.",
+          "quality": "quiet",
+          "state_label": "Quiet",
+          "trend_change_rate": null,
+          "trend_delta": -1.0993487723484552,
+          "trend_direction": "stable",
+          "unified_score": 28.391488311310017
+        },
+        {
+          "detailed": "This group combines three emotional dimensions: Love (romantic connection and openness), Inner Stability (emotional groundedness and resilience), and Sensitivity (empathy and emotional awareness). Together they show your overall emotional state. High scores mean your heart is open, you feel emotionally stable, and your sensitivity is a gift. Low scores suggest emotional distance, fragility, or overwhelming emotional absorption.",
+          "display_name": "Emotions",
+          "group_name": "emotions",
+          "harmony": 50.13579188416597,
+          "intensity": 74.43656346036873,
+          "interpretation": "Emotions are intense today, with strong waves of feeling and heightened sensitivity. While inner stability feels challenging, the overall intensity suggests a powerful emotional processing period.",
+          "meters": [
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "7": "Committed partnerships, one-on-one romantic bonds"
+                },
+                "natal_planets_tracked": [
+                  "venus",
+                  "moon"
+                ],
+                "primary_planets": {
+                  "moon": "Emotional availability and nurturing capacity in relationships",
+                  "venus": "Rules romantic love, affection, and relationship harmony"
+                },
+                "secondary_planets": {
+                  "jupiter": "Expands love and generosity when supportive",
+                  "mars": "Passion and desire - adds heat but can create conflict"
+                },
+                "transit_planets_tracked": [
+                  "venus",
+                  "mars",
+                  "moon",
+                  "jupiter",
+                  "saturn"
+                ]
+              },
+              "detailed": "This meter tracks Venus and Mars transits to your natal Venus, Moon, and 7th house (partnerships). Venus governs romantic attraction, affection, and relationship harmony. Mars adds passion and desire but can create conflict. The Moon shows emotional availability. When these planets form supportive aspects, love flows naturally and you feel open to connection. Challenging aspects create relationship tension, defensiveness, or difficulty giving and receiving affection. Venus retrograde reduces romantic flow by 30%.",
+              "display_name": "Love",
+              "group": "emotions",
+              "harmony": 43.672273540814935,
+              "intensity": 45.57874300380789,
+              "interpretation": "Love is experiencing gentle uncertainty, with a slight softening of emotional boundaries. While connection is solo, there's a chance for subtle shifts in how you relate.",
+              "meter_name": "love",
+              "overview": "Love represents your romantic connection energy, openness to intimacy, and the flow of affection in relationships.",
+              "state_label": "Gentle uncertainty",
+              "top_aspects": [
+                {
+                  "aspect_type": "square",
+                  "contribution": 529.8749999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.URANUS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 89.856,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.JUPITER square Natal Planet.VENUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "venus",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "libra",
+                  "orb": 3.2,
+                  "orb_percentage": 40.0,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 54.209999999999994,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.MERCURY square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 6.61,
+                  "orb_percentage": 82.625,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "mercury"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 206.31000000000003,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.MARS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 2.71,
+                  "orb_percentage": 33.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "mars"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 139.46400000000003,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.MOON trine Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 2.04,
+                  "orb_percentage": 25.5,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "moon"
+                }
+              ],
+              "trend_change_rate": "slow",
+              "trend_delta": 4.900750504161898,
+              "trend_direction": "increasing",
+              "unified_quality": "mixed",
+              "unified_score": 44.60514645485521
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "4": "Emotional foundation, home, roots, sense of safety"
+                },
+                "natal_planets_tracked": [
+                  "moon"
+                ],
+                "primary_planets": {
+                  "moon": "Emotional state, reactivity, and sense of security",
+                  "saturn": "Emotional structure, boundaries, and long-term stability"
+                },
+                "secondary_planets": {
+                  "jupiter": "Can expand emotional resilience when supportive",
+                  "neptune": "Can dissolve emotional boundaries for better or worse"
+                },
+                "transit_planets_tracked": [
+                  "moon",
+                  "saturn",
+                  "jupiter",
+                  "neptune",
+                  "uranus"
+                ]
+              },
+              "detailed": "This meter tracks Moon and Saturn transits to your natal Moon and 4th house (emotional foundation). The Moon shows your day-to-day emotional state and reactivity. Saturn brings structure and grounding but can create heaviness. When these planets form supportive aspects, you feel emotionally centered and resilient. Challenging aspects create emotional volatility, insecurity, or a shaky sense of self. Your 4th house (home, roots, foundation) is key to understanding where you find emotional safety.",
+              "display_name": "Inner Stability",
+              "group": "emotions",
+              "harmony": 53.22283652053215,
+              "intensity": 84.99838001897959,
+              "interpretation": "Inner stability is marked by intense waves today, creating a challenging but transformative experience. The high intensity suggests a significant emotional adjustment period.",
+              "meter_name": "inner_stability",
+              "overview": "Inner Stability represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.",
+              "state_label": "Intense waves",
+              "top_aspects": [
+                {
+                  "aspect_type": "square",
+                  "contribution": 529.8749999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.URANUS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 194.39999999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.URANUS conjunction Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 0.32,
+                  "orb_percentage": 4.0,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 64.49625,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.NEPTUNE sextile Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 0.65,
+                  "orb_percentage": 8.125,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 89.24175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.PLUTO trine Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 1.22,
+                  "orb_percentage": 15.25,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 19.936799999999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.JUPITER sextile Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 5.16,
+                  "orb_percentage": 64.5,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                }
+              ],
+              "trend_change_rate": "moderate",
+              "trend_delta": 5.966682039826452,
+              "trend_direction": "increasing",
+              "unified_quality": "mixed",
+              "unified_score": 65.45818359176478
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "12": "The unconscious, collective feelings, psychic awareness"
+                },
+                "natal_planets_tracked": [
+                  "moon",
+                  "neptune"
+                ],
+                "primary_planets": {
+                  "moon": "Emotional receptivity and feeling-absorption capacity",
+                  "neptune": "Dissolves emotional boundaries for empathy and psychic awareness"
+                },
+                "secondary_planets": {
+                  "uranus": "Can create erratic emotional awareness when active",
+                  "venus": "Adds compassion and relational sensitivity"
+                },
+                "transit_planets_tracked": [
+                  "moon",
+                  "neptune",
+                  "venus",
+                  "uranus"
+                ]
+              },
+              "detailed": "This meter tracks Moon, Venus, and Neptune transits to your natal Moon, Neptune, and 12th house (the unconscious). The Moon shows emotional receptivity. Neptune dissolves boundaries for deep empathy and psychic awareness. Venus adds compassion. When these planets form supportive aspects, your sensitivity is a gift that allows profound connection and intuition. Challenging aspects make you emotionally porous in ways that feel overwhelming - you absorb others' emotions and struggle to maintain boundaries. The 12th house heightens this sensitivity to collective and unconscious feelings.",
+              "display_name": "Sensitivity",
+              "group": "emotions",
+              "harmony": 53.51226559115082,
+              "intensity": 92.73256735831869,
+              "interpretation": "You are feeling everything intensely today, with heightened emotional sensitivity. This surge of feeling, while challenging, opens doors for deeper empathy and understanding.",
+              "meter_name": "sensitivity",
+              "overview": "Sensitivity represents your emotional awareness, empathy, and attunement to the feelings and energy around you.",
+              "state_label": "Feeling everything",
+              "top_aspects": [
+                {
+                  "aspect_type": "square",
+                  "contribution": 529.8749999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.URANUS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 132.46875,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.NEPTUNE conjunction Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 66.825,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    12
+                  ],
+                  "label": "Transit Planet.PLUTO conjunction Natal Planet.PLUTO",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "pluto",
+                  "natal_planet_house": 12,
+                  "natal_planet_sign": "aquarius",
+                  "orb": 0.08,
+                  "orb_percentage": 1.0,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 8.9505,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    12
+                  ],
+                  "label": "Transit Planet.JUPITER opposition Natal Planet.PLUTO",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "pluto",
+                  "natal_planet_house": 12,
+                  "natal_planet_sign": "aquarius",
+                  "orb": 6.3,
+                  "orb_percentage": 78.75,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 54.209999999999994,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.MERCURY square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 6.61,
+                  "orb_percentage": 82.625,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "mercury"
+                }
+              ],
+              "trend_change_rate": "slow",
+              "trend_delta": 4.0674421525565165,
+              "trend_direction": "increasing",
+              "unified_quality": "mixed",
+              "unified_score": 67.86331760715561
+            }
+          ],
+          "overview": "Emotions represents your heart, emotional security, and sensitivity to feelings around you.",
+          "quality": "mixed",
+          "state_label": "Mixed",
+          "trend_change_rate": null,
+          "trend_delta": 4.978291565514955,
+          "trend_direction": "stable",
+          "unified_score": 59.308882551258534
+        },
+        {
+          "detailed": "This group combines three physical dimensions: Vitality (physical energy and stamina), Drive (motivation to take action and pursue goals), and Wellness (daily health routines and work-life balance). Together they show your overall physical and practical state. High scores mean you have energy, feel motivated, and your routines are supporting you. Low scores suggest exhaustion, low motivation, or neglected self-care.",
+          "display_name": "Body",
+          "group_name": "body",
+          "harmony": 80.50840449632365,
+          "intensity": 77.18503376635614,
+          "interpretation": "Your body is experiencing peak energy and a strong drive, with optimal health and vitality rising. This is a powerful day for physical activity and action.",
+          "meters": [
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "1": "Physical body and how you show up in the world",
+                  "5": "Creative vitality and self-expression through action"
+                },
+                "natal_planets_tracked": [
+                  "sun"
+                ],
+                "primary_planets": {
+                  "mars": "Physical drive and action energy - determines how much push you have",
+                  "sun": "Core life force and constitutional strength - powers your baseline energy levels"
+                },
+                "secondary_planets": {
+                  "jupiter": "Expands energy and optimism when supportive",
+                  "saturn": "Can temporarily deplete reserves but builds long-term stamina when worked with"
+                },
+                "transit_planets_tracked": [
+                  "sun",
+                  "mars",
+                  "saturn",
+                  "jupiter"
+                ]
+              },
+              "detailed": "This meter tracks your core vitality by monitoring how Mars and the Sun in the sky interact with your natal Sun, Mars, and key houses (1st house = identity and physical body, 5th house = creative expression). When these planets form supportive aspects like trines and sextiles, you feel energized and capable. Challenging aspects like squares and oppositions can deplete energy or create resistance that requires more effort to push through. Saturn transits can temporarily drain reserves but build long-term stamina when worked with intentionally.",
+              "display_name": "Vitality",
+              "group": "body",
+              "harmony": 54.48102678650556,
+              "intensity": 49.239631897121726,
+              "interpretation": "Your vitality is experiencing a gentle rise, bringing a sense of subtle energy and renewed strength. This slow build supports sustained effort throughout the day.",
+              "meter_name": "vitality",
+              "overview": "Vitality represents your physical energy, stamina, and life force available for daily activities and bold action.",
+              "state_label": "Gentle rise",
+              "top_aspects": [
+                {
+                  "aspect_type": "square",
+                  "contribution": 529.8749999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.URANUS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 23.400000000000002,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.PLUTO square Natal Planet.SUN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "sun",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 6.8,
+                  "orb_percentage": 85.0,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 54.209999999999994,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.MERCURY square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 6.61,
+                  "orb_percentage": 82.625,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "mercury"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 206.31000000000003,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.MARS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 2.71,
+                  "orb_percentage": 33.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "mars"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 26.487499999999997,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.VENUS conjunction Natal Planet.SUN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "sun",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 6.37,
+                  "orb_percentage": 79.625,
+                  "phase": "exact",
+                  "quality_factor": 0.0,
+                  "transit_planet": "venus"
+                }
+              ],
+              "trend_change_rate": "slow",
+              "trend_delta": 3.9911996254094433,
+              "trend_direction": "increasing",
+              "unified_quality": "mixed",
+              "unified_score": 51.727895645696
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "1": "Personal action, self-assertion, how you initiate",
+                  "10": "Career ambition, public achievement, drive for success"
+                },
+                "natal_planets_tracked": [
+                  "mars"
+                ],
+                "primary_planets": {
+                  "mars": "Raw drive, initiative, and will to act - the warrior energy",
+                  "uranus": "Sudden bursts of motivation and breakthrough action"
+                },
+                "secondary_planets": {
+                  "pluto": "Deep transformational drive and power",
+                  "sun": "Conscious will and ego-driven ambition"
+                },
+                "transit_planets_tracked": [
+                  "mars",
+                  "uranus",
+                  "sun",
+                  "pluto",
+                  "jupiter"
+                ]
+              },
+              "detailed": "This meter tracks Mars and Uranus transits to your natal Mars, 1st house (identity and action), and 10th house (ambition and achievement). Mars brings raw drive, initiative, and the will to act. Uranus adds sudden motivation and unconventional approaches. When these planets form supportive aspects, you feel motivated and capable of bold action. Challenging aspects create frustration, blocked drive, or impulsive action that backfires. Mars retrograde reduces drive by 35%, requiring strategic pacing rather than forcing.",
+              "display_name": "Drive",
+              "group": "body",
+              "harmony": 87.04418670246541,
+              "intensity": 82.3154694019467,
+              "interpretation": "Your drive is strong today, fueled by a powerful surge of energy. This potent force encourages you to take action and pursue your goals with determination.",
+              "meter_name": "drive",
+              "overview": "Drive represents your motivation to take action, pursue goals, and assert yourself in the world.",
+              "state_label": "Strong drive",
+              "top_aspects": [
+                {
+                  "aspect_type": "square",
+                  "contribution": 529.8749999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.URANUS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 253.98359999999997,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 1.97,
+                  "orb_percentage": 24.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 405.14175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 2.87,
+                  "orb_percentage": 35.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                }
+              ],
+              "trend_change_rate": "slow",
+              "trend_delta": 2.056622986788085,
+              "trend_direction": "increasing",
+              "unified_quality": "harmonious",
+              "unified_score": 84.61381242657664
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "6": "Daily routines, health habits, work-life balance, self-care practices"
+                },
+                "natal_planets_tracked": [
+                  "moon",
+                  "mars",
+                  "saturn"
+                ],
+                "primary_planets": {
+                  "moon": "Emotional wellness, self-nurturing, daily comfort needs",
+                  "saturn": "Work stress, boundaries, sustainable routines vs. burnout"
+                },
+                "secondary_planets": {
+                  "jupiter": "Can support wellness or encourage overindulgence",
+                  "mars": "Physical energy management and exercise"
+                },
+                "transit_planets_tracked": [
+                  "moon",
+                  "saturn",
+                  "mars",
+                  "jupiter",
+                  "neptune"
+                ]
+              },
+              "detailed": "This meter tracks transits through your 6th house (daily routines, health, work habits) and aspects to your natal Moon, Mars, and Saturn. The 6th house shows how your day-to-day life is functioning - work stress, health habits, sleep, exercise, and self-care. The Moon affects emotional wellness and self-nurturing. Mars shows physical energy management. Saturn reveals stress, boundaries, and sustainability of routines. When these are well-aspected, your routines support your health. Challenging aspects create work stress, neglected self-care, or unsustainable habits.",
+              "display_name": "Wellness",
+              "group": "body",
+              "harmony": 100.0,
+              "intensity": 100.0,
+              "interpretation": "Your wellness is in a state of optimal health, with perfect harmony and peak energy. This is a day where your body and mind are working in perfect alignment.",
+              "meter_name": "wellness",
+              "overview": "Wellness represents your daily health routines, work-life balance, and overall sense of physical and mental wellbeing.",
+              "state_label": "Optimal health",
+              "top_aspects": [
+                {
+                  "aspect_type": "square",
+                  "contribution": 529.8749999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    1
+                  ],
+                  "label": "Transit Planet.URANUS square Natal Planet.MOON",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "moon",
+                  "natal_planet_house": 1,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 253.98359999999997,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 1.97,
+                  "orb_percentage": 24.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 87.86249999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    6
+                  ],
+                  "label": "Transit Planet.JUPITER conjunction Natal Planet.JUPITER",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "jupiter",
+                  "natal_planet_house": 6,
+                  "natal_planet_sign": "cancer",
+                  "orb": 0.19,
+                  "orb_percentage": 2.375,
+                  "phase": "exact",
+                  "quality_factor": 0.8,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 172.79999999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.SATURN conjunction Natal Planet.SATURN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "saturn",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.32,
+                  "orb_percentage": 4.0,
+                  "phase": "exact",
+                  "quality_factor": -0.8,
+                  "transit_planet": "saturn"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 405.14175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 2.87,
+                  "orb_percentage": 35.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": 0.0,
+              "trend_direction": "stable",
+              "unified_quality": "harmonious",
+              "unified_score": 100.0
+            }
+          ],
+          "overview": "Body represents your physical vitality, motivation to act, and overall health and wellbeing.",
+          "quality": "harmonious",
+          "state_label": "Harmonious",
+          "trend_change_rate": null,
+          "trend_delta": 2.0159408707325093,
+          "trend_direction": "stable",
+          "unified_score": 78.78056935742421
+        },
+        {
+          "detailed": "This group combines four spiritual dimensions: Purpose (life direction and meaning), Connection (spiritual belonging and unity), Intuition (psychic awareness and inner guidance), and Creativity (creative flow and self-expression). Together they show your overall spiritual and creative state. High scores mean you feel aligned with purpose, spiritually connected, intuitively clear, and creatively flowing. Low scores suggest feeling lost, isolated, cut off from intuition, or creatively blocked.",
+          "display_name": "Spirit",
+          "group_name": "spirit",
+          "harmony": 65.22621860470483,
+          "intensity": 42.13907234436776,
+          "interpretation": "A gentle seeking is present in your spirit today. While intuition is actively sensing, there's a quiet integration happening, encouraging a deeper connection to your inner knowing.",
+          "meters": [
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "10": "Public calling, career purpose, what you're meant to contribute",
+                  "9": "Life philosophy, higher meaning, spiritual and educational growth"
+                },
+                "natal_planets_tracked": [
+                  "jupiter",
+                  "sun"
+                ],
+                "primary_planets": {
+                  "jupiter": "Expansion, growth, search for meaning and higher purpose",
+                  "sun": "Core identity, life direction, and ego-driven sense of calling"
+                },
+                "secondary_planets": {
+                  "neptune": "Spiritual purpose and transcendent meaning",
+                  "saturn": "Long-term purpose building through discipline"
+                },
+                "transit_planets_tracked": [
+                  "jupiter",
+                  "sun",
+                  "saturn",
+                  "neptune",
+                  "pluto"
+                ]
+              },
+              "detailed": "This meter tracks Jupiter and Sun transits to your natal Jupiter, Sun, and key houses (9th = life philosophy and meaning, 10th = public calling and career purpose). Jupiter brings expansion, growth, and the search for meaning. The Sun represents your core identity and life direction. When these planets form supportive aspects, you feel aligned with your path and clear about your purpose. Challenging aspects create existential questioning, feeling lost, or disconnection from meaning. Jupiter retrograde reduces clarity by 20% but can deepen internal wisdom.",
+              "display_name": "Purpose",
+              "group": "spirit",
+              "harmony": 100.0,
+              "intensity": 62.93059396182833,
+              "interpretation": "Your purpose is illuminated with clear direction today. With a perfect harmony score, you feel a strong sense of alignment and confidence in your path.",
+              "meter_name": "purpose",
+              "overview": "Purpose represents your sense of meaning, life direction, and connection to what you're here to do.",
+              "state_label": "Clear direction",
+              "top_aspects": [
+                {
+                  "aspect_type": "trine",
+                  "contribution": 253.98359999999997,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 1.97,
+                  "orb_percentage": 24.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 87.86249999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    6
+                  ],
+                  "label": "Transit Planet.JUPITER conjunction Natal Planet.JUPITER",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "jupiter",
+                  "natal_planet_house": 6,
+                  "natal_planet_sign": "cancer",
+                  "orb": 0.19,
+                  "orb_percentage": 2.375,
+                  "phase": "exact",
+                  "quality_factor": 0.8,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 405.14175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 2.87,
+                  "orb_percentage": 35.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -1.051292887787099,
+              "trend_direction": "decreasing",
+              "unified_quality": "harmonious",
+              "unified_score": 77.24834536179475
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "11": "Community, collective belonging, connection through shared ideals and friendship"
+                },
+                "natal_planets_tracked": [
+                  "neptune"
+                ],
+                "primary_planets": {
+                  "neptune": "Spiritual connection, dissolution of boundaries, mystical unity with the whole"
+                },
+                "secondary_planets": {
+                  "jupiter": "Expands sense of belonging and collective meaning",
+                  "uranus": "Connects through shared ideals and revolutionary community"
+                },
+                "transit_planets_tracked": [
+                  "neptune",
+                  "jupiter",
+                  "uranus",
+                  "pluto"
+                ]
+              },
+              "detailed": "This meter tracks Neptune transits to your natal Neptune and 11th house (community, collective, belonging to something larger). Neptune dissolves boundaries between self and other, creating mystical unity or overwhelming dissolution. When Neptune forms supportive aspects, you feel spiritually connected, part of something meaningful, and able to transcend ego. Challenging aspects create spiritual confusion, feeling lost in the collective, or unhealthy merging. The 11th house shows connection through community and shared ideals.",
+              "display_name": "Connection",
+              "group": "spirit",
+              "harmony": 68.36325728758618,
+              "intensity": 24.912641124982727,
+              "interpretation": "Connection is currently a solo path, with less emphasis on external relationships. This period encourages introspection and self-reliance rather than group activities.",
+              "meter_name": "connection",
+              "overview": "Connection represents your sense of spiritual belonging, unity with something larger, and feeling part of the whole.",
+              "state_label": "Solo path",
+              "top_aspects": [
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 132.46875,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.NEPTUNE conjunction Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 52.785,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.URANUS sextile Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.18,
+                  "orb_percentage": 2.25,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 23.4468,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 4.66,
+                  "orb_percentage": 58.25,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 36.73800000000001,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 1.72,
+                  "orb_percentage": 21.5,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 43.29,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.SATURN conjunction Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 4.3,
+                  "orb_percentage": 53.75,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "saturn"
+                }
+              ],
+              "trend_change_rate": "slow",
+              "trend_delta": 2.115833928072675,
+              "trend_direction": "increasing",
+              "unified_quality": "quiet",
+              "unified_score": 36.517671208214296
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "8": "Hidden knowledge, psychic depth, penetrating insight into what's beneath the surface",
+                  "9": "Intuitive wisdom, higher knowing, philosophical and spiritual insight"
+                },
+                "natal_planets_tracked": [
+                  "uranus",
+                  "neptune"
+                ],
+                "primary_planets": {
+                  "neptune": "Psychic channels, dissolving the veil, mystical knowing",
+                  "uranus": "Sudden insight, breakthrough awareness, lightning-bolt intuition"
+                },
+                "secondary_planets": {
+                  "moon": "Emotional intuition and gut feelings",
+                  "pluto": "Deep psychological insight and penetrating awareness"
+                },
+                "transit_planets_tracked": [
+                  "uranus",
+                  "neptune",
+                  "moon",
+                  "pluto",
+                  "mercury"
+                ]
+              },
+              "detailed": "This meter tracks Uranus and Neptune transits to your natal Uranus, Neptune, and key houses (8th = hidden knowledge and psychic depth, 9th = intuitive wisdom and insight). Uranus brings sudden flashes of insight and breakthrough awareness. Neptune opens psychic channels and dissolves the veil between conscious and unconscious. When these planets form supportive aspects, your intuition is reliable and you receive clear inner guidance. Challenging aspects create confusion between intuition and fear, or overwhelming psychic static. Both retrograde reduce intuitive clarity by 20%.",
+              "display_name": "Intuition",
+              "group": "spirit",
+              "harmony": 45.53704154973508,
+              "intensity": 54.325913214764185,
+              "interpretation": "Your intuition is actively sensing today, with a good capacity for inner knowing. While there's a slight dip in harmony, your psychic receptivity is heightened.",
+              "meter_name": "intuition",
+              "overview": "Intuition represents your access to inner knowing, psychic awareness, and ability to sense what isn't visible.",
+              "state_label": "Active sensing",
+              "top_aspects": [
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 194.39999999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.URANUS conjunction Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 0.32,
+                  "orb_percentage": 4.0,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 132.46875,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.NEPTUNE conjunction Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 64.49625,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.NEPTUNE sextile Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 0.65,
+                  "orb_percentage": 8.125,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 23.400000000000002,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.PLUTO square Natal Planet.SUN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "sun",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 6.8,
+                  "orb_percentage": 85.0,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 89.856,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.JUPITER square Natal Planet.VENUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "venus",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "libra",
+                  "orb": 3.2,
+                  "orb_percentage": 40.0,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "jupiter"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": 0.49223013626263423,
+              "trend_direction": "increasing",
+              "unified_quality": "mixed",
+              "unified_score": 49.54472603222944
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "5": "Creative self-expression, art, play, joy, and bringing ideas into form"
+                },
+                "natal_planets_tracked": [
+                  "venus",
+                  "neptune"
+                ],
+                "primary_planets": {
+                  "neptune": "Dissolves creative blocks, opens channels to the muse, boundless imagination",
+                  "venus": "Aesthetic sense, desire to create beauty, artistic expression"
+                },
+                "secondary_planets": {
+                  "moon": "Emotional creativity and intuitive art-making",
+                  "uranus": "Breakthrough creativity and innovative expression"
+                },
+                "transit_planets_tracked": [
+                  "venus",
+                  "neptune",
+                  "uranus",
+                  "moon",
+                  "sun"
+                ]
+              },
+              "detailed": "This meter tracks Venus and Neptune transits to your natal Venus, Neptune, and 5th house (creative self-expression, art, play, joy). Venus brings aesthetic sensitivity and the desire to create beauty. Neptune dissolves creative blocks and opens channels to the muse. When these planets form supportive aspects, creative energy flows naturally and you feel inspired. Challenging aspects create creative blocks, self-doubt, or overwhelming inspiration that's hard to ground. Venus retrograde reduces creative flow by 30%, Neptune by 20%.",
+              "display_name": "Creativity",
+              "group": "spirit",
+              "harmony": 47.004575581498045,
+              "intensity": 26.387141075895798,
+              "interpretation": "Creativity is quietly brewing, with a gentle flow of inspiration. While intensity is low, this is a good time for subtle artistic expression and imaginative thought.",
+              "meter_name": "creativity",
+              "overview": "Creativity represents your access to creative flow, self-expression, and ability to bring something new into being.",
+              "state_label": "Quietly brewing",
+              "top_aspects": [
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 132.46875,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.NEPTUNE conjunction Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "square",
+                  "contribution": 89.856,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    9
+                  ],
+                  "label": "Transit Planet.JUPITER square Natal Planet.VENUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "venus",
+                  "natal_planet_house": 9,
+                  "natal_planet_sign": "libra",
+                  "orb": 3.2,
+                  "orb_percentage": 40.0,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 52.785,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.URANUS sextile Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.18,
+                  "orb_percentage": 2.25,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 23.4468,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 4.66,
+                  "orb_percentage": 58.25,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 36.73800000000001,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 1.72,
+                  "orb_percentage": 21.5,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                }
+              ],
+              "trend_change_rate": "slow",
+              "trend_delta": 2.5220852879976974,
+              "trend_direction": "increasing",
+              "unified_quality": "challenging",
+              "unified_score": 33.79990068556708
+            }
+          ],
+          "overview": "Spirit represents your sense of meaning, spiritual connection, inner knowing, and creative flow.",
+          "quality": "mixed",
+          "state_label": "Mixed",
+          "trend_change_rate": null,
+          "trend_delta": 1.019714116136477,
+          "trend_direction": "stable",
+          "unified_score": 49.27766082195139
+        },
+        {
+          "detailed": "This group combines four growth dimensions: Opportunities (favorable timing and doors opening), Career (professional momentum and recognition), Growth (personal evolution and life transitions), and Social Life (friendships and community connections). Together they show your overall external growth and expansion. High scores mean doors are opening, career is flowing, you're evolving naturally, and social connections feel easy. Low scores suggest closed doors, career obstacles, resistance to change, or social isolation.",
+          "display_name": "Growth",
+          "group_name": "growth",
+          "harmony": 71.16247123766865,
+          "intensity": 44.6624473375,
+          "interpretation": "Growth is building momentum through quiet integration. While opportunities are present, the focus is on internal shifts and deepening your understanding of transformation.",
+          "meters": [
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "11": "Networks, future possibilities, community and collective opportunities",
+                  "2": "Resources, value, what you have to work with and attract"
+                },
+                "natal_planets_tracked": [
+                  "jupiter",
+                  "venus"
+                ],
+                "primary_planets": {
+                  "jupiter": "Expansion, good fortune, opportunities that enlarge your world",
+                  "venus": "Attraction, favorable circumstances, helpful people and resources"
+                },
+                "secondary_planets": {
+                  "sun": "Opportunities for recognition and visibility",
+                  "uranus": "Sudden unexpected opportunities and breakthrough timing"
+                },
+                "transit_planets_tracked": [
+                  "jupiter",
+                  "venus",
+                  "sun",
+                  "uranus",
+                  "mercury"
+                ]
+              },
+              "detailed": "This meter tracks Jupiter and Venus transits to your natal Jupiter, Venus, and key houses (2nd = resources and value, 11th = networks and future possibilities). Jupiter expands opportunities and brings good fortune. Venus attracts favorable circumstances and helpful people. When these planets form supportive aspects, opportunities appear naturally and timing works in your favor. Challenging aspects create missed timing, doors that stay closed, or opportunities that look good but aren't. Jupiter retrograde reduces opportunity flow by 30%, Venus by 30%.",
+              "display_name": "Opportunities",
+              "group": "growth",
+              "harmony": 81.66945084401148,
+              "intensity": 62.663178691156126,
+              "interpretation": "Opportunities are appearing with good timing, though there's a slight dip in harmony. The overall energy supports recognizing and acting on chances that arise.",
+              "meter_name": "opportunities",
+              "overview": "Opportunities represents favorable timing windows, lucky breaks, and moments when doors open for you.",
+              "state_label": "Good timing",
+              "top_aspects": [
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 132.46875,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.NEPTUNE conjunction Natal Planet.NEPTUNE",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "neptune",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.15,
+                  "orb_percentage": 1.875,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 87.86249999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    6
+                  ],
+                  "label": "Transit Planet.JUPITER conjunction Natal Planet.JUPITER",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "jupiter",
+                  "natal_planet_house": 6,
+                  "natal_planet_sign": "cancer",
+                  "orb": 0.19,
+                  "orb_percentage": 2.375,
+                  "phase": "exact",
+                  "quality_factor": 0.8,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 172.79999999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.SATURN conjunction Natal Planet.SATURN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "saturn",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.32,
+                  "orb_percentage": 4.0,
+                  "phase": "exact",
+                  "quality_factor": -0.8,
+                  "transit_planet": "saturn"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 85.644,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.SATURN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "saturn",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.68,
+                  "orb_percentage": 8.5,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 101.64375000000001,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.NEPTUNE conjunction Natal Planet.SATURN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "saturn",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 3.83,
+                  "orb_percentage": 47.875,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "neptune"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -0.10597429914365364,
+              "trend_direction": "decreasing",
+              "unified_quality": "harmonious",
+              "unified_score": 70.91490549751163
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "10": "Career, public life, professional achievement, reputation, what you're known for"
+                },
+                "natal_planets_tracked": [
+                  "saturn"
+                ],
+                "primary_planets": {
+                  "saturn": "Career structure, professional responsibility, hard-earned success through discipline"
+                },
+                "secondary_planets": {
+                  "jupiter": "Career expansion and professional opportunities",
+                  "mars": "Career drive and assertiveness in professional life",
+                  "sun": "Recognition, visibility, and leadership in career"
+                },
+                "transit_planets_tracked": [
+                  "saturn",
+                  "sun",
+                  "jupiter",
+                  "mars",
+                  "pluto"
+                ]
+              },
+              "detailed": "This meter tracks Saturn transits to your natal Saturn and 10th house (career, public life, professional achievement). Saturn brings structure, responsibility, hard-earned success, and career tests. When Saturn forms supportive aspects, your professional efforts pay off and you build lasting career foundations. Challenging aspects create career obstacles, professional setbacks, or heavy responsibilities that feel overwhelming. Saturn retrograde reduces career pressure by 20% but can slow external momentum while deepening internal mastery.",
+              "display_name": "Career",
+              "group": "growth",
+              "harmony": 79.13685659457613,
+              "intensity": 72.74736296161318,
+              "interpretation": "Your career is getting recognition today, with strong energy and good harmony. This is a favorable day to advance professionally and feel seen for your efforts.",
+              "meter_name": "career",
+              "overview": "Career represents your professional momentum, recognition, and the structure of your work life and public role.",
+              "state_label": "Getting recognition",
+              "top_aspects": [
+                {
+                  "aspect_type": "trine",
+                  "contribution": 253.98359999999997,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 1.97,
+                  "orb_percentage": 24.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 172.79999999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    2
+                  ],
+                  "label": "Transit Planet.SATURN conjunction Natal Planet.SATURN",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "saturn",
+                  "natal_planet_house": 2,
+                  "natal_planet_sign": "pisces",
+                  "orb": 0.32,
+                  "orb_percentage": 4.0,
+                  "phase": "exact",
+                  "quality_factor": -0.8,
+                  "transit_planet": "saturn"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 405.14175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MARS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mars",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "scorpio",
+                  "orb": 2.87,
+                  "orb_percentage": 35.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -0.5277305297879309,
+              "trend_direction": "decreasing",
+              "unified_quality": "harmonious",
+              "unified_score": 75.80771257407648
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "11": "Future self and evolutionary direction",
+                  "5": "Creative self-expression and playful evolution",
+                  "8": "Transformational growth and psychological depth"
+                },
+                "natal_planets_tracked": [
+                  "jupiter",
+                  "uranus"
+                ],
+                "primary_planets": {
+                  "jupiter": "Expansion, philosophical growth, becoming more of who you are",
+                  "uranus": "Breakthrough evolution, liberation from old patterns, quantum leaps"
+                },
+                "secondary_planets": {
+                  "pluto": "Deep transformational growth through death/rebirth cycles",
+                  "saturn": "Growth through maturation and discipline"
+                },
+                "transit_planets_tracked": [
+                  "jupiter",
+                  "uranus",
+                  "pluto",
+                  "saturn",
+                  "neptune"
+                ]
+              },
+              "detailed": "This meter tracks Jupiter and Uranus transits to your natal Jupiter, Uranus, and key houses (5th = creative evolution, 8th = transformational growth, 11th = future self). Jupiter brings expansion and philosophical growth. Uranus creates breakthrough evolution and liberation from old patterns. When these planets form supportive aspects, you grow naturally and feel excited about becoming who you're meant to be. Challenging aspects create growing pains, resistance to change, or overwhelming transformation. Both retrograde reduce growth pressure by 20% while deepening internal evolution.",
+              "display_name": "Growth",
+              "group": "growth",
+              "harmony": 65.34115155034128,
+              "intensity": 27.39240540891299,
+              "interpretation": "Growth is characterized by quiet integration. While intensity is low, the harmonious energy suggests a steady, internal process of evolution and understanding.",
+              "meter_name": "growth",
+              "overview": "Growth represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.",
+              "state_label": "Quiet integration",
+              "top_aspects": [
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 194.39999999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.URANUS conjunction Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 0.32,
+                  "orb_percentage": 4.0,
+                  "phase": "exact",
+                  "quality_factor": -0.3,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 87.86249999999998,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    6
+                  ],
+                  "label": "Transit Planet.JUPITER conjunction Natal Planet.JUPITER",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "jupiter",
+                  "natal_planet_house": 6,
+                  "natal_planet_sign": "cancer",
+                  "orb": 0.19,
+                  "orb_percentage": 2.375,
+                  "phase": "exact",
+                  "quality_factor": 0.8,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 64.49625,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.NEPTUNE sextile Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 0.65,
+                  "orb_percentage": 8.125,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "neptune"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 89.24175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.PLUTO trine Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 1.22,
+                  "orb_percentage": 15.25,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 19.936799999999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    4
+                  ],
+                  "label": "Transit Planet.JUPITER sextile Natal Planet.URANUS",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "uranus",
+                  "natal_planet_house": 4,
+                  "natal_planet_sign": "gemini",
+                  "orb": 5.16,
+                  "orb_percentage": 64.5,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -1.0759328912255839,
+              "trend_direction": "decreasing",
+              "unified_quality": "quiet",
+              "unified_score": 38.60202006353764
+            },
+            {
+              "astrological_foundation": {
+                "key_houses": {
+                  "11": "Friendships, community, social networks, group belonging"
+                },
+                "natal_planets_tracked": [
+                  "venus",
+                  "mercury"
+                ],
+                "primary_planets": {
+                  "mercury": "Communication in friendships, group discussions, social wit",
+                  "venus": "Social harmony, likability, ease of friendship and connection"
+                },
+                "secondary_planets": {
+                  "jupiter": "Expands social circle and community opportunities",
+                  "moon": "Emotional comfort in social settings"
+                },
+                "transit_planets_tracked": [
+                  "venus",
+                  "mercury",
+                  "moon",
+                  "jupiter",
+                  "saturn"
+                ]
+              },
+              "detailed": "This meter tracks Venus and Mercury transits to your natal Venus, Mercury, and 11th house (friendships, community, social networks). Venus brings social harmony, likability, and ease of connection. Mercury governs communication in friendships and group settings. When these planets form supportive aspects, friendships feel easy, you enjoy socializing, and community feels welcoming. Challenging aspects create social awkwardness, friendship friction, or feeling like an outsider.",
+              "display_name": "Social Life",
+              "group": "growth",
+              "harmony": 58.50242596174572,
+              "intensity": 15.846842288317713,
+              "interpretation": "Your social life is leaning towards solo time today. With low intensity and stable harmony, this is a period for personal reflection rather than group engagement.",
+              "meter_name": "social_life",
+              "overview": "Social Life represents your friendships, community connections, and ease of social interaction and belonging.",
+              "state_label": "Solo time",
+              "top_aspects": [
+                {
+                  "aspect_type": "sextile",
+                  "contribution": 50.96249999999999,
+                  "days_to_exact": 0.0,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.PLUTO sextile Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.45,
+                  "orb_percentage": 5.625,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "pluto"
+                },
+                {
+                  "aspect_type": "opposition",
+                  "contribution": 79.10662499999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.URANUS opposition Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 1.99,
+                  "orb_percentage": 24.875,
+                  "phase": "exact",
+                  "quality_factor": -1.0,
+                  "transit_planet": "uranus"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 8.213399999999998,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.JUPITER trine Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 6.83,
+                  "orb_percentage": 85.375,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "jupiter"
+                },
+                {
+                  "aspect_type": "conjunction",
+                  "contribution": 69.5175,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.MARS conjunction Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 0.87,
+                  "orb_percentage": 10.875,
+                  "phase": "exact",
+                  "quality_factor": 0.0,
+                  "transit_planet": "mars"
+                },
+                {
+                  "aspect_type": "trine",
+                  "contribution": 49.842,
+                  "days_to_exact": null,
+                  "houses_involved": [
+                    10
+                  ],
+                  "label": "Transit Planet.NEPTUNE trine Natal Planet.MERCURY",
+                  "natal_aspect_echo": null,
+                  "natal_planet": "mercury",
+                  "natal_planet_house": 10,
+                  "natal_planet_sign": "sagittarius",
+                  "orb": 2.32,
+                  "orb_percentage": 28.999999999999996,
+                  "phase": "exact",
+                  "quality_factor": 1.0,
+                  "transit_planet": "neptune"
+                }
+              ],
+              "trend_change_rate": "stable",
+              "trend_delta": -0.1859470162797514,
+              "trend_direction": "decreasing",
+              "unified_quality": "quiet",
+              "unified_score": 24.938475912948267
+            }
+          ],
+          "overview": "Growth represents your external expansion - opportunities, career momentum, personal evolution, and social connections.",
+          "quality": "harmonious",
+          "state_label": "Harmonious",
+          "trend_change_rate": null,
+          "trend_delta": -0.47389618410922996,
+          "trend_direction": "stable",
+          "unified_score": 52.565778512018504
+        }
+      ],
+      "overall_harmony": 70.10022213887565,
+      "overall_intensity": 66.21827306627208,
+      "overall_quality": "harmonious",
+      "overall_state": "Smooth support",
+      "overall_unified_score": 68.10397436698096,
+      "top_active_meters": [
+        "wellness",
+        "sensitivity",
+        "inner_stability",
+        "drive",
+        "career"
+      ],
+      "top_challenging_meters": [
+        "love",
+        "intuition",
+        "creativity"
+      ],
+      "top_flowing_meters": [
+        "wellness",
+        "drive",
+        "purpose",
+        "career",
+        "opportunities"
+      ]
+    },
+    "collective_energy": "Uranus at a critical degree is pushing everyone towards sudden breakthroughs and disruptions, while Neptune at a critical degree blurs lines and encourages collective introspection.",
+    "daily_overview": "Alex, today feels like peak energy with strong drive and optimal health. Your body's vitality is high because Uranus is directly squaring your natal Moon, demanding immediate action and change. Your purpose is clear, with a strong sense of direction thanks to Jupiter trining your natal Mars, supporting your career. As a Scorpio, this intensity can be channeled into deep, transformative action.",
+    "daily_theme_headline": "Alex, your body's energy peaks with strong drive and optimal health today.",
+    "date": "2025-11-08",
+    "energy_rhythm": "Morning energy feels intense and demanding due to Uranus's influence, but after 3:06 PM, when the Moon enters Cancer, energy shifts to a more nurturing and stable rhythm. Evening will feel calmer and more focused on home.",
+    "generation_time_ms": 5191,
+    "look_ahead_preview": "This week brings a powerful confluence of energies, with Pluto and Uranus activating transformative shifts. Next Tuesday, Venus joins your Sun, bringing a personal boost to your relationships and self-expression. By Friday, expect a surge in opportunities as Jupiter aligns perfectly with your career and drive.",
+    "model_used": "gemini-2.5-flash-lite",
+    "moon_detail": {
+      "dispositor": {
+        "interpretation": "Your emotional state is filtered through Mercury in Sagittarius, connected to career and public role",
+        "ruler": "mercury",
+        "ruler_house": 10,
+        "ruler_sign": "sagittarius"
+      },
+      "emotional_tone": "mental stimulation, curiosity, and emotional versatility",
+      "interpretation": "Alex, the Moon is currently Void of Course, meaning it's best to wrap up tasks rather than start new ones. After 3:06 PM UTC, the Moon enters Cancer, bringing a shift towards home and emotional security. Use this afternoon to focus on what feels complete and prepare for a more nurturing evening.",
+      "lunar_phase": {
+        "angle": 221.8,
+        "energy": "Culmination, illumination, release",
+        "illumination_percent": 76,
+        "phase_emoji": "\ud83c\udf15",
+        "phase_name": "full_moon",
+        "ritual_suggestion": "Celebrate and let go"
+      },
+      "moon_aspects": [
+        {
+          "applying": true,
+          "aspect_type": "square",
+          "exact_degree": 90,
+          "meaning": "tension requiring action",
+          "natal_critical_degrees": [
+            [
+              "anaretic",
+              "Crisis/completion point - urgent pisces energy culminating"
+            ]
+          ],
+          "natal_degree": 359.8,
+          "natal_house": 2,
+          "natal_planet": "neptune",
+          "natal_sign": "pisces",
+          "orb": 1.71,
+          "priority_score": 40,
+          "transit_critical_degrees": [],
+          "transit_degree": 88.09,
+          "transit_planet": "moon",
+          "transit_sign": "gemini",
+          "transit_speed": "average",
+          "transit_speed_description": "Normal Moon motion (14.80\u00b0/day)"
+        },
+        {
+          "applying": true,
+          "aspect_type": "trine",
+          "exact_degree": 120,
+          "meaning": "natural flow",
+          "natal_critical_degrees": [
+            [
+              "avatar",
+              "Pure beginning - potent fresh pisces energy"
+            ]
+          ],
+          "natal_degree": 330.13,
+          "natal_house": 1,
+          "natal_planet": "moon",
+          "natal_sign": "pisces",
+          "orb": 2.04,
+          "priority_score": 51,
+          "transit_critical_degrees": [],
+          "transit_degree": 88.09,
+          "transit_planet": "moon",
+          "transit_sign": "gemini",
+          "transit_speed": "average",
+          "transit_speed_description": "Normal Moon motion (14.80\u00b0/day)"
+        },
+        {
+          "applying": true,
+          "aspect_type": "square",
+          "exact_degree": 90,
+          "meaning": "tension requiring action",
+          "natal_critical_degrees": [],
+          "natal_degree": 355.82,
+          "natal_house": 2,
+          "natal_planet": "saturn",
+          "natal_sign": "pisces",
+          "orb": 2.27,
+          "priority_score": 39,
+          "transit_critical_degrees": [],
+          "transit_degree": 88.09,
+          "transit_planet": "moon",
+          "transit_sign": "gemini",
+          "transit_speed": "average",
+          "transit_speed_description": "Normal Moon motion (14.80\u00b0/day)"
+        }
+      ],
+      "moon_degree": 88.09,
+      "moon_degree_in_sign": 28.08,
+      "moon_house": 8,
+      "moon_sign": "gemini",
+      "next_major_aspect": {
+        "datetime_utc": "2025-11-08T15:06:32.727273",
+        "event_description": "Moon square natal Neptune",
+        "event_type": "aspect",
+        "hours_away": 3.1,
+        "significance": "tension requiring action"
+      },
+      "next_phase_milestone": {
+        "datetime_utc": "2025-11-18T23:16:21.818182",
+        "event_description": "New Moon",
+        "event_type": "phase_change",
+        "hours_away": 251.3,
+        "significance": "Fresh start, new intentions, beginnings"
+      },
+      "next_sign_change": {
+        "datetime_utc": "2025-11-08T15:06:48.042808",
+        "event_description": "Moon enters Cancer",
+        "event_type": "sign_change",
+        "hours_away": 3.1,
+        "significance": "Emotional tone shifts to cancer qualities"
+      },
+      "timing_guidance": "Moon is void-of-course. Avoid starting new projects or making major decisions. Focus on reflection, completion, and rest.",
+      "void_end_time": "2025-11-08T15:06:48.042808",
+      "void_of_course": "active",
+      "void_start_time": "2025-11-08T12:00:00"
+    },
+    "relationship_weather": "Relationship weather is mixed today, with moments of intense emotional waves and gentle uncertainty. Uranus square your Moon brings tension, while Venus trine your Moon offers supportive connections. Navigate carefully, acknowledging both the need for change and the desire for harmony.",
+    "sun_sign": "scorpio",
+    "technical_analysis": "Uranus at 29.98\u00b0 Taurus squares your natal Moon at 0.15\u00b0 Taurus, creating intense emotional waves and demanding immediate action. Jupiter at 2.54\u00b0 Sagittarius trines your natal Mars at 2.54\u00b0 Sagittarius, offering a strong flow of drive and energy for your career. Uranus at 0.32\u00b0 Taurus conjuncts your natal Uranus, amplifying your inner drive and pushing for immediate change.",
+    "transit_summary": {
+      "critical_degree_alerts": [
+        {
+          "degree": 29.98,
+          "description": "Crisis/completion point - urgent taurus energy culminating",
+          "planet": "Uranus",
+          "sign": "Taurus",
+          "type": "anaretic"
+        },
+        {
+          "degree": 29.65,
+          "description": "Crisis/completion point - urgent pisces energy culminating",
+          "planet": "Neptune",
+          "sign": "Pisces",
+          "type": "anaretic"
+        }
+      ],
+      "critical_degree_synthesis": {
+        "anaretic_planets": [
+          {
+            "degree": 30.0,
+            "description": "Crisis/completion point - urgent taurus energy culminating",
+            "planet": "Uranus",
+            "sign": "Taurus"
+          },
+          {
+            "degree": 29.6,
+            "description": "Crisis/completion point - urgent pisces energy culminating",
+            "planet": "Neptune",
+            "sign": "Pisces"
+          }
+        ],
+        "avatar_planets": [],
+        "cardinal_critical": [
+          {
+            "degree": 25.1,
+            "description": "Cardinal point (26\u00b0) - completion/preparation",
+            "planet": "Jupiter",
+            "sign": "Cancer"
+          }
+        ],
+        "intensity": "Significant Timing",
+        "interpretation": "3 planets at critical points (2 anaretic, 0 avatar, 1 cardinal). Important threshold week - heightened sensitivity to timing.",
+        "major_timing_alert": true,
+        "total_count": 3
+      },
+      "planet_positions": [
+        {
+          "degree": 16.3,
+          "house": 9,
+          "planet": "Sun",
+          "retrograde": false,
+          "sign": "Scorpio",
+          "speed_status": "average"
+        },
+        {
+          "degree": 28.1,
+          "house": 5,
+          "planet": "Moon",
+          "retrograde": false,
+          "sign": "Gemini",
+          "speed_status": "average"
+        },
+        {
+          "degree": 6.7,
+          "house": 10,
+          "planet": "Mercury",
+          "retrograde": false,
+          "sign": "Sagittarius",
+          "speed_status": "stationary"
+        },
+        {
+          "degree": 1.9,
+          "house": 9,
+          "planet": "Venus",
+          "retrograde": false,
+          "sign": "Scorpio",
+          "speed_status": "average"
+        },
+        {
+          "degree": 2.8,
+          "house": 10,
+          "planet": "Mars",
+          "retrograde": false,
+          "sign": "Sagittarius",
+          "speed_status": "fast"
+        },
+        {
+          "degree": 25.1,
+          "house": 6,
+          "planet": "Jupiter",
+          "retrograde": false,
+          "sign": "Cancer",
+          "speed_status": "stationary"
+        },
+        {
+          "degree": 25.5,
+          "house": 2,
+          "planet": "Saturn",
+          "retrograde": true,
+          "sign": "Pisces",
+          "speed_status": "average"
+        },
+        {
+          "degree": 30.0,
+          "house": 4,
+          "planet": "Uranus",
+          "retrograde": true,
+          "sign": "Taurus",
+          "speed_status": "fast"
+        },
+        {
+          "degree": 29.6,
+          "house": 2,
+          "planet": "Neptune",
+          "retrograde": true,
+          "sign": "Pisces",
+          "speed_status": "fast"
+        },
+        {
+          "degree": 1.5,
+          "house": 12,
+          "planet": "Pluto",
+          "retrograde": false,
+          "sign": "Aquarius",
+          "speed_status": "fast"
+        },
+        {
+          "degree": 15.0,
+          "house": 1,
+          "planet": "North Node",
+          "retrograde": true,
+          "sign": "Pisces",
+          "speed_status": "stationary"
+        }
+      ],
+      "priority_transits": [
+        {
+          "applying": false,
+          "applying_label": "separating",
+          "aspect_type": "square",
+          "critical_degrees": [
+            "Crisis/completion point - urgent taurus energy culminating",
+            "Natal: Pure beginning - potent fresh pisces energy"
+          ],
+          "description": "\u26a1\u26a1\u26a1 Uranus square natal Moon",
+          "house_context": "Home/Family (4th) influences identity/self (1st)",
+          "intensity_indicator": "\u26a1\u26a1\u26a1",
+          "intensity_label": "PEAK INFLUENCE",
+          "meaning": "tension requiring action",
+          "natal_house": 1,
+          "natal_planet": "moon",
+          "orb": 0.15,
+          "orb_label": "exact",
+          "priority_score": 100,
+          "speed_timing": {
+            "best_use": "Quick opportunities, immediate actions, time-sensitive matters",
+            "peak_window": "Nov 08 - Nov 15",
+            "speed_description": "Fast Uranus (0.04\u00b0/day) - brief window",
+            "speed_enum": "fast",
+            "timing_impact": "Brief but intense - act within days"
+          },
+          "transit_house": 4,
+          "transit_planet": "uranus"
+        },
+        {
+          "applying": false,
+          "applying_label": "separating",
+          "aspect_type": "trine",
+          "critical_degrees": [
+            "Cardinal point (26\u00b0) - completion/preparation"
+          ],
+          "description": "\u26a1\u26a1\u26a1 Jupiter trine natal Mars",
+          "house_context": "Health/Work (6th) influences career/public life (10th)",
+          "intensity_indicator": "\u26a1\u26a1\u26a1",
+          "intensity_label": "PEAK INFLUENCE",
+          "meaning": "natural flow",
+          "natal_house": 10,
+          "natal_planet": "mars",
+          "orb": 1.97,
+          "orb_label": "moderate",
+          "priority_score": 97,
+          "speed_timing": {
+            "best_use": "Life-changing decisions, major commitments, transformation work",
+            "peak_window": "Critical 2-week window around station",
+            "speed_description": "Stationary Jupiter (near station) - pivotal turning point",
+            "speed_enum": "stationary",
+            "timing_impact": "Maximum impact - station point marks major turning point"
+          },
+          "transit_house": 6,
+          "transit_planet": "jupiter"
+        },
+        {
+          "applying": false,
+          "applying_label": "separating",
+          "aspect_type": "conjunction",
+          "critical_degrees": [
+            "Crisis/completion point - urgent taurus energy culminating",
+            "Natal: Pure beginning - potent fresh gemini energy"
+          ],
+          "description": "\u26a1\u26a1\u26a1 Uranus conjunction natal Uranus",
+          "house_context": "Activating your home/family - direct impact on your foundation/roots",
+          "intensity_indicator": "\u26a1\u26a1\u26a1",
+          "intensity_label": "PEAK INFLUENCE",
+          "meaning": "fusion of energies",
+          "natal_house": 4,
+          "natal_planet": "uranus",
+          "orb": 0.32,
+          "orb_label": "exact",
+          "priority_score": 96,
+          "speed_timing": {
+            "best_use": "Quick opportunities, immediate actions, time-sensitive matters",
+            "peak_window": "Nov 08 - Nov 15",
+            "speed_description": "Fast Uranus (0.04\u00b0/day) - brief window",
+            "speed_enum": "fast",
+            "timing_impact": "Brief but intense - act within days"
+          },
+          "transit_house": 4,
+          "transit_planet": "uranus"
+        },
+        {
+          "applying": false,
+          "applying_label": "separating",
+          "aspect_type": "sextile",
+          "critical_degrees": [],
+          "description": "\u26a1\u26a1\u26a1 Pluto sextile natal Mercury",
+          "house_context": "Spirituality/Subconscious (12th) influences career/public life (10th)",
+          "intensity_indicator": "\u26a1\u26a1\u26a1",
+          "intensity_label": "PEAK INFLUENCE",
+          "meaning": "opportunity",
+          "natal_house": 10,
+          "natal_planet": "mercury",
+          "orb": 0.45,
+          "orb_label": "exact",
+          "priority_score": 96,
+          "speed_timing": {
+            "best_use": "Process insights, integrate changes, deep psychological work",
+            "peak_window": "Integration window: Nov 08 - Nov 29",
+            "speed_description": "Fast Pluto (0.01\u00b0/day) - brief window",
+            "speed_enum": "fast",
+            "timing_impact": "Slow-burn transformation - effects unfold over weeks"
+          },
+          "transit_house": 12,
+          "transit_planet": "pluto"
+        },
+        {
+          "applying": true,
+          "applying_label": "applying",
+          "aspect_type": "conjunction",
+          "critical_degrees": [
+            "Crisis/completion point - urgent pisces energy culminating",
+            "Natal: Crisis/completion point - urgent pisces energy culminating"
+          ],
+          "description": "\u26a1\u26a1\u26a1 Neptune conjunction natal Neptune",
+          "house_context": "Activating your resources/values - direct impact on what you own/value",
+          "intensity_indicator": "\u26a1\u26a1\u26a1",
+          "intensity_label": "PEAK INFLUENCE",
+          "meaning": "fusion of energies",
+          "natal_house": 2,
+          "natal_planet": "neptune",
+          "orb": 0.15,
+          "orb_label": "exact",
+          "priority_score": 93,
+          "speed_timing": {
+            "best_use": "Process insights, integrate changes, deep psychological work",
+            "peak_window": "Integration window: Nov 08 - Nov 29",
+            "speed_description": "Fast Neptune (0.02\u00b0/day) - brief window",
+            "speed_enum": "fast",
+            "timing_impact": "Slow-burn transformation - effects unfold over weeks"
+          },
+          "transit_house": 2,
+          "transit_planet": "neptune"
+        }
+      ],
+      "retrograde_planets": [
+        {
+          "degree": 25.5,
+          "natal_aspects": [
+            {
+              "message": "Retrograde affecting your natal Saturn",
+              "natal_planet": "Saturn",
+              "orb": 0.3
+            }
+          ],
+          "natal_connection": null,
+          "planet": "Saturn",
+          "sign": "Pisces",
+          "speed_description": "Normal Saturn motion (0.03\u00b0/day)",
+          "speed_status": "average"
+        },
+        {
+          "degree": 30.0,
+          "natal_aspects": [
+            {
+              "message": "Retrograde affecting your natal Uranus",
+              "natal_planet": "Uranus",
+              "orb": 0.3
+            }
+          ],
+          "natal_connection": null,
+          "planet": "Uranus",
+          "sign": "Taurus",
+          "speed_description": "Fast Uranus (0.04\u00b0/day) - brief window",
+          "speed_status": "fast"
+        },
+        {
+          "degree": 29.6,
+          "natal_aspects": [
+            {
+              "message": "Retrograde affecting your natal Neptune",
+              "natal_planet": "Neptune",
+              "orb": 0.2
+            }
+          ],
+          "natal_connection": null,
+          "planet": "Neptune",
+          "sign": "Pisces",
+          "speed_description": "Fast Neptune (0.02\u00b0/day) - brief window",
+          "speed_status": "fast"
+        },
+        {
+          "degree": 15.0,
+          "natal_aspects": [
+            {
+              "message": "Retrograde affecting your natal North Node",
+              "natal_planet": "North Node",
+              "orb": 0.4
+            }
+          ],
+          "natal_connection": null,
+          "planet": "North Node",
+          "sign": "Pisces",
+          "speed_description": "Stationary North Node (near station) - pivotal turning point",
+          "speed_status": "stationary"
+        }
+      ],
+      "theme_synthesis": {
+        "balance_description": "Flow and ease dominate - opportunities unfold naturally",
+        "convergence_patterns": [],
+        "harmony_tension_balance": "harmonious",
+        "theme_synthesis": "Uranus-Moon tension + Jupiter-Mars harmony = Opportunity for structured growth through manageable challenge",
+        "total_challenging": 1,
+        "total_harmonious": 2
+      },
+      "total_aspects_found": 32
+    },
+    "usage": {
+      "cache_tokens_details": null,
+      "cached_content_token_count": null,
+      "candidates_token_count": 1457,
+      "candidates_tokens_details": null,
+      "prompt_token_count": 15533,
+      "prompt_tokens_details": [
+        {
+          "modality": "TEXT",
+          "token_count": 15533
+        }
+      ],
+      "thoughts_token_count": null,
+      "tool_use_prompt_token_count": null,
+      "tool_use_prompt_tokens_details": null,
+      "total_token_count": 16990,
+      "traffic_type": null
+    }
+  }
+}

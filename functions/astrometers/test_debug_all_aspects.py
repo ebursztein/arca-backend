@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
 from astro import compute_birth_chart, find_natal_transit_aspects
-from astrometers.meters import convert_to_transit_aspects
+from functions.astrometers.meters_v1 import convert_to_transit_aspects
 
 
 def test_debug_all_aspects():

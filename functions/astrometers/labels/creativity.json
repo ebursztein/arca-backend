@@ -1,0 +1,98 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "creativity",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "creativity",
+    "display_name": "Creativity",
+    "group": "spirit",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Creativity represents your access to creative flow, self-expression, and ability to bring something new into being.",
+    "detailed": "This meter tracks Venus and Neptune transits to your natal Venus, Neptune, and 5th house (creative self-expression, art, play, joy). Venus brings aesthetic sensitivity and the desire to create beauty. Neptune dissolves creative blocks and opens channels to the muse. When these planets form supportive aspects, creative energy flows naturally and you feel inspired. Challenging aspects create creative blocks, self-doubt, or overwhelming inspiration that's hard to ground. Venus retrograde reduces creative flow by 30%, Neptune by 20%.",
+    "keywords": ["creative flow", "self-expression", "inspiration", "art", "innovation"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "venus": "Aesthetic sense, desire to create beauty, artistic expression",
+      "neptune": "Dissolves creative blocks, opens channels to the muse, boundless imagination"
+    },
+    "secondary_planets": {
+      "uranus": "Breakthrough creativity and innovative expression",
+      "moon": "Emotional creativity and intuitive art-making"
+    },
+    "natal_planets_tracked": ["venus", "neptune"],
+    "transit_planets_tracked": ["venus", "neptune", "uranus", "moon", "sun"],
+    "key_houses": {
+      "5": "Creative self-expression, art, play, joy, and bringing ideas into form"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum creative impact - inspired flow or overwhelming chaos",
+      "opposition": "High impact - tension between vision and execution",
+      "trine": "High flow - creativity comes naturally and joyfully",
+      "square": "Moderate friction - creative blocks or self-doubt",
+      "sextile": "Moderate flow - opportunities for creative expression"
+    },
+    "planetary_dignities": {
+      "venus": {
+        "strong_in": ["libra", "taurus", "pisces"],
+        "weak_in": ["aries", "scorpio", "virgo"]
+      },
+      "neptune": {
+        "strong_in": ["pisces", "cancer"],
+        "weak_in": ["virgo", "capricorn"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Incubating ideas",
+        "mixed": "Quietly brewing",
+        "harmonious": "Peaceful pause"
+      },
+      "mild": {
+        "challenging": "Finding spark",
+        "mixed": "Gentle stirring",
+        "harmonious": "Easy flow"
+      },
+      "moderate": {
+        "challenging": "Working through",
+        "mixed": "Active creating",
+        "harmonious": "Good flow"
+      },
+      "high": {
+        "challenging": "Breaking through",
+        "mixed": "Intense creation",
+        "harmonious": "Inspired flow"
+      },
+      "extreme": {
+        "challenging": "Major breakthrough",
+        "mixed": "Wild energy",
+        "harmonious": "Pure flow"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Encouraging and permission-giving - validate creative blocks and celebrate flow",
+    "focus_when_high": "Emphasize making time for creative work, trusting inspiration, letting it flow",
+    "focus_when_low": "Normalize creative fallow periods, rest is part of the process, input before output",
+    "focus_when_challenging": "Validate creative blocks as real - offer concrete strategies (change medium, lower stakes, play)",
+    "avoid": ["Shaming creative blocks", "Forcing productivity", "Dismissing inspiration as impractical"],
+    "phrasing_examples": {
+      "high_harmonious": "Creative energy is flowing today - make time to create, follow your inspiration, and trust what wants to come through you.",
+      "moderate_mixed": "Creative energy is active but takes effort - lower the stakes and focus on process over outcome to keep flow going.",
+      "low_challenging": "Creative blocks are real today - honor the fallow period, focus on input (reading, observing) rather than forcing output."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["venus", "neptune"],
+    "natal_houses": [5],
+    "retrograde_modifiers": {
+      "venus": 0.7,
+      "neptune": 0.8
+    }
+  }
+}

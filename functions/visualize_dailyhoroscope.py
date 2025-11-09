@@ -54,13 +54,6 @@ def visualize_daily_horoscope(daily_horoscope: DailyHoroscope, sun_sign: str, da
         border_style="yellow"
     ))
 
-    # Summary
-    console.print(Panel(
-        daily_horoscope.summary,
-        title="[bold cyan]summary[/bold cyan]",
-        border_style="cyan"
-    ))
-
     # Astrometers Summary
     astrometers_summary = f"""overall_intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})
 overall_harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})

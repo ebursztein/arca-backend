@@ -21,7 +21,7 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 
 from astro import compute_birth_chart, find_natal_transit_aspects, Planet, AspectType
-from astrometers.meters import convert_to_transit_aspects
+from functions.astrometers.meters_v1 import convert_to_transit_aspects
 from astrometers.core import calculate_astrometers
 
 

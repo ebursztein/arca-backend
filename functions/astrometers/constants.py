@@ -247,7 +247,8 @@ TRANSIT_PLANET_WEIGHTS: Dict[Planet, float] = {
 # Quality Factors (Section 2.3.C - Quality Factor)
 # =============================================================================
 
-# Fixed quality scores for non-conjunction aspects
+# Fixed quality scores for non-conjunction aspects - FLAT BASELINE
+# Used in raw score calculations and calibration
 QUALITY_TRINE = 1.0
 QUALITY_SEXTILE = 1.0
 QUALITY_SQUARE = -1.0
@@ -258,6 +259,12 @@ BENEFIC_PLANETS = {Planet.VENUS, Planet.JUPITER}
 MALEFIC_PLANETS = {Planet.MARS, Planet.SATURN}
 TRANSFORMATIONAL_PLANETS = {Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO}
 
+# Planetary Nature Multipliers (applied via harmonic_boost function)
+# Based on 2,000+ years of observational astrology
+# Applied AFTER raw score calculation, BEFORE normalization
+BENEFIC_QUALITY_MULTIPLIER = 2.0    # Venus/Jupiter enhance harmonious aspects (optimistic: 2x boost)
+MALEFIC_QUALITY_MULTIPLIER = 0.5    # Mars/Saturn soften challenging aspects (optimistic: 0.5x softening)
+
 # Conjunction quality values
 CONJUNCTION_DOUBLE_BENEFIC = 0.8
 CONJUNCTION_DOUBLE_MALEFIC = -0.8
@@ -265,14 +272,15 @@ CONJUNCTION_BENEFIC_MALEFIC = 0.2
 CONJUNCTION_TRANSFORMATIONAL = -0.3
 CONJUNCTION_DEFAULT = 0.0
 
-# Quality label thresholds (exact mapping to actual quality values)
-QUALITY_BLISSFUL_THRESHOLD = 1.0           # +1.0 (trine, sextile)
-QUALITY_VERY_HARMONIOUS_THRESHOLD = 0.8    # +0.8 (double benefic)
-QUALITY_HARMONIOUS_THRESHOLD = 0.2         # +0.2 (benefic-malefic)
-QUALITY_NEUTRAL_THRESHOLD = -0.3           # 0.0, -0.3 (default/transformational)
-QUALITY_CHALLENGING_THRESHOLD = -0.8       # -0.8 (double malefic)
-QUALITY_VERY_CHALLENGING_THRESHOLD = -1.0  # -1.0 (square, opposition)
-# < -1.0: Extremely Challenging (reserved for future)
+# Quality label thresholds (V2 Optimistic Model - updated for new ranges)
+# New range: +1.32 (trine × benefic) to -0.85 (opposition × malefic)
+QUALITY_BLISSFUL_THRESHOLD = 1.1           # ≥1.1 (trine/sextile with benefic boost)
+QUALITY_VERY_HARMONIOUS_THRESHOLD = 0.8    # ≥0.8 (double benefic, strong harmonious)
+QUALITY_HARMONIOUS_THRESHOLD = 0.2         # ≥0.2 (benefic-malefic, mild positive)
+QUALITY_NEUTRAL_THRESHOLD = -0.3           # ≥-0.3 (default/transformational conjunctions)
+QUALITY_CHALLENGING_THRESHOLD = -0.7       # ≥-0.7 (softened challenging aspects)
+QUALITY_VERY_CHALLENGING_THRESHOLD = -0.85 # ≥-0.85 (harsh aspects, still softened)
+# < -0.85: Extremely Challenging (rare, double malefic)
 
 # =============================================================================
 # Essential Dignity Scores (Section 3.2 - Planetary Dignity)
@@ -389,44 +397,30 @@ HARMONY_HARMONIOUS_THRESHOLD = 70    # 70-100: Harmonious
 # Weights are normalized during aggregation, so these are relative importance
 
 METER_IMPORTANCE_WEIGHTS: Dict[Meter, float] = {
-    # OVERVIEW - Highest importance (dashboard summary)
-    Meter.OVERALL_INTENSITY: 2.0,
-    Meter.OVERALL_HARMONY: 2.0,
-
     # MIND - High importance (daily cognitive function)
     Meter.MENTAL_CLARITY: 2.0,
-    Meter.DECISION_QUALITY: 1.5,
-    Meter.COMMUNICATION_FLOW: 1.5,
+    Meter.FOCUS: 1.5,
+    Meter.COMMUNICATION: 1.5,
 
     # EMOTIONS - High importance (emotional well-being)
-    Meter.EMOTIONAL_INTENSITY: 2.0,
-    Meter.RELATIONSHIP_HARMONY: 1.5,
-    Meter.EMOTIONAL_RESILIENCE: 1.5,
+    Meter.LOVE: 2.0,
+    Meter.INNER_STABILITY: 1.5,
+    Meter.SENSITIVITY: 1.0,
 
     # BODY - High importance (physical energy and action)
-    Meter.PHYSICAL_ENERGY: 2.0,
-    Meter.MOTIVATION_DRIVE: 1.5,
-    Meter.CONFLICT_RISK: 1.0,
+    Meter.VITALITY: 2.0,
+    Meter.DRIVE: 1.5,
+    Meter.WELLNESS: 1.0,
 
-    # CAREER - High importance (professional life)
-    Meter.CAREER_AMBITION: 2.0,
-    Meter.OPPORTUNITY_WINDOW: 1.5,
+    # SPIRIT - Medium-high importance (spiritual and creative expression)
+    Meter.PURPOSE: 1.5,
+    Meter.CONNECTION: 1.0,
+    Meter.INTUITION: 1.0,
+    Meter.CREATIVITY: 1.2,
 
-    # EVOLUTION - Medium-high importance (personal growth)
-    Meter.CHALLENGE_INTENSITY: 1.5,
-    Meter.TRANSFORMATION_PRESSURE: 1.5,
-    Meter.INNOVATION_BREAKTHROUGH: 1.0,
-
-    # ELEMENTS - Medium importance (temperament patterns)
-    Meter.FIRE_ENERGY: 0.7,
-    Meter.EARTH_ENERGY: 0.7,
-    Meter.AIR_ENERGY: 0.7,
-    Meter.WATER_ENERGY: 0.7,
-
-    # SPIRITUAL - Medium importance (spiritual awareness)
-    Meter.INTUITION_SPIRITUALITY: 1.0,
-    Meter.KARMIC_LESSONS: 1.0,
-
-    # COLLECTIVE - Lower importance (less personally immediate)
-    Meter.SOCIAL_COLLECTIVE: 0.5,
+    # GROWTH - High importance (career and personal evolution)
+    Meter.OPPORTUNITIES: 1.5,
+    Meter.CAREER: 2.0,
+    Meter.GROWTH: 1.5,
+    Meter.SOCIAL_LIFE: 1.0,
 }

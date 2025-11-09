@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 from datetime import datetime, timedelta
 from astro import compute_birth_chart
-from astrometers.meters import get_meters, AllMetersReading
+from functions.astrometers.meters_v1 import get_meters, AllMetersReading
 
 
 # ============================================================================

@@ -1,0 +1,99 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "intuition",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "intuition",
+    "display_name": "Intuition",
+    "group": "spirit",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Intuition represents your access to inner knowing, psychic awareness, and ability to sense what isn't visible.",
+    "detailed": "This meter tracks Uranus and Neptune transits to your natal Uranus, Neptune, and key houses (8th = hidden knowledge and psychic depth, 9th = intuitive wisdom and insight). Uranus brings sudden flashes of insight and breakthrough awareness. Neptune opens psychic channels and dissolves the veil between conscious and unconscious. When these planets form supportive aspects, your intuition is reliable and you receive clear inner guidance. Challenging aspects create confusion between intuition and fear, or overwhelming psychic static. Both retrograde reduce intuitive clarity by 20%.",
+    "keywords": ["inner knowing", "psychic awareness", "insight", "gut feeling", "sixth sense"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "uranus": "Sudden insight, breakthrough awareness, lightning-bolt intuition",
+      "neptune": "Psychic channels, dissolving the veil, mystical knowing"
+    },
+    "secondary_planets": {
+      "moon": "Emotional intuition and gut feelings",
+      "pluto": "Deep psychological insight and penetrating awareness"
+    },
+    "natal_planets_tracked": ["uranus", "neptune"],
+    "transit_planets_tracked": ["uranus", "neptune", "moon", "pluto", "mercury"],
+    "key_houses": {
+      "8": "Hidden knowledge, psychic depth, penetrating insight into what's beneath the surface",
+      "9": "Intuitive wisdom, higher knowing, philosophical and spiritual insight"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum intuitive impact - profound knowing or overwhelming confusion",
+      "opposition": "High impact - tension between intuition and logic",
+      "trine": "High flow - intuition flows naturally and reliably",
+      "square": "Moderate friction - distinguishing intuition from fear",
+      "sextile": "Moderate flow - opportunities for intuitive insight"
+    },
+    "planetary_dignities": {
+      "uranus": {
+        "strong_in": ["aquarius", "scorpio"],
+        "weak_in": ["taurus", "leo"]
+      },
+      "neptune": {
+        "strong_in": ["pisces", "cancer"],
+        "weak_in": ["virgo", "capricorn"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Going deeper",
+        "mixed": "Subtle knowing",
+        "harmonious": "Calm clarity"
+      },
+      "mild": {
+        "challenging": "Learning trust",
+        "mixed": "Gentle insights",
+        "harmonious": "Soft guidance"
+      },
+      "moderate": {
+        "challenging": "Building trust",
+        "mixed": "Active sensing",
+        "harmonious": "Clear knowing"
+      },
+      "high": {
+        "challenging": "Sorting truth",
+        "mixed": "Intense awareness",
+        "harmonious": "Strong intuition"
+      },
+      "extreme": {
+        "challenging": "Finding clarity",
+        "mixed": "Sudden downloads",
+        "harmonious": "Total clarity"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Validating and practical about psychic/intuitive experience - not woo-woo",
+    "focus_when_high": "Emphasize trusting gut feelings, acting on inner knowing, intuition is reliable today",
+    "focus_when_low": "Normalize intuitive quiet, logic is fine today, not every day requires psychic awareness",
+    "focus_when_challenging": "Help distinguish intuition from anxiety - fear contracts, intuition expands",
+    "avoid": ["Making them feel crazy for intuitive experiences", "Dismissing real psychic awareness", "Over-mystifying normal gut feelings"],
+    "phrasing_examples": {
+      "high_harmonious": "Your intuition is sharp and reliable today - trust those gut feelings and inner knowing, even if you can't explain why.",
+      "moderate_mixed": "You're picking up intuitive signals but they're mixed - give yourself time to sort what's real insight vs. anxiety.",
+      "low_challenging": "Intuition feels muffled or confusing today - rely more on logic and let your inner knowing rest rather than forcing it."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["uranus", "neptune"],
+    "natal_houses": [8, 9],
+    "retrograde_modifiers": {
+      "uranus": 0.8,
+      "neptune": 0.8
+    }
+  }
+}

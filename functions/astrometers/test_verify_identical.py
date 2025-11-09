@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
 from astro import compute_birth_chart
-from astrometers.meters import get_meters
+from functions.astrometers.meters_v1 import get_meters
 
 
 def test_verify_identical():

@@ -1,0 +1,71 @@
+{
+  "_schema_version": "2.0",
+  "_group": "body",
+  "_last_updated": "2025-01-08",
+  "metadata": {
+    "group_id": "body",
+    "display_name": "Body",
+    "description": "Physical energy, drive, and wellness"
+  },
+  "description": {
+    "overview": "Body represents your physical vitality, motivation to act, and overall health and wellbeing.",
+    "detailed": "This group combines three physical dimensions: Vitality (physical energy and stamina), Drive (motivation to take action and pursue goals), and Wellness (daily health routines and work-life balance). Together they show your overall physical and practical state. High scores mean you have energy, feel motivated, and your routines are supporting you. Low scores suggest exhaustion, low motivation, or neglected self-care.",
+    "keywords": ["energy", "action", "health", "vitality", "wellness"]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Physical recovery",
+        "mixed": "Low movement",
+        "harmonious": "Restful body"
+      },
+      "mild": {
+        "challenging": "Building reserves",
+        "mixed": "Gentle energy",
+        "harmonious": "Body ease"
+      },
+      "moderate": {
+        "challenging": "Physical friction",
+        "mixed": "Steady effort",
+        "harmonious": "Physical flow"
+      },
+      "high": {
+        "challenging": "Physical pressure",
+        "mixed": "Strong drive",
+        "harmonious": "Peak energy"
+      },
+      "extreme": {
+        "challenging": "Physical breakthrough",
+        "mixed": "Maximum output",
+        "harmonious": "Optimal vitality"
+      }
+    }
+  },
+  "advice_templates": {
+    "quiet": {
+      "challenging": "Your body needs rest and recovery - honor low energy",
+      "mixed": "Physical activity is minimal - conserve energy",
+      "harmonious": "Your body is peacefully resting - deep recovery happening"
+    },
+    "mild": {
+      "challenging": "Energy is building slowly - be patient with your body",
+      "mixed": "Gentle physical energy present - light activity favored",
+      "harmonious": "Your body has easy energy - movement feels natural"
+    },
+    "moderate": {
+      "challenging": "Physical resistance present - work with your body not against it",
+      "mixed": "Physical energy requires effort but is available",
+      "harmonious": "Strong steady energy - good for sustained activity"
+    },
+    "high": {
+      "challenging": "Physical demands are intense - manage energy carefully",
+      "mixed": "Drive is high but requires management - channel wisely",
+      "harmonious": "Peak physical performance - maximize activity windows"
+    },
+    "extreme": {
+      "challenging": "Physical exhaustion or rebuilding - prioritize rest and recovery",
+      "mixed": "Maximum physical output - powerful but unsustainable",
+      "harmonious": "Optimal vitality and drive - exceptional physical capacity"
+    }
+  }
+}

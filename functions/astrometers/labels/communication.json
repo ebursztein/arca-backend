@@ -1,0 +1,98 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "communication",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "communication",
+    "display_name": "Communication",
+    "group": "mind",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Communication represents how easily you express yourself, connect through words, and understand others in conversations.",
+    "detailed": "This meter tracks Mercury and Venus transits to your natal Mercury and key communication houses (3rd = everyday talk, 7th = one-on-one dialogue). Mercury governs how you express ideas and process language. Venus adds harmony and social grace to interactions. When these planets form supportive aspects, conversations flow naturally and you feel understood. Challenging aspects create miscommunication, social awkwardness, or difficulty finding the right words. Mercury retrograde cuts communication effectiveness in half.",
+    "keywords": ["expression", "clarity", "messages", "dialogue", "understanding"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "mercury": "Rules language, expression, and information exchange",
+      "venus": "Social grace, harmony in communication, diplomatic expression"
+    },
+    "secondary_planets": {
+      "mars": "Adds directness and assertiveness but can create bluntness",
+      "saturn": "Can create communication blocks but adds gravitas when positive"
+    },
+    "natal_planets_tracked": ["mercury"],
+    "transit_planets_tracked": ["mercury", "venus", "mars", "jupiter", "saturn"],
+    "key_houses": {
+      "3": "Everyday communication, siblings, neighbors, short exchanges",
+      "7": "One-on-one dialogue, partnerships, direct communication"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum communication impact - intense connection or confusion",
+      "opposition": "High impact - tension in understanding each other",
+      "trine": "High flow - words come easily and are well-received",
+      "square": "Moderate friction - miscommunication to navigate",
+      "sextile": "Moderate flow - supportive dialogue opportunities"
+    },
+    "planetary_dignities": {
+      "mercury": {
+        "strong_in": ["gemini", "virgo", "aquarius"],
+        "weak_in": ["sagittarius", "pisces"]
+      },
+      "venus": {
+        "strong_in": ["libra", "taurus", "pisces"],
+        "weak_in": ["aries", "scorpio", "virgo"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Finding voice",
+        "mixed": "Quiet listening",
+        "harmonious": "Peaceful silence"
+      },
+      "mild": {
+        "challenging": "Building bridges",
+        "mixed": "Gentle exchanges",
+        "harmonious": "Easy conversation"
+      },
+      "moderate": {
+        "challenging": "Finding words",
+        "mixed": "Active dialogue",
+        "harmonious": "Clear connection"
+      },
+      "high": {
+        "challenging": "Pushing through",
+        "mixed": "Intense discussion",
+        "harmonious": "Flowing exchange"
+      },
+      "extreme": {
+        "challenging": "Breaking through",
+        "mixed": "Nonstop talking",
+        "harmonious": "Total understanding"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Social and relational - talk about conversations, texts, meetings, social interactions",
+    "focus_when_high": "Emphasize important conversations, networking, expressing needs, difficult talks you've been avoiding",
+    "focus_when_low": "Emphasize listening more than talking, written communication over verbal, waiting for better timing",
+    "focus_when_challenging": "Acknowledge miscommunication risks but offer strategies (clarify before reacting, ask questions, give benefit of doubt)",
+    "avoid": ["Blaming them for miscommunication", "Ignoring real social friction", "Making light of communication anxiety"],
+    "phrasing_examples": {
+      "high_harmonious": "Communication flows beautifully today - this is your window for important conversations, expressing what you need, or having talks you've been putting off.",
+      "moderate_mixed": "Conversations take more effort today - ask clarifying questions and give people the benefit of the doubt before assuming meaning.",
+      "low_challenging": "Words aren't coming easily today - text instead of calling when possible, and save vulnerable conversations for when communication feels less fraught."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["mercury"],
+    "natal_houses": [3, 7],
+    "retrograde_modifiers": {
+      "mercury": 0.5
+    }
+  }
+}

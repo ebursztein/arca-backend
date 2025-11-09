@@ -2,6 +2,74 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL RULES
+
+**NEVER use theoretical/constant estimates for normalization:**
+- DO NOT use `DTI_MAX_ESTIMATE`, `HQS_MAX_POSITIVE_ESTIMATE`, `HQS_MAX_NEGATIVE_ESTIMATE`
+- ALWAYS use empirical calibration data from `calibration_constants.json`
+- If calibration data is missing or wrong, re-run calibration scripts
+- Theoretical constants are unreliable and produce bad meter readings
+
+**Re-running calibration (when meter filters change):**
+```bash
+# From project root: /Users/elieb/git/arca-backend
+uv run python functions/astrometers/calibration/calculate_historical_v2.py
+```
+- Calculates DTI/HQS scores across 1,000 diverse charts × 1,827 days × 17 meters = ~31M calculations
+- Date range: 2020-01-01 to 2024-12-31 (5 years)
+- Updates `functions/astrometers/calibration/calibration_constants.json`
+- Outputs `functions/astrometers/calibration/historical_scores_v2.csv` (raw scores)
+- Takes ~5-10 minutes to complete
+- **MUST run this whenever you change meter configurations or filter logic**
+
+**Verifying distribution quality (after calibration):**
+```bash
+# From project root: /Users/elieb/git/arca-backend
+uv run python functions/astrometers/calibration/verify_percentile.py
+```
+- Verifies that normalized scores follow proper statistical distribution
+- Checks that score 99 happens 1% of the time (P99)
+- Checks that score above 90 happens 10% of the time (P90)
+- Validates score 50 is the median (P50)
+- Takes ~30 seconds
+- **Run this after calibration to ensure normalization is working correctly**
+
+**Testing meter overlap/collision (after changing filters):**
+```bash
+# From project root: /Users/elieb/git/arca-backend
+uv run python functions/astrometers/test_charts_stats_v2.py
+```
+- Tests 1,000 random charts to detect unexpected meter overlaps
+- Validates that meters are distinct and measuring different things
+- Takes ~2-3 minutes to complete
+- **Target: All overlaps < 6% (currently achieved)**
+- Run this after calibration to ensure meters aren't too correlated
+
+**Viewing meter configurations (for astrological review):**
+```bash
+# From project root: /Users/elieb/git/arca-backend
+uv run python functions/astrometers/show_meters.py
+```
+- Displays all 17 meter configurations organized by group
+- Shows natal planets, natal houses, and house meanings
+- Use this to review meter definitions before making changes
+- Takes <1 second
+
+**Managing state labels (user-facing text):**
+```bash
+# View all state labels in formatted tables
+uv run python functions/astrometers/show_all_labels.py
+
+# Validate all labels are ≤2 words (iOS UI constraint)
+uv run python functions/astrometers/test_label_word_counts.py
+```
+- 17 individual meters + 6 meter groups (mind, emotions, body, spirit, growth, overall)
+- Each with 15 state labels (5 intensity × 3 quality levels)
+- **Critical constraint**: All labels must be 2 words maximum
+- Labels use empowering, energy-focused language (see `docs/ASTROMETER_LABELS.md`)
+- NO clinical terms ("crisis," "burnout"), NO mystical jargon ("psychic," "soul")
+- Labels describe cosmic energy available, not emotional states
+
 ## Project Overview
 
 arca-backend is the backend service for a daily tarot and astrology app that provides personalized spiritual guidance through AI-powered readings. The app helps users navigate real-life situations (relationships, career, life transitions) through the lens of ancient spiritual practices.
@@ -67,23 +135,28 @@ arca-backend is the backend service for a daily tarot and astrology app that pro
 - `jinja2` - Prompt templating system
   - **Template architecture:** Modular design with static/dynamic/personalization split
   - **Location:** `functions/templates/horoscope/`
-  - **Fast Horoscope (Prompt 1):**
-    - `daily_static.j2` - System instructions, task, style guidelines (cacheable, shared)
-    - `daily_dynamic.j2` - Today's transits, lunar data (changes daily)
-    - `personalization.j2` - User profile, natal chart, memory (cacheable per user)
-  - **Detailed Horoscope (Prompt 2):**
-    - `detailed_static.j2` - System instructions for detailed predictions (cacheable, shared)
-    - `detailed_dynamic.j2` - Fast horoscope output + upcoming transits (changes per request)
-    - `personalization.j2` - Same shared template (cacheable per user)
+  - **Daily Horoscope Templates (Single-Prompt Architecture):**
+    - `daily_static.j2` - System instructions, task, style guidelines (cacheable, shared across all users)
+    - `daily_dynamic.j2` - Today's transits, lunar data, astrometers, meter groups (changes daily, not cacheable)
+    - `personalization.j2` - User profile, natal chart, memory (not cacheable - memory updates frequently)
   - **Composition:**
     ```
-    Fast = daily_static + daily_dynamic + personalization
-    Detailed = detailed_static + detailed_dynamic + personalization
+    Daily Horoscope Prompt = daily_static + daily_dynamic + personalization
     ```
   - **Caching strategy:**
-    - Static templates: Cache per model (same for all users)
-    - Personalization: Cache per user (natal chart + sun sign profile)
-    - Dynamic: Never cache (transits change daily)
+    - Static templates: Cacheable (same for all users, changes infrequently)
+    - Dynamic content: Not cacheable (transits change daily)
+    - Personalization: Not cacheable (memory updates with each reading)
+  - **Daily Horoscope Output Fields:**
+    - Core fields: `technical_analysis`, `daily_theme_headline`, `daily_overview`, `actionable_advice`
+    - Astrometers: Complete meter data with group/meter interpretations and explainability
+    - Transit data: Enhanced transit summary with priority transits and critical degrees
+    - Moon data: Lunar phase, aspects, void of course, with LLM interpretation
+    - Phase 1 extensions:
+      - `look_ahead_preview` - Upcoming significant transits (2-3 sentences)
+      - `energy_rhythm` - Energy pattern throughout day based on intensity curve (1-2 sentences)
+      - `relationship_weather` - Interpersonal dynamics from relationship meters (2-3 sentences)
+      - `collective_energy` - Outer planet context showing collective mood (1-2 sentences)
 - `pydantic` (v2.12.2+) - Data validation and type safety
 - `posthog` - Analytics and LLM observability
   - **PostHog AI Gemini Integration:** `posthog.ai.gemini.Client`
@@ -138,6 +211,12 @@ arca-backend/
 │   ├── main.py            # Cloud Functions entry point
 │   ├── astro.py           # ⭐ Core astrology module with Pydantic models
 │   ├── astro_test.py      # ⭐ Comprehensive test suite (60 tests)
+│   ├── astrometers/       # ⭐ Quantified meter system (17 meters + 5 groups)
+│   │   ├── core.py        # DTI/HQS calculation engine
+│   │   ├── meters.py      # All 17 meter calculation functions
+│   │   ├── calibration/   # Backtesting scripts and sample charts
+│   │   ├── labels/        # JSON labels for LLM interpretation
+│   │   └── tests/         # Comprehensive test suite
 │   ├── signs/             # ⭐ Sun sign profile data (JSON)
 │   │   ├── aries.json     # Complete Aries profile (8 life domains)
 │   │   ├── taurus.json    # (etc. for all 12 signs)
@@ -156,6 +235,7 @@ arca-backend/
 │   ├── TODO.md            # Sprint-based task list (current work)
 │   ├── ios.md             # iOS integration guide (Firebase functions reference)
 │   ├── ASTROLOGY_MODULE.md # Complete astrology API reference
+│   ├── astrometers.md     # ⭐ Astrometers system documentation (meters, calibration, backtesting)
 │   └── sunsign.json       # Sun sign profile JSON schema
 ├── public_site/           # Marketing/landing static site (Astro)
 │   ├── src/               # Astro source files
@@ -194,7 +274,7 @@ arca-backend/
 
 3. **`docs/TODO.md`** - Current work tracker:
    - Sprint 1: Core Astrology Module ✅ COMPLETE (60 tests)
-   - Sprint 2: LLM Integration ✅ COMPLETE (two-prompt architecture)
+   - Sprint 2: LLM Integration ✅ COMPLETE (single-prompt daily horoscope)
    - Sprint 3: Firestore Operations ← NEXT
    - Sprint 4: Callable Functions
    - Sprint 5: Triggers
@@ -206,7 +286,22 @@ arca-backend/
    - Pydantic models documentation
    - Usage patterns
 
-5. **`docs/ios.md`** - iOS integration guide
+5. **`docs/astrometers.md`** - Astrometers system documentation
+   - 17 specialized meters organized into 5 user-facing groups (intensity + harmony scoring)
+   - Core algorithms: DTI (Dual Transit Influence) and HQS (Harmonic Quality Score)
+   - Calibration process: How 1,000+ diverse charts inform normalization
+   - Backtesting: Overlap testing and trend threshold analysis
+   - Complete file-by-file breakdown of all components
+   - Integration guide with code examples
+
+6. **`docs/ASTROMETER_LABELS.md`** - State label system guide
+   - Complete brand voice principles for 345 user-facing labels
+   - Empowering vocabulary bank and conversion patterns
+   - Label maintenance workflows and QA checklist
+   - Future rotation strategy for label diversity
+   - Tool documentation for all label management scripts
+
+7. **`docs/ios.md`** - iOS integration guide
    - All Firebase functions with Swift examples
    - Authentication setup
    - Data models and error handling
@@ -379,6 +474,15 @@ Functions decorated with `@firestore_fn.on_document_created()` etc.:
   - `summarize_transits()` - Personalized transit summaries for LLM context
   - `get_sun_sign()` - Calculate sun sign from birth date
   - `get_sun_sign_profile()` - Load rich profile data
+- **Astrometers system** (`functions/astrometers/`)
+  - 17 specialized meters organized into 5 user-facing groups (Mind, Emotions, Body, Spirit, Growth)
+  - Dual-metric scoring: Intensity (0-100) + Harmony (0-100)
+  - Core algorithms: DTI (Σ W_i × P_i) and HQS (Σ W_i × P_i × Q_i)
+  - Empirically calibrated using 2,500+ diverse birth charts
+  - Automatic trend calculation (daily changes with STABLE/SLOW/MODERATE/RAPID classification)
+  - Backtesting: Validated meter distinctiveness across 1,000 random charts
+  - LLM-ready: JSON labels + markdown summary tables for prompt generation
+  - See `docs/astrometers.md` for complete documentation
 - **Comprehensive test coverage** (60 tests passing)
   - Sun sign calculation tests (13 tests)
   - Sun sign profile validation tests (12 tests with "HARD FAIL" messages)
@@ -386,12 +490,13 @@ Functions decorated with `@firestore_fn.on_document_created()` etc.:
   - Transit summary tests (10 tests)
   - Solar house calculation tests (17 tests including regression + boundary conditions)
   - Sign rulers tests (3 tests for modern astrology rulerships)
+  - Astrometer overlap tests (1,000 random chart validation)
 - **Infrastructure**
   - Firebase project setup and configuration
   - Local emulator configuration
   - Cloud Functions scaffolding with natal integration
   - Static marketing site (Astro-based)
-  - JSON schema documentation (`docs/sunsign.json`)
+  - JSON schema documentation (`docs/sunsign.json`, `docs/astrometers.md`)
 
 ### 🚧 In Progress
 - LLM integration for personalized readings
@@ -408,24 +513,53 @@ Functions decorated with `@firestore_fn.on_document_created()` etc.:
 
 ## Design Principles
 
-### Brand Voice & Positioning
-- Elevated and sacred (not transactional or fortune-telling)
-- Transformational framing (spiritual evolution, not problem-solving)
-- Personal and intimate (tailored to individual journeys)
-- Ancient wisdom meets modern life
-- Accessible to everyone, not gatekept
+### Brand Voice & Tone (CRITICAL)
+**Target Audience:** 20-something women navigating relationships, career, life transitions
+
+**Tone:** Direct, actionable, honest, relatable. Write like a wise friend, not a mystical guru.
+- Warm, direct, conversational
+- Talk like a wise friend over coffee (or texting)
+- Use "you" voice throughout
+- Encouraging and empowering, never fatalistic
+- Don't oversell the mystical angle
+- Be honest about challenges without being dramatic
+
+**Language Level:**
+- Write at 8th grade reading level
+- Use short sentences (15-20 words ideal)
+- Avoid academic/mystical words: "catalyze," "manifestation," "archetypal," "synthesize," "profound," "deeply"
+- Say things directly and simply
+- NO astrology jargon without explanation (for look_ahead: talk like texting a friend, not "Mars stations retrograde")
+
+**Examples:**
+- ❌ "This celestial configuration catalyzes a profound recalibration"
+- ✅ "Today's planets are pushing you to rethink this area"
+
+- ❌ "Your soul is undergoing profound alchemical transmutation"
+- ✅ "You're going through a deep change in how you see yourself"
+
+- ❌ "Transform your resource consciousness"
+- ✅ "Rethink how you earn, spend, and value money"
+
+**Prohibitions:**
+- Never mention AI, algorithms, meters, or technology to users
+- Never give medical, legal, or financial advice
+- Never repeat exact phrasing across sections
+- Don't use emojis in horoscope text
 
 ### Personalization Strategy
-- LLM responses must feel mystical and intuitive, like the app "knows" the user
 - Surface recurring themes organically (e.g., boundaries, self-worth, career courage)
 - Connect dots across readings to show how situations relate
 - Adapt guidance depth based on user's spiritual journey progression
-- Never explicitly mention AI/technology to users - maintain mystical framing
+- Use their name naturally (once in Daily Overview)
+- Reference sun sign simply ("As a Gemini, you...")
+- Weave in memory data without making it obvious
 
 ### User Experience Goals
 - Users should feel understood and validated
 - Reframe everyday concerns as opportunities for growth
-- Create a sacred daily practice, not just an app check-in
+- Be specific and actionable (not vague)
+- Make it forward-looking and empowering
 - Document and reflect spiritual evolution over time
 
 ## Astrology Module Architecture (`functions/astro.py`)
@@ -839,3 +973,4 @@ The natal library handles all astronomical calculations regardless of the time p
 - Keep memory collection server-side only (critical for privacy)
 - Cost control: Use max_instances to prevent unexpected scaling
 - Firestore rules need hardening before production launch
+- always use pytest to write unit test and tests

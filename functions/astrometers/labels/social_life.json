@@ -1,0 +1,95 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "social_life",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "social_life",
+    "display_name": "Social Life",
+    "group": "growth",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Social Life represents your friendships, community connections, and ease of social interaction and belonging.",
+    "detailed": "This meter tracks Venus and Mercury transits to your natal Venus, Mercury, and 11th house (friendships, community, social networks). Venus brings social harmony, likability, and ease of connection. Mercury governs communication in friendships and group settings. When these planets form supportive aspects, friendships feel easy, you enjoy socializing, and community feels welcoming. Challenging aspects create social awkwardness, friendship friction, or feeling like an outsider.",
+    "keywords": ["friendships", "community", "social ease", "belonging", "connection"]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "venus": "Social harmony, likability, ease of friendship and connection",
+      "mercury": "Communication in friendships, group discussions, social wit"
+    },
+    "secondary_planets": {
+      "moon": "Emotional comfort in social settings",
+      "jupiter": "Expands social circle and community opportunities"
+    },
+    "natal_planets_tracked": ["venus", "mercury"],
+    "transit_planets_tracked": ["venus", "mercury", "moon", "jupiter", "saturn"],
+    "key_houses": {
+      "11": "Friendships, community, social networks, group belonging"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum social impact - intense connection or social drama",
+      "opposition": "High impact - tension in friendships or feeling outside community",
+      "trine": "High flow - social ease and natural belonging",
+      "square": "Moderate friction - friendship challenges or social awkwardness",
+      "sextile": "Moderate flow - opportunities for social connection"
+    },
+    "planetary_dignities": {
+      "venus": {
+        "strong_in": ["libra", "taurus", "pisces"],
+        "weak_in": ["aries", "scorpio", "virgo"]
+      },
+      "mercury": {
+        "strong_in": ["gemini", "virgo", "aquarius"],
+        "weak_in": ["sagittarius", "pisces"]
+      }
+    },
+    "critical_degrees": [0, 15, 29]
+  },
+  "experience_labels": {
+    "combined": {
+      "quiet": {
+        "challenging": "Solo recharge",
+        "mixed": "Solo time",
+        "harmonious": "Content alone"
+      },
+      "mild": {
+        "challenging": "Finding rhythm",
+        "mixed": "Selective socializing",
+        "harmonious": "Easy hangouts"
+      },
+      "moderate": {
+        "challenging": "Working through",
+        "mixed": "Active social",
+        "harmonious": "Social flow"
+      },
+      "high": {
+        "challenging": "Navigating dynamics",
+        "mixed": "Intense connections",
+        "harmonious": "Thriving community"
+      },
+      "extreme": {
+        "challenging": "Building community",
+        "mixed": "Social overload",
+        "harmonious": "Total belonging"
+      }
+    }
+  },
+  "interpretation_guidelines": {
+    "tone": "Social and community-focused - talk about friendships, belonging, social energy",
+    "focus_when_high": "Emphasize reaching out to friends, accepting social invitations, enjoying community",
+    "focus_when_low": "Normalize introvert needs, solo time is healthy, quality over quantity in friendships",
+    "focus_when_challenging": "Acknowledge social awkwardness or friendship friction as real - offer strategies without shaming",
+    "avoid": ["Forcing extroversion", "Shaming introversion or social anxiety", "Dismissing friendship conflicts"],
+    "phrasing_examples": {
+      "high_harmonious": "Social energy is high today - reach out to friends, say yes to invitations, and enjoy feeling connected to your community.",
+      "moderate_mixed": "Socializing takes effort today but connection is possible - be selective about who you spend energy on.",
+      "low_challenging": "Social energy is low or friendships feel fraught today - honor your need for solitude and don't force connection you don't feel."
+    }
+  },
+  "configuration": {
+    "natal_planets": ["venus", "mercury"],
+    "natal_houses": [11],
+    "retrograde_modifiers": {}
+  }
+}

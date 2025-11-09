@@ -8,13 +8,21 @@
   "functions": [
     {
       "source": "functions",
+      "get_daily_horoscope": {
+        "memory": "512MB"
+      },
       "ignore": [
         "venv",
         ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
         "*.local",
-        "*log"
+        "*log",
+        "*.csv",
+        "tmp/",
+        "archive/",
+        "docs/",
+        "tests/",
+        "calibration/"
+
       ],
       "runtime": "python313"
     }
