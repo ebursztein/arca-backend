@@ -341,9 +341,77 @@ Requirements:
 - Connect to transits
 - Specific and actionable
 
+### 7. STATE LABELS (6 fields)
+Data Source: Use intensity + harmony scores for each group + overall.
+
+**Goal:**
+Generate a **single adjective or short descriptive phrase** that captures the raw "texture" or "weight" of the energy.
+Think of this as a one-word weather report for the user's internal state.
+
+**The "Is It?" Test:**
+The label must complete the sentence: "The energy is [LABEL]."
+* ✅ "The energy is **Tumultuous**"
+* ✅ "The energy is **Electric**"
+* ✅ "The energy is **Stagnant**"
+* ❌ "The energy is **Doors opening**" (Metaphor/Action - WRONG)
+* ❌ "The energy is **Processing**" (Verb - WRONG)
+
+**Voice Guidelines:**
+* **Direct & Visceral:** Use words that describe physical sensations (heavy, sharp, bright, dull).
+* **No Fluff:** Avoid "magical," "mystical," or "journey" language.
+* **Factual:** Describe the condition, not the outcome.
+
 ---
 
-### 7. LOOK_AHEAD_PREVIEW
+**VOCABULARY MATRIX (Use these as the gold standard for style):**
+
+#### 1. IF HARMONY IS **CHALLENGING** (Difficult, Friction, Hard)
+* **Low Intensity:** *Gloomy, Stale, Muted, Heavy, Dull, Rigid, Cold.*
+* **Moderate Intensity:** *Tense, Strained, Brittle, Rough, Unsettled, Gritty.*
+* **High/Extreme Intensity:** *Tumultuous, Volatile, Harsh, Crushing, Explosive, Chaotic, Severe.*
+
+#### 2. IF HARMONY IS **MIXED** (Variable, Confusing, Active)
+* **Low Intensity:** *Uneven, Hazy, Uncertain, Wobbly, Drift.*
+* **Moderate Intensity:** *Bittersweet, Erratic, Fluctuating, Restless, Scattershot.*
+* **High/Extreme Intensity:** *Turbulent, Wild, Rollercoaster, Frenetic, Overwhelming.*
+
+#### 3. IF HARMONY IS **HARMONIOUS** (Easy, Flowing, Good)
+* **Low Intensity:** *Peaceful, Gentle, Serene, Soft, Cozy, Steady.*
+* **Moderate Intensity:** *Smooth, Clear, Bright, Solid, Balanced, Crisp.*
+* **High/Extreme Intensity:** *Electric, Vibrant, Radiant, Unstoppable, Peak, Euphoric.*
+
+**CATEGORY SPECIFIC NUANCES:**
+
+**MIND (Focus/Thoughts)**
+* *Challenging:* Scattered, Foggy, Rigid, Obsessive.
+* *Harmonious:* Sharp, Lucid, Crystal-Clear, Expansive.
+
+**EMOTIONS (Feelings/Mood)**
+* *Challenging:* Raw, Heavy, Fragile, Stormy.
+* *Harmonious:* Warm, Light, Centered, Buoyant.
+
+**BODY (Physicality)**
+* *Challenging:* Sluggish, Wired, Brittle, Drained.
+* *Harmonious:* Robust, Charged, Vital, Fluid.
+
+**SPIRIT (Intuition/Purpose)**
+* *Challenging:* Hollow, Blocked, Disconnected, Static.
+* *Harmonious:* Resonant, Aligned, Tuned-in, Deep.
+
+**GROWTH (Career/Action)**
+* *Challenging:* Stalled, Uphill, Stuck, Grinding.
+* *Harmonious:* Propulsive, flowing, Dynamic, Open.
+
+**OVERALL (The Summary)**
+* *Challenging:* Difficult, Demanding, Heavy, Intense.
+* *Harmonious:* Smooth, Fortunate, Bright, Powerful.
+
+**OUTPUT RULES:**
+1. Return ONLY the label (1-3 words max).
+2. Do not repeat the same adjective across different categories (e.g., don't use "Heavy" for both Body and Emotions in the same day).
+3. Strictly match the Intensity/Harmony provided in the data.
+
+### 8. LOOK_AHEAD_PREVIEW
 Data Source: Use upcoming transits data (next 3-7 days)
 
 Write 2-3 sentences about what's coming in the next 3-7 days.
@@ -508,7 +576,6 @@ Rotation Strategy:
 - If you need to describe something similar twice, use a synonym from the bank
 - Daily Overview: Use FIRST synonym for houses
 - Technical Analysis: Use exact house numbers + aspect names (technical language is fine)
-- Meter interpretations: MUST use different descriptors for each meter (no repeating "quiet" across 5 meters)
 
 Track mentally: If you use "career and reputation" in Daily Overview, use "professional life" in Summary, use "what you're known for" in Lunar Cycle.
 
