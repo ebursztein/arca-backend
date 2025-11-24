@@ -1,0 +1,207 @@
+You are extracting entities and attributes to build a comprehensive user profile for personalized astrological guidance.
+
+TASK:
+Extract EVERYTHING meaningful the user mentions - people, places, things, interests, values, habits, dreams. Build a rich psychological and lifestyle profile.
+
+COMPREHENSIVE ENTITY TYPES:
+
+**People & Relationships:**
+- relationship, person, family_member, friend, ex, mentor, role_model
+
+**Work & Career:**
+- company, job, career_goal, project, interview, promotion, coworker, boss, client
+
+**Places & Travel:**
+- home, city, country, travel_destination, favorite_place, dream_destination, regular_spot
+
+**Media & Culture:**
+- book, movie, tv_show, podcast, music, artist, album, song, author
+
+**Hobbies & Interests:**
+- hobby, sport, activity, practice, creative_pursuit, game, collection
+
+**Brands & Products:**
+- brand, product, service, app, tool, technology
+
+**Meaningful Objects:**
+- gift, jewelry, heirloom, collection_item, clothing, art_piece, sentimental_object
+
+**Animals:**
+- pet, animal (with personality traits)
+
+**Health & Wellness:**
+- therapist, doctor, trainer, wellness_practice, health_concern, fitness_goal, diet
+
+**Spiritual Practices:**
+- meditation, yoga, tarot_practice, ritual, spiritual_practice, belief_system
+
+**Values & Philosophy:**
+- core_value, belief, philosophy, principle, worldview
+
+**Habits & Patterns:**
+- habit, routine, pattern, ritual, behavior (positive or negative)
+
+**Challenges & Growth:**
+- fear, insecurity, block, challenge, obstacle, trigger, emotional_pattern
+
+**Goals & Dreams:**
+- life_goal, aspiration, bucket_list_item, dream, intention, resolution
+
+**Events & Milestones:**
+- milestone, life_transition, event, celebration, ceremony, loss
+
+ATTRIBUTE EXTRACTION:
+Extract ALL implied metadata:
+
+**Temporal:**
+- birthday_season, anniversary_month, timeline (new/recent/long-term), frequency (daily/weekly/rare)
+
+**Emotional/Quality:**
+- sentiment (positive/negative/mixed), emotional_state, intensity, importance_to_user
+
+**Descriptive:**
+- genre, style, type, category, subcategory
+
+**Relational:**
+- works_at, made_by, written_by, located_in, given_by, reminds_of
+
+**Status:**
+- status (active/past/future/aspirational), progress, completion
+
+**Role/Function:**
+- role, purpose, why_meaningful, represents
+
+**Quantitative:**
+- how_long (duration), how_often, how_much
+
+RELATIONSHIPS BETWEEN ENTITIES:
+Connect entities when mentioned together:
+- "reading Atomic Habits by James Clear" → book `related_to` author
+- "Bob my therapist" → person `related_to` profession
+- "necklace from grandma" → object `related_to` family_member
+
+INSTRUCTIONS:
+1. Extract EVERYTHING with meaning or emotional weight
+2. Even small details matter (favorite coffee shop, go-to playlist)
+3. Extract rich attributes - why does this matter to them?
+4. Note relationships between entities
+5. High confidence for explicit mentions, lower for implications
+
+USER MESSAGE:
+{{ user_message }}
+
+CURRENT DATE: {{ current_date }}
+
+OUTPUT FORMAT:
+{
+  "entities": [
+    {
+      "name": "string",
+      "entity_type": "string",
+      "context": "string",
+      "confidence": float,
+      "attributes": {
+        "key": "value"
+      },
+      "related_to": "string | null"
+    }
+  ]
+}
+
+EXAMPLES:
+
+Input: "Just finished reading Atomic Habits - really helped me with my morning routine"
+Output:
+{
+  "entities": [
+    {
+      "name": "Atomic Habits",
+      "entity_type": "book",
+      "context": "just finished, helped with morning routine",
+      "confidence": 1.0,
+      "attributes": {
+        "author": "James Clear",
+        "genre": "self-help",
+        "impact": "positive",
+        "helps_with": "morning routine"
+      },
+      "related_to": null
+    },
+    {
+      "name": "morning routine",
+      "entity_type": "habit",
+      "context": "working on improving it",
+      "confidence": 0.9,
+      "attributes": {
+        "status": "in progress",
+        "timeline": "recent"
+      },
+      "related_to": null
+    }
+  ]
+}
+
+Input: "My dog Luna has been anxious lately when I leave for work"
+Output:
+{
+  "entities": [
+    {
+      "name": "Luna",
+      "entity_type": "pet",
+      "context": "anxious when user leaves for work",
+      "confidence": 1.0,
+      "attributes": {
+        "animal_type": "dog",
+        "emotional_state": "anxious",
+        "trigger": "user leaving for work"
+      },
+      "related_to": "work"
+    },
+    {
+      "name": "work",
+      "entity_type": "job",
+      "context": "leaving Luna to go to work",
+      "confidence": 0.8,
+      "attributes": {
+        "schedule": "regular",
+        "causes_stress_for": "Luna"
+      },
+      "related_to": null
+    }
+  ]
+}
+
+Input: "Planning trip to Japan in spring - been a dream since reading Shogun"
+Output:
+{
+  "entities": [
+    {
+      "name": "Japan trip",
+      "entity_type": "travel_destination",
+      "context": "planning for spring, long-time dream",
+      "confidence": 1.0,
+      "attributes": {
+        "location": "Japan",
+        "timing": "spring",
+        "status": "planning",
+        "timeline": "long-term dream",
+        "inspired_by": "Shogun book"
+      },
+      "related_to": "Shogun"
+    },
+    {
+      "name": "Shogun",
+      "entity_type": "book",
+      "context": "inspired Japan travel dream",
+      "confidence": 1.0,
+      "attributes": {
+        "genre": "historical fiction",
+        "setting": "Japan",
+        "impact": "inspired travel dream"
+      },
+      "related_to": null
+    }
+  ]
+}
+
+If no entities, return: {"entities": []}

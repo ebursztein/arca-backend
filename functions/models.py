@@ -20,12 +20,17 @@ if TYPE_CHECKING:
 # Enums
 # =============================================================================
 
-class EntryType(str, Enum):
-    """Journal entry type."""
-    HOROSCOPE_READING = "horoscope_reading"
-    TAROT_READING = "tarot_reading"  # V3+
-    REFLECTION = "reflection"  # V3+
-    QUESTION = "question"  # V3+
+class EntityStatus(str, Enum):
+    """Entity tracking status."""
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+    RESOLVED = "resolved"
+
+
+class MessageRole(str, Enum):
+    """Conversation message role."""
+    USER = "user"
+    ASSISTANT = "assistant"
 
 
 # =============================================================================
@@ -118,6 +123,25 @@ class MemoryCollection(BaseModel):
         description="Last 10 readings with full text"
     )
 
+    # Ask the Stars - Conversation tracking
+    entity_summary: dict[str, int] = Field(
+        default_factory=dict,
+        description="Entity type counts (e.g., {'relationship': 5, 'career_goal': 3})"
+    )
+    last_conversation_date: Optional[str] = Field(
+        None,
+        description="ISO date of last conversation"
+    )
+    total_conversations: int = Field(
+        default=0,
+        ge=0,
+        description="Total number of Ask the Stars conversations"
+    )
+    question_categories: dict[str, int] = Field(
+        default_factory=dict,
+        description="Question category counts for analytics"
+    )
+
     # Timestamp
     updated_at: str = Field(description="ISO datetime of last update")
 
@@ -175,31 +199,177 @@ class MemoryCollection(BaseModel):
 
 
 # =============================================================================
-# Journal Entry Models
+# Ask the Stars - Entity Tracking Models
 # =============================================================================
 
-class JournalEntry(BaseModel):
+class AttributeKV(BaseModel):
+    """Key-value pair for entity attributes (Gemini API compatible)."""
+    key: str = Field(description="Attribute key")
+    value: str = Field(description="Attribute value")
+
+
+class Entity(BaseModel):
     """
-    Journal entry stored in Firestore: users/{userId}/journal/{entryId}
+    Tracked entity from user conversations (person, relationship, goal, challenge, etc.).
 
-    Immutable log of user activity. Source of truth for memory collection.
-    V1: horoscope readings. V3+: includes tarot, reflections, Q&A.
+    Stored in: users/{userId}/entities/all (single doc with entities array)
     """
-    entry_id: str = Field(description="Auto-generated entry ID")
-    date: str = Field(description="ISO date of reading")
-    entry_type: EntryType = Field(description="Type of entry")
+    entity_id: str = Field(description="UUID for this entity")
+    name: str = Field(description="Entity name (e.g., 'John', 'Job Search', 'Meditation Practice')")
+    entity_type: str = Field(description="Open string: 'relationship', 'career_goal', 'challenge', etc.")
+    status: EntityStatus = Field(default=EntityStatus.ACTIVE, description="Entity status")
+    aliases: list[str] = Field(default_factory=list, description="Alternative names for deduplication")
 
-    # V1: Horoscope reading data
-    summary_viewed: str = Field(description="Summary text shown to user")
-    categories_viewed: list[CategoryViewed] = Field(description="Categories expanded and read")
+    # Rich metadata (flexible key-value pairs)
+    attributes: list[AttributeKV] = Field(
+        default_factory=list,
+        description="Entity attributes: birthday_season, works_at, role, relationship_to_user, etc."
+    )
 
-    # V3+: Additional fields for tarot/reflections
-    # tarot_cards: Optional[list] = None
-    # user_question: Optional[str] = None
-    # user_notes: Optional[str] = None
+    # Relationships between entities
+    related_entities: list[str] = Field(
+        default_factory=list,
+        description="Entity IDs this entity is related to (e.g., 'Bob' → ['ent_005'] where ent_005 is TechCorp)"
+    )
 
-    time_spent_seconds: int = Field(ge=0, description="Time spent reading")
-    created_at: str = Field(description="ISO datetime of creation")
+    # Tracking
+    first_seen: str = Field(description="ISO timestamp of first mention")
+    last_seen: str = Field(description="ISO timestamp of last mention")
+    mention_count: int = Field(default=1, ge=1, description="Number of times mentioned")
+
+    # Context (FIFO queue, max 10)
+    context_snippets: list[str] = Field(
+        default_factory=list,
+        description="Last 10 context snippets where entity was mentioned"
+    )
+
+    # Importance scoring (for filtering top N entities)
+    importance_score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Calculated: recency (0.6) + frequency (0.4)"
+    )
+
+    # Timestamps
+    created_at: str = Field(description="ISO timestamp of creation")
+    updated_at: str = Field(description="ISO timestamp of last update")
+
+
+class Message(BaseModel):
+    """
+    Single message in a conversation (user or assistant).
+
+    Stored in Conversation.messages array.
+    """
+    message_id: str = Field(description="UUID for this message")
+    role: MessageRole = Field(description="Message role")
+    content: str = Field(description="Message text content")
+    timestamp: str = Field(description="ISO timestamp")
+
+
+class Conversation(BaseModel):
+    """
+    Conversation session tied to a horoscope date.
+
+    Stored in: conversations/{conversationId}
+    All messages stored in single document (messages array).
+    """
+    conversation_id: str = Field(description="UUID for this conversation")
+    user_id: str = Field(description="Firebase Auth user ID")
+    horoscope_date: str = Field(description="ISO date (e.g., '2025-01-20')")
+
+    # All messages in single array (cost optimization)
+    messages: list[Message] = Field(default_factory=list, description="All messages in conversation")
+
+    # Timestamps
+    created_at: str = Field(description="ISO timestamp of creation")
+    updated_at: str = Field(description="ISO timestamp of last update")
+
+
+class UserEntities(BaseModel):
+    """
+    Single document containing all entities for a user (cost optimization).
+
+    Stored in: users/{userId}/entities/all
+    """
+    user_id: str = Field(description="Firebase Auth user ID")
+    entities: list[Entity] = Field(default_factory=list, description="All entities in single array")
+    updated_at: str = Field(description="ISO timestamp of last update")
+
+
+class UserHoroscopes(BaseModel):
+    """
+    Single document containing cached horoscopes for a user (cost optimization).
+
+    Stored in: users/{userId}/horoscopes/all
+    """
+    user_id: str = Field(description="Firebase Auth user ID")
+    horoscopes: dict[str, dict] = Field(
+        default_factory=dict,
+        description="Date -> DailyHoroscope dict (e.g., {'2025-01-20': {...}})"
+    )
+    updated_at: str = Field(description="ISO timestamp of last update")
+
+
+# =============================================================================
+# Ask the Stars - LLM Structured Output Models
+# =============================================================================
+
+class ExtractedEntity(BaseModel):
+    """
+    Single entity extracted from user message (LLM output).
+    """
+    name: str = Field(description="Entity name")
+    entity_type: str = Field(description="Entity type (open string)")
+    context: str = Field(description="Context snippet from message")
+    confidence: float = Field(ge=0.0, le=1.0, description="Extraction confidence")
+
+    # Rich metadata
+    attributes: list[AttributeKV] = Field(
+        default_factory=list,
+        description="Extracted attributes (e.g., birthday_season, role, works_at)"
+    )
+    related_to: Optional[str] = Field(
+        None,
+        description="Name of related entity mentioned in same context (e.g., 'Bob' related_to 'TechCorp')"
+    )
+
+
+class ExtractedEntities(BaseModel):
+    """
+    Structured output from entity extraction LLM call.
+    """
+    entities: list[ExtractedEntity] = Field(description="Extracted entities")
+
+
+class EntityMergeAction(BaseModel):
+    """
+    Single merge action from entity merging LLM call.
+    """
+    action: str = Field(description="Action type: 'create', 'update', 'merge', 'link'")
+    entity_name: str = Field(description="Entity name")
+    entity_type: str = Field(description="Entity type")
+    merge_with_id: Optional[str] = Field(None, description="Entity ID to merge with (if action='merge')")
+    new_alias: Optional[str] = Field(None, description="Alias to add (if action='merge')")
+    context_update: Optional[str] = Field(None, description="Context snippet to add")
+
+    # Rich metadata updates
+    attribute_updates: list[AttributeKV] = Field(
+        default_factory=list,
+        description="Attributes to add/update (e.g., [{'key': 'birthday_season', 'value': 'January'}])"
+    )
+    link_to_entity_id: Optional[str] = Field(
+        None,
+        description="Entity ID to link/relate to (if action='link' or creating relationship)"
+    )
+
+
+class MergedEntities(BaseModel):
+    """
+    Structured output from entity merging LLM call.
+    """
+    actions: list[EntityMergeAction] = Field(description="List of merge actions to execute")
 
 
 # =============================================================================
@@ -335,6 +505,12 @@ class DailyHoroscope(BaseModel):
         description="What everyone is feeling from outer planet context (1-2 sentences)"
     )
 
+    # Engagement
+    follow_up_questions: Optional[list[str]] = Field(
+        None,
+        description="5 thought-provoking questions to help user reflect on their horoscope"
+    )
+
     # Metadata
     model_used: Optional[str] = Field(None, description="LLM model used")
     generation_time_ms: Optional[int] = Field(None, description="Generation time in milliseconds")
@@ -371,47 +547,41 @@ def create_empty_memory(user_id: str) -> MemoryCollection:
     )
 
 
-def update_memory_from_journal(
-    memory: MemoryCollection,
-    journal_entry: JournalEntry
-) -> MemoryCollection:
+def calculate_entity_importance_score(
+    entity: Entity,
+    current_time: Optional[datetime] = None
+) -> float:
     """
-    Update memory collection based on a journal entry.
+    Calculate importance score for entity filtering.
 
-    This simulates the Firestore trigger logic:
-    - Increment category counts
-    - Update last_mentioned timestamps
-    - Add to recent_readings (FIFO, max 10)
+    Formula: importance = (recency * 0.6) + (frequency * 0.4)
+    - Recency: 1.0 if seen today, decays over 30 days
+    - Frequency: min(1.0, mention_count / 10)
 
     Args:
-        memory: Current memory collection
-        journal_entry: New journal entry to process
+        entity: Entity to score
+        current_time: Current time (defaults to now)
 
     Returns:
-        Updated memory collection
+        Importance score (0.0 to 1.0)
     """
-    # Update category counts
-    for cat_view in journal_entry.categories_viewed:
-        category = cat_view.category
-        memory.categories[category].count += 1
-        memory.categories[category].last_mentioned = journal_entry.date
+    if current_time is None:
+        current_time = datetime.now()
 
-    # Add to recent readings (FIFO, max 10)
-    reading = RecentReading(
-        date=journal_entry.date,
-        summary=journal_entry.summary_viewed,
-        categories_viewed=journal_entry.categories_viewed
-    )
-    memory.recent_readings.append(reading)
+    # Parse last_seen timestamp
+    last_seen_dt = datetime.fromisoformat(entity.last_seen.replace('Z', '+00:00'))
 
-    # Keep only last 10 readings
-    if len(memory.recent_readings) > 10:
-        memory.recent_readings = memory.recent_readings[-10:]
+    # Calculate recency (decays over 30 days)
+    days_since_mention = (current_time - last_seen_dt).days
+    recency = max(0.0, 1.0 - (days_since_mention / 30.0))
 
-    # Update timestamp
-    memory.updated_at = datetime.now().isoformat()
+    # Calculate frequency (caps at 10 mentions)
+    frequency = min(1.0, entity.mention_count / 10.0)
 
-    return memory
+    # Weighted combination
+    importance_score = (recency * 0.6) + (frequency * 0.4)
+
+    return importance_score
 
 
 # =============================================================================

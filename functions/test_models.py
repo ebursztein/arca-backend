@@ -407,3 +407,124 @@ class TestModelSerialization:
         memory_restored = MemoryCollection(**memory_dict)
         assert memory_restored.user_id == memory.user_id
         print("✓ MemoryCollection serialization works")
+
+
+# =============================================================================
+# Ask the Stars - Entity & Conversation Tests
+# =============================================================================
+
+from models import (
+    Entity,
+    EntityStatus,
+    Message,
+    MessageRole,
+    Conversation,
+    UserEntities,
+    UserHoroscopes
+)
+
+
+class TestAskTheStarsModels:
+    """Test Ask the Stars data models."""
+
+    def test_entity_creation(self):
+        """Test Entity model with attributes and relationships."""
+        now = datetime.now().isoformat()
+        entity = Entity(
+            entity_id="ent_001",
+            name="John",
+            entity_type="relationship",
+            status=EntityStatus.ACTIVE,
+            aliases=["boyfriend", "partner"],
+            attributes={"role": "partner", "relationship_status": "dating"},
+            related_entities=["ent_company"],
+            first_seen=now,
+            last_seen=now,
+            mention_count=5,
+            context_snippets=["Met at coffee shop", "Anniversary in June"],
+            importance_score=0.85,
+            created_at=now,
+            updated_at=now
+        )
+
+        assert entity.name == "John"
+        assert entity.attributes["role"] == "partner"
+        assert "boyfriend" in entity.aliases
+        assert "ent_company" in entity.related_entities
+        print("✓ Entity with attributes and relationships works")
+
+    def test_message_and_conversation(self):
+        """Test Message and Conversation models."""
+        now = datetime.now().isoformat()
+
+        user_msg = Message(
+            message_id="msg_001",
+            role=MessageRole.USER,
+            content="Why am I feeling anxious today?",
+            timestamp=now
+        )
+
+        assistant_msg = Message(
+            message_id="msg_002",
+            role=MessageRole.ASSISTANT,
+            content="Mars is square your Sun today...",
+            timestamp=now
+        )
+
+        conversation = Conversation(
+            conversation_id="conv_001",
+            user_id="user_123",
+            horoscope_date="2025-01-20",
+            messages=[user_msg, assistant_msg],
+            created_at=now,
+            updated_at=now
+        )
+
+        assert len(conversation.messages) == 2
+        assert conversation.messages[0].role == MessageRole.USER
+        assert conversation.horoscope_date == "2025-01-20"
+        print("✓ Message and Conversation models work")
+
+    def test_user_entities_collection(self):
+        """Test UserEntities single-document model."""
+        now = datetime.now().isoformat()
+        entities = [
+            Entity(
+                entity_id=f"ent_{i}",
+                name=f"Entity {i}",
+                entity_type="person",
+                first_seen=now,
+                last_seen=now,
+                created_at=now,
+                updated_at=now
+            )
+            for i in range(10)
+        ]
+
+        user_entities = UserEntities(
+            user_id="user_123",
+            entities=entities,
+            updated_at=now
+        )
+
+        assert len(user_entities.entities) == 10
+        assert user_entities.user_id == "user_123"
+        print("✓ UserEntities single-document collection works")
+
+    def test_user_horoscopes_collection(self):
+        """Test UserHoroscopes single-document model."""
+        now = datetime.now().isoformat()
+        horoscopes = {
+            "2025-01-20": {"date": "2025-01-20", "sun_sign": "taurus"},
+            "2025-01-21": {"date": "2025-01-21", "sun_sign": "taurus"}
+        }
+
+        user_horoscopes = UserHoroscopes(
+            user_id="user_123",
+            horoscopes=horoscopes,
+            updated_at=now
+        )
+
+        assert len(user_horoscopes.horoscopes) == 2
+        assert "2025-01-20" in user_horoscopes.horoscopes
+        print("✓ UserHoroscopes single-document collection works")

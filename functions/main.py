@@ -21,9 +21,7 @@ from astro import (
 from models import (
     UserProfile,
     MemoryCollection,
-    JournalEntry,
     create_empty_memory,
-    update_memory_from_journal,
 )
 from llm import generate_daily_horoscope
 
@@ -658,6 +656,24 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
             model_name=model_name
         )
 
+        # Cache horoscope in UserHoroscopes collection (for Ask the Stars)
+        horoscopes_ref = db.collection("users").document(user_id).collection("horoscopes").document("all")
+        horoscopes_doc = horoscopes_ref.get()
+
+        if horoscopes_doc.exists:
+            # Update existing horoscopes
+            horoscopes_ref.update({
+                f"horoscopes.{date}": daily_horoscope.model_dump(),
+                "updated_at": datetime.now().isoformat()
+            })
+        else:
+            # Create new horoscopes document
+            horoscopes_ref.set({
+                "user_id": user_id,
+                "horoscopes": {date: daily_horoscope.model_dump()},
+                "updated_at": datetime.now().isoformat()
+            })
+
         # Update last_active
         db.collection("users").document(user_id).update({
             "last_active": datetime.now().isoformat()
@@ -802,61 +818,23 @@ def get_astrometers(req: https_fn.CallableRequest) -> dict:
 
 
 # =============================================================================
-# Sprint 5: Firestore Triggers
+# Ask the Stars - Conversational Q&A Feature
 # =============================================================================
 
-@firestore_fn.on_document_created(document="users/{user_id}/journal/{entry_id}")  # type: ignore[arg-type]
-def update_memory_on_journal_entry(
-    event: firestore_fn.Event[firestore_fn.DocumentSnapshot]
-) -> None:
-    """
-    Firestore trigger: Update memory collection when journal entry is created.
+# Import Ask the Stars functions
+from ask_the_stars import ask_the_stars
+from triggers import extract_entities_on_message
+from conversation_helpers import (
+    get_conversation_history,
+    get_user_entities,
+    update_entity,
+    delete_entity
+)
 
-    This implements the Journal → Memory pattern:
-    - Journal = immutable source of truth
-    - Memory = derivative cache for personalization
-
-    Process:
-        1. Read the newly created journal entry
-        2. Get current memory collection (or create if doesn't exist)
-        3. Update category counts and last_mentioned
-        4. Add to recent_readings (FIFO, max 10)
-        5. Write updated memory back to Firestore
-    """
-    try:
-        # Get user_id from path
-        user_id = event.params["user_id"]
-
-        # Get journal entry data
-        journal_data = event.data.to_dict()
-
-        if not journal_data:
-            print(f"No data in journal entry for user {user_id}")
-            return
-
-        # Get Firestore client
-        db = firestore.client(database_id=DATABASE_ID)
-
-        # Get current memory or create new one
-        memory_doc = db.collection("memory").document(user_id).get()
-
-        if memory_doc.exists:
-            memory_data = memory_doc.to_dict()
-            memory = MemoryCollection(**memory_data)
-        else:
-            memory = create_empty_memory(user_id)
-
-        # Create JournalEntry from data
-        journal_entry = JournalEntry(**journal_data)
-
-        # Update memory using helper function from models.py
-        updated_memory = update_memory_from_journal(memory, journal_entry)
-
-        # Write back to Firestore
-        db.collection("memory").document(user_id).set(updated_memory.model_dump())
-
-        print(f"Memory updated for user {user_id} after journal entry {journal_data.get('entry_id')}")
-
-    except Exception as e:
-        print(f"Error updating memory for user {user_id}: {str(e)}")
-        # Don't raise - triggers should not fail the original operation
+# Functions are automatically registered when imported
+# - ask_the_stars: HTTPS endpoint with SSE streaming
+# - extract_entities_on_message: Firestore trigger (background)
+# - get_conversation_history: Callable function
+# - get_user_entities: Callable function
+# - update_entity: Callable function
+# - delete_entity: Callable function

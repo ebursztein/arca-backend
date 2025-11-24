@@ -1,0 +1,157 @@
+You are merging newly extracted entities with existing tracked entities to build a comprehensive user profile for personalized astrology.
+
+TASK:
+For each newly extracted entity, determine the action AND extract rich metadata:
+1. **CREATE** - New entity with attributes
+2. **MERGE** - Combine with existing entity (same person/thing, different name)
+3. **UPDATE** - Add context/attributes to existing entity
+4. **LINK** - Create relationship between entities
+
+EXISTING ENTITIES:
+{{ existing_entities_json }}
+
+NEWLY EXTRACTED ENTITIES:
+{{ extracted_entities_json }}
+
+CURRENT DATE: {{ current_date }}
+
+ATTRIBUTE EXTRACTION (Critical!):
+Extract ALL implied information as attributes:
+
+**Temporal attributes:**
+- `birthday_season`: "January", "summer", "winter" (from "birthday present", "birthday coming up")
+- `anniversary_month`: "June" (from anniversary mentions)
+- `timeline`: "recent", "long-term", "new" (from context clues)
+
+**Role/Relationship attributes:**
+- `role`: "boss", "coworker", "manager", "direct report"
+- `relationship_to_user`: "mother", "father", "partner", "friend", "sibling"
+- `workplace_relationship`: "reports to user", "peer", "manages user"
+
+**Work/Organization attributes:**
+- `works_at`: "TechCorp", "Google", "startup" (company name)
+- `department`: "sales", "engineering", "marketing"
+- `position`: "senior engineer", "VP", "intern"
+
+**Status attributes:**
+- `relationship_status`: "dating", "married", "ex", "divorced"
+- `project_status`: "in progress", "completed", "stalled"
+- `emotional_state`: "tense", "improving", "stable"
+
+**Location attributes:**
+- `location`: "San Francisco", "remote", "New York office"
+- `frequency`: "daily", "weekly", "rare"
+
+RELATIONSHIP LINKING:
+When entities are connected, link them:
+
+**Example 1:**
+Extracted: "Bob" (boss at TechCorp)
+Existing: "TechCorp" (company, ent_005)
+→ Action: UPDATE Bob with `attributes: {role: "boss", works_at: "TechCorp"}` and `link_to_entity_id: "ent_005"`
+
+**Example 2:**
+Extracted: "getting birthday present for mom"
+Existing: "mother" (ent_003)
+→ Action: UPDATE with `attribute_updates: {birthday_season: "January", relationship_to_user: "mother"}`
+
+**Example 3:**
+Extracted: "Sarah from accounting"
+Existing: "company" (ent_010)
+→ Action: CREATE Sarah with `attributes: {department: "accounting", works_at: <company_name>}` and `link_to_entity_id: "ent_010"`
+
+DEDUPLICATION RULES:
+⚠️ **CRITICAL: ASSUME DIFFERENT PEOPLE IF CONTEXTS CONFLICT**
+
+**DEFAULT TO CREATE when name matches exist** - only MERGE/UPDATE if you have STRONG evidence it's the same entity.
+
+**NEVER merge/update if attributes conflict:**
+- Extracted has `relationship: "coworker"` BUT existing has `relationship_to_user: "partner"` → **CREATE NEW**
+- Extracted has `role: "boss"` BUT existing has `role: "friend"` → **CREATE NEW**
+- Extracted mentions family role BUT existing is work-related → **CREATE NEW**
+- Extracted is work context BUT existing is personal/romantic → **CREATE NEW**
+
+**Example of DO NOT MERGE:**
+Input: "feeling tension with John at work"
+Extracted: {"name": "John", "entity_type": "person", "attributes": {"relationship": "coworker"}}
+Existing: {"entity_id": "ent_001", "name": "John", "entity_type": "relationship", "attributes": {"relationship_to_user": "partner", "relationship_status": "dating"}}
+→ **Output: CREATE** - Work John is different from boyfriend John (conflicting contexts)
+
+**Example of DO NOT MERGE:**
+- Extracted: "Sarah from accounting"
+- Existing: "Sarah" (sister, family)
+→ **CREATE NEW** - Different Sarahs (family vs. coworker)
+
+**When to MERGE:**
+1. **Same person, different reference** → MERGE + update attributes
+   - "mom" + existing "mother" → merge with alias
+   - "bf" + existing "boyfriend John" → merge if clearly same person
+   - "John my partner" + existing "John" (partner) → merge and update
+
+2. **Same entity, new metadata** → UPDATE attributes
+   - "John's birthday" + existing "John" → add birthday_season attribute
+   - "still dating John" + existing "John" (boyfriend) → update context
+
+3. **Related entities** → LINK
+   - "Bob from TechCorp" → link Bob to TechCorp entity
+
+4. **Truly new OR name collision** → CREATE with all attributes
+
+OUTPUT FORMAT:
+Return valid JSON:
+{
+  "actions": [
+    {
+      "action": "create" | "merge" | "update" | "link",
+      "entity_name": "string",
+      "entity_type": "string",
+      "merge_with_id": "string (if merge)",
+      "new_alias": "string (if merge)",
+      "context_update": "string",
+      "attribute_updates": {
+        "key": "value"
+      },
+      "link_to_entity_id": "string (if linking)"
+    }
+  ]
+}
+
+EXAMPLES:
+
+Input: "getting a birthday present for mom"
+Existing: [{"entity_id": "ent_003", "name": "mother", "entity_type": "person", "attributes": {}}]
+Output:
+{
+  "actions": [{
+    "action": "merge",
+    "entity_name": "mom",
+    "entity_type": "person",
+    "merge_with_id": "ent_003",
+    "new_alias": "mom",
+    "context_update": "getting birthday present",
+    "attribute_updates": {
+      "birthday_season": "late January",
+      "relationship_to_user": "mother"
+    }
+  }]
+}
+
+Input: "stressed about meeting with Bob my boss tomorrow"
+Existing: [{"entity_id": "ent_010", "name": "TechCorp", "entity_type": "company", "attributes": {}}]
+Output:
+{
+  "actions": [{
+    "action": "create",
+    "entity_name": "Bob",
+    "entity_type": "person",
+    "context_update": "stressed about meeting tomorrow",
+    "attribute_updates": {
+      "role": "boss",
+      "works_at": "TechCorp",
+      "relationship_to_user": "manager"
+    },
+    "link_to_entity_id": "ent_010"
+  }]
+}
+
+If no actions needed, return: {"actions": []}

@@ -48,11 +48,8 @@ from models import (
     MemoryCollection,
     CategoryEngagement,
     CategoryViewed,
-    JournalEntry,
-    EntryType,
     DailyHoroscope,
     create_empty_memory,
-    update_memory_from_journal,
 )
 from astrometers.hierarchy import MeterGroupV2
 
@@ -463,6 +460,187 @@ Groups Summary:"""
     console.print(f"\n[yellow]Recent Readings:[/yellow] {len(memory.recent_readings)}")
 
     # ========================================================================
+    # 6. ASK THE STARS - CONVERSATIONAL Q&A
+    # ========================================================================
+    print_section("6️⃣  ASK THE STARS - CONVERSATIONAL Q&A", style="bold magenta")
+
+    console.print("[cyan]Testing Ask the Stars feature with sample question...[/cyan]\n")
+
+    # Import Ask the Stars modules
+    from models import (
+        Entity, EntityStatus, Message, MessageRole, Conversation,
+        ExtractedEntities, ExtractedEntity, MergedEntities, EntityMergeAction,
+        UserEntities, AttributeKV
+    )
+    from entity_extraction import (
+        extract_entities_from_message,
+        merge_entities_with_existing,
+        execute_merge_actions,
+        get_top_entities_by_importance
+    )
+    from ask_the_stars import stream_ask_the_stars_response
+    import os
+    from google import genai
+    import time
+
+    # Initialize Gemini client for entity extraction
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    posthog_api_key = os.environ.get("POSTHOG_API_KEY")
+    ask_the_stars_perf = None  # Default if test skipped
+
+    if not gemini_api_key:
+        console.print("[red]⚠️  GEMINI_API_KEY not set, skipping Ask the Stars test[/red]")
+    else:
+        gemini_client = genai.Client(api_key=gemini_api_key)
+
+        # Create sample entities (simulating existing user data)
+        now = datetime.now()
+        sample_entities = [
+            Entity(
+                entity_id="ent_001",
+                name="John",
+                entity_type="relationship",
+                status=EntityStatus.ACTIVE,
+                aliases=["boyfriend", "partner"],
+                attributes=[
+                    AttributeKV(key="relationship_to_user", value="partner"),
+                    AttributeKV(key="relationship_status", value="dating")
+                ],
+                related_entities=[],
+                first_seen=now.isoformat(),
+                last_seen=now.isoformat(),
+                mention_count=5,
+                context_snippets=[
+                    "Met at coffee shop last year",
+                    "Anniversary in June",
+                    "Feeling some tension lately"
+                ],
+                importance_score=0.85,
+                created_at=now.isoformat(),
+                updated_at=now.isoformat()
+            ),
+            Entity(
+                entity_id="ent_002",
+                name="TechCorp",
+                entity_type="company",
+                status=EntityStatus.ACTIVE,
+                aliases=[],
+                attributes=[AttributeKV(key="user_role", value="software engineer")],
+                related_entities=[],
+                first_seen=(now).isoformat(),
+                last_seen=now.isoformat(),
+                mention_count=3,
+                context_snippets=["Working at TechCorp for 2 years", "Big project deadline coming up"],
+                importance_score=0.70,
+                created_at=now.isoformat(),
+                updated_at=now.isoformat()
+            ),
+            Entity(
+                entity_id="ent_003",
+                name="Luna",
+                entity_type="pet",
+                status=EntityStatus.ACTIVE,
+                aliases=["cat"],
+                attributes=[
+                    AttributeKV(key="species", value="cat"),
+                    AttributeKV(key="personality", value="playful")
+                ],
+                related_entities=[],
+                first_seen=now.isoformat(),
+                last_seen=now.isoformat(),
+                mention_count=2,
+                context_snippets=["Luna my cat keeps me company", "She's very cuddly"],
+                importance_score=0.60,
+                created_at=now.isoformat(),
+                updated_at=now.isoformat()
+            )
+        ]
+
+        console.print(f"[green]✓ Sample entities created: {len(sample_entities)} entities[/green]")
+        for entity in sample_entities:
+            console.print(f"  • {entity.name} ({entity.entity_type}) - {entity.mention_count} mentions")
+
+        # User asks a question
+        user_question = "Why am I feeling so much tension with John at work today? My cat Luna has been acting weird too."
+        console.print(f"\n[yellow]User Question:[/yellow]")
+        console.print(f"  \"{user_question}\"")
+
+        # Create async function to run all async operations in single event loop
+        import asyncio
+        async def run_ask_the_stars_flow():
+            # Step 1: Extract entities from message
+            console.print(f"\n[cyan]Step 1: Extracting entities from message...[/cyan]")
+            extracted, perf_extract = await extract_entities_from_message(
+                user_message=user_question,
+                current_date=today,
+                gemini_client=gemini_client,
+                user_id=user_profile.user_id,
+                posthog_api_key=posthog_api_key
+            )
+            console.print(f"[green]✓ Extracted {len(extracted.entities)} entities ({perf_extract['time_ms']}ms)[/green]")
+            for ent in extracted.entities:
+                console.print(f"  • {ent.name} ({ent.entity_type}) - \"{ent.context}\"")
+                if ent.attributes:
+                    attrs_dict = {attr.key: attr.value for attr in ent.attributes}
+                    console.print(f"    Attributes: {attrs_dict}")
+
+            # Use sample entities directly (no merging in prototype)
+            top_entities = sample_entities
+
+            # Step 2: Generate answer using Ask the Stars
+            console.print(f"\n[cyan]Step 2: Generating answer with Ask the Stars...[/cyan]")
+            start_time = time.time()
+            answer_chunks = []
+
+            # Stream answer from LLM
+            async for chunk in stream_ask_the_stars_response(
+                question=user_question,
+                horoscope_date=today,
+                user_profile=user_profile,
+                horoscope=daily_horoscope,
+                entities=top_entities,
+                memory=memory,
+                conversation_messages=[],  # First question in conversation
+                gemini_client=gemini_client,
+                posthog_api_key=posthog_api_key,
+                model=model_name
+            ):
+                # Parse SSE format: "data: {json}\n\n"
+                import json
+                if chunk.startswith("data: "):
+                    chunk_json = json.loads(chunk[6:])  # Remove "data: " prefix
+                    if chunk_json['type'] == 'chunk':
+                        answer_chunks.append(chunk_json['text'])
+
+            answer = "".join(answer_chunks)
+            answer_time_ms = (time.time() - start_time) * 1000
+
+            return answer, answer_time_ms, perf_extract
+
+        # Run all async operations in single event loop
+        answer, answer_time_ms, perf_extract = asyncio.run(run_ask_the_stars_flow())
+
+        console.print(f"[green]✓ Generated answer ({answer_time_ms:.0f}ms)[/green]")
+        console.print(f"\n[yellow]Answer:[/yellow]")
+        console.print(Panel(
+            answer,
+            title="[bold magenta]🌟 Ask the Stars Response[/bold magenta]",
+            border_style="magenta"
+        ))
+
+        console.print(f"\n[cyan]Ask the Stars test completed[/cyan]")
+
+        # Store performance data for summary table
+        ask_the_stars_perf = {
+            "extract": perf_extract,
+            "answer": {
+                "time_ms": answer_time_ms,
+                "model": model_name,
+                "usage": {}  # Streaming doesn't return usage metadata
+            }
+        }
+
+    # ========================================================================
     # 7. PERFORMANCE SUMMARY
     # ========================================================================
     print_section("7️⃣  PERFORMANCE SUMMARY", style="bold cyan")
@@ -487,21 +665,6 @@ Groups Summary:"""
         # force type hinting
         data: DailyHoroscope = t
 
-        # example output for usage data
-        # {
-        #     'cache_tokens_details': None,
-        #     'cached_content_token_count': None,
-        #     'candidates_token_count': 1672,
-        #     'candidates_tokens_details': None,
-        #     'prompt_token_count': 2358,
-        #     'prompt_tokens_details': [{'modality': <MediaModality.TEXT: 'TEXT'>, 'token_count': 2358}],
-        #     'thoughts_token_count': 3059,
-        #     'tool_use_prompt_token_count': None,
-        #     'tool_use_prompt_tokens_details': None,
-        #     'total_token_count': 7089,
-        #     'traffic_type': None
-        # }
-        # console.print(data.usage)
         table.add_row(
             stage,
             data.model_used,
@@ -513,7 +676,33 @@ Groups Summary:"""
             str(data.usage.get("total_token_count", 0)),
         )
 
+    # Add Ask the Stars performance data
+    if ask_the_stars_perf:
+        for stage_name, perf_data in [
+            ("Entity Extraction", ask_the_stars_perf["extract"]),
+            ("Answer Generation", ask_the_stars_perf["answer"])
+        ]:
+            usage = perf_data.get("usage", {})
+            table.add_row(
+                stage_name,
+                perf_data.get("model", "unknown"),
+                str(perf_data.get("time_ms", 0) / 1000),
+                str(usage.get("prompt_token_count", 0)),
+                str(usage.get("candidates_token_count", 0)),
+                str(usage.get("thoughts_token_count", 0)),
+                str(usage.get("cached_content_token_count", 0)),
+                str(usage.get("total_token_count", 0)),
+            )
+
     console.print(table)
+
+    # Summary of Ask the Stars performance
+    if ask_the_stars_perf:
+        console.print(f"\n[yellow]Ask the Stars Summary:[/yellow]")
+        extract_usage = ask_the_stars_perf["extract"]["usage"]
+        console.print(f"  Entity Extraction: {ask_the_stars_perf['extract']['time_ms']}ms | {extract_usage.get('prompt_token_count', 0)}→{extract_usage.get('candidates_token_count', 0)} tokens")
+        console.print(f"  Answer Generation: {ask_the_stars_perf['answer']['time_ms']:.0f}ms | (streaming - no token count)")
+        console.print(f"  Total: {ask_the_stars_perf['extract']['time_ms'] + ask_the_stars_perf['answer']['time_ms']:.0f}ms")
 
 
 
