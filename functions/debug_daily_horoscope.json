@@ -1,13 +1,13 @@
 {
   "date": "2025-11-20",
   "sun_sign": "gemini",
-  "technical_analysis": "Saturn at 14° Pisces Square Mars at 14° Gemini: This is a classic 'stop and go' aspect. Mars wants speed, Saturn demands caution. Moon in Scorpio: Emotions are deep, private, and intense.",
-  "daily_theme_headline": "Elie, career tension peaks today forcing you to choose a side.",
-  "daily_overview": "David, today feels like you're driving with the handbrake on. You want to push forward, but Saturn is squaring your Mars, creating a wall of bureaucracy and delay at work. As an Aries, you hate waiting, but today demands patience, not force. If you push now, you'll just break the engine.",
+  "technical_analysis": "Saturn at 30° Pisces squares your natal Uranus at 29° Taurus—this exact aspect is testing your sense of self and pushing you to break free from old structures. Mars at 0° Aries opposes your natal Sun at 0° Gemini, creating tension between action and identity. The New Moon at 0° Sagittarius is active in your partnership zone, initiating new relationship themes.",
+  "daily_theme_headline": "Elie, career pressure peaks making you question your authority.",
+  "daily_overview": "Elie, today feels quiet but internally charged. Your mind is clearing fog as Neptune squares Mercury, prompting introspection about your social life. Your inner stability is tested because Saturn squares Uranus, forcing you to rebuild foundations. As a Gemini, this push for deeper understanding might feel disorienting, but it's preparing you for new growth.",
   "actionable_advice": {
-    "do": "Today, take a full 10-minute walk without your phone to reset your patience.",
-    "dont": "Don't hit 'send' on that angry email until you've slept on it—Saturn will make you regret it.",
-    "reflect_on": "Are you angry because you're blocked, or because you're going in the wrong direction?"
+    "do": "Before 3 PM, write down three specific fears you have about your career or public image. Then, identify one small, concrete action you can take on each fear this week.",
+    "dont": "Don't let the Saturn-Uranus tension make you impulsively dismantle structures or push people away—transformation requires conscious rebuilding, not just breaking things apart.",
+    "reflect_on": "What does 'security' truly mean to you, and how can you build it from the inside out?"
   },
   "astrometers": {
     "date": "2025-11-20T00:00:00",
@@ -55,7 +55,7 @@
       "trend": null
     },
     "overall_quality": "challenging",
-    "overall_state": "Gritty",
+    "overall_state": "Quietly uncertain",
     "groups": [
       {
         "group_name": "mind",
@@ -63,9 +63,9 @@
         "unified_score": 16.055574484438623,
         "intensity": 11.460513702566976,
         "harmony": 30.200851769396063,
-        "state_label": "Foggy",
+        "state_label": "Clearing fog",
         "quality": "quiet",
-        "interpretation": "Your thoughts are drifting and it's hard to pin down details. Mercury is opposing Neptune, creating a mental fog that makes spreadsheets dangerous today.",
+        "interpretation": "Your thinking is clearing, but it requires a deep dive into your social connections. The fog is lifting, revealing a need for introspection.",
         "meters": [
           {
             "meter_name": "mental_clarity",
@@ -400,9 +400,9 @@
         "unified_score": 17.117798631749647,
         "intensity": 12.61636464201374,
         "harmony": 50.47368067111548,
-        "state_label": "Reserved",
+        "state_label": "Soft emotions",
         "quality": "quiet",
-        "interpretation": "You are vibrating with excess energy and need to burn it off. Mars is lighting up your vitality sector, making it impossible to sit still.",
+        "interpretation": "Your feelings are soft and gentle, with a touch of optimism from the New Moon. However, underlying tensions might still surface.",
         "meters": [
           {
             "meter_name": "love",
@@ -793,9 +793,9 @@
         "unified_score": 9.023653508644284,
         "intensity": 5.026043076926945,
         "harmony": 55.72206127801372,
-        "state_label": "Sluggish",
+        "state_label": "Low movement",
         "quality": "quiet",
-        "interpretation": "Your body feels heavy and sluggish, like you're wading through mud. Low vitality is indicated by Mars in its low-intensity state.",
+        "interpretation": "Physical energy is low, encouraging rest and gentle movement. It's a day for maintenance rather than intense physical exertion.",
         "meters": [
           {
             "meter_name": "vitality",
@@ -1098,9 +1098,9 @@
         "unified_score": 13.528292990837596,
         "intensity": 12.91404645415352,
         "harmony": 41.60979614480738,
-        "state_label": "Seeking",
+        "state_label": "Quiet seeking",
         "quality": "quiet",
-        "interpretation": "You're feeling a deep pull to explore your inner world, but it's hard to find the right path. Saturn's influence on your intuition makes you doubt your inner compass.",
+        "interpretation": "You're quietly seeking deeper meaning and trust in your intuition. This is a time for inner exploration rather than outward action.",
         "meters": [
           {
             "meter_name": "purpose",
@@ -1588,9 +1588,9 @@
         "unified_score": 15.47252618288198,
         "intensity": 9.562050904913814,
         "harmony": 40.881662232762345,
-        "state_label": "Preparing",
+        "state_label": "Quiet preparation",
         "quality": "quiet",
-        "interpretation": "You are in a quiet preparation phase, building a solid foundation for future growth. This is a time for consolidation, not expansion.",
+        "interpretation": "Growth is happening quietly, preparing you for new phases. It's a time of preparation and integration, not outward expansion.",
         "meters": [
           {
             "meter_name": "opportunities",
@@ -2515,30 +2515,35 @@
     },
     "emotional_tone": "optimism, restlessness, and philosophical perspective",
     "timing_guidance": "Moon is void-of-course. Avoid starting new projects or making major decisions. Focus on reflection, completion, and rest.",
-    "interpretation": "The Moon is in Sagittarius, bringing optimism but also restlessness. Be aware that the Moon is Void of Course until 11:07 PM UTC, so it's best to avoid starting new projects or making big decisions today. Focus on wrapping things up."
+    "interpretation": "Elie, the New Moon is just beginning in Sagittarius, setting a tone for new beginnings and optimism. Since the Moon is currently Void of Course, it's best to wrap up old tasks rather than launch new ones. After 11:07 PM UTC, when the Moon enters Capricorn, you'll feel a shift towards more grounded intentions."
   },
-  "look_ahead_preview": "By Thursday, this heaviness lifts. Friday brings a lucky break in your career zone, so spend the next two days preparing your pitch.",
-  "energy_rhythm": "Morning feels heavy and slow until 11 AM. The energy shifts at 2 PM when the Moon enters Aries, giving you a second wind for the evening.",
-  "relationship_weather": "It's a 'spiky' day for love. Venus is clashing with Uranus, so expect sudden changes in plans or a partner acting distant. Give them space rather than chasing them.",
-  "collective_energy": "Everyone is feeling the Pluto pressure to purge old habits—people around you might seem extra on edge or ready to argue about politics.",
+  "look_ahead_preview": "This weekend, expect relationship energy to become more active and potentially challenging. Early next week, Mars will trine your natal Moon, bringing a surge of energy to your emotions and actions. By Thursday, Mars and Saturn align, creating a powerful push for career-related action.",
+  "energy_rhythm": "Energy starts low until 11 AM, then slowly builds. After 11:07 PM UTC, the Moon enters Capricorn, bringing a more grounded and focused energy for the evening.",
+  "relationship_weather": "Relationship weather is calm but preparing for change with the New Moon in Sagittarius. While current connections feel reserved, new themes are initiating. Venus square your Moon suggests some underlying emotional tension might need gentle attention.",
+  "collective_energy": "Everyone is feeling the pressure of Saturn square Uranus, pushing for transformation and breaking free from outdated structures. This collective tension is palpable as important thresholds are reached.",
   "model_used": "gemini-2.5-flash-lite",
-  "generation_time_ms": 2439,
+  "generation_time_ms": 4628,
   "usage": {
-    "cache_tokens_details": null,
-    "cached_content_token_count": null,
-    "candidates_token_count": 748,
+    "cache_tokens_details": [
+      {
+        "modality": "TEXT",
+        "token_count": 13122
+      }
+    ],
+    "cached_content_token_count": 13122,
+    "candidates_token_count": 843,
     "candidates_tokens_details": null,
-    "prompt_token_count": 5856,
+    "prompt_token_count": 13227,
     "prompt_tokens_details": [
       {
         "modality": "TEXT",
-        "token_count": 5856
+        "token_count": 13227
       }
     ],
     "thoughts_token_count": null,
     "tool_use_prompt_token_count": null,
     "tool_use_prompt_tokens_details": null,
-    "total_token_count": 6604,
+    "total_token_count": 14070,
     "traffic_type": null
   }
 }

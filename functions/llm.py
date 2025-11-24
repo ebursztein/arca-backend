@@ -186,7 +186,9 @@ def convert_aspect_contribution_to_meter_aspect(
 def build_astrometers_for_ios(
     all_meters_reading,
     meter_interpretations: dict[str, str],
-    group_interpretations: dict[str, str]
+    group_interpretations: dict[str, str],
+    group_state_labels: dict[str, str],
+    overall_state_label: str
 ) -> AstrometersForIOS:
     """
     Convert AllMetersReading to clean iOS-optimized structure.
@@ -195,6 +197,8 @@ def build_astrometers_for_ios(
         all_meters_reading: Complete AllMetersReading object
         meter_interpretations: Dict of meter_name -> LLM interpretation
         group_interpretations: Dict of group_name -> LLM interpretation
+        group_state_labels: Dict of group_name -> LLM-generated state label
+        overall_state_label: LLM-generated overall state label
 
     Returns:
         AstrometersForIOS with complete explainability data
@@ -279,8 +283,8 @@ def build_astrometers_for_ios(
         else:
             quality = "mixed"
 
-        # Get group state label from JSON (empowering energy-focused labels)
-        state_label = get_group_state_label(group_name, avg_intensity, avg_harmony)
+        # Use LLM-generated state label (contextual, personalized to today's energy)
+        state_label = group_state_labels.get(group_name, "Active")
 
         # Extract group trend (calculate from member meter trends)
         group_trend_delta = None
@@ -325,37 +329,8 @@ def build_astrometers_for_ios(
     top_challenging_meters = [m.meter_name for m in sorted_by_harmony_low[:5] if m.harmony < 50]
     top_flowing_meters = [m.meter_name for m in sorted_by_unified_high[:5] if m.unified_score > 70]
 
-    # Load overall state label from JSON
-    overall_labels_path = Path(__file__).parent / "astrometers" / "labels" / "groups" / "overall.json"
-    with open(overall_labels_path, 'r') as f:
-        overall_labels = json.load(f)
-
-    # Calculate intensity and harmony for label lookup
-    intensity = all_meters_reading.overall_intensity.intensity
-    harmony = all_meters_reading.overall_harmony.harmony
-
-    # Determine intensity band
-    if intensity < 25:
-        intensity_band = "quiet"
-    elif intensity < 50:
-        intensity_band = "mild"
-    elif intensity < 75:
-        intensity_band = "moderate"
-    elif intensity < 90:
-        intensity_band = "high"
-    else:
-        intensity_band = "extreme"
-
-    # Determine quality band
-    if harmony >= 60:
-        quality_band = "harmonious"
-    elif harmony < 40:
-        quality_band = "challenging"
-    else:
-        quality_band = "mixed"
-
-    # Look up label
-    overall_state = overall_labels["experience_labels"]["combined"][intensity_band][quality_band]
+    # Use LLM-generated overall state label (passed as parameter)
+    overall_state = overall_state_label
 
     return AstrometersForIOS(
         date=all_meters_reading.date.isoformat(),
@@ -695,33 +670,13 @@ def generate_daily_horoscope(
         spirit_interpretation: str
         growth_interpretation: str
 
-        # Individual meter interpretations (1-2 sentences each, 80-150 chars)
-        # Mind group (3 meters)
-        mental_clarity_interpretation: str
-        focus_interpretation: str
-        communication_interpretation: str
-
-        # Emotions group (3 meters)
-        love_interpretation: str
-        inner_stability_interpretation: str
-        sensitivity_interpretation: str
-
-        # Body group (3 meters)
-        vitality_interpretation: str
-        drive_interpretation: str
-        wellness_interpretation: str
-
-        # Spirit group (4 meters)
-        purpose_interpretation: str
-        connection_interpretation: str
-        intuition_interpretation: str
-        creativity_interpretation: str
-
-        # Growth group (4 meters)
-        opportunities_interpretation: str
-        career_interpretation: str
-        growth_meter_interpretation: str  # Renamed to avoid conflict with group
-        social_life_interpretation: str
+        # Dynamic State Labels (2-3 words, evocative)
+        overall_state_label: str
+        mind_state_label: str
+        emotions_state_label: str
+        body_state_label: str
+        spirit_state_label: str
+        growth_state_label: str
 
         # Look ahead (merged from detailed horoscope)
         look_ahead_preview: str
@@ -755,6 +710,9 @@ def generate_daily_horoscope(
         usage = response.usage_metadata.model_dump() if response.usage_metadata else {}
         parsed: DailyHoroscopeResponse = response.parsed
 
+        open('last_daily_horoscope_response.json', 'w').write(parsed.model_dump_json(indent=2))
+
+
         print(f"[generate_daily_horoscope]Model:{model_name} Time:{generation_time_ms}ms Usage:{usage}")
 
         # Manually capture to PostHog using HTTP API
@@ -783,32 +741,44 @@ def generate_daily_horoscope(
             "growth": parsed.growth_interpretation,
         }
 
+        # Extract LLM-generated state labels (6 total: overall + 5 groups)
+        group_state_labels = {
+            "mind": parsed.mind_state_label,
+            "emotions": parsed.emotions_state_label,
+            "body": parsed.body_state_label,
+            "spirit": parsed.spirit_state_label,
+            "growth": parsed.growth_state_label,
+        }
+        overall_state_label = parsed.overall_state_label
+
         # Extract individual meter interpretations (17 fields)
         meter_interpretations = {
-            "mental_clarity": parsed.mental_clarity_interpretation,
-            "focus": parsed.focus_interpretation,
-            "communication": parsed.communication_interpretation,
-            "love": parsed.love_interpretation,
-            "inner_stability": parsed.inner_stability_interpretation,
-            "sensitivity": parsed.sensitivity_interpretation,
-            "vitality": parsed.vitality_interpretation,
-            "drive": parsed.drive_interpretation,
-            "wellness": parsed.wellness_interpretation,
-            "purpose": parsed.purpose_interpretation,
-            "connection": parsed.connection_interpretation,
-            "intuition": parsed.intuition_interpretation,
-            "creativity": parsed.creativity_interpretation,
-            "opportunities": parsed.opportunities_interpretation,
-            "career": parsed.career_interpretation,
-            "growth": parsed.growth_meter_interpretation,
-            "social_life": parsed.social_life_interpretation,
+            "mental_clarity": "",
+            "focus": "",
+            "communication": "",
+            "love": "",
+            "inner_stability": "",
+            "sensitivity": "",
+            "vitality": "",
+            "drive": "",
+            "wellness": "",
+            "purpose": "",
+            "connection": "",
+            "intuition": "",
+            "creativity": "",
+            "opportunities": "",
+            "career": "",
+            "growth": "",
+            "social_life": "",
         }
 
         # Build iOS-optimized astrometers structure
         astrometers_for_ios = build_astrometers_for_ios(
             astrometers,
             meter_interpretations=meter_interpretations,
-            group_interpretations=group_interpretations
+            group_interpretations=group_interpretations,
+            group_state_labels=group_state_labels,
+            overall_state_label=overall_state_label
         )
 
         # Populate moon_detail.interpretation with LLM output
