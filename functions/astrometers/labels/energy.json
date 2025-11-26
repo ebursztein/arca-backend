@@ -1,0 +1,108 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "energy",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "energy",
+    "display_name": "Energy",
+    "group": "body",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Energy represents your physical energy, stamina, and life force available for daily activities and bold action.",
+    "detailed": "This meter tracks your core vitality by monitoring how Mars and the Sun in the sky interact with your natal Sun, Mars, and key houses (1st house = identity and physical body, 5th house = creative expression). When these planets form supportive aspects like trines and sextiles, you feel energized and capable. Challenging aspects like squares and oppositions can deplete energy or create resistance that requires more effort to push through. Saturn transits can temporarily drain reserves but build long-term stamina when worked with intentionally.",
+    "keywords": [
+      "energy",
+      "stamina",
+      "physical strength",
+      "drive",
+      "endurance"
+    ]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "sun": "Core life force and constitutional strength - powers your baseline energy levels",
+      "mars": "Physical drive and action energy - determines how much push you have"
+    },
+    "secondary_planets": {
+      "saturn": "Can temporarily deplete reserves but builds long-term stamina when worked with",
+      "jupiter": "Expands energy and optimism when supportive"
+    },
+    "natal_planets_tracked": [
+      "sun"
+    ],
+    "transit_planets_tracked": [
+      "sun",
+      "mars",
+      "saturn",
+      "jupiter"
+    ],
+    "key_houses": {
+      "1": "Physical body and how you show up in the world",
+      "5": "Creative vitality and self-expression through action"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum impact - direct merging of energies",
+      "opposition": "High impact - tension requires energy management",
+      "trine": "High flow - energy comes naturally",
+      "square": "Moderate friction - energy meets obstacles",
+      "sextile": "Moderate flow - supportive opportunities"
+    },
+    "planetary_dignities": {
+      "mars": {
+        "strong_in": [
+          "aries",
+          "scorpio",
+          "capricorn"
+        ],
+        "weak_in": [
+          "libra",
+          "taurus",
+          "cancer"
+        ]
+      },
+      "sun": {
+        "strong_in": [
+          "leo",
+          "aries"
+        ],
+        "weak_in": [
+          "aquarius",
+          "libra"
+        ]
+      }
+    },
+    "critical_degrees": [
+      0,
+      13,
+      26,
+      29
+    ]
+  },
+  "interpretation_guidelines": {
+    "tone": "Direct and physical - talk about what their body can handle today",
+    "focus_when_high": "Emphasize windows for physical activity, bold action, tackling demanding tasks",
+    "focus_when_low": "Emphasize rest, conservation, not overcommitting",
+    "focus_when_challenging": "Acknowledge obstacles but frame as manageable with strategy",
+    "avoid": [
+      "Telling them to 'push through' when depleted",
+      "Ignoring legitimate energy limits",
+      "Being vague about timing"
+    ],
+    "phrasing_examples": {
+      "high_harmonious": "Your physical energy is at its peak today - this is your window for intense workouts, demanding projects, or bold moves you've been planning.",
+      "moderate_mixed": "You have solid stamina today but it's not limitless - pace yourself and take breaks between demanding tasks.",
+      "low_challenging": "Your energy reserves are low today - honor that by conserving where you can and avoiding overcommitments."
+    }
+  },
+  "configuration": {
+    "natal_planets": [
+      "sun"
+    ],
+    "natal_houses": [
+      1,
+      5
+    ],
+    "retrograde_modifiers": {}
+  }
+}

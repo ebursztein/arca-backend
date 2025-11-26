@@ -10,8 +10,8 @@ def count_words(text):
     """Count words in a text string."""
     return len(text.strip().split())
 
-def test_labels_in_file(file_path):
-    """Test all labels in a single JSON file."""
+def check_labels_in_file(file_path):
+    """Check all labels in a single JSON file (not a pytest test)."""
     errors = []
 
     with open(file_path, 'r') as f:
@@ -60,7 +60,7 @@ def main():
     all_errors = []
 
     for file_path in sorted(all_files):
-        errors = test_labels_in_file(file_path)
+        errors = check_labels_in_file(file_path)
         all_errors.extend(errors)
 
     # Report results

@@ -1,0 +1,97 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "clarity",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "clarity",
+    "display_name": "Clarity",
+    "group": "mind",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Clarity represents your cognitive sharpness, how clearly you think, and how easily you process and communicate information.",
+    "detailed": "This meter tracks how Mercury transits interact with your natal Mercury, Sun, and Moon, which govern thinking, communication, and mental processing. Mercury aspects to your Sun show overall cognitive function and mental clarity. Aspects to your Moon affect emotional intelligence and intuitive thinking. The 9th house (higher mind and learning) is also monitored. When Mercury forms harmonious aspects, your mind is sharp and communication flows. Challenging aspects create mental fog, miscommunication, or scattered thinking. Mercury retrograde reduces the impact of Mercury transits by 40%.",
+    "keywords": [
+      "thinking",
+      "clarity",
+      "communication",
+      "focus",
+      "understanding"
+    ]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "mercury": "Rules thinking, communication, and information processing - core mental function"
+    },
+    "secondary_planets": {
+      "sun": "Conscious awareness and mental vitality",
+      "moon": "Emotional intelligence and intuitive thinking"
+    },
+    "natal_planets_tracked": [
+      "sun",
+      "mercury"
+    ],
+    "transit_planets_tracked": [
+      "mercury",
+      "jupiter",
+      "saturn",
+      "uranus"
+    ],
+    "key_houses": {
+      "9": "Higher mind, philosophy, learning, and understanding"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum mental impact - thoughts merge intensely",
+      "opposition": "High impact - mental tension between perspectives",
+      "trine": "High flow - thoughts come easily and clearly",
+      "square": "Moderate friction - mental obstacles to work through",
+      "sextile": "Moderate flow - supportive thinking opportunities"
+    },
+    "planetary_dignities": {
+      "mercury": {
+        "strong_in": [
+          "gemini",
+          "virgo",
+          "aquarius"
+        ],
+        "weak_in": [
+          "sagittarius",
+          "pisces"
+        ]
+      }
+    },
+    "critical_degrees": [
+      0,
+      15,
+      29
+    ]
+  },
+  "interpretation_guidelines": {
+    "tone": "Practical and cognitive - talk about decisions, conversations, learning",
+    "focus_when_high": "Emphasize windows for important decisions, complex thinking, clear communication",
+    "focus_when_low": "Emphasize simplifying, taking mental breaks, avoiding complex decisions",
+    "focus_when_challenging": "Acknowledge confusion but offer strategies (write things down, double-check, ask clarifying questions)",
+    "avoid": [
+      "Making them feel stupid",
+      "Dismissing legitimate mental fog",
+      "Overpromising clarity that isn't there"
+    ],
+    "phrasing_examples": {
+      "high_harmonious": "Your mind is razor-sharp today - this is your window for important conversations, strategic planning, or tackling complex problems.",
+      "moderate_mixed": "Your thinking is active but not perfectly clear - double-check details and ask clarifying questions before deciding.",
+      "low_challenging": "Mental fog is real today - simplify where you can, write things down, and save complex decisions for when your mind is clearer."
+    }
+  },
+  "configuration": {
+    "natal_planets": [
+      "sun",
+      "mercury"
+    ],
+    "natal_houses": [
+      9
+    ],
+    "retrograde_modifiers": {
+      "mercury": 0.6
+    }
+  }
+}

@@ -73,7 +73,7 @@ class MeterReading(BaseModel):
     group: MeterGroupV2
 
     # Primary scores
-    unified_score: float = Field(ge=0, le=100)
+    unified_score: float = Field(ge=-100, le=100)  # V2: polar-style -100 to +100
     intensity: float = Field(ge=0, le=100)
     harmony: float = Field(ge=0, le=100)
 
@@ -103,31 +103,31 @@ class AllMetersReading(BaseModel):
     key_aspects: List[AspectContribution]  # Top aspects driving today's energy
 
     # Mind (3)
-    mental_clarity: MeterReading
+    clarity: MeterReading
     focus: MeterReading
     communication: MeterReading
 
-    # Emotions (3)
-    love: MeterReading
-    inner_stability: MeterReading
-    sensitivity: MeterReading
+    # Heart (3)
+    resilience: MeterReading
+    connections: MeterReading
+    vulnerability: MeterReading
 
     # Body (3)
-    vitality: MeterReading
+    energy: MeterReading
     drive: MeterReading
-    wellness: MeterReading
+    strength: MeterReading
 
-    # Spirit (4)
-    purpose: MeterReading
-    connection: MeterReading
+    # Instincts (4)
+    vision: MeterReading
+    flow: MeterReading
     intuition: MeterReading
     creativity: MeterReading
 
     # Growth (4)
-    opportunities: MeterReading
-    career: MeterReading
-    growth: MeterReading
-    social_life: MeterReading
+    momentum: MeterReading
+    ambition: MeterReading
+    evolution: MeterReading
+    circle: MeterReading
 
 
 class MeterConfig(BaseModel):
@@ -156,23 +156,23 @@ def _load_meter_configs() -> Dict[str, MeterConfig]:
 
     # Meter names and their groups
     meter_groups = {
-        "mental_clarity": MeterGroupV2.MIND,
+        "clarity": MeterGroupV2.MIND,
         "focus": MeterGroupV2.MIND,
         "communication": MeterGroupV2.MIND,
-        "love": MeterGroupV2.EMOTIONS,
-        "inner_stability": MeterGroupV2.EMOTIONS,
-        "sensitivity": MeterGroupV2.EMOTIONS,
-        "vitality": MeterGroupV2.BODY,
+        "resilience": MeterGroupV2.HEART,
+        "connections": MeterGroupV2.HEART,
+        "vulnerability": MeterGroupV2.HEART,
+        "energy": MeterGroupV2.BODY,
         "drive": MeterGroupV2.BODY,
-        "wellness": MeterGroupV2.BODY,
-        "purpose": MeterGroupV2.SPIRIT,
-        "connection": MeterGroupV2.SPIRIT,
-        "intuition": MeterGroupV2.SPIRIT,
-        "creativity": MeterGroupV2.SPIRIT,
-        "opportunities": MeterGroupV2.GROWTH,
-        "career": MeterGroupV2.GROWTH,
-        "growth": MeterGroupV2.GROWTH,
-        "social_life": MeterGroupV2.GROWTH,
+        "strength": MeterGroupV2.BODY,
+        "vision": MeterGroupV2.INSTINCTS,
+        "flow": MeterGroupV2.INSTINCTS,
+        "intuition": MeterGroupV2.INSTINCTS,
+        "creativity": MeterGroupV2.INSTINCTS,
+        "momentum": MeterGroupV2.GROWTH,
+        "ambition": MeterGroupV2.GROWTH,
+        "evolution": MeterGroupV2.GROWTH,
+        "circle": MeterGroupV2.GROWTH,
     }
 
     for meter_name, group in meter_groups.items():
@@ -327,16 +327,49 @@ def get_harmony_level(harmony: float) -> str:
 
 
 def get_state_label(meter_name: str, intensity: float, harmony: float) -> str:
-    """Get state label from JSON."""
-    try:
-        labels = load_meter_labels(meter_name)
-        intensity_level = get_intensity_level(intensity)
-        harmony_level = get_harmony_level(harmony)
+    """
+    Get state label for a meter based on unified_score.
 
-        return labels["experience_labels"]["combined"][intensity_level][harmony_level]
-    except (KeyError, FileNotFoundError):
-        # Fallback
-        return f"{get_intensity_level(intensity).title()} & {get_harmony_level(harmony).title()}"
+    Maps unified_score to one of 4 bucket labels based on the meter's group.
+    Individual meters inherit bucket labels from their parent group.
+
+    Returns:
+        Bucket label string (e.g., "Clear", "Grounded", "Surging")
+    """
+    from .hierarchy import METER_TO_GROUP_V2, Meter
+
+    # Calculate unified_score
+    unified_score, _ = calculate_unified_score(intensity, harmony)
+
+    # Get the meter's group
+    try:
+        meter_enum = Meter(meter_name)
+        group = METER_TO_GROUP_V2.get(meter_enum)
+        group_name = group.value if group else "overall"
+    except ValueError:
+        group_name = "overall"
+
+    # Group-specific bucket labels
+    BUCKET_LABELS = {
+        "mind": ("Overloaded", "Hazy", "Clear", "Sharp"),
+        "heart": ("Heavy", "Tender", "Grounded", "Magnetic"),
+        "body": ("Depleted", "Low Power Mode", "Powering Through", "Surging"),
+        "instincts": ("Disconnected", "Noisy", "Tuned In", "Aligned"),
+        "growth": ("Uphill", "Pacing", "Climbing", "Unstoppable"),
+        "overall": ("Challenging", "Chaotic", "Peaceful", "Flowing"),
+    }
+
+    labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))
+
+    # Map unified_score to bucket (quartile-based thresholds)
+    if unified_score < -25:
+        return labels[0]  # Challenge bucket
+    elif unified_score < 10:
+        return labels[1]  # Mixed bucket
+    elif unified_score < 50:
+        return labels[2]  # Good bucket
+    else:
+        return labels[3]  # Peak bucket
 
 
 def get_quality_label(intensity: float, harmony: float) -> QualityLabel:
@@ -353,26 +386,50 @@ def get_quality_label(intensity: float, harmony: float) -> QualityLabel:
 
 def calculate_unified_score(intensity: float, harmony: float) -> tuple[float, QualityLabel]:
     """
-    Calculate unified score and quality label.
+    Calculate unified score and quality label using polar-style formula with sigmoid stretch.
 
-    Design: unified_score = harmonic mean of intensity and harmony.
-    This ensures both metrics contribute - low value in either dimension reduces the unified score.
+    Design: unified_score combines intensity (magnitude) with harmony (direction).
+    - Harmony determines direction: above 50 = positive, below 50 = negative
+    - Intensity amplifies the signal (but harmony is always partially visible)
+    - Sigmoid (tanh) stretches middle values toward extremes for better range use
+    - Empowering asymmetry: positive boosted, negative dampened
 
     Args:
         intensity: Intensity meter (0-100) - how much is happening
-        harmony: Harmony meter (0-100) - quality of what's happening
+        harmony: Harmony meter (0-100) - quality of what's happening (50 = neutral)
 
     Returns:
         Tuple of (unified_score, quality_label):
-        - unified_score: Harmonic mean of intensity and harmony
+        - unified_score: -100 to +100 (positive = harmonious, negative = challenging)
         - quality_label: QualityLabel enum based on intensity + harmony combination
     """
-    # Harmonic mean: 2 * (a * b) / (a + b)
-    # Handle edge case where both are 0
-    if intensity + harmony == 0:
-        unified_score = 0.0
+    import math
+    from astrometers.constants import (
+        UNIFIED_SCORE_BASE_WEIGHT,
+        UNIFIED_SCORE_INTENSITY_WEIGHT,
+        UNIFIED_SCORE_TANH_FACTOR,
+        UNIFIED_SCORE_POSITIVE_BOOST,
+        UNIFIED_SCORE_NEGATIVE_DAMPEN,
+    )
+
+    # Base direction from harmony: -100 to +100
+    base_direction = (harmony - 50) * 2
+
+    # Intensity as amplification factor: BASE_WEIGHT to 1.0
+    # Even at intensity=0, we preserve BASE_WEIGHT of the harmony signal
+    magnitude_factor = UNIFIED_SCORE_BASE_WEIGHT + UNIFIED_SCORE_INTENSITY_WEIGHT * (intensity / 100)
+
+    # Raw score before stretch
+    raw_score = base_direction * magnitude_factor
+
+    # Apply sigmoid stretch using tanh - spreads middle values toward extremes
+    stretched = 100 * math.tanh(raw_score / UNIFIED_SCORE_TANH_FACTOR)
+
+    # Apply empowering asymmetry: boost positive, dampen negative
+    if stretched >= 0:
+        unified_score = min(100, round(stretched * UNIFIED_SCORE_POSITIVE_BOOST, 1))
     else:
-        unified_score = 2 * intensity * harmony / (intensity + harmony)
+        unified_score = max(-100, round(stretched * UNIFIED_SCORE_NEGATIVE_DAMPEN, 1))
 
     quality = get_quality_label(intensity, harmony)
     return unified_score, quality
@@ -405,6 +462,59 @@ def aggregate_meter_scores(meters: list[MeterReading]) -> tuple[float, float]:
     return avg_intensity, avg_harmony
 
 
+def calculate_cosmic_background(
+    user_id: str,
+    date: str,
+    meter_name: str,
+    aspect_count: int
+) -> tuple[float, float]:
+    """
+    Calculate cosmic background noise for natural daily meter variation.
+
+    Adds reproducible randomness tied to user+date+meter for personalized feel.
+    Only applies when there are active transits (aspect_count > 0).
+
+    Args:
+        user_id: User identifier for reproducible randomness
+        date: Date string (YYYY-MM-DD) for reproducible randomness
+        meter_name: Meter identifier for reproducible randomness
+        aspect_count: Number of active aspects for this meter
+
+    Returns:
+        Tuple of (intensity_noise, harmony_nudge):
+        - intensity_noise: -5 to +10 (slight positive bias)
+        - harmony_nudge: 0 to +3 (always positive - empowering)
+    """
+    import hashlib
+    import random
+    from astrometers.constants import (
+        COSMIC_NOISE_INTENSITY_MIN,
+        COSMIC_NOISE_INTENSITY_MAX,
+        COSMIC_NOISE_HARMONY_MIN,
+        COSMIC_NOISE_HARMONY_MAX,
+    )
+
+    # No noise if no transits - the meter should stay quiet
+    if aspect_count == 0:
+        return 0.0, 0.0
+
+    # Create deterministic seed from user + date + meter
+    # This ensures same user gets same noise on same day for same meter
+    seed_string = f"{user_id}:{date}:{meter_name}"
+    seed_hash = int(hashlib.sha256(seed_string.encode()).hexdigest()[:8], 16)
+
+    # Use seed for reproducible randomness
+    rng = random.Random(seed_hash)
+
+    # Intensity noise: slight positive bias
+    intensity_noise = rng.uniform(COSMIC_NOISE_INTENSITY_MIN, COSMIC_NOISE_INTENSITY_MAX)
+
+    # Harmony nudge: always positive (empowering)
+    harmony_nudge = rng.uniform(COSMIC_NOISE_HARMONY_MIN, COSMIC_NOISE_HARMONY_MAX)
+
+    return intensity_noise, harmony_nudge
+
+
 # =============================================================================
 # CORE CALCULATION (Single Function for All Meters)
 # =============================================================================
@@ -418,7 +528,8 @@ def calculate_meter(
     date: datetime,
     apply_harmonic_boost: bool = True,
     benefic_multiplier: float = 2.0,
-    malefic_multiplier: float = 0.5
+    malefic_multiplier: float = 0.5,
+    user_id: Optional[str] = None
 ) -> MeterReading:
     """
     Calculate a single meter reading.
@@ -435,6 +546,7 @@ def calculate_meter(
         apply_harmonic_boost: Apply planetary nature multipliers (default: True)
         benefic_multiplier: Multiplier for benefic+harmonious aspects (default: 2.0)
         malefic_multiplier: Multiplier for malefic+challenging aspects (default: 0.5)
+        user_id: User ID for cosmic background noise (optional)
 
     Returns:
         Complete MeterReading
@@ -467,13 +579,25 @@ def calculate_meter(
     intensity = normalize_intensity(raw_score.dti, meter_name)
     harmony = normalize_harmony(boosted_hqs, meter_name)  # Normalize (boosted or flat)
 
+    # Step 3.5: Apply cosmic background noise (if user_id provided)
+    if user_id:
+        date_str = date.strftime("%Y-%m-%d")
+        intensity_noise, harmony_nudge = calculate_cosmic_background(
+            user_id=user_id,
+            date=date_str,
+            meter_name=meter_name,
+            aspect_count=raw_score.aspect_count
+        )
+        intensity = max(0.0, min(100.0, intensity + intensity_noise))
+        harmony = max(0.0, min(100.0, harmony + harmony_nudge))
+
     # Step 4: Apply retrograde modifiers
     for planet, modifier in config.retrograde_modifiers.items():
         if is_planet_retrograde(transit_chart, planet):
             harmony = harmony * modifier
             harmony = max(0.0, min(100.0, harmony))  # Clamp
 
-    # Step 5: Calculate unified score (harmonic mean)
+    # Step 5: Calculate unified score (polar-style with sigmoid stretch)
     unified_score, _ = calculate_unified_score(intensity, harmony)
 
     # Step 6: Get labels
@@ -528,7 +652,8 @@ def get_meters(
     calculate_trends: bool = True,
     apply_harmonic_boost: bool = True,
     benefic_multiplier: float = 2.0,
-    malefic_multiplier: float = 0.5
+    malefic_multiplier: float = 0.5,
+    user_id: Optional[str] = None
 ) -> AllMetersReading:
     """
     Calculate all 17 meters.
@@ -541,6 +666,7 @@ def get_meters(
         apply_harmonic_boost: Apply planetary nature multipliers (default: True)
         benefic_multiplier: Multiplier for benefic+harmonious aspects (default: 2.0)
         malefic_multiplier: Multiplier for malefic+challenging aspects (default: 0.5)
+        user_id: User ID for cosmic background noise (optional)
 
     Returns:
         AllMetersReading with all 17 meters
@@ -564,7 +690,8 @@ def get_meters(
             date,
             apply_harmonic_boost=apply_harmonic_boost,
             benefic_multiplier=benefic_multiplier,
-            malefic_multiplier=malefic_multiplier
+            malefic_multiplier=malefic_multiplier,
+            user_id=user_id
         )
 
     # Calculate trends if requested
@@ -624,11 +751,11 @@ def get_meters(
     # Calculate overall aggregates using DYNAMIC WEIGHTED AVERAGE
     # Weight = intensity * (1 + |delta|/100) to favor active, changing meters
     all_17_meters = [
-        readings["mental_clarity"], readings["focus"], readings["communication"],
-        readings["love"], readings["inner_stability"], readings["sensitivity"],
-        readings["vitality"], readings["drive"], readings["wellness"],
-        readings["purpose"], readings["connection"], readings["intuition"], readings["creativity"],
-        readings["opportunities"], readings["career"], readings["growth"], readings["social_life"]
+        readings["clarity"], readings["focus"], readings["communication"],
+        readings["resilience"], readings["connections"], readings["vulnerability"],
+        readings["energy"], readings["drive"], readings["strength"],
+        readings["vision"], readings["flow"], readings["intuition"], readings["creativity"],
+        readings["momentum"], readings["ambition"], readings["evolution"], readings["circle"]
     ]
 
     total_weighted_intensity = 0.0
@@ -744,27 +871,27 @@ def get_meters(
         aspect_count=total_aspect_count,
         key_aspects=key_aspects_list[:10],  # Top 10 cross-cutting aspects
         # Mind
-        mental_clarity=readings["mental_clarity"],
+        clarity=readings["clarity"],
         focus=readings["focus"],
         communication=readings["communication"],
-        # Emotions
-        love=readings["love"],
-        inner_stability=readings["inner_stability"],
-        sensitivity=readings["sensitivity"],
+        # Heart
+        resilience=readings["resilience"],
+        connections=readings["connections"],
+        vulnerability=readings["vulnerability"],
         # Body
-        vitality=readings["vitality"],
+        energy=readings["energy"],
         drive=readings["drive"],
-        wellness=readings["wellness"],
-        # Spirit
-        purpose=readings["purpose"],
-        connection=readings["connection"],
+        strength=readings["strength"],
+        # Instincts
+        vision=readings["vision"],
+        flow=readings["flow"],
         intuition=readings["intuition"],
         creativity=readings["creativity"],
         # Growth
-        opportunities=readings["opportunities"],
-        career=readings["career"],
-        growth=readings["growth"],
-        social_life=readings["social_life"],
+        momentum=readings["momentum"],
+        ambition=readings["ambition"],
+        evolution=readings["evolution"],
+        circle=readings["circle"],
     )
 
 
@@ -804,3 +931,221 @@ def get_meter(
         transit_chart,
         date
     )
+
+
+# =============================================================================
+# WORD BANKS & FEATURED SELECTION (for LLM curation)
+# =============================================================================
+
+_WORD_BANKS_CACHE = None
+
+def load_word_banks() -> dict:
+    """Load word banks from JSON config file."""
+    global _WORD_BANKS_CACHE
+    if _WORD_BANKS_CACHE is not None:
+        return _WORD_BANKS_CACHE
+
+    word_banks_file = os.path.join(
+        os.path.dirname(__file__), "labels", "word_banks.json"
+    )
+    with open(word_banks_file, "r") as f:
+        _WORD_BANKS_CACHE = json.load(f)
+
+    return _WORD_BANKS_CACHE
+
+
+def get_quadrant(intensity: float, harmony: float) -> str:
+    """
+    Determine which quadrant based on intensity and harmony.
+
+    Uses empirical thresholds from 102k data points (P33/P67).
+
+    Returns:
+        One of: "high_intensity_high_harmony", "high_intensity_low_harmony",
+                "low_intensity_high_harmony", "low_intensity_low_harmony", "moderate"
+    """
+    word_banks = load_word_banks()
+    thresholds = word_banks["thresholds"]
+
+    int_low = thresholds["intensity"]["low"]   # 19
+    int_high = thresholds["intensity"]["high"]  # 38
+    harm_low = thresholds["harmony"]["low"]     # 52
+    harm_high = thresholds["harmony"]["high"]   # 65
+
+    is_int_high = intensity > int_high
+    is_int_low = intensity < int_low
+    is_harm_high = harmony > harm_high
+    is_harm_low = harmony < harm_low
+
+    if is_int_high and is_harm_high:
+        return "high_intensity_high_harmony"
+    elif is_int_high and is_harm_low:
+        return "high_intensity_low_harmony"
+    elif is_int_low and is_harm_high:
+        return "low_intensity_high_harmony"
+    elif is_int_low and is_harm_low:
+        return "low_intensity_low_harmony"
+    else:
+        return "moderate"
+
+
+def select_state_words(
+    group_name: str,
+    intensity: float,
+    harmony: float,
+    user_id: str,
+    date: str,
+    count: int = 2
+) -> list[str]:
+    """
+    Select N words from the word bank for a group based on its quadrant.
+
+    Uses reproducible randomness tied to user+date+group for consistency.
+
+    Args:
+        group_name: Group name (mind, emotions, body, spirit, growth, overall)
+        intensity: Group intensity score
+        harmony: Group harmony score
+        user_id: User ID for reproducible selection
+        date: Date string for reproducible selection
+        count: Number of words to select (default 2)
+
+    Returns:
+        List of selected words as creative inspiration for LLM
+    """
+    import hashlib
+    import random
+
+    word_banks = load_word_banks()
+    quadrant = get_quadrant(intensity, harmony)
+    words = word_banks["quadrants"][quadrant].get(group_name, [])
+
+    if not words:
+        return ["shifting", "in motion"]  # fallback
+
+    # Reproducible random selection
+    seed_string = f"{user_id}:{date}:{group_name}:state_words"
+    seed_hash = int(hashlib.sha256(seed_string.encode()).hexdigest()[:8], 16)
+    rng = random.Random(seed_hash)
+
+    # Select N unique words
+    selected = rng.sample(words, min(count, len(words)))
+    return selected
+
+
+def select_featured_meters(
+    all_meters: AllMetersReading,
+    user_id: str,
+    date: str,
+    num_groups: int = 2,
+    num_meters_per_group: int = 2
+) -> dict:
+    """
+    Select featured groups and meters for today's horoscope using weighted random.
+
+    Higher absolute unified_score = more likely to be selected.
+    This provides programmatic curation - we decide what's important, not the LLM.
+
+    Args:
+        all_meters: Complete meter readings
+        user_id: User ID for reproducible selection
+        date: Date string for reproducible selection
+        num_groups: Number of groups to feature (default 2)
+        num_meters_per_group: Number of meters per group (default 2)
+
+    Returns:
+        Dict with:
+        - featured_groups: List of group names
+        - featured_meters: Dict mapping group_name -> list of meter readings
+        - group_words: Dict mapping group_name -> list of state word inspirations
+    """
+    import hashlib
+    import random
+    from .hierarchy import MeterGroupV2, get_meters_in_group_v2
+
+    # Create reproducible RNG
+    seed_string = f"{user_id}:{date}:featured_selection"
+    seed_hash = int(hashlib.sha256(seed_string.encode()).hexdigest()[:8], 16)
+    rng = random.Random(seed_hash)
+
+    # Calculate group scores
+    group_scores = {}
+    group_meters = {}
+
+    for group in MeterGroupV2:
+        meter_enums = get_meters_in_group_v2(group)
+        meters_in_group = []
+
+        for meter_enum in meter_enums:
+            meter_reading = getattr(all_meters, meter_enum.value, None)
+            if meter_reading:
+                meters_in_group.append(meter_reading)
+
+        if meters_in_group:
+            avg_intensity = sum(m.intensity for m in meters_in_group) / len(meters_in_group)
+            avg_harmony = sum(m.harmony for m in meters_in_group) / len(meters_in_group)
+            unified, _ = calculate_unified_score(avg_intensity, avg_harmony)
+
+            group_scores[group.value] = {
+                "unified_score": unified,
+                "intensity": avg_intensity,
+                "harmony": avg_harmony,
+                "weight": max(10, abs(unified))  # Use absolute score as weight, min 10
+            }
+            group_meters[group.value] = meters_in_group
+
+    # Weighted random selection of groups
+    groups = list(group_scores.keys())
+    weights = [group_scores[g]["weight"] for g in groups]
+    featured_groups = []
+
+    for _ in range(min(num_groups, len(groups))):
+        if not groups:
+            break
+        selected = rng.choices(groups, weights=weights, k=1)[0]
+        featured_groups.append(selected)
+        # Remove selected to avoid duplicates
+        idx = groups.index(selected)
+        groups.pop(idx)
+        weights.pop(idx)
+
+    # For each featured group, select meters with weighted random
+    featured_meters = {}
+    group_words = {}
+
+    for group_name in featured_groups:
+        meters = group_meters[group_name]
+        meter_weights = [max(10, abs(m.unified_score)) for m in meters]
+
+        selected_meters = []
+        available_meters = list(meters)
+        available_weights = list(meter_weights)
+
+        for _ in range(min(num_meters_per_group, len(available_meters))):
+            if not available_meters:
+                break
+            selected = rng.choices(available_meters, weights=available_weights, k=1)[0]
+            selected_meters.append(selected)
+            idx = available_meters.index(selected)
+            available_meters.pop(idx)
+            available_weights.pop(idx)
+
+        featured_meters[group_name] = selected_meters
+
+        # Get state words for this group
+        group_data = group_scores[group_name]
+        group_words[group_name] = select_state_words(
+            group_name=group_name,
+            intensity=group_data["intensity"],
+            harmony=group_data["harmony"],
+            user_id=user_id,
+            date=date,
+            count=2
+        )
+
+    return {
+        "featured_groups": featured_groups,
+        "featured_meters": featured_meters,
+        "group_words": group_words,
+        "group_scores": {g: group_scores[g] for g in featured_groups}
+    }

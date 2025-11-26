@@ -1,5 +1,5 @@
 """
-Debug test to understand why challenge_intensity and karmic_lessons have identical aspect sets.
+Debug test to understand why focus and communication might have identical aspect sets.
 """
 
 import sys
@@ -8,11 +8,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
 from astro import compute_birth_chart
-from functions.astrometers.meters_v1 import get_meters
+from astrometers.meters import get_meters
 
 
-def test_debug_challenge_vs_karmic():
-    """Debug why these two meters have identical aspect sets."""
+def test_debug_focus_vs_communication():
+    """Debug why these two meters might have identical aspect sets."""
 
     # Same test data as validation tests
     natal_chart, _ = compute_birth_chart(
@@ -30,10 +30,10 @@ def test_debug_challenge_vs_karmic():
     meters = get_meters(natal_chart, transit_chart, date)
 
     print("\n" + "="*80)
-    print("CHALLENGE INTENSITY ASPECTS")
+    print("FOCUS ASPECTS")
     print("="*80)
-    print(f"Total aspects: {len(meters.challenge_intensity.top_aspects)}")
-    for aspect in meters.challenge_intensity.top_aspects:
+    print(f"Total aspects: {len(meters.focus.top_aspects)}")
+    for aspect in meters.focus.top_aspects:
         print(f"  {aspect.label}")
         print(f"    Natal planet: {aspect.natal_planet.value}")
         print(f"    Transit planet: {aspect.transit_planet.value}")
@@ -42,10 +42,10 @@ def test_debug_challenge_vs_karmic():
         print()
 
     print("\n" + "="*80)
-    print("KARMIC LESSONS ASPECTS")
+    print("COMMUNICATION ASPECTS")
     print("="*80)
-    print(f"Total aspects: {len(meters.karmic_lessons.top_aspects)}")
-    for aspect in meters.karmic_lessons.top_aspects:
+    print(f"Total aspects: {len(meters.communication.top_aspects)}")
+    for aspect in meters.communication.top_aspects:
         print(f"  {aspect.label}")
         print(f"    Natal planet: {aspect.natal_planet.value}")
         print(f"    Transit planet: {aspect.transit_planet.value}")
@@ -54,32 +54,28 @@ def test_debug_challenge_vs_karmic():
         print()
 
     # Create sets for comparison
-    challenge_set = set(
+    focus_set = set(
         (a.natal_planet, a.transit_planet, a.aspect_type)
-        for a in meters.challenge_intensity.top_aspects
+        for a in meters.focus.top_aspects
     )
-    karmic_set = set(
+    comm_set = set(
         (a.natal_planet, a.transit_planet, a.aspect_type)
-        for a in meters.karmic_lessons.top_aspects
+        for a in meters.communication.top_aspects
     )
 
     print("\n" + "="*80)
     print("COMPARISON")
     print("="*80)
-    print(f"Challenge intensity planets: Saturn, Uranus, Neptune, Pluto")
-    print(f"Karmic lessons planets: Saturn, North Node")
-    print()
-    print(f"Challenge set size: {len(challenge_set)}")
-    print(f"Karmic set size: {len(karmic_set)}")
-    print(f"Are they equal? {challenge_set == karmic_set}")
+    print(f"Focus set size: {len(focus_set)}")
+    print(f"Communication set size: {len(comm_set)}")
+    print(f"Are they equal? {focus_set == comm_set}")
 
-    if challenge_set == karmic_set:
-        print("\n❌ BUG CONFIRMED: These meters have identical aspect sets!")
-        print("\nThis means:")
-        print("  1. Either the filtering logic is broken")
-        print("  2. Or in this specific chart there are no Uranus/Neptune/Pluto/North Node aspects")
-        print("     and both meters only see Saturn aspects")
+    if focus_set == comm_set:
+        print("\nℹ️  INFO: These meters have identical aspect sets.")
+        print("   This is expected if they share the same configuration (e.g. Mercury/3rd House).")
+    else:
+        print("\n✅ These meters have different aspect sets.")
 
 
 if __name__ == "__main__":
-    test_debug_challenge_vs_karmic()
+    test_debug_focus_vs_communication()

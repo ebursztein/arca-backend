@@ -27,6 +27,15 @@ class EntityStatus(str, Enum):
     RESOLVED = "resolved"
 
 
+class EntityCategory(str, Enum):
+    """Entity category for relationship tracking."""
+    PARTNER = "partner"  # Current committed relationship (only one allowed)
+    FAMILY = "family"  # Mother, father, sister, brother, etc.
+    FRIEND = "friend"  # Friends
+    COWORKER = "coworker"  # Boss, colleague, etc.
+    OTHER = "other"  # Catch-all for non-relationship entities (goals, challenges, etc.)
+
+
 class MessageRole(str, Enum):
     """Conversation message role."""
     USER = "user"
@@ -81,25 +90,13 @@ class CategoryEngagement(BaseModel):
     last_mentioned: Optional[str] = Field(default=None, description="ISO date of last view")
 
 
-class CategoryViewed(BaseModel):
-    """
-    A category/group that was viewed in a reading.
-    """
-    category: MeterGroupV2 = Field(description="Meter group name")
-    text: str = Field(description="Full text that was viewed")
-
-
-class RecentReading(BaseModel):
-    """
-    A single reading in the recent history (FIFO queue, max 10).
-    """
-    date: str = Field(description="ISO date of reading")
-    summary: str = Field(description="Summary text shown on main screen")
-    categories_viewed: list[CategoryViewed] = Field(description="Categories expanded and read")
-    astrometers_summary: Optional[dict] = Field(
-        None,
-        description="Key astrometers data: overall_intensity, overall_harmony, key_aspects (for trend analysis)"
-    )
+class RelationshipMention(BaseModel):
+    """Tracks when a relationship entity was featured in horoscope."""
+    entity_id: str = Field(description="ID of the entity")
+    entity_name: str = Field(description="Name of the entity")
+    category: EntityCategory = Field(description="Category: partner, family, friend, coworker")
+    date: str = Field(description="ISO date when featured")
+    context: str = Field(description="What was said about this relationship")
 
 
 class MemoryCollection(BaseModel):
@@ -107,20 +104,13 @@ class MemoryCollection(BaseModel):
     Memory collection stored in Firestore: memory/{userId}
 
     Server-side only - NOT accessible to client.
-    Derivative cache used for personalization, rebuilt from journal.
+    Used for personalization in Ask the Stars conversations.
     """
     user_id: str = Field(description="Firebase Auth user ID")
 
     # Category engagement tracking (using MeterGroupV2 hierarchy)
     categories: dict[MeterGroupV2, CategoryEngagement] = Field(
         description="Engagement counts per meter group"
-    )
-
-    # Recent readings for continuity (FIFO, max 10)
-    recent_readings: list[RecentReading] = Field(
-        default_factory=list,
-        max_length=10,
-        description="Last 10 readings with full text"
     )
 
     # Ask the Stars - Conversation tracking
@@ -140,6 +130,12 @@ class MemoryCollection(BaseModel):
     question_categories: dict[str, int] = Field(
         default_factory=dict,
         description="Question category counts for analytics"
+    )
+
+    # Horoscope relationship rotation (capped at 20)
+    relationship_mentions: list[RelationshipMention] = Field(
+        default_factory=list,
+        description="Last 20 relationship mentions in horoscopes for rotation tracking"
     )
 
     # Timestamp
@@ -177,24 +173,6 @@ class MemoryCollection(BaseModel):
         if not has_engagement:
             lines.append("  (First time user - no history yet)")
 
-        # Recent readings for continuity
-        lines.append("\nLast 10 Readings:")
-
-        if self.recent_readings:
-            for i, reading in enumerate(self.recent_readings[-10:], 1):
-                lines.append(f"\n  Reading {i} ({reading.date}):")
-                lines.append(f"    Summary: {reading.summary}")
-
-                if reading.categories_viewed:
-                    lines.append("    Categories viewed:")
-                    for cat_view in reading.categories_viewed:
-                        text_preview = cat_view.text[:100] + "..."
-                        lines.append(
-                            f"      - {cat_view.category.value}: {text_preview}"
-                        )
-        else:
-            lines.append("  (First time user - no reading history)")
-
         return "\n".join(lines)
 
 
@@ -219,6 +197,22 @@ class Entity(BaseModel):
     entity_type: str = Field(description="Open string: 'relationship', 'career_goal', 'challenge', etc.")
     status: EntityStatus = Field(default=EntityStatus.ACTIVE, description="Entity status")
     aliases: list[str] = Field(default_factory=list, description="Alternative names for deduplication")
+
+    # Category for relationship tracking (iOS dropdown)
+    category: Optional[EntityCategory] = Field(
+        None,
+        description="Entity category: partner, family, friend, coworker, other"
+    )
+    relationship_label: Optional[str] = Field(
+        None,
+        description="Specific relationship label from iOS dropdown: mother, sister, boss, etc."
+    )
+
+    # User notes (editable by user in iOS)
+    notes: Optional[str] = Field(
+        None,
+        description="User-written notes about this entity"
+    )
 
     # Rich metadata (flexible key-value pairs)
     attributes: list[AttributeKV] = Field(
@@ -249,6 +243,12 @@ class Entity(BaseModel):
         ge=0.0,
         le=1.0,
         description="Calculated: recency (0.6) + frequency (0.4)"
+    )
+
+    # Connection link (for compatibility feature)
+    connection_id: Optional[str] = Field(
+        None,
+        description="Links to Connection with birth data for compatibility"
     )
 
     # Timestamps
@@ -295,20 +295,6 @@ class UserEntities(BaseModel):
     """
     user_id: str = Field(description="Firebase Auth user ID")
     entities: list[Entity] = Field(default_factory=list, description="All entities in single array")
-    updated_at: str = Field(description="ISO timestamp of last update")
-
-
-class UserHoroscopes(BaseModel):
-    """
-    Single document containing cached horoscopes for a user (cost optimization).
-
-    Stored in: users/{userId}/horoscopes/all
-    """
-    user_id: str = Field(description="Firebase Auth user ID")
-    horoscopes: dict[str, dict] = Field(
-        default_factory=dict,
-        description="Date -> DailyHoroscope dict (e.g., {'2025-01-20': {...}})"
-    )
     updated_at: str = Field(description="ISO timestamp of last update")
 
 
@@ -393,7 +379,7 @@ class MeterGroupScores(BaseModel):
     """
     Aggregated scores for a meter group (arithmetic mean of member meters).
     """
-    unified_score: float = Field(description="Primary display value (0-100), average of member meters")
+    unified_score: float = Field(description="Primary display value (-100 to +100), average of member meters")
     harmony: float = Field(description="Supportive vs challenging quality (0-100)")
     intensity: float = Field(description="Activity level (0-100)")
 
@@ -437,8 +423,8 @@ class MeterGroupData(BaseModel):
     - Trend data (if available)
     - Member meter IDs (for drill-down)
     """
-    group_name: str = Field(description="Group ID: mind, emotions, body, spirit, growth")
-    display_name: str = Field(description="Display name: Mind, Emotions, Body, Spirit, Growth")
+    group_name: str = Field(description="Group ID: mind, heart, body, instincts, growth")
+    display_name: str = Field(description="Display name: Mind, Heart, Body, Instincts, Growth")
     scores: MeterGroupScores
     state: MeterGroupState
     interpretation: str = Field(description="LLM-generated 2-3 sentence interpretation (150-300 chars)")
@@ -518,6 +504,101 @@ class DailyHoroscope(BaseModel):
 
 
 # =============================================================================
+# Compressed Horoscope Storage Models
+# =============================================================================
+
+class CompressedMeter(BaseModel):
+    """Compressed meter data for storage (just name + scores)."""
+    name: str = Field(description="Meter name")
+    intensity: float = Field(ge=0, le=100, description="Intensity score 0-100")
+    harmony: float = Field(ge=0, le=100, description="Harmony score 0-100")
+
+
+class CompressedMeterGroup(BaseModel):
+    """Compressed meter group data for storage."""
+    name: str = Field(description="Group name: mind, heart, body, instincts, growth")
+    intensity: float = Field(ge=0, le=100, description="Group intensity 0-100")
+    harmony: float = Field(ge=0, le=100, description="Group harmony 0-100")
+    meters: list[CompressedMeter] = Field(description="Member meters with scores only")
+
+
+class CompressedTransit(BaseModel):
+    """Compressed transit for Ask the Stars context."""
+    interpretation: str = Field(description="Human-readable transit interpretation")
+
+
+class CompressedTransitSummary(BaseModel):
+    """Compressed transit summary for Ask the Stars context."""
+    priority_transits: list[CompressedTransit] = Field(
+        default_factory=list,
+        description="Top priority transits with interpretations"
+    )
+
+
+class CompressedAstrometers(BaseModel):
+    """Compressed astrometers summary for Ask the Stars context."""
+    overall_state: str = Field(description="Overall state label (e.g., 'Quiet Reflection')")
+    top_active_meters: list[str] = Field(description="Top 3-5 most active meters")
+    top_flowing_meters: list[str] = Field(description="Top 3-5 meters with high harmony")
+    top_challenging_meters: list[str] = Field(description="Top 3-5 meters needing attention")
+
+
+class CompressedHoroscope(BaseModel):
+    """
+    Compressed horoscope for storage - only LLM-generated fields + meter scores.
+
+    Reduces storage from ~128KB to ~5KB by removing all astrological foundations,
+    aspects, trends, and verbose explainability data.
+
+    Stored in: users/{user_id}/horoscopes/latest (FIFO, max 10)
+    """
+    date: str = Field(description="ISO date")
+    sun_sign: str = Field(description="Sun sign")
+
+    # LLM-generated fields (what user actually reads)
+    technical_analysis: str
+    daily_theme_headline: str
+    daily_overview: str
+    actionable_advice: ActionableAdvice
+    look_ahead_preview: Optional[str] = None
+    energy_rhythm: Optional[str] = None
+    relationship_weather: Optional[str] = None
+    collective_energy: Optional[str] = None
+    follow_up_questions: Optional[list[str]] = None
+
+    # Compressed meters (scores only, no foundations/aspects/trends)
+    meter_groups: list[CompressedMeterGroup] = Field(
+        description="5 groups with scores and member meters"
+    )
+
+    # Compressed astrometers summary (for Ask the Stars template)
+    astrometers: CompressedAstrometers = Field(
+        description="Summary of astrometers: overall state and top meters"
+    )
+
+    # Compressed transit summary (for Ask the Stars template)
+    transit_summary: CompressedTransitSummary = Field(
+        description="Top priority transits with interpretations"
+    )
+
+    # Metadata
+    created_at: str = Field(description="ISO datetime of generation")
+
+
+class UserHoroscopes(BaseModel):
+    """
+    User horoscopes collection - FIFO queue of last 10 horoscopes.
+
+    Stored in: users/{user_id}/horoscopes/latest
+    """
+    user_id: str = Field(description="Firebase Auth user ID")
+    horoscopes: dict[str, dict] = Field(
+        description="Date-keyed horoscopes (max 10, FIFO)"
+    )
+    updated_at: str = Field(description="ISO datetime of last update")
+
+
+# =============================================================================
 # Helper Functions
 # =============================================================================
 
@@ -537,13 +618,100 @@ def create_empty_memory(user_id: str) -> MemoryCollection:
         user_id=user_id,
         categories={
             MeterGroupV2.MIND: CategoryEngagement(),
-            MeterGroupV2.EMOTIONS: CategoryEngagement(),
+            MeterGroupV2.HEART: CategoryEngagement(),
             MeterGroupV2.BODY: CategoryEngagement(),
-            MeterGroupV2.SPIRIT: CategoryEngagement(),
+            MeterGroupV2.INSTINCTS: CategoryEngagement(),
             MeterGroupV2.GROWTH: CategoryEngagement(),
         },
-        recent_readings=[],
         updated_at=datetime.now().isoformat()
+    )
+
+
+def compress_horoscope(horoscope: DailyHoroscope) -> CompressedHoroscope:
+    """
+    Compress a DailyHoroscope for storage.
+
+    Reduces size from ~128KB to ~5KB by keeping only:
+    - LLM-generated text fields (what user reads)
+    - Meter scores (intensity + harmony only, no foundations/aspects/trends)
+    - Astrometers summary (overall_state, top meters)
+    - Transit summary (priority transits with interpretations)
+
+    Args:
+        horoscope: Full DailyHoroscope with complete astrometers
+
+    Returns:
+        CompressedHoroscope for storage
+    """
+    # Compress meter groups
+    compressed_groups = []
+    for group in horoscope.astrometers.groups:
+        # Compress member meters
+        compressed_meters = [
+            CompressedMeter(
+                name=meter.meter_name,
+                intensity=meter.intensity,
+                harmony=meter.harmony
+            )
+            for meter in group.meters
+        ]
+
+        compressed_groups.append(
+            CompressedMeterGroup(
+                name=group.group_name,
+                intensity=group.intensity,
+                harmony=group.harmony,
+                meters=compressed_meters
+            )
+        )
+
+    # Compress astrometers summary (for Ask the Stars template)
+    compressed_astrometers = CompressedAstrometers(
+        overall_state=horoscope.astrometers.overall_state,
+        top_active_meters=horoscope.astrometers.top_active_meters,
+        top_flowing_meters=horoscope.astrometers.top_flowing_meters,
+        top_challenging_meters=horoscope.astrometers.top_challenging_meters
+    )
+
+    # Compress transit summary (for Ask the Stars template)
+    compressed_transits = []
+    if horoscope.transit_summary and horoscope.transit_summary.get("priority_transits"):
+        for transit in horoscope.transit_summary["priority_transits"][:5]:
+            # Build human-readable interpretation from transit data
+            description = transit.get("description", "").lstrip("⚡ ")  # Remove intensity indicators
+            meaning = transit.get("meaning", "")
+            house_context = transit.get("house_context", "")
+
+            # Compose interpretation
+            parts = [description]
+            if meaning:
+                parts.append(f"({meaning})")
+            if house_context:
+                parts.append(f"- {house_context}")
+
+            interpretation = " ".join(parts)
+            compressed_transits.append(CompressedTransit(interpretation=interpretation))
+
+    compressed_transit_summary = CompressedTransitSummary(
+        priority_transits=compressed_transits
+    )
+
+    return CompressedHoroscope(
+        date=horoscope.date,
+        sun_sign=horoscope.sun_sign,
+        technical_analysis=horoscope.technical_analysis,
+        daily_theme_headline=horoscope.daily_theme_headline,
+        daily_overview=horoscope.daily_overview,
+        actionable_advice=horoscope.actionable_advice,
+        look_ahead_preview=horoscope.look_ahead_preview,
+        energy_rhythm=horoscope.energy_rhythm,
+        relationship_weather=horoscope.relationship_weather,
+        collective_energy=horoscope.collective_energy,
+        follow_up_questions=horoscope.follow_up_questions,
+        meter_groups=compressed_groups,
+        astrometers=compressed_astrometers,
+        transit_summary=compressed_transit_summary,
+        created_at=datetime.now().isoformat()
     )
 
 
@@ -647,12 +815,12 @@ class MeterForIOS(BaseModel):
     - How it's changing (trend)
     """
     # Identity
-    meter_name: str = Field(description="Internal meter ID (e.g., 'mental_clarity')")
-    display_name: str = Field(description="User-facing name (e.g., 'Mental Clarity')")
-    group: str = Field(description="Group ID: mind, emotions, body, spirit, growth")
+    meter_name: str = Field(description="Internal meter ID (e.g., 'clarity')")
+    display_name: str = Field(description="User-facing name (e.g., 'Clarity')")
+    group: str = Field(description="Group ID: mind, heart, body, instincts, growth")
 
-    # Scores (0-100, normalized via calibration)
-    unified_score: float = Field(ge=0, le=100, description="Primary display value (balanced view of intensity + harmony)")
+    # Scores (unified_score: -100 to +100, others: 0-100, normalized via calibration)
+    unified_score: float = Field(ge=-100, le=100, description="Primary display value (-100 to +100, polar-style from intensity + harmony)")
     intensity: float = Field(ge=0, le=100, description="Activity level - how much is happening")
     harmony: float = Field(ge=0, le=100, description="Quality - supportive (high) vs challenging (low)")
 
@@ -687,11 +855,11 @@ class MeterGroupForIOS(BaseModel):
     Scores are arithmetic means of member meters.
     """
     # Identity
-    group_name: str = Field(description="Group ID: mind, emotions, body, spirit, growth")
-    display_name: str = Field(description="User-facing name: Mind, Emotions, Body, Spirit, Growth")
+    group_name: str = Field(description="Group ID: mind, heart, body, instincts, growth")
+    display_name: str = Field(description="User-facing name: Mind, Heart, Body, Instincts, Growth")
 
     # Aggregated scores (arithmetic mean of member meters)
-    unified_score: float = Field(ge=0, le=100, description="Average unified score of member meters")
+    unified_score: float = Field(ge=-100, le=100, description="Average unified score of member meters (-100 to +100)")
     intensity: float = Field(ge=0, le=100, description="Average intensity of member meters")
     harmony: float = Field(ge=0, le=100, description="Average harmony of member meters")
 
@@ -725,7 +893,7 @@ class AstrometersForIOS(BaseModel):
     date: str = Field(description="ISO date of reading")
 
     # Overall stats (aggregated across all 17 meters)
-    overall_unified_score: float = Field(ge=0, le=100, description="Overall unified score across all meters")
+    overall_unified_score: float = Field(ge=-100, le=100, description="Overall unified score across all meters (-100 to +100)")
     overall_intensity: "MeterReading" = Field(description="Overall intensity meter with state_label")
     overall_harmony: "MeterReading" = Field(description="Overall harmony meter with state_label")
     overall_quality: str = Field(description="Overall quality: harmonious, challenging, mixed, quiet, peaceful")

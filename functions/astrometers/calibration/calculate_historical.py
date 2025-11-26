@@ -32,7 +32,7 @@ METER_CONFIGS = {
     "overall_harmony": {"filter": "all"},
 
     # Cognitive meters
-    "mental_clarity": {"filter": "natal_planets", "planets": [Planet.MERCURY]},
+    "clarity": {"filter": "natal_planets", "planets": [Planet.MERCURY]},
     "decision_quality": {"filter": "natal_planets", "planets": [Planet.MERCURY, Planet.JUPITER, Planet.SATURN, Planet.NEPTUNE]},
     "communication_flow": {"filter": "natal_planets", "planets": [Planet.MERCURY, Planet.VENUS, Planet.MARS]},
 

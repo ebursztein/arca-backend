@@ -66,9 +66,10 @@ uv run python functions/astrometers/test_label_word_counts.py
 - 17 individual meters + 6 meter groups (mind, emotions, body, spirit, growth, overall)
 - Each with 15 state labels (5 intensity × 3 quality levels)
 - **Critical constraint**: All labels must be 2 words maximum
-- Labels use empowering, energy-focused language (see `docs/ASTROMETER_LABELS.md`)
+- Labels use empowering, energy-focused language
 - NO clinical terms ("crisis," "burnout"), NO mystical jargon ("psychic," "soul")
 - Labels describe cosmic energy available, not emotional states
+- See `arca-design.md` for complete technical documentation
 
 ## Project Overview
 
@@ -251,62 +252,25 @@ arca-backend/
 └── CLAUDE.md             # Backend overview (see docs/CLAUDE.md for details)
 ```
 
-## Planning Documents
+## Documentation
 
-**Read these to understand the project (all in `docs/` directory):**
+**Primary technical reference:**
+- **`arca-design.md`** - Complete technical design document (DTI/HQS algorithms, calibration, API reference)
 
-1. **`docs/MVP_PLAN.md`** - The complete V1 vision:
-   - Product scope (V1-V4 roadmap)
-   - User flow and workflows
-   - Data models (Firestore collections)
-   - Architecture (journal → memory pattern)
-   - All 8 interest categories
-   - LLM prompt templates
-   - Success criteria
+**iOS Integration (in `docs/` directory):**
+- **`docs/ios.md`** - Complete iOS integration guide with Swift examples
+- **`docs/IOS_DAILY_HOROSCOPE_API.md`** - Detailed daily horoscope API specification
+- **`docs/IOS_BREAKING_CHANGES.md`** - Breaking changes log for iOS
+- **`docs/ios-super-group-meters.md`** - Super-group meters iOS integration
+- **`docs/ios-ask-stars.md`** - Ask the Stars feature iOS guide
 
-2. **`docs/IMPLEMENTATION_PLAN.md`** - Technical implementation guide:
-   - 7 sprints with detailed tasks
-   - Module structure (astro, llm, models, firestore_ops)
-   - Test strategy (unit, integration, e2e)
-   - Environment setup
-   - Timeline estimates
-   - Risk mitigation
+**Feature Specs:**
+- **`docs/ask_the_stars_feature.md`** - Ask the Stars feature design document
+- **`docs/backend-chart-api-spec.md`** - Chart visualization API (future)
 
-3. **`docs/TODO.md`** - Current work tracker:
-   - Sprint 1: Core Astrology Module ✅ COMPLETE (60 tests)
-   - Sprint 2: LLM Integration ✅ COMPLETE (single-prompt daily horoscope)
-   - Sprint 3: Firestore Operations ← NEXT
-   - Sprint 4: Callable Functions
-   - Sprint 5: Triggers
-   - Sprint 6: Prototype Validation
-   - Progress tracking: 23/49 tasks (47%)
-
-4. **`docs/ASTROLOGY_MODULE.md`** - Complete astrology API reference
-   - All functions with examples
-   - Pydantic models documentation
-   - Usage patterns
-
-5. **`docs/astrometers.md`** - Astrometers system documentation
-   - 17 specialized meters organized into 5 user-facing groups (intensity + harmony scoring)
-   - Core algorithms: DTI (Dual Transit Influence) and HQS (Harmonic Quality Score)
-   - Calibration process: How 1,000+ diverse charts inform normalization
-   - Backtesting: Overlap testing and trend threshold analysis
-   - Complete file-by-file breakdown of all components
-   - Integration guide with code examples
-
-6. **`docs/ASTROMETER_LABELS.md`** - State label system guide
-   - Complete brand voice principles for 345 user-facing labels
-   - Empowering vocabulary bank and conversion patterns
-   - Label maintenance workflows and QA checklist
-   - Future rotation strategy for label diversity
-   - Tool documentation for all label management scripts
-
-7. **`docs/ios.md`** - iOS integration guide
-   - All Firebase functions with Swift examples
-   - Authentication setup
-   - Data models and error handling
-
-**Start here:** Check `docs/TODO.md` to see current sprint and tasks.
+**Reference:**
+- **`docs/sunsign.json`** - Sun sign profile JSON schema
+- **`docs/image_prompts.md`** - Background image generation prompts
 
 ## Development Environment
 

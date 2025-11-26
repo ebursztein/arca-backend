@@ -11,7 +11,13 @@
   "description": {
     "overview": "Focus represents your ability to concentrate, stay on task, and direct your attention without distraction.",
     "detailed": "This meter monitors how Saturn and Mars transits interact with your natal Mercury, showing your capacity for sustained concentration and mental discipline. Saturn brings structure and focus but can feel restrictive. Mars adds mental drive and urgency but can create restlessness. The 6th house (work routines) and 8th house (deep concentration) are tracked. When these planets form supportive aspects, you can concentrate deeply and work productively. Challenging aspects scatter attention or create mental resistance to focused work.",
-    "keywords": ["concentration", "attention", "discipline", "productivity", "mental stamina"]
+    "keywords": [
+      "concentration",
+      "attention",
+      "discipline",
+      "productivity",
+      "mental stamina"
+    ]
   },
   "astrological_foundation": {
     "primary_planets": {
@@ -21,8 +27,15 @@
     "secondary_planets": {
       "mercury": "Base cognitive function affecting ability to concentrate"
     },
-    "natal_planets_tracked": ["mercury"],
-    "transit_planets_tracked": ["saturn", "mars", "mercury", "neptune"],
+    "natal_planets_tracked": [
+      "mercury"
+    ],
+    "transit_planets_tracked": [
+      "saturn",
+      "mars",
+      "mercury",
+      "neptune"
+    ],
     "key_houses": {
       "6": "Work routines and sustained attention to daily tasks",
       "8": "Deep concentration, research, penetrating focus"
@@ -36,55 +49,56 @@
     },
     "planetary_dignities": {
       "saturn": {
-        "strong_in": ["capricorn", "aquarius", "libra"],
-        "weak_in": ["cancer", "aries"]
+        "strong_in": [
+          "capricorn",
+          "aquarius",
+          "libra"
+        ],
+        "weak_in": [
+          "cancer",
+          "aries"
+        ]
       },
       "mars": {
-        "strong_in": ["aries", "scorpio", "capricorn"],
-        "weak_in": ["libra", "taurus", "cancer"]
+        "strong_in": [
+          "aries",
+          "scorpio",
+          "capricorn"
+        ],
+        "weak_in": [
+          "libra",
+          "taurus",
+          "cancer"
+        ]
       },
       "mercury": {
-        "strong_in": ["gemini", "virgo", "aquarius"],
-        "weak_in": ["sagittarius", "pisces"]
+        "strong_in": [
+          "gemini",
+          "virgo",
+          "aquarius"
+        ],
+        "weak_in": [
+          "sagittarius",
+          "pisces"
+        ]
       }
     },
-    "critical_degrees": [0, 15, 29]
-  },
-  "experience_labels": {
-    "combined": {
-      "quiet": {
-        "challenging": "Building discipline",
-        "mixed": "Soft awareness",
-        "harmonious": "Restful mind"
-      },
-      "mild": {
-        "challenging": "Gathering focus",
-        "mixed": "Gentle attention",
-        "harmonious": "Gentle focus"
-      },
-      "moderate": {
-        "challenging": "Building focus",
-        "mixed": "Working through",
-        "harmonious": "Solid concentration"
-      },
-      "high": {
-        "challenging": "Pushing through",
-        "mixed": "Intense effort",
-        "harmonious": "Deep focus"
-      },
-      "extreme": {
-        "challenging": "Forcing breakthrough",
-        "mixed": "Hyper-focused",
-        "harmonious": "Laser focus"
-      }
-    }
+    "critical_degrees": [
+      0,
+      15,
+      29
+    ]
   },
   "interpretation_guidelines": {
     "tone": "Practical and work-focused - talk about productivity and task management",
     "focus_when_high": "Emphasize tackling complex projects, deep work sessions, tasks requiring sustained attention",
     "focus_when_low": "Emphasize breaking tasks into smaller chunks, using timers, accepting limitations",
     "focus_when_challenging": "Acknowledge distractions but offer practical strategies (remove distractions, Pomodoro technique, work in bursts)",
-    "avoid": ["Shaming for lack of focus", "Ignoring ADHD-like days", "Suggesting willpower alone will fix it"],
+    "avoid": [
+      "Shaming for lack of focus",
+      "Ignoring ADHD-like days",
+      "Suggesting willpower alone will fix it"
+    ],
     "phrasing_examples": {
       "high_harmonious": "Your concentration is peak today - this is your window for deep work on complex projects that require sustained focus.",
       "moderate_mixed": "Focus comes with effort today - use timers, take breaks, and tackle one thing at a time rather than multitasking.",
@@ -92,8 +106,13 @@
     }
   },
   "configuration": {
-    "natal_planets": ["mercury"],
-    "natal_houses": [6, 8],
+    "natal_planets": [
+      "mercury"
+    ],
+    "natal_houses": [
+      6,
+      8
+    ],
     "retrograde_modifiers": {
       "mercury": 0.7
     }

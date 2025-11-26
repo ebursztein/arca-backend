@@ -1,0 +1,48 @@
+{
+  "_schema_version": "2.0",
+  "_group": "instincts",
+  "_last_updated": "2025-01-08",
+  "metadata": {
+    "group_id": "instincts",
+    "display_name": "Instincts",
+    "description": "Vision, flow, intuition, and creativity"
+  },
+  "description": {
+    "overview": "Instincts represents your sense of meaning, spiritual connection, inner knowing, and creative flow.",
+    "detailed": "This group combines four instinctual dimensions: Vision (life direction and meaning), Flow (spiritual belonging and unity), Intuition (inner guidance and awareness), and Creativity (creative flow and self-expression). Together they show your overall instinctual and creative state. High scores mean you feel aligned with your vision, spiritually connected, intuitively clear, and creatively flowing. Low scores suggest feeling lost, isolated, cut off from intuition, or creatively blocked.",
+    "keywords": [
+      "meaning",
+      "spirituality",
+      "intuition",
+      "creativity",
+      "purpose"
+    ]
+  },
+  "advice_templates": {
+    "quiet": {
+      "challenging": "Meaning feels distant right now - that's part of the journey. The answers are forming even when you can't see them",
+      "mixed": "Intuition is quiet today - subtle signals are still signals. Trust the slow knowing",
+      "harmonious": "Peaceful inner alignment - the stillness itself holds meaning. Rest in it"
+    },
+    "mild": {
+      "challenging": "Direction is unclear - be gentle with yourself. Searching is its own form of progress",
+      "mixed": "Gentle exploration happening - you're both seeking and finding. Neither is wrong",
+      "harmonious": "Soft connection to purpose - alignment comes without forcing. Follow the pull"
+    },
+    "moderate": {
+      "challenging": "Creative and spiritual blocks are real - but they break. Keep showing up and they'll crack",
+      "mixed": "Active inner process - seeking and discovering at once. Trust that both are moving you forward",
+      "harmonious": "Strong alignment with intuition and creativity - trust what you're sensing. It's reliable today"
+    },
+    "high": {
+      "challenging": "Deep questions are surfacing - this is uncomfortable but it's growth. The answers are coming",
+      "mixed": "Intense inner transformation - breakdown and breakthrough happen together. You're not falling apart, you're reorganizing",
+      "harmonious": "Profound connection to purpose and creativity - rare clarity. Act on what you know"
+    },
+    "extreme": {
+      "challenging": "This feels like a dark night - and dark nights end. You're being rebuilt for something bigger",
+      "mixed": "Massive inner upheaval - chaos and revelation at once. You're strong enough to hold both",
+      "harmonious": "Complete alignment - purpose, intuition, creativity all flowing. This is your moment. Trust it fully"
+    }
+  }
+}

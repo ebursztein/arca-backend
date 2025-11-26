@@ -22,12 +22,13 @@ from models import (
     UserProfile,
     MemoryCollection,
     create_empty_memory,
+    Entity,
+    UserEntities,
 )
-from llm import generate_daily_horoscope
+from llm import generate_daily_horoscope, update_memory_with_relationship_mention
 
-# Define secrets
-GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
-POSTHOG_API_KEY = params.SecretParam("POSTHOG_API_KEY")
+# Import shared secrets (centralized to avoid duplicate declarations)
+from firebase_secrets import GEMINI_API_KEY, POSTHOG_API_KEY
 
 # For cost control, you can set the maximum number of containers that can be
 # running at the same time. This helps mitigate the impact of unexpected
@@ -427,88 +428,6 @@ def get_memory(req: https_fn.CallableRequest) -> dict:
 
 
 @https_fn.on_call()
-def add_journal_entry(req: https_fn.CallableRequest) -> dict:
-    """
-    Create a journal entry when user reads their horoscope.
-
-    Memory updates happen automatically via Firestore trigger.
-
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id",
-        "date": "2025-10-18",  // ISO date
-        "entry_type": "horoscope_reading",
-        "summary_viewed": "Today's summary text",
-        "categories_viewed": [
-            {
-                "category": "mind",  // Valid values: "overview", "mind", "emotions", "body", "career", "evolution", "elements", "spiritual", "collective"
-                "text": "Full text that was read..."
-            }
-        ],
-        "time_spent_seconds": 180
-    }
-
-    Returns:
-    {
-        "success": true,
-        "entry_id": "auto_generated_id"
-    }
-    """
-    try:
-        data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
-
-        # Create journal entry data (Pydantic will validate)
-        entry_data = {
-            "entry_id": "temp",  # Will be replaced with Firestore ID
-            "date": data.get("date"),
-            "entry_type": data.get("entry_type"),
-            "summary_viewed": data.get("summary_viewed"),
-            "categories_viewed": data.get("categories_viewed", []),
-            "time_spent_seconds": data.get("time_spent_seconds", 0),
-            "created_at": datetime.now().isoformat()
-        }
-
-        # Validate with Pydantic
-        journal_entry = JournalEntry(**entry_data)
-
-        # Save to Firestore (auto-generate ID)
-        db = firestore.client(database_id=DATABASE_ID)
-        collection_ref = db.collection("users").document(user_id).collection("journal")
-        doc_ref = collection_ref.document()
-        entry_id = doc_ref.id
-
-        # Update entry_id
-        entry_dict = journal_entry.model_dump()
-        entry_dict["entry_id"] = entry_id
-
-        doc_ref.set(entry_dict)
-
-        # Note: Firestore trigger will automatically update memory collection
-
-        return {
-            "success": True,
-            "entry_id": entry_id
-        }
-
-    except ValueError as e:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-            message=f"Invalid journal entry data: {str(e)}"
-        )
-    except Exception as e:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.INTERNAL,
-            message=f"Error creating journal entry: {str(e)}"
-        )
-
-@https_fn.on_call()
 def get_sun_sign_from_date(req: https_fn.CallableRequest) -> dict:
     """
     Get sun sign from birth date.
@@ -578,10 +497,10 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
     Includes:
     - Core fields: technical_analysis, daily_theme_headline, daily_overview,
                    summary, actionable_advice, lunar_cycle_update
-    - Meter groups: 5 life areas (mind, emotions, body, spirit, growth) with
+    - Meter groups: 5 life areas (mind, heart, body, instincts, growth) with
                     aggregated scores and LLM interpretations
     - Look ahead: Upcoming transits preview (next 7 days)
-    - Astrometers: Complete 28-meter reading
+    - Astrometers: Complete 17-meter reading
 
     Expected request data:
     {
@@ -632,6 +551,16 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         # Memory collection: Using empty memory for all users
         memory = create_empty_memory(user_id)
 
+        # Fetch user entities for relationship weather
+        entities_doc = db.collection("users").document(user_id).collection("entities").document("all").get()
+        entities = []
+        if entities_doc.exists:
+            try:
+                user_entities = UserEntities(**entities_doc.to_dict())
+                entities = user_entities.entities
+            except Exception as e:
+                print(f"Warning: Could not parse entities for user {user_id}: {e}")
+
         # Compute transit chart for today
         transit_chart, _ = compute_birth_chart(
             birth_date=date,
@@ -645,32 +574,59 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         transit_summary = format_transit_summary_for_ui(natal_chart, transit_chart, max_aspects=5)
 
         # Generate daily horoscope (Prompt 1)
-        daily_horoscope = generate_daily_horoscope(
+        daily_horoscope, featured_relationship = generate_daily_horoscope(
             date=date,
             user_profile=user_profile,
             sun_sign_profile=sun_sign_profile,
             transit_summary=transit_summary,
             memory=memory,
+            entities=entities,  # Pass entities for relationship weather
             api_key=GEMINI_API_KEY.value,
             posthog_api_key=POSTHOG_API_KEY.value,
             model_name=model_name
         )
 
-        # Cache horoscope in UserHoroscopes collection (for Ask the Stars)
-        horoscopes_ref = db.collection("users").document(user_id).collection("horoscopes").document("all")
+        # Update memory with relationship mention (for rotation tracking)
+        if featured_relationship:
+            memory = update_memory_with_relationship_mention(
+                memory=memory,
+                featured_relationship=featured_relationship,
+                date=date,
+                relationship_weather=daily_horoscope.relationship_weather or ""
+            )
+            # Save updated memory to Firestore
+            memory_ref = db.collection("memory").document(user_id)
+            memory_ref.set(memory.model_dump(), merge=True)
+
+        # Cache compressed horoscope (for Ask the Stars)
+        # Store in users/{user_id}/horoscopes/latest with FIFO limit of 10
+        from models import compress_horoscope, UserHoroscopes, CompressedHoroscope
+
+        compressed = compress_horoscope(daily_horoscope)
+        horoscopes_ref = db.collection("users").document(user_id).collection("horoscopes").document("latest")
         horoscopes_doc = horoscopes_ref.get()
 
         if horoscopes_doc.exists:
-            # Update existing horoscopes
+            # Load existing and add new (FIFO enforcement)
+            horoscopes_data = UserHoroscopes(**horoscopes_doc.to_dict())
+            horoscopes_dict = horoscopes_data.horoscopes
+
+            # Add new horoscope
+            horoscopes_dict[date] = compressed.model_dump()
+
+            # FIFO: Keep only last 10 (sort by date descending, take top 10)
+            sorted_dates = sorted(horoscopes_dict.keys(), reverse=True)[:10]
+            horoscopes_dict = {d: horoscopes_dict[d] for d in sorted_dates}
+
             horoscopes_ref.update({
-                f"horoscopes.{date}": daily_horoscope.model_dump(),
+                "horoscopes": horoscopes_dict,
                 "updated_at": datetime.now().isoformat()
             })
         else:
             # Create new horoscopes document
             horoscopes_ref.set({
                 "user_id": user_id,
-                "horoscopes": {date: daily_horoscope.model_dump()},
+                "horoscopes": {date: compressed.model_dump()},
                 "updated_at": datetime.now().isoformat()
             })
 
@@ -702,25 +658,16 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
 @https_fn.on_call()
 def get_astrometers(req: https_fn.CallableRequest) -> dict:
     """
-    Calculate all 28 astrological meters for a user on a given date.
+    Calculate all 17 astrological meters for a user on a given date.
 
-    Returns 23 individual meters + 5 super-group aggregate meters:
+    Returns 17 individual meters organized into 5 groups:
 
-    INDIVIDUAL METERS (23):
-    - Overall intensity and harmony of transits
-    - Element energies (fire, earth, air, water)
-    - Cognitive state (mental clarity, decision quality, communication)
-    - Emotional state (intensity, relationship harmony, resilience)
-    - Physical/action state (energy, conflict risk, motivation)
-    - Life domains (career, opportunity, challenge, transformation)
-    - Specialized areas (intuition, innovation, karmic lessons, collective)
-
-    SUPER-GROUP AGGREGATES (5):
-    - overview_super_group: Dashboard summary (2 meters)
-    - inner_world_super_group: Thoughts + feelings (6 meters)
-    - outer_world_super_group: Action + career (5 meters)
-    - evolution_super_group: Transformation (3 meters)
-    - deeper_dimensions_super_group: Elements + spiritual (7 meters)
+    METER GROUPS (5):
+    - Mind (3): clarity, focus, communication
+    - Heart (3): connections, resilience, vulnerability
+    - Body (3): energy, drive, strength
+    - Instincts (4): vision, flow, intuition, creativity
+    - Growth (4): momentum, ambition, evolution, circle
 
     Expected request data:
     {
@@ -737,15 +684,10 @@ def get_astrometers(req: https_fn.CallableRequest) -> dict:
             "moon_sign": "pisces"
         },
         "aspect_count": 12,
-        "overall_intensity": {...},  // MeterReading with intensity, harmony, interpretation, advice
+        "overall_intensity": {...},  // MeterReading with intensity, harmony, unified_score
         "overall_harmony": {...},
-        "fire_energy": {...},
-        ... // All 23 individual meters
-        "overview_super_group": {...},  // Super-group aggregate meters
-        "inner_world_super_group": {...},
-        "outer_world_super_group": {...},
-        "evolution_super_group": {...},
-        "deeper_dimensions_super_group": {...}
+        "clarity": {...},
+        ... // All 17 individual meters
     }
     """
     try:

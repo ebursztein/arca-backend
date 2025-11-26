@@ -22,11 +22,11 @@ def show_individual_meter_labels():
 
     # All 17 individual meters
     meters = [
-        'mental_clarity', 'focus', 'communication',  # Mind
-        'love', 'inner_stability', 'sensitivity',     # Emotions
-        'vitality', 'drive', 'wellness',              # Body
-        'purpose', 'connection', 'intuition', 'creativity',  # Spirit
-        'opportunities', 'career', 'growth', 'social_life'   # Growth
+        'clarity', 'focus', 'communication',  # Mind
+        'connections', 'resilience', 'vulnerability',  # Heart
+        'energy', 'drive', 'strength',  # Body
+        'vision', 'flow', 'intuition', 'creativity',  # Instincts
+        'momentum', 'ambition', 'evolution', 'circle'  # Growth
     ]
 
     console.print("\n[bold cyan]═══ INDIVIDUAL METER LABELS (17 meters) ═══[/bold cyan]\n")
@@ -77,7 +77,7 @@ def show_group_labels():
     """Display all group state labels in formatted tables."""
 
     labels_dir = Path(__file__).parent / "labels" / "groups"
-    groups = ['mind', 'emotions', 'body', 'spirit', 'growth', 'overall']
+    groups = ['mind', 'heart', 'body', 'instincts', 'growth', 'overall']
 
     console.print("\n[bold cyan]═══ GROUP STATE LABELS ═══[/bold cyan]\n")
 
@@ -165,7 +165,7 @@ def check_label_quality():
     console.print("\n[bold cyan]═══ LABEL QUALITY CHECK ═══[/bold cyan]\n")
 
     labels_dir = Path(__file__).parent / "labels" / "groups"
-    groups = ['mind', 'emotions', 'body', 'spirit', 'growth', 'overall']
+    groups = ['mind', 'heart', 'body', 'instincts', 'growth', 'overall']
 
     # Check for repetitive words across groups
     all_labels = {}

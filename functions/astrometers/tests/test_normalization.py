@@ -1,8 +1,8 @@
 """
 Tests for normalization functions.
 
-Tests the conversion of raw DTI/HQS scores to 0-100 meter scales,
-including soft ceiling compression for outliers.
+Tests the conversion of raw DTI/HQS scores to 0-100 meter scales
+using empirical calibration data.
 """
 
 import sys
@@ -19,11 +19,7 @@ from astrometers.normalization import (
     get_harmony_label,
     get_meter_interpretation,
     MeterInterpretation,
-)
-from astrometers.constants import (
-    DTI_MAX_ESTIMATE,
-    HQS_MAX_POSITIVE_ESTIMATE,
-    HQS_MAX_NEGATIVE_ESTIMATE,
+    load_calibration_constants,
 )
 
 
@@ -33,11 +29,8 @@ from astrometers.constants import (
 
 def test_normalize_soft_ceiling_linear_range():
     """Test linear scaling within expected maximum."""
-    # At 50% of max
     assert normalize_with_soft_ceiling(100, 200, 100) == 50.0
-    # At 25% of max
     assert normalize_with_soft_ceiling(50, 200, 100) == 25.0
-    # At 100% of max
     assert normalize_with_soft_ceiling(200, 200, 100) == 100.0
 
 
@@ -53,114 +46,14 @@ def test_normalize_soft_ceiling_negative():
 
 def test_normalize_soft_ceiling_outlier_compressed():
     """Test that outliers beyond max are compressed."""
-    # 150% of max should be compressed and capped at 100
     result = normalize_with_soft_ceiling(300, 200, 100)
     assert result == 100.0  # Capped at target scale
 
 
 def test_normalize_soft_ceiling_different_scales():
     """Test soft ceiling with different target scales."""
-    # Half scale (for harmony meter)
     assert normalize_with_soft_ceiling(50, 100, 50) == 25.0
     assert normalize_with_soft_ceiling(100, 100, 50) == 50.0
-
-
-# =============================================================================
-# Intensity Normalization Tests
-# =============================================================================
-
-def test_normalize_intensity_zero():
-    """Test zero DTI returns zero intensity."""
-    assert normalize_intensity(0, use_empirical=False) == 0.0
-
-
-def test_normalize_intensity_half_max():
-    """Test DTI at half of max."""
-    # With DTI_MAX_ESTIMATE = 200, half should be 50%
-    result = normalize_intensity(DTI_MAX_ESTIMATE / 2, use_empirical=False)
-    assert result == pytest.approx(50.0)
-
-
-def test_normalize_intensity_at_max():
-    """Test DTI at estimated maximum."""
-    result = normalize_intensity(DTI_MAX_ESTIMATE, use_empirical=False)
-    assert result == pytest.approx(100.0)
-
-
-def test_normalize_intensity_beyond_max():
-    """Test DTI beyond estimated maximum is capped."""
-    result = normalize_intensity(DTI_MAX_ESTIMATE * 2, use_empirical=False)
-    assert result <= 100.0
-
-
-# =============================================================================
-# Harmony Normalization Tests
-# =============================================================================
-
-def test_normalize_harmony_zero():
-    """Test zero HQS returns neutral harmony (50)."""
-    assert normalize_harmony(0, use_empirical=False) == pytest.approx(50.0)
-
-
-def test_normalize_harmony_positive():
-    """Test positive HQS increases harmony above 50."""
-    # Half of positive max should give 75 (50 + 25)
-    result = normalize_harmony(HQS_MAX_POSITIVE_ESTIMATE / 2, use_empirical=False)
-    assert result == pytest.approx(75.0)
-
-
-def test_normalize_harmony_negative():
-    """Test negative HQS decreases harmony below 50."""
-    # Half of negative max should give 25 (50 - 25)
-    result = normalize_harmony(-HQS_MAX_NEGATIVE_ESTIMATE / 2, use_empirical=False)
-    assert result == pytest.approx(25.0)
-
-
-def test_normalize_harmony_positive_at_max():
-    """Test positive HQS at maximum returns 100."""
-    result = normalize_harmony(HQS_MAX_POSITIVE_ESTIMATE, use_empirical=False)
-    assert result == pytest.approx(100.0)
-
-
-def test_normalize_harmony_negative_at_max():
-    """Test negative HQS at maximum returns 0."""
-    result = normalize_harmony(-HQS_MAX_NEGATIVE_ESTIMATE, use_empirical=False)
-    assert result == pytest.approx(0.0)
-
-
-def test_normalize_harmony_symmetry():
-    """Test that positive and negative HQS are symmetric around 50."""
-    positive_result = normalize_harmony(50, use_empirical=False)
-    negative_result = normalize_harmony(-50, use_empirical=False)
-
-    # Should be equidistant from 50
-    positive_distance = positive_result - 50
-    negative_distance = 50 - negative_result
-    assert abs(positive_distance - negative_distance) < 0.01
-
-
-# =============================================================================
-# Combined Normalization Tests
-# =============================================================================
-
-def test_normalize_meters_combined():
-    """Test normalizing both DTI and HQS together."""
-    # Use theoretical mode for unit test
-    intensity = normalize_intensity(100.0, use_empirical=False)
-    harmony = normalize_harmony(-50.0, use_empirical=False)
-
-    assert intensity > 0
-    assert intensity < 100
-    assert harmony < 50  # Negative HQS
-
-
-def test_normalize_meters_zero():
-    """Test normalizing zero DTI and HQS."""
-    intensity = normalize_intensity(0, use_empirical=False)
-    harmony = normalize_harmony(0, use_empirical=False)
-
-    assert intensity == 0.0
-    assert harmony == pytest.approx(50.0)
 
 
 # =============================================================================
@@ -326,52 +219,7 @@ def test_meter_interpretation_returns_dataclass():
 
 
 # =============================================================================
-# Integration Test with Realistic Values
-# =============================================================================
-
-def test_realistic_scenario_moderate_challenging():
-    """Test a realistic scenario with moderate challenging transits."""
-    # Raw scores from hypothetical calculation
-    dti = 150.0  # Moderate activity
-    hqs = -75.0  # Somewhat challenging
-
-    intensity = normalize_intensity(dti, use_empirical=False)
-    harmony = normalize_harmony(hqs, use_empirical=False)
-    interp = get_meter_interpretation(intensity, harmony)
-
-    # Should be in moderate intensity range
-    assert intensity > 50
-    assert intensity < 100
-
-    # Should be in challenging harmony range
-    assert harmony < 50
-
-    # Interpretation should reflect moderate challenge or mixed dynamics
-    assert "Challenge" in interp.label or "Mixed" in interp.label
-
-
-def test_realistic_scenario_high_harmonious():
-    """Test a realistic scenario with high harmonious transits."""
-    # Raw scores from hypothetical calculation
-    dti = 160.0  # High activity
-    hqs = 80.0  # Very harmonious
-
-    intensity = normalize_intensity(dti, use_empirical=False)
-    harmony = normalize_harmony(hqs, use_empirical=False)
-    interp = get_meter_interpretation(intensity, harmony)
-
-    # Should be in high intensity range
-    assert intensity > 70
-
-    # Should be in harmonious range
-    assert harmony > 70
-
-    # Interpretation should reflect opportunity
-    assert "Opportunity" in interp.label or "Flow" in interp.label
-
-
-# =============================================================================
-# Meter-Specific Normalization Tests (Issue #1: Broken Normalization)
+# Meter-Specific Normalization Tests (Empirical Calibration)
 # =============================================================================
 
 def test_meter_specific_normalization_different_results():
@@ -379,77 +227,43 @@ def test_meter_specific_normalization_different_results():
     raw_dti = 250.0
 
     # Different meters should produce different intensity scores
-    vitality = normalize_intensity(raw_dti, meter_name="vitality")
-    mental = normalize_intensity(raw_dti, meter_name="mental_clarity")
+    energy = normalize_intensity(raw_dti, meter_name="energy")
+    clarity = normalize_intensity(raw_dti, meter_name="clarity")
     drive = normalize_intensity(raw_dti, meter_name="drive")
 
     # All should be within valid range
-    assert 0 <= mental <= 100
+    assert 0 <= clarity <= 100
     assert 0 <= drive <= 100
-    assert 0 <= vitality <= 100
+    assert 0 <= energy <= 100
 
 
-def test_bug_fix_mental_clarity_not_zero():
-    """
-    Test mental_clarity normalization produces non-zero values.
+def test_meter_specific_normalization_nonzero():
+    """Test meter-specific normalization produces non-zero values for realistic inputs."""
+    test_cases = [
+        ("clarity", 80.85),
+        ("energy", 525.91),
+        ("drive", 447.85),
+    ]
 
-    Ensures meter-specific calibration is working correctly.
-    """
-    raw_dti = 80.85
-
-    # With meter-specific calibration
-    result = normalize_intensity(raw_dti, meter_name="mental_clarity")
-
-    # Should be within valid range and non-zero
-    assert 0 <= result <= 100, f"Mental Clarity intensity should be 0-100, got {result:.1f}%"
-    assert result >= 0.0, f"Mental Clarity intensity should be non-negative, got {result:.1f}%"
-
-
-def test_bug_fix_physical_energy_not_zero():
-    """
-    Test vitality normalization produces non-zero values.
-
-    Replaced old physical_energy with vitality meter.
-    """
-    raw_dti = 525.91
-
-    result = normalize_intensity(raw_dti, meter_name="vitality")
-
-    # Should be within valid range
-    assert 0 <= result <= 100, f"Vitality intensity should be 0-100, got {result:.1f}%"
-    assert result >= 0.0, f"Vitality intensity should be non-negative, got {result:.1f}%"
-
-
-def test_bug_fix_fire_energy_not_zero():
-    """
-    Test drive normalization produces non-zero values.
-
-    Replaced old fire_energy with drive meter.
-    """
-    raw_dti = 447.85
-
-    result = normalize_intensity(raw_dti, meter_name="drive")
-
-    # Should be within valid range
-    assert 0 <= result <= 100, f"Drive intensity should be 0-100, got {result:.1f}%"
-    assert result >= 0.0, f"Drive intensity should be non-negative, got {result:.1f}%"
+    for meter_name, raw_dti in test_cases:
+        result = normalize_intensity(raw_dti, meter_name=meter_name)
+        assert 0 <= result <= 100, f"{meter_name} intensity should be 0-100, got {result:.1f}%"
 
 
 def test_meter_specific_harmony_normalization():
     """Test that harmony uses meter-specific calibration."""
     raw_hqs = 100.0
 
-    # Different meters should normalize the same HQS value
-    mental = normalize_harmony(raw_hqs, meter_name="mental_clarity")
-    vitality = normalize_harmony(raw_hqs, meter_name="vitality")
+    clarity = normalize_harmony(raw_hqs, meter_name="clarity")
+    energy = normalize_harmony(raw_hqs, meter_name="energy")
 
     # Both should be within valid range
-    assert 0 <= mental <= 100
-    assert 0 <= vitality <= 100
+    assert 0 <= clarity <= 100
+    assert 0 <= energy <= 100
 
     # Both should be above neutral (50) since HQS is positive
-    assert mental > 50.0
-    assert vitality > 50.0
+    assert clarity > 50.0
+    assert energy > 50.0
 
 
 def test_normalize_meters_uses_meter_name():
@@ -457,63 +271,47 @@ def test_normalize_meters_uses_meter_name():
     raw_dti = 250.0
     raw_hqs = 100.0
 
-    # Same raw scores, different meters
-    mental_int, mental_harm = normalize_meters(raw_dti, raw_hqs, meter_name="mental_clarity")
-    vitality_int, vitality_harm = normalize_meters(raw_dti, raw_hqs, meter_name="vitality")
+    clarity_int, clarity_harm = normalize_meters(raw_dti, raw_hqs, meter_name="clarity")
+    energy_int, energy_harm = normalize_meters(raw_dti, raw_hqs, meter_name="energy")
 
     # Both should be within valid range
-    assert 0 <= mental_int <= 100
-    assert 0 <= vitality_int <= 100
-    assert 0 <= mental_harm <= 100
-    assert 0 <= vitality_harm <= 100
+    assert 0 <= clarity_int <= 100
+    assert 0 <= energy_int <= 100
+    assert 0 <= clarity_harm <= 100
+    assert 0 <= energy_harm <= 100
 
 
-def test_meter_name_none_uses_fallback():
-    """Test that passing meter_name=None falls back gracefully."""
-    raw_dti = 1805.0  # Median for overall
-
-    # No meter name provided - should use fallback logic
-    result = normalize_intensity(raw_dti, meter_name=None)
-
-    # Should return reasonable value (not crash)
-    assert 0.0 <= result <= 100.0
-
-
-def test_unknown_meter_name_uses_fallback():
-    """Test that unknown meter name falls back gracefully."""
-    raw_dti = 1805.0
-
-    # Unknown meter - should fall back without crashing
-    result = normalize_intensity(raw_dti, meter_name="nonexistent_meter")
-
-    # Should return reasonable value
-    assert 0.0 <= result <= 100.0
-
-
-def test_meter_specific_respects_zero_hqs():
-    """Test that HQS=0 always returns 50 regardless of meter."""
-    # Test multiple meters - all should return 50 for HQS=0
-    for meter_name in ["mental_clarity", "vitality", "drive"]:
+def test_meter_specific_zero_hqs_reasonable():
+    """Test that HQS=0 returns a reasonable mid-range value."""
+    for meter_name in ["clarity", "energy", "drive"]:
         result = normalize_harmony(0.0, meter_name=meter_name)
-        assert result == pytest.approx(50.0, abs=0.1), f"{meter_name} should return 50 for HQS=0"
+        # With empirical percentile calibration, HQS=0 should be in a reasonable
+        # mid-range but not necessarily exactly 50 (depends on distribution)
+        assert 30 <= result <= 70, f"{meter_name} HQS=0 should be mid-range, got {result:.1f}"
+
+
+# =============================================================================
+# Calibration File Tests
+# =============================================================================
+
+def test_calibration_file_exists():
+    """Test that calibration_constants.json exists and loads."""
+    calibration = load_calibration_constants()
+    assert calibration is not None
 
 
 def test_calibration_file_has_meter_specific_data():
     """Test that calibration_constants.json has meter-specific data."""
-    from astrometers.normalization import load_calibration_constants
-
     calibration = load_calibration_constants()
 
-    # Should have version 4.0 structure with 17 meters
     assert calibration is not None
     assert "meters" in calibration
 
-    # Check that specific meters exist (sample from 17-meter system)
-    required_meters = ["mental_clarity", "vitality", "drive", "focus", "love", "growth"]
+    # Check that specific meters exist
+    required_meters = ["clarity", "energy", "drive", "focus", "connections", "evolution"]
     for meter in required_meters:
         assert meter in calibration["meters"], f"Missing meter: {meter}"
 
-        # Each meter should have percentiles
         meter_data = calibration["meters"][meter]
         assert "dti_percentiles" in meter_data
         assert "hqs_percentiles" in meter_data

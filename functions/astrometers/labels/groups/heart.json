@@ -1,0 +1,48 @@
+{
+  "_schema_version": "2.0",
+  "_group": "heart",
+  "_last_updated": "2025-01-08",
+  "metadata": {
+    "group_id": "heart",
+    "display_name": "Heart",
+    "description": "Connections, resilience, and vulnerability"
+  },
+  "description": {
+    "overview": "Heart represents your emotional core, emotional security, and sensitivity to feelings around you.",
+    "detailed": "This group combines three emotional dimensions: Connections (romantic connection and openness), Resilience (emotional groundedness and stability), and Vulnerability (empathy and emotional awareness). Together they show your overall emotional state. High scores mean your heart is open, you feel emotionally stable, and your sensitivity is a gift. Low scores suggest emotional distance, fragility, or overwhelming emotional absorption.",
+    "keywords": [
+      "love",
+      "stability",
+      "empathy",
+      "heart",
+      "feelings"
+    ]
+  },
+  "advice_templates": {
+    "quiet": {
+      "challenging": "Your heart needs protection right now - that's wisdom, not weakness. It'll open again when it's safe",
+      "mixed": "Emotional energy is quiet today - subtle feelings are still feelings. Let them surface gently",
+      "harmonious": "Your heart is peacefully calm - enjoy the stillness and let it restore you"
+    },
+    "mild": {
+      "challenging": "Heart is tentative today - don't force openness. Small moments of connection are enough",
+      "mixed": "Feelings are gentle and mixed - both are valid. You don't have to resolve them today",
+      "harmonious": "Your heart is softly open - connection flows naturally without effort"
+    },
+    "moderate": {
+      "challenging": "Emotional walls are up for a reason - work through them gently. You'll know when you're ready",
+      "mixed": "Multiple emotional currents pulling you - sit with the complexity. Clarity comes from feeling, not thinking",
+      "harmonious": "Heart energy is flowing - lean into connection. The people you reach out to will respond"
+    },
+    "high": {
+      "challenging": "Emotional intensity is strong - this is hard but you're not fragile. Feel it, then let it move through",
+      "mixed": "Big feelings in all directions - you can hold complexity. Honor what's hard and what's beautiful",
+      "harmonious": "Deep love and connection are available - let yourself receive it fully"
+    },
+    "extreme": {
+      "challenging": "Emotional overload is real - protect yourself or let it process, but know this wave will pass",
+      "mixed": "Overwhelming feelings, beautiful and difficult at once - you're built to feel deeply. That's your gift",
+      "harmonious": "Heart completely open - this is rare. Use it for the conversations and connections that matter most"
+    }
+  }
+}

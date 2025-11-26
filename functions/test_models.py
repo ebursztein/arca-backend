@@ -13,9 +13,12 @@ from models import (
     MeterGroupForIOS,
     AstrometersForIOS,
     AstrologicalFoundation,
-    MeterAspect
+    MeterAspect,
+    AttributeKV
 )
 from astro import compute_birth_chart, get_sun_sign
+from astrometers.meters import MeterReading, QualityLabel
+from astrometers.hierarchy import MeterGroupV2
 
 
 class TestUserProfile:
@@ -85,7 +88,6 @@ class TestMemoryCollection:
 
         assert memory.user_id == "user_789"
         assert len(memory.categories) == 5  # Pre-initialized with 5 meter groups
-        assert len(memory.recent_readings) == 0
         assert memory.updated_at  # Has timestamp
         # Verify all categories have zero engagement
         for category, engagement in memory.categories.items():
@@ -143,19 +145,49 @@ class TestDailyHoroscope:
             timing_guidance="Good for routine tasks"
         )
 
+        # Create minimal MeterReading objects for overall intensity/harmony
+        # Using MIND as placeholder group since OVERALL doesn't exist
+        overall_intensity = MeterReading(
+            meter_name="overall_intensity",
+            date=datetime(2025, 11, 6),
+            group=MeterGroupV2.MIND,
+            unified_score=45.0,
+            intensity=45.0,
+            harmony=50.0,
+            unified_quality=QualityLabel.MIXED,
+            state_label="Moderate",
+            interpretation="Overall intensity is moderate",
+            advice=["Take it easy"],
+            top_aspects=[],
+            raw_scores={"dti": 45.0, "hqs": 50.0}
+        )
+        overall_harmony = MeterReading(
+            meter_name="overall_harmony",
+            date=datetime(2025, 11, 6),
+            group=MeterGroupV2.MIND,
+            unified_score=55.0,
+            intensity=50.0,
+            harmony=55.0,
+            unified_quality=QualityLabel.MIXED,
+            state_label="Balanced",
+            interpretation="Overall harmony is balanced",
+            advice=["Stay centered"],
+            top_aspects=[],
+            raw_scores={"dti": 50.0, "hqs": 55.0}
+        )
+
         # Create minimal astrometers
         astrometers = AstrometersForIOS(
             date="2025-11-06T00:00:00",
             overall_unified_score=50.0,
-            overall_intensity=45.0,
-            overall_harmony=55.0,
+            overall_intensity=overall_intensity,
+            overall_harmony=overall_harmony,
             overall_quality="mixed",
             overall_state="Moderate energy",
             groups=[],
             top_active_meters=["vitality", "drive"],
             top_challenging_meters=["inner_stability", "focus"],
-            top_flowing_meters=["communication", "love"],
-            top_changing_meters=["focus"]
+            top_flowing_meters=["communication", "love"]
         )
 
         horoscope = DailyHoroscope(
@@ -436,7 +468,10 @@ class TestAskTheStarsModels:
             entity_type="relationship",
             status=EntityStatus.ACTIVE,
             aliases=["boyfriend", "partner"],
-            attributes={"role": "partner", "relationship_status": "dating"},
+            attributes=[
+                AttributeKV(key="role", value="partner"),
+                AttributeKV(key="relationship_status", value="dating")
+            ],
             related_entities=["ent_company"],
             first_seen=now,
             last_seen=now,
@@ -448,7 +483,8 @@ class TestAskTheStarsModels:
         )
 
         assert entity.name == "John"
-        assert entity.attributes["role"] == "partner"
+        assert entity.attributes[0].key == "role"
+        assert entity.attributes[0].value == "partner"
         assert "boyfriend" in entity.aliases
         assert "ent_company" in entity.related_entities
         print("✓ Entity with attributes and relationships works")

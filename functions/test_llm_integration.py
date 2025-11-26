@@ -63,12 +63,13 @@ class TestDailyHoroscopeGeneration:
 
         memory = create_empty_memory(sample_user_profile.user_id)
 
-        horoscope = generate_daily_horoscope(
+        horoscope, _ = generate_daily_horoscope(
             date=today,
             user_profile=sample_user_profile,
             sun_sign_profile=sun_sign_profile,
             transit_summary=transit_summary,
             memory=memory,
+            entities=[],  # No entities for test
             model_name="gemini-2.5-flash-lite"
         )
 

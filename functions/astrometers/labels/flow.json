@@ -1,0 +1,93 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "flow",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "flow",
+    "display_name": "Flow",
+    "group": "instincts",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Flow represents your sense of spiritual belonging, unity with something larger, and feeling part of the whole.",
+    "detailed": "This meter tracks Neptune transits to your natal Neptune and 11th house (community, collective, belonging to something larger). Neptune dissolves boundaries between self and other, creating mystical unity or overwhelming dissolution. When Neptune forms supportive aspects, you feel spiritually connected, part of something meaningful, and able to transcend ego. Challenging aspects create spiritual confusion, feeling lost in the collective, or unhealthy merging. The 11th house shows connection through community and shared ideals.",
+    "keywords": [
+      "spiritual connection",
+      "unity",
+      "belonging",
+      "collective",
+      "transcendence"
+    ]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "neptune": "Spiritual connection, dissolution of boundaries, mystical unity with the whole"
+    },
+    "secondary_planets": {
+      "jupiter": "Expands sense of belonging and collective meaning",
+      "uranus": "Connects through shared ideals and revolutionary community"
+    },
+    "natal_planets_tracked": [
+      "neptune"
+    ],
+    "transit_planets_tracked": [
+      "neptune",
+      "jupiter",
+      "uranus",
+      "pluto"
+    ],
+    "key_houses": {
+      "11": "Community, collective belonging, connection through shared ideals and friendship"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum spiritual connection - profound unity or overwhelming dissolution",
+      "opposition": "High impact - tension between self and collective",
+      "trine": "High flow - natural spiritual belonging",
+      "square": "Moderate friction - spiritual confusion or boundary challenges",
+      "sextile": "Moderate flow - opportunities for meaningful connection"
+    },
+    "planetary_dignities": {
+      "neptune": {
+        "strong_in": [
+          "pisces",
+          "cancer"
+        ],
+        "weak_in": [
+          "virgo",
+          "capricorn"
+        ]
+      }
+    },
+    "critical_degrees": [
+      0,
+      15,
+      29
+    ]
+  },
+  "interpretation_guidelines": {
+    "tone": "Spiritual and collective-focused - talk about belonging, unity, transcendence",
+    "focus_when_high": "Emphasize spiritual connection, feeling part of something larger, meaningful community",
+    "focus_when_low": "Normalize solitude, emphasize that connection ebbs and flows, honor solo spiritual path",
+    "focus_when_challenging": "Validate spiritual confusion or overwhelming dissolution - boundaries are important",
+    "avoid": [
+      "Forcing spiritual connection",
+      "Shaming solitude",
+      "Ignoring need for healthy boundaries",
+      "Toxic spiritual bypass"
+    ],
+    "phrasing_examples": {
+      "high_harmonious": "You feel spiritually connected today - part of something larger and united with the collective in meaningful ways.",
+      "moderate_mixed": "You're seeking spiritual connection but boundaries feel blurred - it's okay to merge while keeping your sense of self.",
+      "low_challenging": "Spiritual connection feels distant or overwhelming today - honor your need for solitude and don't force unity you don't feel."
+    }
+  },
+  "configuration": {
+    "natal_planets": [
+      "neptune"
+    ],
+    "natal_houses": [
+      11
+    ],
+    "retrograde_modifiers": {}
+  }
+}

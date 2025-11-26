@@ -286,7 +286,7 @@ def normalize_intensity(dti: float, meter_name: str = None, use_empirical: bool 
     Example:
         >>> normalize_intensity(1805.47, "overall_intensity")  # Median for overall
         ~50.0  # 50th percentile
-        >>> normalize_intensity(80.0, "mental_clarity")  # Mercury only
+        >>> normalize_intensity(80.0, "clarity")  # Mercury only
         ~50.0  # 50th percentile for this meter
     """
     if dti <= 0:
@@ -378,7 +378,7 @@ def normalize_meters(dti: float, hqs: float, meter_name: str = None) -> Tuple[fl
         Tuple[float, float]: (intensity_meter, harmony_meter)
 
     Example:
-        >>> normalize_meters(100.0, -50.0, "mental_clarity")
+        >>> normalize_meters(100.0, -50.0, "clarity")
         (50.0, 25.0)  # Moderate intensity, challenging harmony
     """
     intensity = normalize_intensity(dti, meter_name)

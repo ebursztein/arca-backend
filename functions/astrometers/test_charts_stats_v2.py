@@ -83,11 +83,11 @@ def analyze_chart_overlaps(natal_chart):
 
         # Get all 17 meter readings
         meter_names = [
-            'mental_clarity', 'focus', 'communication',
-            'love', 'inner_stability', 'sensitivity',
-            'vitality', 'drive', 'wellness',
-            'purpose', 'connection', 'intuition', 'creativity',
-            'opportunities', 'career', 'growth', 'social_life'
+            'clarity', 'focus', 'communication',
+            'connections', 'resilience', 'vulnerability',
+            'energy', 'drive', 'strength',
+            'vision', 'flow', 'intuition', 'creativity',
+            'momentum', 'ambition', 'evolution', 'circle'
         ]
 
         # Build aspect sets for each meter

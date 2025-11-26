@@ -18,31 +18,31 @@ from typing import Dict, List
 class Meter(str, Enum):
     """Individual meter identifiers (17 total)"""
     # MIND (3)
-    MENTAL_CLARITY = "mental_clarity"
+    CLARITY = "clarity"
     FOCUS = "focus"
     COMMUNICATION = "communication"
 
-    # EMOTIONS (3)
-    LOVE = "love"
-    INNER_STABILITY = "inner_stability"
-    SENSITIVITY = "sensitivity"
+    # HEART (3)
+    RESILIENCE = "resilience"
+    CONNECTIONS = "connections"
+    VULNERABILITY = "vulnerability"
 
     # BODY (3)
-    VITALITY = "vitality"
+    ENERGY = "energy"
     DRIVE = "drive"
-    WELLNESS = "wellness"
+    STRENGTH = "strength"
 
-    # SPIRIT (4)
-    PURPOSE = "purpose"
-    CONNECTION = "connection"
+    # INSTINCTS (4)
+    VISION = "vision"
+    FLOW = "flow"
     INTUITION = "intuition"
     CREATIVITY = "creativity"
 
     # GROWTH (4)
-    OPPORTUNITIES = "opportunities"
-    CAREER = "career"
-    GROWTH = "growth"
-    SOCIAL_LIFE = "social_life"
+    MOMENTUM = "momentum"
+    AMBITION = "ambition"
+    EVOLUTION = "evolution"
+    CIRCLE = "circle"
 
 
 # =============================================================================
@@ -52,9 +52,9 @@ class Meter(str, Enum):
 class MeterGroupV2(str, Enum):
     """5 user-facing life categories"""
     MIND = "mind"
-    EMOTIONS = "emotions"
+    HEART = "heart"
     BODY = "body"
-    SPIRIT = "spirit"
+    INSTINCTS = "instincts"
     GROWTH = "growth"
 
 
@@ -62,73 +62,73 @@ class MeterGroupV2(str, Enum):
 # METER TO GROUP MAPPINGS
 # =============================================================================
 
-# Meter → MeterGroupV2 mapping
+# Meter -> MeterGroupV2 mapping
 METER_TO_GROUP_V2: Dict[Meter, MeterGroupV2] = {
     # MIND (3 meters)
-    Meter.MENTAL_CLARITY: MeterGroupV2.MIND,
+    Meter.CLARITY: MeterGroupV2.MIND,
     Meter.FOCUS: MeterGroupV2.MIND,
     Meter.COMMUNICATION: MeterGroupV2.MIND,
 
-    # EMOTIONS (3 meters)
-    Meter.LOVE: MeterGroupV2.EMOTIONS,
-    Meter.INNER_STABILITY: MeterGroupV2.EMOTIONS,
-    Meter.SENSITIVITY: MeterGroupV2.EMOTIONS,
+    # HEART (3 meters)
+    Meter.RESILIENCE: MeterGroupV2.HEART,
+    Meter.CONNECTIONS: MeterGroupV2.HEART,
+    Meter.VULNERABILITY: MeterGroupV2.HEART,
 
     # BODY (3 meters)
-    Meter.VITALITY: MeterGroupV2.BODY,
+    Meter.ENERGY: MeterGroupV2.BODY,
     Meter.DRIVE: MeterGroupV2.BODY,
-    Meter.WELLNESS: MeterGroupV2.BODY,
+    Meter.STRENGTH: MeterGroupV2.BODY,
 
-    # SPIRIT (4 meters)
-    Meter.PURPOSE: MeterGroupV2.SPIRIT,
-    Meter.CONNECTION: MeterGroupV2.SPIRIT,
-    Meter.INTUITION: MeterGroupV2.SPIRIT,
-    Meter.CREATIVITY: MeterGroupV2.SPIRIT,
+    # INSTINCTS (4 meters)
+    Meter.VISION: MeterGroupV2.INSTINCTS,
+    Meter.FLOW: MeterGroupV2.INSTINCTS,
+    Meter.INTUITION: MeterGroupV2.INSTINCTS,
+    Meter.CREATIVITY: MeterGroupV2.INSTINCTS,
 
     # GROWTH (4 meters)
-    Meter.OPPORTUNITIES: MeterGroupV2.GROWTH,
-    Meter.CAREER: MeterGroupV2.GROWTH,
-    Meter.GROWTH: MeterGroupV2.GROWTH,
-    Meter.SOCIAL_LIFE: MeterGroupV2.GROWTH,
+    Meter.MOMENTUM: MeterGroupV2.GROWTH,
+    Meter.AMBITION: MeterGroupV2.GROWTH,
+    Meter.EVOLUTION: MeterGroupV2.GROWTH,
+    Meter.CIRCLE: MeterGroupV2.GROWTH,
 }
 
-# MeterGroupV2 → List[Meter] reverse mapping
+# MeterGroupV2 -> List[Meter] reverse mapping
 GROUP_V2_METERS: Dict[MeterGroupV2, List[Meter]] = {
     MeterGroupV2.MIND: [
-        Meter.MENTAL_CLARITY,
+        Meter.CLARITY,
         Meter.FOCUS,
         Meter.COMMUNICATION,
     ],
-    MeterGroupV2.EMOTIONS: [
-        Meter.LOVE,
-        Meter.INNER_STABILITY,
-        Meter.SENSITIVITY,
+    MeterGroupV2.HEART: [
+        Meter.RESILIENCE,
+        Meter.CONNECTIONS,
+        Meter.VULNERABILITY,
     ],
     MeterGroupV2.BODY: [
-        Meter.VITALITY,
+        Meter.ENERGY,
         Meter.DRIVE,
-        Meter.WELLNESS,
+        Meter.STRENGTH,
     ],
-    MeterGroupV2.SPIRIT: [
-        Meter.PURPOSE,
-        Meter.CONNECTION,
+    MeterGroupV2.INSTINCTS: [
+        Meter.VISION,
+        Meter.FLOW,
         Meter.INTUITION,
         Meter.CREATIVITY,
     ],
     MeterGroupV2.GROWTH: [
-        Meter.OPPORTUNITIES,
-        Meter.CAREER,
-        Meter.GROWTH,
-        Meter.SOCIAL_LIFE,
+        Meter.MOMENTUM,
+        Meter.AMBITION,
+        Meter.EVOLUTION,
+        Meter.CIRCLE,
     ],
 }
 
 # Display names for each group
 GROUP_V2_DISPLAY_NAMES: Dict[MeterGroupV2, str] = {
     MeterGroupV2.MIND: "Mind",
-    MeterGroupV2.EMOTIONS: "Emotions",
+    MeterGroupV2.HEART: "Heart",
     MeterGroupV2.BODY: "Body",
-    MeterGroupV2.SPIRIT: "Spirit",
+    MeterGroupV2.INSTINCTS: "Instincts",
     MeterGroupV2.GROWTH: "Growth",
 }
 
@@ -185,9 +185,9 @@ def validate_group_v2_complete() -> bool:
     # Validate distribution
     expected_distribution = {
         MeterGroupV2.MIND: 3,
-        MeterGroupV2.EMOTIONS: 3,
+        MeterGroupV2.HEART: 3,
         MeterGroupV2.BODY: 3,
-        MeterGroupV2.SPIRIT: 4,
+        MeterGroupV2.INSTINCTS: 4,
         MeterGroupV2.GROWTH: 4,
     }
 

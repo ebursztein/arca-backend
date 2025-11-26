@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime, timedelta
 from astro import compute_birth_chart
-from functions.astrometers.meters_v1 import get_meters
+from astrometers.meters import get_meters
 from astrometers.summary import daily_meters_summary, meter_groups_summary
 from astrometers.meter_groups import build_all_meter_groups
 

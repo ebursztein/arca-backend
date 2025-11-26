@@ -359,6 +359,35 @@ ESSENTIAL_DIGNITIES = {
 }
 
 # =============================================================================
+# Unified Score V2 Constants (Polar-style with sigmoid stretch)
+# =============================================================================
+
+# Base formula weights for polar-style calculation
+# unified_score combines intensity (magnitude) with harmony (direction)
+UNIFIED_SCORE_BASE_WEIGHT = 0.3      # Minimum harmony signal preserved (even at intensity=0)
+UNIFIED_SCORE_INTENSITY_WEIGHT = 0.7  # How much intensity amplifies the signal
+
+# Sigmoid stretch factor - controls how much middle values spread toward extremes
+# Uses tanh for natural S-curve: lower = more stretch, higher = less stretch
+UNIFIED_SCORE_TANH_FACTOR = 50.0
+
+# Empowering asymmetry - positive experiences emphasized, negative softened
+# This creates an optimistic bias aligned with empowering brand voice
+UNIFIED_SCORE_POSITIVE_BOOST = 1.2   # Amplify positive scores
+UNIFIED_SCORE_NEGATIVE_DAMPEN = 0.7  # Soften negative scores
+
+# =============================================================================
+# Cosmic Background Noise Constants
+# =============================================================================
+
+# Adds daily variation for natural meter movement (seeded by user_id + date)
+# Only applied when aspect_count > 0 (no noise on truly quiet days)
+COSMIC_NOISE_INTENSITY_MIN = -5.0    # Minimum intensity noise
+COSMIC_NOISE_INTENSITY_MAX = 10.0    # Maximum intensity noise (slight positive bias)
+COSMIC_NOISE_HARMONY_MIN = 0.0       # Minimum harmony nudge (never negative - empowering)
+COSMIC_NOISE_HARMONY_MAX = 3.0       # Maximum harmony nudge
+
+# =============================================================================
 # Normalization Constants (Section 2.4 - Placeholder values)
 # =============================================================================
 
@@ -398,29 +427,29 @@ HARMONY_HARMONIOUS_THRESHOLD = 70    # 70-100: Harmonious
 
 METER_IMPORTANCE_WEIGHTS: Dict[Meter, float] = {
     # MIND - High importance (daily cognitive function)
-    Meter.MENTAL_CLARITY: 2.0,
+    Meter.CLARITY: 2.0,
     Meter.FOCUS: 1.5,
     Meter.COMMUNICATION: 1.5,
 
     # EMOTIONS - High importance (emotional well-being)
-    Meter.LOVE: 2.0,
-    Meter.INNER_STABILITY: 1.5,
-    Meter.SENSITIVITY: 1.0,
+    Meter.FLOW: 2.0,
+    Meter.RESILIENCE: 1.5,
+    Meter.VULNERABILITY: 1.0,
 
     # BODY - High importance (physical energy and action)
-    Meter.VITALITY: 2.0,
+    Meter.ENERGY: 2.0,
     Meter.DRIVE: 1.5,
-    Meter.WELLNESS: 1.0,
+    Meter.STRENGTH: 1.0,
 
     # SPIRIT - Medium-high importance (spiritual and creative expression)
-    Meter.PURPOSE: 1.5,
-    Meter.CONNECTION: 1.0,
+    Meter.VISION: 1.5,
+    Meter.FLOW: 1.0,
     Meter.INTUITION: 1.0,
     Meter.CREATIVITY: 1.2,
 
     # GROWTH - High importance (career and personal evolution)
-    Meter.OPPORTUNITIES: 1.5,
-    Meter.CAREER: 2.0,
-    Meter.GROWTH: 1.5,
-    Meter.SOCIAL_LIFE: 1.0,
+    Meter.MOMENTUM: 1.5,
+    Meter.AMBITION: 2.0,
+    Meter.EVOLUTION: 1.5,
+    Meter.CIRCLE: 1.0,
 }

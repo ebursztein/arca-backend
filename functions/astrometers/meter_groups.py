@@ -2,7 +2,10 @@
 Meter Groups Aggregation Module
 
 Provides functions to aggregate individual meters into 5 life-area groups
-(Mind, Emotions, Body, Spirit, Growth) with scores, state labels, and trends.
+(Mind, Heart, Body, Instincts, Growth) with scores, state labels, and trends.
+
+NOTE: Experience labels have been removed from JSON files. iOS handles bucket
+labels based on unified_score. The backend provides scores only.
 """
 
 import json
@@ -43,27 +46,56 @@ def load_group_labels(group_name: str) -> Dict:
 
 
 def get_group_state_label(group_name: str, intensity: float, harmony: float) -> str:
-    """Get state label for a group from JSON based on intensity and harmony."""
-    labels = load_group_labels(group_name)
+    """
+    Get state label for a group based on unified_score.
 
-    intensity_level = get_intensity_level(intensity)
-    harmony_level = get_harmony_level(harmony)
+    Maps unified_score to one of 4 bucket labels per group.
+    Thresholds based on quartiles (P25, P50, P75).
 
-    # Get from combined labels
-    combined = labels["experience_labels"]["combined"]
-    return combined[intensity_level][harmony_level]
+    Returns:
+        Bucket label string (e.g., "Clear", "Grounded", "Surging")
+    """
+    # Calculate unified_score from intensity and harmony
+    unified_score, _ = calculate_unified_score(intensity, harmony)
+
+    # Bucket thresholds (quartile-based)
+    # Bucket 1: < -25 (Challenge)
+    # Bucket 2: -25 to 10 (Mixed)
+    # Bucket 3: 10 to 50 (Good)
+    # Bucket 4: >= 50 (Peak)
+
+    # Group-specific bucket labels
+    BUCKET_LABELS = {
+        "mind": ("Overloaded", "Hazy", "Clear", "Sharp"),
+        "heart": ("Heavy", "Tender", "Grounded", "Magnetic"),
+        "body": ("Depleted", "Low Power Mode", "Powering Through", "Surging"),
+        "instincts": ("Disconnected", "Noisy", "Tuned In", "Aligned"),
+        "growth": ("Uphill", "Pacing", "Climbing", "Unstoppable"),
+        "overall": ("Challenging", "Chaotic", "Peaceful", "Flowing"),
+    }
+
+    labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))
+
+    if unified_score < -25:
+        return labels[0]  # Challenge bucket
+    elif unified_score < 10:
+        return labels[1]  # Mixed bucket
+    elif unified_score < 50:
+        return labels[2]  # Good bucket
+    else:
+        return labels[3]  # Peak bucket
 
 
 def get_group_advice_category(group_name: str, intensity: float, harmony: float) -> str:
     """Get advice category for a group from JSON."""
-    labels = load_group_labels(group_name)
-
-    intensity_level = get_intensity_level(intensity)
-    harmony_level = get_harmony_level(harmony)
-
-    # Get from advice templates
-    advice_templates = labels["advice_templates"]
-    return advice_templates[intensity_level][harmony_level]
+    try:
+        labels = load_group_labels(group_name)
+        intensity_level = get_intensity_level(intensity)
+        harmony_level = get_harmony_level(harmony)
+        advice_templates = labels.get("advice_templates", {})
+        return advice_templates.get(intensity_level, {}).get(harmony_level, "Focus on this area")
+    except (KeyError, FileNotFoundError):
+        return "Focus on this area"
 
 
 def get_group_description(group_name: str) -> Dict[str, str]:

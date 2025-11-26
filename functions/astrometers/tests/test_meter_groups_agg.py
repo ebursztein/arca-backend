@@ -10,7 +10,7 @@ from astrometers.meter_groups import (
     build_meter_group_data,
 )
 from astrometers.hierarchy import MeterGroupV2, Meter
-from functions.astrometers.meters_v1 import MeterReading, QualityLabel
+from astrometers.meters import MeterReading, QualityLabel
 
 
 # =============================================================================
@@ -57,7 +57,7 @@ def test_load_group_labels():
     assert "_group" in labels
     assert labels["_group"] == "mind"
     assert "metadata" in labels
-    assert "experience_labels" in labels
+    assert "description" in labels
     assert "advice_templates" in labels
 
 
@@ -152,13 +152,13 @@ def test_calculate_trend_metric():
 def test_calculate_group_trends():
     """Test group trend calculation with multiple meters."""
     today_meters = [
-        create_mock_meter("mental_clarity", 75, 70, 80),
+        create_mock_meter("clarity", 75, 70, 80),
         create_mock_meter("decision_quality", 70, 65, 75),
         create_mock_meter("communication_flow", 80, 75, 85),
     ]
 
     yesterday_meters = [
-        create_mock_meter("mental_clarity", 70, 65, 75),
+        create_mock_meter("clarity", 70, 65, 75),
         create_mock_meter("decision_quality", 65, 60, 70),
         create_mock_meter("communication_flow", 75, 70, 80),
     ]
@@ -181,7 +181,7 @@ def test_calculate_group_trends():
 def test_calculate_group_trends_no_yesterday():
     """Test that trends are None when no yesterday data."""
     today_meters = [
-        create_mock_meter("mental_clarity", 75, 70, 80),
+        create_mock_meter("clarity", 75, 70, 80),
     ]
 
     trends = calculate_group_trends(today_meters, [])
@@ -194,7 +194,7 @@ def test_calculate_group_trends_no_yesterday():
 def test_build_meter_group_data():
     """Test building complete meter group data."""
     today_meters = [
-        create_mock_meter("mental_clarity", 75, 70, 80),
+        create_mock_meter("clarity", 75, 70, 80),
         create_mock_meter("decision_quality", 70, 65, 75),
         create_mock_meter("communication_flow", 80, 75, 85),
     ]
@@ -231,7 +231,7 @@ def test_build_meter_group_data():
 
     # Check meter_ids
     assert len(group_data["meter_ids"]) == 3
-    assert "mental_clarity" in group_data["meter_ids"]
+    assert "clarity" in group_data["meter_ids"]
 
     # Check trend is None (no yesterday data)
     assert group_data["trend"] is None
@@ -240,13 +240,13 @@ def test_build_meter_group_data():
 def test_build_meter_group_data_with_trends():
     """Test building meter group data with trend calculation."""
     today_meters = [
-        create_mock_meter("mental_clarity", 75, 70, 80),
+        create_mock_meter("clarity", 75, 70, 80),
         create_mock_meter("decision_quality", 70, 65, 75),
         create_mock_meter("communication_flow", 80, 75, 85),
     ]
 
     yesterday_meters = [
-        create_mock_meter("mental_clarity", 70, 65, 75),
+        create_mock_meter("clarity", 70, 65, 75),
         create_mock_meter("decision_quality", 65, 60, 70),
         create_mock_meter("communication_flow", 75, 70, 80),
     ]
@@ -268,7 +268,7 @@ def test_build_meter_group_data_with_trends():
 def test_build_meter_group_data_fallback_interpretation():
     """Test that fallback interpretation is used when LLM interpretation is None."""
     today_meters = [
-        create_mock_meter("mental_clarity", 75, 70, 80),
+        create_mock_meter("clarity", 75, 70, 80),
     ]
 
     group_data = build_meter_group_data(

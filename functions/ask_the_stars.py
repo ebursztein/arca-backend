@@ -8,7 +8,7 @@ import json
 import uuid
 import os
 from datetime import datetime
-from typing import AsyncGenerator, Optional
+from typing import Optional
 from pathlib import Path
 
 from firebase_functions import https_fn, params, options
@@ -25,23 +25,24 @@ from models import (
     UserHoroscopes,
     UserProfile,
     MemoryCollection,
-    DailyHoroscope
+    CompressedHoroscope
 )
 from entity_extraction import get_top_entities_by_importance
 from posthog_utils import capture_llm_generation
 
-GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
+# Import shared secrets (centralized to avoid duplicate declarations)
+from firebase_secrets import GEMINI_API_KEY
 
 # Template path relative to this file
 TEMPLATE_DIR = Path(__file__).parent / 'templates' / 'conversation'
 template_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 
 
-async def stream_ask_the_stars_response(
+def stream_ask_the_stars_response(
     question: str,
     horoscope_date: str,
     user_profile: UserProfile,
-    horoscope: DailyHoroscope,
+    horoscope: CompressedHoroscope,
     entities: list,
     memory: MemoryCollection,
     conversation_messages: list[Message],
@@ -50,8 +51,8 @@ async def stream_ask_the_stars_response(
     model: str = "gemini-2.5-flash-lite",
     temperature: float = 0.7,
     max_tokens: int = 500
-) -> AsyncGenerator[str, None]:
-    """Stream LLM response for Ask the Stars question."""
+):
+    """Stream LLM response for Ask the Stars question (synchronous generator)."""
     import time
     start_time = time.time()
 
@@ -74,7 +75,8 @@ async def stream_ask_the_stars_response(
     full_response = ""
     last_usage = None
 
-    async for chunk in await gemini_client.aio.models.generate_content_stream(
+    # Use synchronous streaming API
+    for chunk in gemini_client.models.generate_content_stream(
         model=model,
         contents=prompt,
         config=config
@@ -104,6 +106,9 @@ async def stream_ask_the_stars_response(
             max_tokens=max_tokens
         )
 
+    # Return full response for caller to use
+    return full_response
+
 
 @https_fn.on_request(
     cors=options.CorsOptions(
@@ -112,7 +117,7 @@ async def stream_ask_the_stars_response(
     ),
     secrets=[GEMINI_API_KEY]
 )
-async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
+def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
     """
     HTTPS endpoint: Ask the Stars with SSE streaming.
 
@@ -145,7 +150,10 @@ async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             headers={"Content-Type": "application/json"}
         )
 
-    # Authenticate user (iOS sends Firebase ID token)
+    # Authenticate user (iOS sends Firebase ID token or dev token)
+    # DEV MODE: Use static token "dev_arca_2025" with user_id from body
+    DEV_TOKEN = "dev_arca_2025"
+
     try:
         auth_header = req.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
@@ -155,9 +163,21 @@ async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
                 headers={"Content-Type": "application/json"}
             )
 
-        id_token = auth_header.split('Bearer ')[1]
-        decoded_token = auth.verify_id_token(id_token)
-        user_id = decoded_token['uid']
+        token = auth_header.split('Bearer ')[1]
+
+        # Dev mode bypass - use user_id from request body
+        if token == DEV_TOKEN:
+            user_id = body.get('user_id')
+            if not user_id:
+                return https_fn.Response(
+                    json.dumps({"error": "Dev mode requires user_id in body"}),
+                    status=400,
+                    headers={"Content-Type": "application/json"}
+                )
+        else:
+            # Production: verify Firebase ID token
+            decoded_token = auth.verify_id_token(token)
+            user_id = decoded_token['uid']
     except Exception as e:
         return https_fn.Response(
             json.dumps({"error": f"Authentication failed: {str(e)}"}),
@@ -179,8 +199,8 @@ async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             )
         user_profile = UserProfile(**user_doc.to_dict())
 
-        # 2. Horoscope
-        horoscope_doc = db.collection('users').document(user_id).collection('horoscopes').document('all').get()
+        # 2. Horoscope (compressed)
+        horoscope_doc = db.collection('users').document(user_id).collection('horoscopes').document('latest').get()
         if not horoscope_doc.exists:
             return https_fn.Response(
                 json.dumps({"error": "No horoscopes found"}),
@@ -194,7 +214,8 @@ async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
                 status=404,
                 headers={"Content-Type": "application/json"}
             )
-        horoscope = DailyHoroscope(**horoscopes_data.horoscopes[horoscope_date])
+        from models import CompressedHoroscope
+        horoscope = CompressedHoroscope(**horoscopes_data.horoscopes[horoscope_date])
 
         # 3. Entities
         entities_doc = db.collection('users').document(user_id).collection('entities').document('all').get()
@@ -231,9 +252,9 @@ async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
     gemini_client = genai.Client(api_key=GEMINI_API_KEY.value)
 
     # Stream response
-    async def generate():
+    def generate():
         full_response = ""
-        async for chunk in stream_ask_the_stars_response(
+        for chunk in stream_ask_the_stars_response(
             question=question,
             horoscope_date=horoscope_date,
             user_profile=user_profile,
@@ -244,7 +265,7 @@ async def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             gemini_client=gemini_client
         ):
             chunk_data = json.loads(chunk.split('data: ')[1])
-            full_response += chunk_data['text']
+            full_response += chunk_data.get('text', '')
             yield chunk
 
         # Save messages after streaming

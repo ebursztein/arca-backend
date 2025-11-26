@@ -40,11 +40,11 @@ class TestConfigurationLoading:
         assert len(METER_CONFIGS) == 17
 
         expected_meters = [
-            'mental_clarity', 'focus', 'communication',
-            'love', 'inner_stability', 'sensitivity',
-            'vitality', 'drive', 'wellness',
-            'purpose', 'connection', 'intuition', 'creativity',
-            'opportunities', 'career', 'growth', 'social_life'
+            'clarity', 'focus', 'communication',
+            'connections', 'resilience', 'vulnerability',
+            'energy', 'drive', 'strength',
+            'vision', 'flow', 'intuition', 'creativity',
+            'momentum', 'ambition', 'evolution', 'circle'
         ]
 
         for meter_name in expected_meters:
@@ -62,9 +62,9 @@ class TestConfigurationLoading:
 
     def test_mental_clarity_config(self):
         """Test mental_clarity meter configuration."""
-        config = METER_CONFIGS['mental_clarity']
+        config = METER_CONFIGS['clarity']
 
-        assert config.name == 'mental_clarity'
+        assert config.name == 'clarity'
         assert Planet.MERCURY in config.natal_planets
         assert Planet.SUN in config.natal_planets
         assert 9 in config.natal_houses  # Higher mind house
@@ -73,17 +73,17 @@ class TestConfigurationLoading:
 
     def test_love_config(self):
         """Test love meter configuration."""
-        config = METER_CONFIGS['love']
+        config = METER_CONFIGS['connections']
 
-        assert config.name == 'love'
+        assert config.name == 'connections'
         assert Planet.VENUS in config.natal_planets
         assert 7 in config.natal_houses  # Partnership house
 
     def test_career_config(self):
         """Test career meter configuration."""
-        config = METER_CONFIGS['career']
+        config = METER_CONFIGS['ambition']
 
-        assert config.name == 'career'
+        assert config.name == 'ambition'
         assert Planet.SATURN in config.natal_planets
         assert 10 in config.natal_houses  # Career house
 
@@ -108,35 +108,36 @@ class TestMeterCalculation:
         assert all_meters.overall_harmony is not None
 
         # Check all 17 individual meters
-        assert all_meters.mental_clarity is not None
+        assert all_meters.clarity is not None
         assert all_meters.focus is not None
         assert all_meters.communication is not None
-        assert all_meters.love is not None
-        assert all_meters.inner_stability is not None
-        assert all_meters.sensitivity is not None
-        assert all_meters.vitality is not None
+        assert all_meters.connections is not None
+        assert all_meters.resilience is not None
+        assert all_meters.vulnerability is not None
+        assert all_meters.energy is not None
         assert all_meters.drive is not None
-        assert all_meters.wellness is not None
-        assert all_meters.purpose is not None
-        assert all_meters.connection is not None
+        assert all_meters.strength is not None
+        assert all_meters.vision is not None
+        assert all_meters.flow is not None
         assert all_meters.intuition is not None
         assert all_meters.creativity is not None
-        assert all_meters.opportunities is not None
-        assert all_meters.career is not None
-        assert all_meters.growth is not None
-        assert all_meters.social_life is not None
+        assert all_meters.momentum is not None
+        assert all_meters.ambition is not None
+        assert all_meters.evolution is not None
+        assert all_meters.circle is not None
 
     def test_get_single_meter(self):
         """Test calculating a single meter."""
         natal_chart, _ = compute_birth_chart("1990-06-15")
         transit_chart, _ = compute_birth_chart("2025-11-03", birth_time="12:00")
 
-        mental_clarity = get_meter('mental_clarity', natal_chart, transit_chart)
+        mental_clarity = get_meter('clarity', natal_chart, transit_chart)
 
-        assert mental_clarity.meter_name == 'mental_clarity'
+        assert mental_clarity.meter_name == 'clarity'
         assert 0 <= mental_clarity.intensity <= 100
         assert 0 <= mental_clarity.harmony <= 100
-        assert 0 <= mental_clarity.unified_score <= 100
+        # Unified score is -100 to +100 (polar-style)
+        assert -100 <= mental_clarity.unified_score <= 100
         assert mental_clarity.unified_quality in [q.value for q in QualityLabel]
 
     def test_meter_value_ranges(self):
@@ -151,14 +152,15 @@ class TestMeterCalculation:
             meter = getattr(all_meters, meter_name)
             assert 0 <= meter.intensity <= 100, f"{meter_name} intensity out of range"
             assert 0 <= meter.harmony <= 100, f"{meter_name} harmony out of range"
-            assert 0 <= meter.unified_score <= 100, f"{meter_name} unified_score out of range"
+            # Unified score is -100 to +100 (polar-style)
+            assert -100 <= meter.unified_score <= 100, f"{meter_name} unified_score out of range"
 
     def test_meter_has_metadata(self):
         """Test that meters include all metadata fields."""
         natal_chart, _ = compute_birth_chart("1990-06-15")
         transit_chart, _ = compute_birth_chart("2025-11-03", birth_time="12:00")
 
-        meter = get_meter('mental_clarity', natal_chart, transit_chart)
+        meter = get_meter('clarity', natal_chart, transit_chart)
 
         assert meter.state_label is not None
         assert meter.interpretation is not None
@@ -182,7 +184,7 @@ class TestAspectFiltering:
         transit_chart, _ = compute_birth_chart("2025-11-03", birth_time="12:00")
 
         all_aspects = calculate_all_aspects(natal_chart, transit_chart)
-        config = METER_CONFIGS['mental_clarity']
+        config = METER_CONFIGS['clarity']
 
         filtered = filter_aspects(all_aspects, config, natal_chart)
 
@@ -198,7 +200,7 @@ class TestAspectFiltering:
         all_aspects = calculate_all_aspects(natal_chart, transit_chart)
 
         # Mental clarity also filters by houses 3 and 9
-        config = METER_CONFIGS['mental_clarity']
+        config = METER_CONFIGS['clarity']
         filtered = filter_aspects(all_aspects, config, natal_chart)
 
         # Should have aspects (either by planet OR by house)
@@ -211,8 +213,8 @@ class TestAspectFiltering:
 
         all_aspects = calculate_all_aspects(natal_chart, transit_chart)
 
-        mental_clarity_aspects = filter_aspects(all_aspects, METER_CONFIGS['mental_clarity'], natal_chart)
-        love_aspects = filter_aspects(all_aspects, METER_CONFIGS['love'], natal_chart)
+        mental_clarity_aspects = filter_aspects(all_aspects, METER_CONFIGS['clarity'], natal_chart)
+        love_aspects = filter_aspects(all_aspects, METER_CONFIGS['connections'], natal_chart)
 
         # Convert to sets for comparison
         mc_keys = {(a.natal_planet, a.transit_planet, a.aspect_type) for a in mental_clarity_aspects}
@@ -244,8 +246,8 @@ class TestRetrogradeModifiers:
 
         # Only run test if Mercury is actually retrograde
         if mercury_rx and mercury_rx.get("retrograde", False):
-            meter_rx = get_meter('mental_clarity', natal_chart, transit_chart_rx)
-            meter_direct = get_meter('mental_clarity', natal_chart, transit_chart_direct)
+            meter_rx = get_meter('clarity', natal_chart, transit_chart_rx)
+            meter_direct = get_meter('clarity', natal_chart, transit_chart_direct)
 
             # Retrograde should reduce harmony (multiplied by 0.6)
             # This is a soft check since the overall harmony depends on many aspects
@@ -263,7 +265,7 @@ class TestRetrogradeModifiers:
 # ============================================================================
 
 class TestUnifiedScore:
-    """Test unified score calculation."""
+    """Test unified score calculation (polar-style with sigmoid stretch)."""
 
     def test_quiet_low_intensity(self):
         """Test quiet quality for low intensity."""
@@ -285,22 +287,35 @@ class TestUnifiedScore:
         score, quality = calculate_unified_score(60, 50)
         assert quality == QualityLabel.MIXED
 
-    def test_unified_score_harmonic_mean(self):
-        """Test that unified score is harmonic mean of intensity and harmony."""
-        intensity = 60
-        harmony = 80
+    def test_unified_score_range(self):
+        """Test that unified score is in valid range (-100 to +100)."""
+        # High harmony = positive score
+        score_high, _ = calculate_unified_score(60, 80)
+        assert 0 < score_high <= 100, "High harmony should give positive score"
 
-        expected = 2 * intensity * harmony / (intensity + harmony)
-        score, _ = calculate_unified_score(intensity, harmony)
+        # Low harmony = negative score
+        score_low, _ = calculate_unified_score(60, 20)
+        assert -100 <= score_low < 0, "Low harmony should give negative score"
 
-        assert score == pytest.approx(expected, abs=0.1)
+        # Neutral harmony = near zero
+        score_neutral, _ = calculate_unified_score(60, 50)
+        assert -10 <= score_neutral <= 10, "Neutral harmony should give near-zero score"
 
-    def test_unified_score_zero_handling(self):
-        """Test that zero values don't cause division errors."""
-        score, quality = calculate_unified_score(0, 0)
-        assert score == 0.0
-        # When both are 0, harmony < 50 so it's CHALLENGING (not QUIET)
-        assert quality == QualityLabel.CHALLENGING
+    def test_unified_score_zero_intensity(self):
+        """Test that zero intensity still shows harmony direction (base weight)."""
+        score, quality = calculate_unified_score(0, 80)
+        # Even at 0 intensity, base weight preserves some harmony signal
+        assert score >= 0, "Positive harmony should give positive score even at 0 intensity"
+        assert quality == QualityLabel.QUIET  # Low intensity = quiet
+
+    def test_unified_score_empowering_asymmetry(self):
+        """Test that positive scores are boosted and negative dampened."""
+        # Same distance from neutral (50)
+        score_positive, _ = calculate_unified_score(60, 80)  # +30 from neutral
+        score_negative, _ = calculate_unified_score(60, 20)  # -30 from neutral
+
+        # Positive should be larger in magnitude due to empowering boost
+        assert abs(score_positive) > abs(score_negative), "Positive should be boosted more than negative"
 
 
 # ============================================================================
@@ -330,7 +345,8 @@ class TestOverallAggregation:
 
         assert 0 <= all_meters.overall_intensity.intensity <= 100
         assert 0 <= all_meters.overall_harmony.harmony <= 100
-        assert 0 <= all_meters.overall_intensity.unified_score <= 100
+        # Unified score is -100 to +100 (polar-style)
+        assert -100 <= all_meters.overall_intensity.unified_score <= 100
 
     def test_key_aspects_extracted(self):
         """Test that key aspects are extracted across all meters."""
@@ -359,7 +375,7 @@ class TestTrendCalculation:
         all_meters = get_meters(natal_chart, transit_chart, calculate_trends=True)
 
         # Check that at least one meter has trends
-        mental_clarity = all_meters.mental_clarity
+        mental_clarity = all_meters.clarity
         assert mental_clarity.trend is not None
         assert mental_clarity.trend.intensity is not None
         assert mental_clarity.trend.harmony is not None
@@ -372,7 +388,7 @@ class TestTrendCalculation:
 
         all_meters = get_meters(natal_chart, transit_chart, calculate_trends=True)
 
-        trend = all_meters.mental_clarity.trend
+        trend = all_meters.clarity.trend
 
         assert hasattr(trend.intensity, 'previous')
         assert hasattr(trend.intensity, 'delta')
@@ -390,7 +406,7 @@ class TestTrendCalculation:
         all_meters = get_meters(natal_chart, transit_chart, calculate_trends=False)
 
         # Trends should be None
-        assert all_meters.mental_clarity.trend is None
+        assert all_meters.clarity.trend is None
 
 
 # ============================================================================
@@ -422,8 +438,8 @@ class TestIntegration:
         meters_2 = get_meters(natal_chart_2, transit_chart, calculate_trends=False)
 
         # Different natal charts should produce different readings
-        assert meters_1.mental_clarity.intensity != meters_2.mental_clarity.intensity or \
-               meters_1.mental_clarity.harmony != meters_2.mental_clarity.harmony
+        assert meters_1.clarity.intensity != meters_2.clarity.intensity or \
+               meters_1.clarity.harmony != meters_2.clarity.harmony
 
     def test_different_transit_dates(self):
         """Test that different transit dates produce different results."""
@@ -436,8 +452,8 @@ class TestIntegration:
         meters_2 = get_meters(natal_chart, transit_chart_2, calculate_trends=False)
 
         # Different dates should produce different readings
-        assert meters_1.mental_clarity.intensity != meters_2.mental_clarity.intensity or \
-               meters_1.mental_clarity.harmony != meters_2.mental_clarity.harmony
+        assert meters_1.clarity.intensity != meters_2.clarity.intensity or \
+               meters_1.clarity.harmony != meters_2.clarity.harmony
 
 
 # ============================================================================

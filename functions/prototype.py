@@ -19,6 +19,9 @@ Requirements:
     - POSTHOG_API_KEY environment variable (optional)
 """
 
+import os
+os.environ["DEBUG_PROMPT"] = "1"  # Enable debug prompt output for prototype
+
 from datetime import datetime
 from typing import Optional
 from rich.console import Console
@@ -40,16 +43,20 @@ from astro import (
 )
 
 # Import our LLM modules
-from llm import generate_daily_horoscope
+from llm import generate_daily_horoscope, update_memory_with_relationship_mention
 
 # Import our Pydantic models
 from models import (
     UserProfile,
     MemoryCollection,
     CategoryEngagement,
-    CategoryViewed,
     DailyHoroscope,
     create_empty_memory,
+    Entity,
+    EntityStatus,
+    EntityCategory,
+    AttributeKV,
+    RelationshipMention,
 )
 from astrometers.hierarchy import MeterGroupV2
 
@@ -196,7 +203,107 @@ def main():
     # Initialize empty memory for first-time user using Pydantic model
     memory = create_empty_memory(user["id"])
 
-    console.print(f"[green]✓ Memory collection initialized[/green]")
+    # Simulate one previous relationship mention to demo rotation
+    # John was featured yesterday, so rotation should pick someone else
+    memory.relationship_mentions = [
+        RelationshipMention(
+            entity_id="ent_001",
+            entity_name="John",
+            category=EntityCategory.PARTNER,
+            date="2025-11-24",
+            context="Today's energy supports deeper connection with John."
+        ),
+    ]
+
+    console.print(f"[green]✓ Memory collection initialized (John mentioned yesterday)[/green]")
+
+    # Create sample entities with categories for relationship weather
+    now = datetime.now()
+    sample_entities = [
+        Entity(
+            entity_id="ent_001",
+            name="John",
+            entity_type="relationship",
+            status=EntityStatus.ACTIVE,
+            category=EntityCategory.PARTNER,
+            relationship_label="boyfriend",
+            notes="Met at coffee shop last year. Anniversary in June.",
+            aliases=["boyfriend", "partner"],
+            attributes=[
+                AttributeKV(key="relationship_status", value="dating")
+            ],
+            related_entities=[],
+            first_seen=now.isoformat(),
+            last_seen=now.isoformat(),
+            mention_count=5,
+            context_snippets=["Feeling some tension lately"],
+            importance_score=0.85,
+            created_at=now.isoformat(),
+            updated_at=now.isoformat()
+        ),
+        Entity(
+            entity_id="ent_002",
+            name="Mom",
+            entity_type="relationship",
+            status=EntityStatus.ACTIVE,
+            category=EntityCategory.FAMILY,
+            relationship_label="mother",
+            notes="Lives nearby. Weekly Sunday dinners.",
+            aliases=["mother"],
+            attributes=[],
+            related_entities=[],
+            first_seen=now.isoformat(),
+            last_seen=now.isoformat(),
+            mention_count=3,
+            context_snippets=["Planning her birthday party"],
+            importance_score=0.70,
+            created_at=now.isoformat(),
+            updated_at=now.isoformat()
+        ),
+        Entity(
+            entity_id="ent_003",
+            name="Sarah",
+            entity_type="relationship",
+            status=EntityStatus.ACTIVE,
+            category=EntityCategory.FRIEND,
+            relationship_label=None,
+            notes="Best friend since college.",
+            aliases=[],
+            attributes=[],
+            related_entities=[],
+            first_seen=now.isoformat(),
+            last_seen=now.isoformat(),
+            mention_count=4,
+            context_snippets=["Planning a trip together"],
+            importance_score=0.75,
+            created_at=now.isoformat(),
+            updated_at=now.isoformat()
+        ),
+        Entity(
+            entity_id="ent_004",
+            name="Mike",
+            entity_type="relationship",
+            status=EntityStatus.ACTIVE,
+            category=EntityCategory.COWORKER,
+            relationship_label="boss",
+            notes="Direct manager at TechCorp. Fair but demanding.",
+            aliases=["manager"],
+            attributes=[AttributeKV(key="company", value="TechCorp")],
+            related_entities=[],
+            first_seen=now.isoformat(),
+            last_seen=now.isoformat(),
+            mention_count=2,
+            context_snippets=["Performance review coming up"],
+            importance_score=0.65,
+            created_at=now.isoformat(),
+            updated_at=now.isoformat()
+        ),
+    ]
+
+    console.print(f"[green]✓ Sample entities created: {len(sample_entities)} relationships[/green]")
+    for entity in sample_entities:
+        label = f" ({entity.relationship_label})" if entity.relationship_label else ""
+        console.print(f"  - {entity.name}{label} [{entity.category.value}]")
 
     # ========================================================================
     # 2. DAILY HOROSCOPE GENERATION
@@ -254,14 +361,25 @@ def main():
     console.print(f"\n[cyan]Generating daily horoscope[/cyan]")
 
     # Generate daily horoscope with new transit summary
-    daily_horoscope = generate_daily_horoscope(
+    daily_horoscope, featured_relationship = generate_daily_horoscope(
         date=today,
         user_profile=user_profile,
         sun_sign_profile=sun_sign_profile,
         transit_summary=transit_summary,  # NEW: Enhanced transit summary dict
         memory=memory,
+        entities=sample_entities,  # Pass entities for relationship weather
         model_name=model_name)
     console.print(f"[green]✓ Daily horoscope generated ({daily_horoscope.generation_time_ms}ms)[/green]")
+
+    # Update memory with relationship mention (for rotation tracking)
+    if featured_relationship:
+        memory = update_memory_with_relationship_mention(
+            memory=memory,
+            featured_relationship=featured_relationship,
+            date=today,
+            relationship_weather=daily_horoscope.relationship_weather or ""
+        )
+        console.print(f"[green]✓ Memory updated with featured relationship: {featured_relationship.name}[/green]")
 
     # Save horoscope AND transit summary to JSON for inspection
     with open('debug_daily_horoscope.json', 'w') as f:
@@ -396,10 +514,10 @@ Groups Summary:"""
     # Display the 5 aggregated meter groups from new structure
     group_icons = {
         "mind": "🧠",
-        "emotions": "💕",
+        "heart": "💕",
         "body": "💪",
-        "spirit": "✨",
-        "growth": "🌱"
+        "instincts": "✨",
+        "evolution": "🌱"
     }
 
     console.print("[yellow]Note: Groups are now nested inside astrometers.groups (new iOS-optimized structure)[/yellow]\n")
@@ -457,7 +575,7 @@ Groups Summary:"""
         if cat_data.count > 0:
             console.print(f"  • {cat_name.value.replace('_', ' ').title()}: {cat_data.count} views")
 
-    console.print(f"\n[yellow]Recent Readings:[/yellow] {len(memory.recent_readings)}")
+    console.print(f"\n[yellow]Total Conversations:[/yellow] {memory.total_conversations}")
 
     # ========================================================================
     # 6. ASK THE STARS - CONVERSATIONAL Q&A
@@ -466,11 +584,11 @@ Groups Summary:"""
 
     console.print("[cyan]Testing Ask the Stars feature with sample question...[/cyan]\n")
 
-    # Import Ask the Stars modules
+    # Import Ask the Stars modules (Entity, EntityStatus, EntityCategory, AttributeKV already imported at top)
     from models import (
-        Entity, EntityStatus, Message, MessageRole, Conversation,
+        Message, MessageRole, Conversation,
         ExtractedEntities, ExtractedEntity, MergedEntities, EntityMergeAction,
-        UserEntities, AttributeKV
+        UserEntities
     )
     from entity_extraction import (
         extract_entities_from_message,
@@ -592,8 +710,8 @@ Groups Summary:"""
             start_time = time.time()
             answer_chunks = []
 
-            # Stream answer from LLM
-            async for chunk in stream_ask_the_stars_response(
+            # Stream answer from LLM (sync generator, not async)
+            for chunk in stream_ask_the_stars_response(
                 question=user_question,
                 horoscope_date=today,
                 user_profile=user_profile,

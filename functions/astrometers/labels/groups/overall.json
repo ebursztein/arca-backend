@@ -9,63 +9,40 @@
   },
   "description": {
     "overview": "Overall represents the combined energy and quality of all life areas today.",
-    "detailed": "This aggregates all 17 meters (Mind, Emotions, Body, Spirit, and Growth groups) to show the big picture of your day. The overall score shows how much astrological activity is affecting you, while harmony indicates whether that activity is supportive or challenging. This gives you an at-a-glance sense of today's energy before diving into specific areas.",
-    "keywords": ["overall", "daily", "energy", "quality", "big picture"]
-  },
-  "experience_labels": {
-    "combined": {
-      "quiet": {
-        "challenging": "Deep restoration",
-        "mixed": "Subtle activity",
-        "harmonious": "Peaceful rest"
-      },
-      "mild": {
-        "challenging": "Light friction",
-        "mixed": "Gentle mixed",
-        "harmonious": "Easy light"
-      },
-      "moderate": {
-        "challenging": "Active resistance",
-        "mixed": "Mixed currents",
-        "harmonious": "Steady support"
-      },
-      "high": {
-        "challenging": "Intense pressure",
-        "mixed": "High complexity",
-        "harmonious": "Strong flow"
-      },
-      "extreme": {
-        "challenging": "Major breakthrough",
-        "mixed": "Total whirlwind",
-        "harmonious": "Peak alignment"
-      }
-    }
+    "detailed": "This aggregates all 17 meters (Mind, Heart, Body, Instincts, and Growth groups) to show the big picture of your day. The overall score shows how much astrological activity is affecting you, while harmony indicates whether that activity is supportive or challenging. This gives you an at-a-glance sense of today's energy before diving into specific areas.",
+    "keywords": [
+      "overall",
+      "daily",
+      "energy",
+      "quality",
+      "big picture"
+    ]
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Minimal cosmic activity but what's present is challenging - rest and restore",
-      "mixed": "Very subtle energy - quiet but present",
-      "harmonious": "Peaceful day with minimal cosmic activity - deep rest"
+      "challenging": "Low-key day with some friction - nothing you can't handle. Use the quiet to recharge",
+      "mixed": "Subtle energy today - not much happening either way. A good day to coast and recover",
+      "harmonious": "Peaceful day ahead - the cosmos are giving you a break. Take it"
     },
     "mild": {
-      "challenging": "Light challenges across life areas - manageable obstacles",
-      "mixed": "Gentle mix of support and challenge - both present",
-      "harmonious": "Easy flowing day - light cosmic support"
+      "challenging": "Light challenges across the board - annoying but manageable. You've got this",
+      "mixed": "Gentle mix of support and friction - nothing overwhelming. Roll with it",
+      "harmonious": "Easy flowing day - small wins are available everywhere. Collect them"
     },
     "moderate": {
-      "challenging": "Active challenges requiring attention - push through resistance",
-      "mixed": "Moderate activity in all directions - complexity to navigate",
-      "harmonious": "Steady cosmic support - good momentum across areas"
+      "challenging": "Real challenges today requiring your attention - but you're equipped. One thing at a time",
+      "mixed": "Active day with complexity to navigate - some things will flow, some won't. Focus on what's working",
+      "harmonious": "Steady support across the board - good momentum available. Push forward on what matters"
     },
     "high": {
-      "challenging": "Intense cosmic pressure - major challenges demanding response",
-      "mixed": "High activity with mixed quality - exciting and difficult simultaneously",
-      "harmonious": "Strong favorable energy - exceptional day for action"
+      "challenging": "Intense day ahead - the pressure is real but so is your capacity. Prioritize and execute",
+      "mixed": "High activity everywhere, exciting and difficult at once - embrace the chaos, you'll come out ahead",
+      "harmonious": "Strong cosmic support - exceptional day for bold moves. The stars are backing you"
     },
     "extreme": {
-      "challenging": "Maximum cosmic intensity with difficult quality - major breakthrough required",
-      "mixed": "Extreme activity in all directions - total chaos and opportunity",
-      "harmonious": "Peak cosmic alignment - exceptional support across all areas"
+      "challenging": "Maximum intensity today - this is the hard stuff that builds character. You'll get through it and be stronger",
+      "mixed": "Everything at once - chaos and opportunity colliding. Stay centered and you'll find the gold in the mess",
+      "harmonious": "Rare peak alignment - everything is flowing your way. Make the big moves you've been waiting for"
     }
   }
 }

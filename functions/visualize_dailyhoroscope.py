@@ -121,7 +121,7 @@ key_aspects (top 3):"""
             ("emotional_resilience", daily_horoscope.astrometers.emotional_resilience)
         ],
         "Cognitive Meters": [
-            ("mental_clarity", daily_horoscope.astrometers.mental_clarity),
+            ("clarity", daily_horoscope.astrometers.clarity),
             ("decision_quality", daily_horoscope.astrometers.decision_quality),
             ("communication_flow", daily_horoscope.astrometers.communication_flow)
         ],
@@ -131,7 +131,7 @@ key_aspects (top 3):"""
             ("motivation_drive", daily_horoscope.astrometers.motivation_drive)
         ],
         "Life Domain Meters": [
-            ("career_ambition", daily_horoscope.astrometers.career_ambition),
+            ("career_ambition", daily_horoscope.astrometers.ambition_ambition),
             ("opportunity_window", daily_horoscope.astrometers.opportunity_window),
             ("challenge_intensity", daily_horoscope.astrometers.challenge_intensity),
             ("transformation_pressure", daily_horoscope.astrometers.transformation_pressure)
@@ -223,12 +223,13 @@ def main():
 
     # Generate daily horoscope
     console.print(f"[cyan]Generating daily horoscope...[/cyan]\n")
-    daily_horoscope = generate_daily_horoscope(
+    daily_horoscope, _ = generate_daily_horoscope(
         date=today,
         user_profile=user_profile,
         sun_sign_profile=sun_sign_profile,
         transit_data=transit_data,
         memory=memory,
+        entities=[],  # No entities for visualization test
         model_name="gemini-2.5-flash-lite"
     )
 

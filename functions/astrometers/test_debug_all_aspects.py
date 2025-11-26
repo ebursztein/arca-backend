@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
 from astro import compute_birth_chart, find_natal_transit_aspects
-from functions.astrometers.meters_v1 import convert_to_transit_aspects
+from astrometers.core import calculate_all_aspects
 
 
 def test_debug_all_aspects():
@@ -46,11 +46,11 @@ def test_debug_all_aspects():
     for planet, count in sorted(natal_planet_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"  {planet:15s}: {count} aspects")
 
-    # Convert to TransitAspect format
-    all_aspects = convert_to_transit_aspects(
+    # Convert to TransitAspect format (using V2 core function)
+    all_aspects = calculate_all_aspects(
         natal_chart,
         transit_chart,
-        natal_transit_aspects
+        orb=8.0
     )
 
     print(f"\nAfter conversion: {len(all_aspects)} TransitAspect objects")

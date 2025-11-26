@@ -53,11 +53,11 @@ def get_meter_list(all_meters: AllMetersReading) -> list:
     Extract all 17 meters from AllMetersReading as a list.
 
     Returns meters in consistent order matching the 5-category grouping:
-    - Mind (3): mental_clarity, focus, communication
-    - Emotions (3): love, inner_stability, sensitivity
-    - Body (3): vitality, drive, wellness
-    - Spirit (4): purpose, connection, intuition, creativity
-    - Growth (4): opportunities, career, growth, social_life
+    - Mind (3): clarity, focus, communication
+    - Heart (3): connections, resilience, vulnerability
+    - Body (3): energy, drive, strength
+    - Instincts (4): vision, flow, intuition, creativity
+    - Growth (4): momentum, ambition, evolution, circle
 
     Args:
         all_meters: AllMetersReading object from get_meters()
@@ -67,31 +67,32 @@ def get_meter_list(all_meters: AllMetersReading) -> list:
     """
     return [
         # Mind (3)
-        all_meters.mental_clarity,
+        all_meters.clarity,
         all_meters.focus,
         all_meters.communication,
-        # Emotions (3)
-        all_meters.love,
-        all_meters.inner_stability,
-        all_meters.sensitivity,
+        # Heart (3)
+        all_meters.connections,
+        all_meters.resilience,
+        all_meters.vulnerability,
         # Body (3)
-        all_meters.vitality,
+        all_meters.energy,
         all_meters.drive,
-        all_meters.wellness,
-        # Spirit (4)
-        all_meters.purpose,
-        all_meters.connection,
+        all_meters.strength,
+        # Instincts (4)
+        all_meters.vision,
+        all_meters.flow,
         all_meters.intuition,
         all_meters.creativity,
         # Growth (4)
-        all_meters.opportunities,
-        all_meters.career,
-        all_meters.growth,
-        all_meters.social_life,
+        all_meters.momentum,
+        all_meters.ambition,
+        all_meters.evolution,
+        all_meters.circle,
     ]
 
 
 __all__ = [
+    # Core calculation modules
     "calculate_dignity_score",
     "calculate_weightage",
     "calculate_chart_ruler",
@@ -113,6 +114,7 @@ __all__ = [
     "calculate_aspect_contribution",
     "calculate_astrometers",
     "get_score_breakdown_text",
+    # Normalization
     "MeterInterpretation",
     "normalize_with_soft_ceiling",
     "normalize_intensity",
@@ -121,37 +123,12 @@ __all__ = [
     "get_intensity_label",
     "get_harmony_label",
     "get_meter_interpretation",
-    # Meter functions
+    # 17-meter system
     "MeterReading",
     "AllMetersReading",
     "get_meters",
-    "group_meters_by_domain",
-    "calculate_overall_intensity_meter",
-    "calculate_overall_harmony_meter",
-    "calculate_mental_clarity_meter",
-    "calculate_decision_quality_meter",
-    "calculate_communication_flow_meter",
-    "calculate_emotional_intensity_meter",
-    "calculate_relationship_harmony_meter",
-    "calculate_emotional_resilience_meter",
-    "calculate_physical_energy_meter",
-    "calculate_conflict_risk_meter",
-    "calculate_motivation_drive_meter",
-    "calculate_career_ambition_meter",
-    "calculate_opportunity_window_meter",
-    "calculate_challenge_intensity_meter",
-    "calculate_transformation_pressure_meter",
-    "calculate_element_distribution",
-    "calculate_fire_energy_meter",
-    "calculate_earth_energy_meter",
-    "calculate_air_energy_meter",
-    "calculate_water_energy_meter",
-    "calculate_intuition_spirituality_meter",
-    "calculate_innovation_breakthrough_meter",
-    "calculate_karmic_lessons_meter",
-    "calculate_social_collective_meter",
-    # Summary function
+    "METER_CONFIGS",
+    # Summary and helpers
     "daily_meters_summary",
-    # Helper function
     "get_meter_list",
 ]

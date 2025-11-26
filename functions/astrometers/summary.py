@@ -79,27 +79,27 @@ def _get_all_meter_readings(meters: AllMetersReading) -> List[MeterReading]:
     """Extract all 17 meter readings from AllMetersReading object."""
     return [
         # Mind (3)
-        meters.mental_clarity,
+        meters.clarity,
         meters.focus,
         meters.communication,
-        # Emotions (3)
-        meters.love,
-        meters.inner_stability,
-        meters.sensitivity,
+        # Heart (3)
+        meters.connections,
+        meters.resilience,
+        meters.vulnerability,
         # Body (3)
-        meters.vitality,
+        meters.energy,
         meters.drive,
-        meters.wellness,
-        # Spirit (4)
-        meters.purpose,
-        meters.connection,
+        meters.strength,
+        # Instincts (4)
+        meters.vision,
+        meters.flow,
         meters.intuition,
         meters.creativity,
         # Growth (4)
-        meters.opportunities,
-        meters.career,
-        meters.growth,
-        meters.social_life,
+        meters.momentum,
+        meters.ambition,
+        meters.evolution,
+        meters.circle,
     ]
 
 
@@ -297,7 +297,7 @@ def meter_groups_summary(meter_groups: dict) -> str:
                 "state": {"label": "Supportive", "quality": "supportive"},
                 "interpretation": "",  # Empty, will be filled by LLM
                 "trend": {"unified_score": {...}, ...} or None,
-                "meter_ids": ["mental_clarity", "decision_quality", "communication_flow"]
+                "meter_ids": ["clarity", "decision_quality", "communication_flow"]
             },
             ...
         }
@@ -341,7 +341,7 @@ def meter_groups_summary(meter_groups: dict) -> str:
     output += data_line
 
     # Sort groups in a consistent order
-    group_order = ["mind", "emotions", "body", "spirit", "growth"]
+    group_order = ["mind", "heart", "body", "instincts", "evolution"]
 
     for i, group_name in enumerate(group_order):
         if group_name not in meter_groups:

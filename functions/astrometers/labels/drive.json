@@ -11,7 +11,13 @@
   "description": {
     "overview": "Drive represents your motivation to take action, pursue goals, and assert yourself in the world.",
     "detailed": "This meter tracks Mars and Uranus transits to your natal Mars, 1st house (identity and action), and 10th house (ambition and achievement). Mars brings raw drive, initiative, and the will to act. Uranus adds sudden motivation and unconventional approaches. When these planets form supportive aspects, you feel motivated and capable of bold action. Challenging aspects create frustration, blocked drive, or impulsive action that backfires. Mars retrograde reduces drive by 35%, requiring strategic pacing rather than forcing.",
-    "keywords": ["drive", "action", "ambition", "energy", "goals"]
+    "keywords": [
+      "drive",
+      "action",
+      "ambition",
+      "energy",
+      "goals"
+    ]
   },
   "astrological_foundation": {
     "primary_planets": {
@@ -22,8 +28,16 @@
       "sun": "Conscious will and ego-driven ambition",
       "pluto": "Deep transformational drive and power"
     },
-    "natal_planets_tracked": ["mars"],
-    "transit_planets_tracked": ["mars", "uranus", "sun", "pluto", "jupiter"],
+    "natal_planets_tracked": [
+      "mars"
+    ],
+    "transit_planets_tracked": [
+      "mars",
+      "uranus",
+      "sun",
+      "pluto",
+      "jupiter"
+    ],
     "key_houses": {
       "1": "Personal action, self-assertion, how you initiate",
       "10": "Career ambition, public achievement, drive for success"
@@ -37,51 +51,45 @@
     },
     "planetary_dignities": {
       "mars": {
-        "strong_in": ["aries", "scorpio", "capricorn"],
-        "weak_in": ["libra", "taurus", "cancer"]
+        "strong_in": [
+          "aries",
+          "scorpio",
+          "capricorn"
+        ],
+        "weak_in": [
+          "libra",
+          "taurus",
+          "cancer"
+        ]
       },
       "uranus": {
-        "strong_in": ["aquarius", "scorpio"],
-        "weak_in": ["taurus", "leo"]
+        "strong_in": [
+          "aquarius",
+          "scorpio"
+        ],
+        "weak_in": [
+          "taurus",
+          "leo"
+        ]
       }
     },
-    "critical_degrees": [0, 13, 26, 29]
-  },
-  "experience_labels": {
-    "combined": {
-      "quiet": {
-        "challenging": "Gathering strength",
-        "mixed": "Conserving energy",
-        "harmonious": "Peaceful pause"
-      },
-      "mild": {
-        "challenging": "Slow start",
-        "mixed": "Gentle push",
-        "harmonious": "Easy momentum"
-      },
-      "moderate": {
-        "challenging": "Working through",
-        "mixed": "Steady effort",
-        "harmonious": "Good flow"
-      },
-      "high": {
-        "challenging": "Gathering force",
-        "mixed": "Powerful push",
-        "harmonious": "Strong drive"
-      },
-      "extreme": {
-        "challenging": "Breaking through",
-        "mixed": "Maximum force",
-        "harmonious": "Peak action"
-      }
-    }
+    "critical_degrees": [
+      0,
+      13,
+      26,
+      29
+    ]
   },
   "interpretation_guidelines": {
     "tone": "Action-oriented and motivational - talk about taking initiative, pursuing goals",
     "focus_when_high": "Emphasize bold action, starting projects, making moves, asserting yourself",
     "focus_when_low": "Emphasize rest without guilt, strategic planning, conserving energy",
     "focus_when_challenging": "Acknowledge blocked drive but redirect frustration into strategy",
-    "avoid": ["Shaming low motivation", "Encouraging reckless impulsivity", "Ignoring legitimate exhaustion"],
+    "avoid": [
+      "Shaming low motivation",
+      "Encouraging reckless impulsivity",
+      "Ignoring legitimate exhaustion"
+    ],
     "phrasing_examples": {
       "high_harmonious": "Your drive is strong today - this is your window to start that project, make that ask, or take bold action you've been planning.",
       "moderate_mixed": "Motivation is there but requires effort - channel your drive strategically rather than forcing everything at once.",
@@ -89,8 +97,13 @@
     }
   },
   "configuration": {
-    "natal_planets": ["mars"],
-    "natal_houses": [1, 10],
+    "natal_planets": [
+      "mars"
+    ],
+    "natal_houses": [
+      1,
+      10
+    ],
     "retrograde_modifiers": {
       "mars": 0.65
     }

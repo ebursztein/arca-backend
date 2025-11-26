@@ -41,7 +41,10 @@ from models import (
     MeterGroupForIOS,
     AstrometersForIOS,
     MeterAspect,
-    AstrologicalFoundation
+    AstrologicalFoundation,
+    Entity,
+    EntityCategory,
+    RelationshipMention,
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
 from astrometers.meter_groups import build_all_meter_groups, get_group_state_label
@@ -62,19 +65,19 @@ jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 # =============================================================================
 
 METER_NAMES = [
-    "mental_clarity", "focus", "communication",
-    "love", "inner_stability", "sensitivity",
-    "vitality", "drive", "wellness",
-    "purpose", "connection", "intuition", "creativity",
-    "opportunities", "career", "growth", "social_life"
+    "clarity", "focus", "communication",
+    "resilience", "connections", "vulnerability",
+    "energy", "drive", "strength",
+    "vision", "flow", "intuition", "creativity",
+    "momentum", "ambition", "evolution", "circle"
 ]
 
 METER_GROUP_MAPPING = {
-    "mind": ["mental_clarity", "focus", "communication"],
-    "emotions": ["love", "inner_stability", "sensitivity"],
-    "body": ["vitality", "drive", "wellness"],
-    "spirit": ["purpose", "connection", "intuition", "creativity"],
-    "growth": ["opportunities", "career", "growth", "social_life"]
+    "mind": ["clarity", "focus", "communication"],
+    "heart": ["resilience", "connections", "vulnerability"],
+    "body": ["energy", "drive", "strength"],
+    "instincts": ["vision", "flow", "intuition", "creativity"],
+    "growth": ["momentum", "ambition", "evolution", "circle"]
 }
 
 
@@ -109,7 +112,7 @@ def load_group_descriptions() -> dict[str, dict]:
     descriptions = {}
     base_path = Path(__file__).parent / "astrometers" / "labels" / "groups"
 
-    for group_name in ["mind", "emotions", "body", "spirit", "growth"]:
+    for group_name in ["mind", "heart", "body", "instincts", "growth"]:
         json_path = base_path / f"{group_name}.json"
         try:
             with open(json_path, 'r') as f:
@@ -188,8 +191,6 @@ def build_astrometers_for_ios(
     all_meters_reading,
     meter_interpretations: dict[str, str],
     group_interpretations: dict[str, str],
-    group_state_labels: dict[str, str],
-    overall_state_label: str
 ) -> AstrometersForIOS:
     """
     Convert AllMetersReading to clean iOS-optimized structure.
@@ -198,11 +199,11 @@ def build_astrometers_for_ios(
         all_meters_reading: Complete AllMetersReading object
         meter_interpretations: Dict of meter_name -> LLM interpretation
         group_interpretations: Dict of group_name -> LLM interpretation
-        group_state_labels: Dict of group_name -> LLM-generated state label
-        overall_state_label: LLM-generated overall state label
 
     Returns:
         AstrometersForIOS with complete explainability data
+
+    Note: State labels are computed by backend. iOS maps unified_score to bucket labels.
     """
     # Load descriptions once
     meter_descriptions = load_meter_descriptions()
@@ -212,7 +213,7 @@ def build_astrometers_for_ios(
     groups = []
     all_meters_list = []
 
-    for group_name in ["mind", "emotions", "body", "spirit", "growth"]:
+    for group_name in ["mind", "heart", "body", "instincts", "growth"]:
         meter_names = METER_GROUP_MAPPING[group_name]
 
         # Build MeterForIOS for each meter in group
@@ -284,8 +285,8 @@ def build_astrometers_for_ios(
         else:
             quality = "mixed"
 
-        # Use LLM-generated state label (contextual, personalized to today's energy)
-        state_label = group_state_labels.get(group_name, "Active")
+        # State label computed by backend - iOS uses unified_score to map to bucket labels
+        state_label = get_group_state_label(group_name, avg_intensity, avg_harmony)
 
         # Extract group trend (calculate from member meter trends)
         group_trend_delta = None
@@ -330,8 +331,10 @@ def build_astrometers_for_ios(
     top_challenging_meters = [m.meter_name for m in sorted_by_harmony_low[:5] if m.harmony < 50]
     top_flowing_meters = [m.meter_name for m in sorted_by_unified_high[:5] if m.unified_score > 70]
 
-    # Use LLM-generated overall state label (passed as parameter)
-    overall_state = overall_state_label
+    # Overall state computed by backend - iOS uses unified_score to map to bucket labels
+    overall_intensity = all_meters_reading.overall_intensity.intensity
+    overall_harmony = all_meters_reading.overall_harmony.harmony
+    overall_state = get_group_state_label("overall", overall_intensity, overall_harmony)
 
     return AstrometersForIOS(
         date=all_meters_reading.date.isoformat(),
@@ -347,16 +350,183 @@ def build_astrometers_for_ios(
     )
 
 
+def group_entities_by_category(entities: list[Entity]) -> dict:
+    """
+    Group user's entities by category for relationship weather.
+
+    Args:
+        entities: List of Entity objects from user's entity collection
+
+    Returns:
+        Dict with:
+        - has_partner: bool
+        - partner: Optional[Entity] - the partner entity if exists
+        - family: list[Entity] - family members
+        - friends: list[Entity] - friends
+        - coworkers: list[Entity] - work relationships
+        - has_relationships: bool - True if any relationship entities exist
+    """
+    result = {
+        "has_partner": False,
+        "partner": None,
+        "family": [],
+        "friends": [],
+        "coworkers": [],
+        "has_relationships": False
+    }
+
+    if not entities:
+        return result
+
+    for entity in entities:
+        if not entity.category:
+            continue
+
+        if entity.category == EntityCategory.PARTNER:
+            result["has_partner"] = True
+            result["partner"] = entity
+        elif entity.category == EntityCategory.FAMILY:
+            result["family"].append(entity)
+        elif entity.category == EntityCategory.FRIEND:
+            result["friends"].append(entity)
+        elif entity.category == EntityCategory.COWORKER:
+            result["coworkers"].append(entity)
+
+    # Check if any relationship entities exist
+    result["has_relationships"] = (
+        result["has_partner"] or
+        len(result["family"]) > 0 or
+        len(result["friends"]) > 0 or
+        len(result["coworkers"]) > 0
+    )
+
+    return result
+
+
+def update_memory_with_relationship_mention(
+    memory: MemoryCollection,
+    featured_relationship: Optional[Entity],
+    date: str,
+    relationship_weather: str
+) -> MemoryCollection:
+    """
+    Update memory with relationship mention after horoscope generation.
+
+    Appends to relationship_mentions (capped at 20, FIFO).
+    This tracks what was said to avoid repetition in rotation.
+
+    Args:
+        memory: User's memory collection
+        featured_relationship: Entity that was featured (or None)
+        date: ISO date string
+        relationship_weather: The relationship_weather text from horoscope
+
+    Returns:
+        Updated MemoryCollection
+    """
+    if not featured_relationship:
+        return memory
+
+    # Create new mention
+    mention = RelationshipMention(
+        entity_id=featured_relationship.entity_id,
+        entity_name=featured_relationship.name,
+        category=featured_relationship.category,
+        date=date,
+        context=relationship_weather[:500] if relationship_weather else ""  # Cap context length
+    )
+
+    # Append to list
+    memory.relationship_mentions.append(mention)
+
+    # FIFO: Keep only last 20
+    if len(memory.relationship_mentions) > 20:
+        memory.relationship_mentions = memory.relationship_mentions[-20:]
+
+    return memory
+
+
+def select_featured_relationship(
+    entities: list[Entity],
+    memory: MemoryCollection,
+    date: str
+) -> Optional[Entity]:
+    """
+    Select ONE entity to feature in today's horoscope using round-robin rotation.
+
+    Rotates through all relationship entities (partner, family, friend, coworker),
+    prioritizing those not recently featured. Uses relationship_mentions in memory
+    to track what was last featured.
+
+    Args:
+        entities: List of Entity objects
+        memory: User's memory collection with relationship_mentions
+        date: Today's date (YYYY-MM-DD)
+
+    Returns:
+        Entity to feature, or None if no relationship entities exist
+    """
+    if not entities:
+        return None
+
+    # Filter to only relationship entities (have a category)
+    relationship_entities = [
+        e for e in entities
+        if e.category and e.category != EntityCategory.OTHER
+    ]
+
+    if not relationship_entities:
+        return None
+
+    # Get recently featured entity IDs from memory
+    recent_mentions = memory.relationship_mentions or []
+    recently_featured_ids = {m.entity_id for m in recent_mentions[-10:]}
+
+    # Prioritize entities NOT recently featured
+    not_recently_featured = [
+        e for e in relationship_entities
+        if e.entity_id not in recently_featured_ids
+    ]
+
+    if not_recently_featured:
+        # Pick from not recently featured, sorted by importance
+        sorted_entities = sorted(
+            not_recently_featured,
+            key=lambda e: e.importance_score,
+            reverse=True
+        )
+        return sorted_entities[0]
+
+    # All have been featured recently - pick the one featured longest ago
+    # by sorting relationship_mentions and picking the oldest
+    if recent_mentions:
+        # Create a map of entity_id -> last mention date
+        mention_dates = {}
+        for mention in recent_mentions:
+            mention_dates[mention.entity_id] = mention.date
+
+        # Sort by oldest mention first
+        sorted_by_oldest = sorted(
+            relationship_entities,
+            key=lambda e: mention_dates.get(e.entity_id, "1900-01-01")
+        )
+        return sorted_by_oldest[0]
+
+    # Fallback: just pick the highest importance
+    return max(relationship_entities, key=lambda e: e.importance_score)
+
+
 def generate_daily_horoscope(
     date: str,
     user_profile: UserProfile,
     sun_sign_profile: SunSignProfile,
     transit_summary: dict,
     memory: MemoryCollection,
+    entities: Optional[list[Entity]] = None,
     api_key: Optional[str] = None,
     posthog_api_key: Optional[str] = None,
     model_name: str = "gemini-2.5-flash-lite",
-) -> DailyHoroscope:
+) -> tuple[DailyHoroscope, Optional[Entity]]:
     """
     Generate daily horoscope (Prompt 1) - core transit analysis (async internal).
 
@@ -366,11 +536,15 @@ def generate_daily_horoscope(
         sun_sign_profile: Complete sun sign profile
         transit_summary: Enhanced transit summary dict from format_transit_summary_for_ui()
         memory: User's memory collection
+        entities: Optional list of user's tracked entities for relationship weather
         api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
+        posthog_api_key: PostHog API key for observability
         model_name: Model to use (default: gemini-2.5-flash-lite)
 
     Returns:
-        DailyHoroscope: Validated horoscope with 8 core fields
+        Tuple of (DailyHoroscope, Optional[Entity]):
+        - DailyHoroscope: Validated horoscope with all fields
+        - Entity: The featured relationship entity (for memory tracking), or None
     """
 
     MAX_TOKENS = 4096
@@ -403,7 +577,8 @@ def generate_daily_horoscope(
     astrometers = get_meters(
         natal_chart=user_profile.natal_chart,
         transit_chart=transit_chart,
-        date=date_obj
+        date=date_obj,
+        user_id=user_profile.user_id  # Pass user_id for cosmic background noise
     )
 
     # Calculate YESTERDAY'S astrometers for trend data
@@ -429,6 +604,16 @@ def generate_daily_horoscope(
         yesterday_all_meters_reading=astrometers_yesterday
     )
     groups_summary = meter_groups_summary(meter_groups)
+
+    # Select featured meters for programmatic curation (1-2 groups, 1-2 meters each = 2-3 total)
+    from astrometers.meters import select_featured_meters
+    featured = select_featured_meters(
+        all_meters=astrometers,
+        user_id=user_profile.user_id,
+        date=date,
+        num_groups=2,
+        num_meters_per_group=1
+    )
 
     # Get comprehensive moon transit detail
     moon_detail = get_moon_transit_detail(
@@ -475,37 +660,89 @@ def generate_daily_horoscope(
     cache_content = None
 
     static_template = jinja_env.get_template("daily_static.j2")
+    static_prompt = static_template.render()  # Static template has no variables now
 
-    # Load detailed meter descriptions from JSON files
-    meter_descriptions = load_meter_descriptions()
+    # Build all_groups with unified_score, trend direction, and word inspirations
+    from astrometers.meters import select_state_words
+    all_groups = []
+    for group_name, group_data in meter_groups.items():
+        words = select_state_words(
+            group_name=group_name,
+            intensity=group_data['scores']['intensity'],
+            harmony=group_data['scores']['harmony'],
+            user_id=user_profile.user_id,
+            date=date,
+            count=2
+        )
+        # Get trend direction as arrow symbol
+        trend = None
+        if group_data.get('trend') and group_data['trend'].get('unified_score'):
+            trend_dir = group_data['trend']['unified_score'].get('direction')
+            if trend_dir == 'increasing':
+                trend = 'rising'
+            elif trend_dir == 'decreasing':
+                trend = 'falling'
+            # stable = no trend shown
 
-    # Build enriched meter list with detailed descriptions
-    meter_list_enriched = []
-    for meter in get_meter_list(astrometers):
-        desc = meter_descriptions.get(meter.meter_name, {})
-        meter_list_enriched.append({
-            'meter_name': meter.meter_name,
-            'display_name': meter.meter_name.replace('_', ' ').title(),
-            'detailed': desc.get('detailed', f"Measures {meter.meter_name.replace('_', ' ')}")
+        all_groups.append({
+            'name': group_name,
+            'unified_score': group_data['scores']['unified_score'],
+            'trend': trend,
+            'words': words
         })
 
-    static_prompt = static_template.render(
-        meter_list=meter_list_enriched  # Pass enriched meter data with detailed descriptions
+    # Flatten featured meters into a single list
+    featured_meters = []
+    for group_name, meters in featured['featured_meters'].items():
+        for meter in meters:
+            featured_meters.append(meter)
+
+    # Group entities by category for relationship weather
+    grouped_entities = group_entities_by_category(entities or [])
+
+    # Select featured relationship for this pull (rotating highlight)
+    featured_relationship = select_featured_relationship(
+        entities=entities or [],
+        memory=memory,
+        date=date
     )
 
-    # astrometers summary is now passed separately
+    # Render dynamic template
     dynamic_template = jinja_env.get_template("daily_dynamic.j2")
     dynamic_prompt = dynamic_template.render(
         date=date,
-        user_profile=user_profile,
-        sun_sign_profile=sun_sign_profile,
-        transit_summary=transit_summary,  # NEW: Enhanced transit summary dict
-        meters_summary=meters_summary,  # Smart filtered summary
-        groups_summary=groups_summary,  # NEW: Meter groups aggregated data
-        upcoming_transits=upcoming_transits_formatted,  # NEW: For look_ahead_preview (grouped by day)
-        astrometers=astrometers,  # Keep for overall stats in template
-        moon_summary=moon_summary_for_llm  # NEW: Comprehensive moon transit detail
+        all_groups=all_groups,  # All 5 groups with scores + words
+        featured_meters=featured_meters,  # 2-3 featured meters for emphasis
+        upcoming_transits=upcoming_transits_formatted,
+        moon_summary=moon_summary_for_llm,
+        # Relationship data for conditional weather section
+        has_relationships=grouped_entities["has_relationships"],
+        has_partner=grouped_entities["has_partner"],
+        partner=grouped_entities["partner"],
+        family=grouped_entities["family"],
+        friends=grouped_entities["friends"],
+        coworkers=grouped_entities["coworkers"],
+        # Featured relationship for personalized highlight
+        featured_relationship=featured_relationship
     )
+
+    # Calculate age and generation
+    birth_year = int(user_profile.birth_date.split("-")[0])
+    current_year = int(date.split("-")[0])
+    age = current_year - birth_year
+
+    if birth_year >= 2013:
+        generation = "Gen Alpha"
+    elif birth_year >= 1997:
+        generation = "Gen Z"
+    elif birth_year >= 1981:
+        generation = "Millennial"
+    elif birth_year >= 1965:
+        generation = "Gen X"
+    elif birth_year >= 1946:
+        generation = "Baby Boomer"
+    else:
+        generation = "Silent Generation"
 
     # this is user specific can't be cached
     personalization_template = jinja_env.get_template("personalization.j2")
@@ -513,15 +750,21 @@ def generate_daily_horoscope(
         user=user_profile,
         sign=sun_sign_profile,
         memory=memory,
-        chart_emphasis=chart_emphasis
+        chart_emphasis=chart_emphasis,
+        age=age,
+        generation=generation
     )
 
     # Compose final
     prompt = f"{static_prompt}\n\n{personalization_prompt}\n\n{dynamic_prompt}"
 
-    print(f"\n[yellow]Generated Daily Horoscope Prompt:[/yellow]")
-    print(prompt)
-    print("\n[yellow]End of Prompt[/yellow]\n")
+    # Debug output (only when running locally, not in Cloud Functions)
+    if os.environ.get("DEBUG_PROMPT"):
+        with open('debug_prompt.txt', 'w') as f:
+            f.write(prompt)
+        print(f"\n[yellow]Generated Daily Horoscope Prompt:[/yellow]")
+        print(prompt)
+        print("\n[yellow]End of Prompt[/yellow]\n")
 
     # Define response schema
     class DailyHoroscopeResponse(BaseModel):
@@ -533,18 +776,10 @@ def generate_daily_horoscope(
 
         # Meter group interpretations (2-3 sentences each, 150-300 chars)
         mind_interpretation: str
-        emotions_interpretation: str
+        heart_interpretation: str
         body_interpretation: str
-        spirit_interpretation: str
+        instincts_interpretation: str
         growth_interpretation: str
-
-        # Dynamic State Labels (2-3 words, evocative)
-        overall_state_label: str
-        mind_state_label: str
-        emotions_state_label: str
-        body_state_label: str
-        spirit_state_label: str
-        growth_state_label: str
 
         # Look ahead (merged from detailed horoscope)
         look_ahead_preview: str
@@ -606,56 +841,45 @@ def generate_daily_horoscope(
         # Extract group interpretations (5 fields)
         group_interpretations = {
             "mind": parsed.mind_interpretation,
-            "emotions": parsed.emotions_interpretation,
+            "heart": parsed.heart_interpretation,
             "body": parsed.body_interpretation,
-            "spirit": parsed.spirit_interpretation,
+            "instincts": parsed.instincts_interpretation,
             "growth": parsed.growth_interpretation,
         }
 
-        # Extract LLM-generated state labels (6 total: overall + 5 groups)
-        group_state_labels = {
-            "mind": parsed.mind_state_label,
-            "emotions": parsed.emotions_state_label,
-            "body": parsed.body_state_label,
-            "spirit": parsed.spirit_state_label,
-            "growth": parsed.growth_state_label,
-        }
-        overall_state_label = parsed.overall_state_label
-
         # Extract individual meter interpretations (17 fields)
         meter_interpretations = {
-            "mental_clarity": "",
+            "clarity": "",
             "focus": "",
             "communication": "",
-            "love": "",
-            "inner_stability": "",
-            "sensitivity": "",
-            "vitality": "",
+            "resilience": "",
+            "connections": "",
+            "vulnerability": "",
+            "energy": "",
             "drive": "",
-            "wellness": "",
-            "purpose": "",
-            "connection": "",
+            "strength": "",
+            "vision": "",
+            "flow": "",
             "intuition": "",
             "creativity": "",
-            "opportunities": "",
-            "career": "",
-            "growth": "",
-            "social_life": "",
+            "momentum": "",
+            "ambition": "",
+            "evolution": "",
+            "circle": "",
         }
 
         # Build iOS-optimized astrometers structure
+        # State labels are computed from unified_score, not generated by LLM
         astrometers_for_ios = build_astrometers_for_ios(
             astrometers,
             meter_interpretations=meter_interpretations,
             group_interpretations=group_interpretations,
-            group_state_labels=group_state_labels,
-            overall_state_label=overall_state_label
         )
 
         # Populate moon_detail.interpretation with LLM output
         moon_detail.interpretation = parsed.lunar_cycle_update
 
-        return DailyHoroscope(
+        horoscope = DailyHoroscope(
             date=date,
             sun_sign=user_profile.sun_sign,
             technical_analysis=parsed.technical_analysis,
@@ -674,6 +898,8 @@ def generate_daily_horoscope(
             generation_time_ms=generation_time_ms,
             usage=usage
         )
+
+        return horoscope, featured_relationship
 
     except Exception as e:
         raise RuntimeError(f"Error generating daily horoscope: {e}")

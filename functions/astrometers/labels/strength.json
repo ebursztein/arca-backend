@@ -1,0 +1,111 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "strength",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "strength",
+    "display_name": "Strength",
+    "group": "body",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Strength represents your daily health routines, work-life balance, and overall sense of physical and mental wellbeing.",
+    "detailed": "This meter tracks transits through your 6th house (daily routines, health, work habits) and aspects to your natal Moon, Mars, and Saturn. The 6th house shows how your day-to-day life is functioning - work stress, health habits, sleep, exercise, and self-care. The Moon affects emotional wellness and self-nurturing. Mars shows physical energy management. Saturn reveals stress, boundaries, and sustainability of routines. When these are well-aspected, your routines support your health. Challenging aspects create work stress, neglected self-care, or unsustainable habits.",
+    "keywords": [
+      "health",
+      "routines",
+      "daily life",
+      "work stress",
+      "self-care"
+    ]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "moon": "Emotional wellness, self-nurturing, daily comfort needs",
+      "saturn": "Work stress, boundaries, sustainable routines vs. burnout"
+    },
+    "secondary_planets": {
+      "mars": "Physical energy management and exercise",
+      "jupiter": "Can support wellness or encourage overindulgence"
+    },
+    "natal_planets_tracked": [
+      "moon",
+      "mars",
+      "saturn"
+    ],
+    "transit_planets_tracked": [
+      "moon",
+      "saturn",
+      "mars",
+      "jupiter",
+      "neptune"
+    ],
+    "key_houses": {
+      "6": "Daily routines, health habits, work-life balance, self-care practices"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum wellness impact - peak health or peak stress",
+      "opposition": "High impact - tension between work and rest",
+      "trine": "High flow - healthy routines come naturally",
+      "square": "Moderate friction - work stress or habit challenges",
+      "sextile": "Moderate flow - opportunities for better routines"
+    },
+    "planetary_dignities": {
+      "moon": {
+        "strong_in": [
+          "cancer",
+          "taurus",
+          "pisces"
+        ],
+        "weak_in": [
+          "capricorn",
+          "scorpio"
+        ]
+      },
+      "saturn": {
+        "strong_in": [
+          "capricorn",
+          "aquarius",
+          "libra"
+        ],
+        "weak_in": [
+          "cancer",
+          "aries"
+        ]
+      }
+    },
+    "critical_degrees": [
+      0,
+      15,
+      29
+    ]
+  },
+  "interpretation_guidelines": {
+    "tone": "Practical and health-focused - talk about routines, work-life balance, self-care",
+    "focus_when_high": "Emphasize establishing healthy routines, prioritizing self-care, sustainable habits",
+    "focus_when_low": "Emphasize gentle self-care, not judging neglect, small habit changes",
+    "focus_when_challenging": "Acknowledge work stress or burnout risk - offer concrete self-care strategies",
+    "avoid": [
+      "Preaching about health",
+      "Shaming for poor habits",
+      "Medical advice",
+      "Toxic wellness culture"
+    ],
+    "phrasing_examples": {
+      "high_harmonious": "Your wellness is strong today - healthy routines feel natural and self-care is easy. This is a good time to establish habits that stick.",
+      "moderate_mixed": "Work-life balance takes effort today - be intentional about breaks and don't let work stress crowd out basic self-care.",
+      "low_challenging": "Burnout risk is real today - your routines aren't supporting you right now. Prioritize rest and boundaries over productivity."
+    }
+  },
+  "configuration": {
+    "natal_planets": [
+      "moon",
+      "mars",
+      "saturn"
+    ],
+    "natal_houses": [
+      6
+    ],
+    "retrograde_modifiers": {}
+  }
+}

@@ -5,67 +5,44 @@
   "metadata": {
     "group_id": "mind",
     "display_name": "Mind",
-    "description": "Mental clarity, focus, and communication"
+    "description": "Clarity, focus, and communication"
   },
   "description": {
     "overview": "Mind represents your cognitive sharpness, ability to concentrate, and ease of expressing yourself.",
-    "detailed": "This group combines three mental functions: Mental Clarity (how clearly you think), Focus (your ability to concentrate), and Communication (how easily you express ideas). Together they show whether your mind is sharp and flowing or foggy and scattered. High scores mean you're thinking clearly, staying focused, and communicating effectively. Low scores suggest mental fog, distractions, or difficulty finding words.",
-    "keywords": ["thinking", "focus", "communication", "clarity", "expression"]
-  },
-  "experience_labels": {
-    "combined": {
-      "quiet": {
-        "challenging": "Mental rebuilding",
-        "mixed": "Quiet processing",
-        "harmonious": "Mental rest"
-      },
-      "mild": {
-        "challenging": "Clearing fog",
-        "mixed": "Gentle processing",
-        "harmonious": "Mental ease"
-      },
-      "moderate": {
-        "challenging": "Mental friction",
-        "mixed": "Active thinking",
-        "harmonious": "Mental flow"
-      },
-      "high": {
-        "challenging": "Mental pressure",
-        "mixed": "Rapid thoughts",
-        "harmonious": "Mental peak"
-      },
-      "extreme": {
-        "challenging": "Mental breakthrough",
-        "mixed": "Mental storm",
-        "harmonious": "Crystal clarity"
-      }
-    }
+    "detailed": "This group combines three mental functions: Clarity (how clearly you think), Focus (your ability to concentrate), and Communication (how easily you express ideas). Together they show whether your mind is sharp and flowing or foggy and scattered. High scores mean you're thinking clearly, staying focused, and communicating effectively. Low scores suggest mental fog, distractions, or difficulty finding words.",
+    "keywords": [
+      "thinking",
+      "focus",
+      "communication",
+      "clarity",
+      "expression"
+    ]
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Rest your mind - this is recovery time",
-      "mixed": "Mental activity is subtle - honor the quiet",
-      "harmonious": "Your mind is peacefully still - enjoy the calm"
+      "challenging": "Your mind needs rest - let it recover now so it's sharper tomorrow",
+      "mixed": "Mental activity is subtle today - honor the quiet, ideas will come",
+      "harmonious": "Your mind is peacefully still - enjoy the calm clarity"
     },
     "mild": {
-      "challenging": "Mental fog is lifting - be patient with yourself",
-      "mixed": "Thoughts are gentle but present - notice them",
-      "harmonious": "Mental energy flows easily - trust your thinking"
+      "challenging": "Mental fog is real but lifting - give it until afternoon and you'll think clearer",
+      "mixed": "Thoughts are gentle but present - trust the slow processing",
+      "harmonious": "Mental energy flows easily - your thinking is reliable today"
     },
     "moderate": {
-      "challenging": "Mental obstacles exist but you're working through them",
-      "mixed": "Your mind is active in multiple directions",
-      "harmonious": "Mental clarity is strong and steady - use it"
+      "challenging": "Mental obstacles are there but you can work through them - take one thing at a time",
+      "mixed": "Your mind is pulled in multiple directions - pick one priority and the rest will wait",
+      "harmonious": "Mental clarity is strong - this is your window for decisions that matter"
     },
     "high": {
-      "challenging": "Mental intensity is high - manage cognitive load",
-      "mixed": "Your mind is racing but creative - channel it",
-      "harmonious": "Peak mental performance - tackle complex tasks"
+      "challenging": "Mental load is intense - but you handle pressure well. Simplify and focus on what's essential",
+      "mixed": "Your mind is racing in all directions - channel that into creative work, not decisions",
+      "harmonious": "Peak mental sharpness - tackle the complex stuff you've been putting off"
     },
     "extreme": {
-      "challenging": "Mental overload is real - simplify where possible",
-      "mixed": "Mental energy is maximum - wild but potentially brilliant",
-      "harmonious": "Your mind is exceptionally sharp - big decisions favored"
+      "challenging": "Mental overload is real - simplify ruthlessly. You'll get through this by doing less, better",
+      "mixed": "Maximum mental energy, chaotic but brilliant - capture ideas now, sort them later",
+      "harmonious": "Your mind is exceptionally sharp - big decisions and complex problems are your playground today"
     }
   }
 }

@@ -1,0 +1,274 @@
+{
+  "description": "State label word banks by group and quadrant. We pick 2 words programmatically, pass to LLM as creative inspiration.",
+  "thresholds": {
+    "intensity": {
+      "low": 19,
+      "high": 38,
+      "note": "Based on P33/P67 from 102k real data points"
+    },
+    "harmony": {
+      "low": 52,
+      "high": 65,
+      "note": "Based on P33/P67 from 102k real data points"
+    }
+  },
+  "quadrant_distribution": {
+    "high_high": "12.6%",
+    "high_low": "13.2%",
+    "low_high": "9.0%",
+    "low_low": "7.7%",
+    "moderate": "57.5%"
+  },
+  "quadrants": {
+    "high_intensity_high_harmony": {
+      "mind": [
+        "Crystalline",
+        "Laser-sharp",
+        "Quicksilver",
+        "Luminous",
+        "On Fire",
+        "Dialed In"
+      ],
+      "body": [
+        "Electric",
+        "Unstoppable",
+        "Surging",
+        "Primed",
+        "Charged",
+        "On Point"
+      ],
+      "growth": [
+        "Ascending",
+        "Breakthrough",
+        "Expanding",
+        "Magnetic",
+        "Unlocking",
+        "Leveling Up"
+      ],
+      "overall": [
+        "Firing",
+        "Peak Day",
+        "In Flow",
+        "Lit Up",
+        "Soaring",
+        "Full Throttle"
+      ],
+      "heart": [
+        "Radiant",
+        "Open-hearted",
+        "Overflowing",
+        "Glowing",
+        "Bursting",
+        "Full"
+      ],
+      "instincts": [
+        "Luminous",
+        "Transcendent",
+        "Piercing",
+        "Connected",
+        "Awake",
+        "Tuned In"
+      ]
+    },
+    "high_intensity_low_harmony": {
+      "mind": [
+        "Buzzing",
+        "Scattered",
+        "Overclocked",
+        "Spinning",
+        "Noisy",
+        "Tangled"
+      ],
+      "body": [
+        "Wired",
+        "Grinding",
+        "Burning Out",
+        "Restless",
+        "Pushing Hard",
+        "Straining"
+      ],
+      "growth": [
+        "Under Pressure",
+        "Striving",
+        "Climbing",
+        "Fighting",
+        "Pushing Uphill",
+        "In The Trenches"
+      ],
+      "overall": [
+        "Turbulent",
+        "Chaotic",
+        "Storm Brewing",
+        "Heavy Lift",
+        "Intense",
+        "In The Fire"
+      ],
+      "heart": [
+        "Raw",
+        "Stormy",
+        "Volcanic",
+        "On Edge",
+        "Turbulent",
+        "Exposed"
+      ],
+      "instincts": [
+        "Wrestling",
+        "Unmoored",
+        "Testing",
+        "Searching",
+        "Questioning",
+        "Unsettled"
+      ]
+    },
+    "low_intensity_high_harmony": {
+      "mind": [
+        "Dreamy",
+        "Soft Focus",
+        "Gentle",
+        "Quiet Clarity",
+        "Still",
+        "Unhurried"
+      ],
+      "body": [
+        "Restorative",
+        "Slow Wave",
+        "Resting",
+        "Gentle",
+        "Easy",
+        "Recovering"
+      ],
+      "growth": [
+        "Planting Seeds",
+        "Preparing",
+        "Quiet Building",
+        "Laying Ground",
+        "Incubating",
+        "Gathering"
+      ],
+      "overall": [
+        "Cocoon Day",
+        "Pause",
+        "Soft Landing",
+        "Breath",
+        "Gentle",
+        "Quiet Grace"
+      ],
+      "heart": [
+        "Cocooned",
+        "Still Waters",
+        "Peaceful",
+        "Settled",
+        "Calm",
+        "At Ease"
+      ],
+      "instincts": [
+        "Contemplative",
+        "Inward",
+        "Reflective",
+        "Centered",
+        "Grounded",
+        "Present"
+      ]
+    },
+    "low_intensity_low_harmony": {
+      "mind": [
+        "Foggy",
+        "Murky",
+        "Hazy",
+        "Clouded",
+        "Dim",
+        "Stuck"
+      ],
+      "body": [
+        "Sluggish",
+        "Depleted",
+        "Heavy",
+        "Dragging",
+        "Low Battery",
+        "Tired"
+      ],
+      "growth": [
+        "Blocked",
+        "Stalled",
+        "On Hold",
+        "Stuck",
+        "Waiting",
+        "Treading Water"
+      ],
+      "overall": [
+        "Stuck",
+        "Foggy Day",
+        "Waiting Room",
+        "Low Tide",
+        "Muted",
+        "On Pause"
+      ],
+      "heart": [
+        "Numb",
+        "Guarded",
+        "Distant",
+        "Withdrawn",
+        "Flat",
+        "Closed Off"
+      ],
+      "instincts": [
+        "Disconnected",
+        "Adrift",
+        "Lost",
+        "Unclear",
+        "Wandering",
+        "In Limbo"
+      ]
+    },
+    "moderate": {
+      "mind": [
+        "Stirring",
+        "Processing",
+        "Sorting",
+        "Working Through",
+        "Active",
+        "Ticking"
+      ],
+      "body": [
+        "Warming Up",
+        "Ramping",
+        "Steady",
+        "In Motion",
+        "Building",
+        "Getting There"
+      ],
+      "growth": [
+        "Building",
+        "Taking Shape",
+        "In Progress",
+        "Developing",
+        "Emerging",
+        "Step by Step"
+      ],
+      "overall": [
+        "In Motion",
+        "Building",
+        "Shifting Gears",
+        "Transitioning",
+        "Unfolding",
+        "Day by Day"
+      ],
+      "heart": [
+        "Shifting",
+        "Mixed Signals",
+        "In Flux",
+        "Moving",
+        "Changing",
+        "Unfolding"
+      ],
+      "instincts": [
+        "Opening",
+        "Transitioning",
+        "Evolving",
+        "Sensing",
+        "Tuning In",
+        "Finding Footing"
+      ]
+    }
+  }
+}

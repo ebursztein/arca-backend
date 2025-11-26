@@ -24,7 +24,7 @@
         "calibration/"
 
       ],
-      "runtime": "python313"
+      "runtime": "python312"
     }
   ],
   "hosting": {

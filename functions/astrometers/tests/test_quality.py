@@ -27,6 +27,12 @@ from astrometers.constants import (
     CONJUNCTION_BENEFIC_MALEFIC,
     CONJUNCTION_TRANSFORMATIONAL,
     CONJUNCTION_DEFAULT,
+    QUALITY_BLISSFUL_THRESHOLD,
+    QUALITY_VERY_HARMONIOUS_THRESHOLD,
+    QUALITY_HARMONIOUS_THRESHOLD,
+    QUALITY_NEUTRAL_THRESHOLD,
+    QUALITY_CHALLENGING_THRESHOLD,
+    QUALITY_VERY_CHALLENGING_THRESHOLD,
 )
 
 
@@ -157,7 +163,6 @@ def test_conjunction_pluto_venus():
 
 def test_conjunction_transformational_takes_precedence_over_benefic():
     """Transformational nature takes precedence over benefic."""
-    # Pluto (transformational) + Venus (benefic) = -0.3 (not +0.2)
     quality = calculate_quality_factor(AspectType.CONJUNCTION, Planet.PLUTO, Planet.VENUS)
     assert quality == CONJUNCTION_TRANSFORMATIONAL
     assert quality == -0.3
@@ -165,7 +170,6 @@ def test_conjunction_transformational_takes_precedence_over_benefic():
 
 def test_conjunction_transformational_takes_precedence_over_malefic():
     """Transformational nature takes precedence over malefic."""
-    # Uranus (transformational) + Mars (malefic) = -0.3 (not part of benefic-malefic)
     quality = calculate_quality_factor(AspectType.CONJUNCTION, Planet.URANUS, Planet.MARS)
     assert quality == CONJUNCTION_TRANSFORMATIONAL
     assert quality == -0.3
@@ -197,82 +201,64 @@ def test_conjunction_mercury_moon():
 
 
 # =============================================================================
-# Quality Label Tests
+# Quality Label Tests (Updated for V2 Optimistic Model thresholds)
 # =============================================================================
 
 def test_quality_label_blissful():
-    """Quality +1.0 returns 'Blissful'."""
-    assert get_quality_label(1.0) == "Blissful"
+    """Quality >= 1.1 returns 'Blissful'."""
+    assert get_quality_label(1.1) == "Blissful"
+    assert get_quality_label(1.5) == "Blissful"
 
 
 def test_quality_label_very_harmonious():
-    """Quality +0.8 returns 'Very Harmonious'."""
+    """Quality >= 0.8 and < 1.1 returns 'Very Harmonious'."""
     assert get_quality_label(0.8) == "Very Harmonious"
+    assert get_quality_label(1.0) == "Very Harmonious"  # 1.0 < 1.1 threshold
 
 
 def test_quality_label_harmonious():
-    """Quality +0.2 returns 'Harmonious'."""
+    """Quality >= 0.2 and < 0.8 returns 'Harmonious'."""
     assert get_quality_label(0.2) == "Harmonious"
+    assert get_quality_label(0.5) == "Harmonious"
+    assert get_quality_label(0.7) == "Harmonious"
 
 
-def test_quality_label_neutral_positive():
-    """Quality 0.0 returns 'Neutral'."""
+def test_quality_label_neutral():
+    """Quality >= -0.3 and < 0.2 returns 'Neutral'."""
     assert get_quality_label(0.0) == "Neutral"
-
-
-def test_quality_label_neutral_negative():
-    """Quality -0.3 returns 'Neutral'."""
+    assert get_quality_label(0.1) == "Neutral"
     assert get_quality_label(-0.3) == "Neutral"
 
 
 def test_quality_label_challenging():
-    """Quality -0.8 returns 'Challenging'."""
-    assert get_quality_label(-0.8) == "Challenging"
+    """Quality >= -0.7 and < -0.3 returns 'Challenging'."""
+    assert get_quality_label(-0.4) == "Challenging"
+    assert get_quality_label(-0.5) == "Challenging"
+    assert get_quality_label(-0.7) == "Challenging"
 
 
 def test_quality_label_very_challenging():
-    """Quality -1.0 returns 'Very Challenging'."""
-    assert get_quality_label(-1.0) == "Very Challenging"
+    """Quality >= -0.85 and < -0.7 returns 'Very Challenging'."""
+    assert get_quality_label(-0.8) == "Very Challenging"
+    assert get_quality_label(-0.85) == "Very Challenging"
 
 
 def test_quality_label_extremely_challenging():
-    """Quality below -1.0 returns 'Extremely Challenging'."""
+    """Quality < -0.85 returns 'Extremely Challenging'."""
+    assert get_quality_label(-0.9) == "Extremely Challenging"
+    assert get_quality_label(-1.0) == "Extremely Challenging"
     assert get_quality_label(-1.5) == "Extremely Challenging"
 
 
-def test_quality_labels_full_range():
-    """Test all quality labels across the full range from -1.1 to 1.1 by 0.1 increments."""
-    # Expected label for each value
-    expected_labels = {
-        -1.1: "Extremely Challenging",
-        -1.0: "Very Challenging",
-        -0.9: "Very Challenging",
-        -0.8: "Challenging",
-        -0.7: "Challenging",
-        -0.6: "Challenging",
-        -0.5: "Challenging",
-        -0.4: "Challenging",
-        -0.3: "Neutral",
-        -0.2: "Neutral",
-        -0.1: "Neutral",
-        0.0: "Neutral",
-        0.1: "Neutral",
-        0.2: "Harmonious",
-        0.3: "Harmonious",
-        0.4: "Harmonious",
-        0.5: "Harmonious",
-        0.6: "Harmonious",
-        0.7: "Harmonious",
-        0.8: "Very Harmonious",
-        0.9: "Very Harmonious",
-        1.0: "Blissful",
-        1.1: "Blissful",
-    }
-
-    for quality_value, expected_label in expected_labels.items():
-        actual_label = get_quality_label(quality_value)
-        assert actual_label == expected_label, \
-            f"Quality {quality_value} expected '{expected_label}', got '{actual_label}'"
+def test_quality_labels_at_thresholds():
+    """Test labels exactly at threshold boundaries."""
+    # Test each threshold exactly
+    assert get_quality_label(QUALITY_BLISSFUL_THRESHOLD) == "Blissful"
+    assert get_quality_label(QUALITY_VERY_HARMONIOUS_THRESHOLD) == "Very Harmonious"
+    assert get_quality_label(QUALITY_HARMONIOUS_THRESHOLD) == "Harmonious"
+    assert get_quality_label(QUALITY_NEUTRAL_THRESHOLD) == "Neutral"
+    assert get_quality_label(QUALITY_CHALLENGING_THRESHOLD) == "Challenging"
+    assert get_quality_label(QUALITY_VERY_CHALLENGING_THRESHOLD) == "Very Challenging"
 
 
 # =============================================================================
@@ -316,8 +302,6 @@ def test_conjunction_quality_range():
 def test_invalid_aspect_type_raises_error():
     """Invalid aspect type should raise ValueError."""
     with pytest.raises(ValueError, match="Unknown aspect type"):
-        # AspectType.QUINCUNX would be invalid if it existed
-        # For now, test with a mock invalid value
         calculate_quality_factor("invalid_aspect", Planet.SUN, Planet.MOON)
 
 

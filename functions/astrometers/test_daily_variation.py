@@ -95,11 +95,11 @@ def analyze_chart_variation(birth_data: dict, num_days: int = 7) -> Dict:
 
     # Calculate day-to-day deltas for all 17 meters
     meter_names = [
-        "mental_clarity", "focus", "communication",
-        "love", "inner_stability", "sensitivity",
-        "vitality", "drive", "wellness",
-        "purpose", "connection", "intuition", "creativity",
-        "opportunities", "career", "growth", "social_life"
+        "clarity", "focus", "communication",
+        "connections", "resilience", "vulnerability",
+        "energy", "drive", "strength",
+        "vision", "flow", "intuition", "creativity",
+        "momentum", "ambition", "evolution", "circle"
     ]
 
     chart_stats = {}
@@ -159,11 +159,11 @@ def main():
 
     # Aggregate stats across all charts
     meter_names = [
-        "mental_clarity", "focus", "communication",
-        "love", "inner_stability", "sensitivity",
-        "vitality", "drive", "wellness",
-        "purpose", "connection", "intuition", "creativity",
-        "opportunities", "career", "growth", "social_life"
+        "clarity", "focus", "communication",
+        "connections", "resilience", "vulnerability",
+        "energy", "drive", "strength",
+        "vision", "flow", "intuition", "creativity",
+        "momentum", "ambition", "evolution", "circle"
     ]
 
     aggregated = {}

@@ -1,0 +1,97 @@
+{
+  "_schema_version": "2.0",
+  "_meter": "ambition",
+  "_last_updated": "2025-01-04",
+  "metadata": {
+    "meter_id": "ambition",
+    "display_name": "Ambition",
+    "group": "growth",
+    "measures": "both"
+  },
+  "description": {
+    "overview": "Ambition represents your professional momentum, recognition, and the structure of your work life and public role.",
+    "detailed": "This meter tracks Saturn transits to your natal Saturn and 10th house (career, public life, professional achievement). Saturn brings structure, responsibility, hard-earned success, and career tests. When Saturn forms supportive aspects, your professional efforts pay off and you build lasting career foundations. Challenging aspects create career obstacles, professional setbacks, or heavy responsibilities that feel overwhelming. Saturn retrograde reduces career pressure by 20% but can slow external momentum while deepening internal mastery.",
+    "keywords": [
+      "professional life",
+      "achievement",
+      "recognition",
+      "work structure",
+      "responsibility"
+    ]
+  },
+  "astrological_foundation": {
+    "primary_planets": {
+      "saturn": "Career structure, professional responsibility, hard-earned success through discipline"
+    },
+    "secondary_planets": {
+      "sun": "Recognition, visibility, and leadership in career",
+      "jupiter": "Career expansion and professional opportunities",
+      "mars": "Career drive and assertiveness in professional life"
+    },
+    "natal_planets_tracked": [
+      "saturn"
+    ],
+    "transit_planets_tracked": [
+      "saturn",
+      "sun",
+      "jupiter",
+      "mars",
+      "pluto"
+    ],
+    "key_houses": {
+      "10": "Career, public life, professional achievement, reputation, what you're known for"
+    },
+    "aspect_weights": {
+      "conjunction": "Maximum career impact - major professional turning points",
+      "opposition": "High impact - tension between career and personal life",
+      "trine": "High flow - professional efforts pay off naturally",
+      "square": "Moderate friction - career challenges that require work",
+      "sextile": "Moderate flow - opportunities for professional growth"
+    },
+    "planetary_dignities": {
+      "saturn": {
+        "strong_in": [
+          "capricorn",
+          "aquarius",
+          "libra"
+        ],
+        "weak_in": [
+          "cancer",
+          "aries"
+        ]
+      }
+    },
+    "critical_degrees": [
+      0,
+      15,
+      29
+    ]
+  },
+  "interpretation_guidelines": {
+    "tone": "Professional and achievement-focused - talk about work, responsibility, recognition, building",
+    "focus_when_high": "Emphasize professional momentum, putting in effort that will pay off, leadership opportunities",
+    "focus_when_low": "Normalize career plateau periods, emphasize skill-building over visibility, patience with timing",
+    "focus_when_challenging": "Acknowledge real career obstacles - offer long-term perspective and strategic patience",
+    "avoid": [
+      "Toxic hustle culture",
+      "Dismissing legitimate career setbacks",
+      "Suggesting success is just mindset"
+    ],
+    "phrasing_examples": {
+      "high_harmonious": "Career momentum is strong today - your professional efforts are paying off and recognition is flowing your way.",
+      "moderate_mixed": "Career progress requires real work today - put in the effort knowing it's building something lasting, even if rewards aren't immediate.",
+      "low_challenging": "Career obstacles are real today - this plateau is temporary. Focus on skill-building and patience rather than forcing momentum that isn't there."
+    }
+  },
+  "configuration": {
+    "natal_planets": [
+      "saturn"
+    ],
+    "natal_houses": [
+      10
+    ],
+    "retrograde_modifiers": {
+      "saturn": 0.8
+    }
+  }
+}

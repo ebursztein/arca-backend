@@ -1,71 +1,46 @@
-═══════════════════════════════════════════════════════════════════
-TODAY'S ASTROMETERS DATA ({{ date }})
-═══════════════════════════════════════════════════════════════════
+TODAY'S ENERGY ({{ date }})
 
-[METER GROUPS - 5 LIFE AREAS]
-{{ groups_summary }}
-
-[INDIVIDUAL METERS DETAIL]
-{{ meters_summary }}
-
-[PRIORITY NATAL-TRANSIT ASPECTS TODAY]
-{% if transit_summary.priority_transits %}
-The most significant transits to YOUR natal chart today:
-
-{% for transit in transit_summary.priority_transits %}
-{{ loop.index }}. {{ transit.description }}
-   {{ transit.meaning }}
-   {% if transit.house_context %}{{ transit.house_context }}{% endif %}
-   {% if transit.speed_timing %}Timing: {{ transit.speed_timing.timing_impact }}{% endif %}
-   {% if transit.critical_degrees %}⚠️ {{ transit.critical_degrees|join(' | ') }}{% endif %}
-
-{% endfor %}
-{% else %}
-No significant natal-transit aspects today (all beyond 3° orb).
-{% endif %}
-
-[OVERALL TRANSIT THEME]
-{{ transit_summary.theme_synthesis.theme_synthesis }}
-{% if transit_summary.theme_synthesis.convergence_pattern %}
-
-Convergence Pattern: {{ transit_summary.theme_synthesis.convergence_pattern }}
-{% endif %}
-{% if transit_summary.theme_synthesis.timing_note %}
-Timing Note: {{ transit_summary.theme_synthesis.timing_note }}
-{% endif %}
-
-{% if transit_summary.critical_degree_alerts %}
-[CRITICAL DEGREE ALERTS]
-{% for alert in transit_summary.critical_degree_alerts %}
-⚠️ {{ alert.planet }} at {{ alert.degree }}° {{ alert.sign }}: {{ alert.description }}
+[GROUPS]
+{% for group in all_groups %}
+{{ group.name|upper }}: {{ group.unified_score|round(0) }} {% if group.trend %}({{ group.trend }}){% endif %} | {{ group.words[0] }}, {{ group.words[1] }}
 {% endfor %}
 
-{{ transit_summary.critical_degree_synthesis.interpretation }}
-{% endif %}
-
-{% if transit_summary.retrograde_planets %}
-[RETROGRADE PLANETS & YOUR NATAL CHART]
-{% for rx in transit_summary.retrograde_planets %}
-🔄 {{ rx.planet }} retrograde in {{ rx.sign }} ({{ rx.speed_description }})
-{% if rx.natal_connection %}   {{ rx.natal_connection.message }}{% endif %}
-{% if rx.natal_aspects %}   Aspecting: {% for asp in rx.natal_aspects %}{{ asp.message }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+[FEATURED - emphasize in headline/overview]
+{% for meter in featured_meters %}
+• {{ meter.meter_name|replace('_', ' ')|title }} ({{ meter.unified_score|round(0) }}){% if meter.top_aspects %} - {{ meter.top_aspects[0].transit_planet.value|title }} {{ meter.top_aspects[0].aspect_type.value }} natal {{ meter.top_aspects[0].natal_planet.value|title }}{% endif %}
 
 {% endfor %}
+{% if has_relationships %}
+[RELATIONSHIPS - for relationship_weather field]
+{% if featured_relationship %}
+SPOTLIGHT: {{ featured_relationship.name }}{% if featured_relationship.relationship_label %} ({{ featured_relationship.relationship_label }}){% endif %} [{{ featured_relationship.category.value }}]
+{% if featured_relationship.notes %}Notes: {{ featured_relationship.notes }}{% endif %}
+
+Give this person extra attention in relationship_weather - a personalized sentence about this dynamic today.
 {% endif %}
+{% if has_partner %}Partner: {{ partner.name }}{% if partner.relationship_label %} ({{ partner.relationship_label }}){% endif %}{% if partner.notes %} - {{ partner.notes }}{% endif %}
 
-Total aspects analyzed: {{ transit_summary.total_aspects_found }} natal-transit connections found today.
+{% endif %}
+{% if family %}Family: {% for f in family %}{{ f.name }}{% if f.relationship_label %} ({{ f.relationship_label }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
 
-[TRANSIT TIMELINE - NEXT 7 DAYS]
+{% endif %}
+{% if friends %}Friends: {% for f in friends %}{{ f.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+{% if coworkers %}Work: {% for c in coworkers %}{{ c.name }}{% if c.relationship_label %} ({{ c.relationship_label }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+Write 1-2 sentences per category that has people. Focus spotlight person first, then brief notes on other dynamics.
+{% endif %}
+[MOON]
+{{ moon_summary }}
+
+[NEXT 7 DAYS]
 {% if upcoming_transits -%}
 {% for day_group in upcoming_transits -%}
-{{ day_group.header }}
-{% for transit in day_group.transits -%}
-  • [{{ transit.priority.value.upper() }}] {{ transit.description }} - {{ transit.status.value.upper() }}, orb {{ transit.orb_today|round(2) }}°{% if transit.status.value == 'exact' %} ⭐ EXACT{% endif %}
-{% endfor %}
+{{ day_group.header }} {% for transit in day_group.transits[:2] %}{{ transit.description }}{% if transit.status.value == 'exact' %} (EXACT){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endfor -%}
 {% else -%}
-No major transits found in next 7 days (using 2° orb).
+Quiet week ahead.
 {% endif -%}
-
-{{ moon_summary }}

@@ -21,13 +21,13 @@ from entity_extraction import (
     execute_merge_actions
 )
 
-# Define secrets
-GEMINI_API_KEY = params.SecretParam("GEMINI_API_KEY")
+# Import shared secrets (centralized to avoid duplicate declarations)
+from firebase_secrets import GEMINI_API_KEY, POSTHOG_API_KEY
 
 
 @firestore_fn.on_document_written(
     document="conversations/{conversationId}",
-    secrets=[GEMINI_API_KEY]
+    secrets=[GEMINI_API_KEY, POSTHOG_API_KEY]
 )
 def extract_entities_on_message(
     event: firestore_fn.Event[firestore_fn.Change[firestore_fn.DocumentSnapshot] | None]
@@ -63,7 +63,8 @@ def extract_entities_on_message(
         user_id=conversation.user_id,
         user_message=latest_message.content,
         horoscope_date=conversation.horoscope_date,
-        gemini_api_key=GEMINI_API_KEY.value
+        gemini_api_key=GEMINI_API_KEY.value,
+        posthog_api_key=POSTHOG_API_KEY.value
     ))
 
 
@@ -71,7 +72,8 @@ async def _extract_and_merge_entities(
     user_id: str,
     user_message: str,
     horoscope_date: str,
-    gemini_api_key: str
+    gemini_api_key: str,
+    posthog_api_key: str
 ) -> None:
     """Extract entities from message and merge with existing."""
     client = genai.Client(api_key=gemini_api_key)
@@ -87,23 +89,27 @@ async def _extract_and_merge_entities(
     else:
         existing_entities = []
 
-    # LLM CALL 1: Extract entities
-    extracted = await extract_entities_from_message(
+    # LLM CALL 1: Extract entities (with PostHog tracking)
+    extracted, _ = await extract_entities_from_message(
         user_message=user_message,
         current_date=horoscope_date,
         gemini_client=client,
+        user_id=user_id,
+        posthog_api_key=posthog_api_key,
         model="gemini-2.0-flash-exp"
     )
 
     if not extracted.entities:
         return
 
-    # LLM CALL 2: Merge with existing
-    merged = await merge_entities_with_existing(
+    # LLM CALL 2: Merge with existing (with PostHog tracking)
+    merged, _ = await merge_entities_with_existing(
         extracted_entities=extracted,
         existing_entities=existing_entities,
         current_date=horoscope_date,
         gemini_client=client,
+        user_id=user_id,
+        posthog_api_key=posthog_api_key,
         model="gemini-2.0-flash-exp"
     )
 
