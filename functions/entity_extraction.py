@@ -7,14 +7,18 @@ This module handles:
 3. Executing merge actions to update entity store
 """
 
+import os
 import json
 import uuid
 from datetime import datetime
 from typing import Optional
 
+from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
 from google import genai
 from google.genai import types
+
+load_dotenv()
 
 from models import (
     Entity,
@@ -49,12 +53,12 @@ def merge_attributes(existing: list[AttributeKV], updates: list[AttributeKV]) ->
 
 
 
-async def extract_entities_from_message(
+def extract_entities_from_message(
     user_message: str,
     current_date: str,
-    gemini_client: genai.Client,
     user_id: str,
     posthog_api_key: Optional[str] = None,
+    api_key: Optional[str] = None,
     model: str = "gemini-2.5-flash-lite",
     temperature: float = 0.0
 ) -> tuple[ExtractedEntities, dict]:
@@ -64,9 +68,9 @@ async def extract_entities_from_message(
     Args:
         user_message: User's message text
         current_date: Current ISO date for temporal attribute extraction
-        gemini_client: Gemini API client
         user_id: User ID for PostHog tracking
         posthog_api_key: PostHog API key for observability
+        api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
         model: Model to use for extraction
         temperature: LLM temperature (default 0 for consistency)
 
@@ -75,6 +79,15 @@ async def extract_entities_from_message(
     """
     import time
     start_time = time.time()
+
+    # Get API key (same pattern as llm.py)
+    if not api_key:
+        api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY not provided")
+
+    # Create client (same pattern as llm.py)
+    client = genai.Client(api_key=api_key)
 
     # Load and render template
     template = template_env.get_template('extract_entities.j2')
@@ -90,8 +103,8 @@ async def extract_entities_from_message(
         response_schema=ExtractedEntities
     )
 
-    # Call LLM
-    response = await gemini_client.aio.models.generate_content(
+    # Call LLM (synchronous - async has DNS issues with httpx)
+    response = client.models.generate_content(
         model=model,
         contents=prompt,
         config=config
@@ -129,7 +142,7 @@ async def extract_entities_from_message(
     return parsed, performance
 
 
-async def merge_entities_with_existing(
+def merge_entities_with_existing(
     extracted_entities: ExtractedEntities,
     existing_entities: list[Entity],
     current_date: str,
@@ -191,8 +204,8 @@ async def merge_entities_with_existing(
         response_schema=MergedEntities
     )
 
-    # Call LLM
-    response = await gemini_client.aio.models.generate_content(
+    # Call LLM (synchronous - async has DNS issues with httpx)
+    response = gemini_client.models.generate_content(
         model=model,
         contents=prompt,
         config=config
@@ -238,24 +251,28 @@ def execute_merge_actions(
     """
     Execute merge actions to update entity list.
 
+    IMPORTANT: This function does NOT mutate the input entities.
+    It creates deep copies before any modifications.
+
     Args:
         actions: MergedEntities with list of actions
         existing_entities: Current tracked entities
         current_time: Current datetime (defaults to now)
 
     Returns:
-        Updated list of entities
+        Updated list of entities (new copies, inputs unchanged)
     """
     if current_time is None:
         current_time = datetime.now()
 
     now_iso = current_time.isoformat()
 
-    # Create lookup dict by entity_id
-    entities_dict = {e.entity_id: e for e in existing_entities}
+    # Create deep copies to avoid mutating inputs
+    # Use model_copy(deep=True) for Pydantic v2
+    entities_dict = {e.entity_id: e.model_copy(deep=True) for e in existing_entities}
 
     # Also create lookup by name (lowercase) for finding entities
-    entities_by_name = {e.name.lower(): e for e in existing_entities}
+    entities_by_name = {e.name.lower(): entities_dict[e.entity_id] for e in existing_entities}
 
     for action in actions.actions:
         if action.action == "create":
@@ -404,3 +421,79 @@ def get_top_entities_by_importance(
     )
 
     return sorted_entities[:limit]
+
+
+def route_people_to_connections(
+    entities: list[Entity],
+    connections: list[dict],
+    context_date: str
+) -> tuple[list[Entity], list[dict]]:
+    """
+    Route person entities to Connection.arca_notes instead of entity bank.
+
+    For each entity with entity_type="relationship" (a person), check if
+    there's a matching Connection by name. If matched, add the context
+    to Connection.arca_notes and exclude from entity list.
+
+    Args:
+        entities: List of entities after merge actions
+        connections: List of user's Connection dicts from Firestore
+        context_date: ISO date string for the note
+
+    Returns:
+        Tuple of (filtered_entities, connection_updates)
+        - filtered_entities: Entities with matched people removed
+        - connection_updates: List of {connection_id, note} to update
+    """
+    if not connections:
+        return entities, []
+
+    # Build lookup by name (lowercase) and aliases
+    connection_by_name = {}
+    for conn in connections:
+        conn_name = conn.get("name", "").lower()
+        if conn_name:
+            connection_by_name[conn_name] = conn
+        # Also check aliases if present
+        for alias in conn.get("aliases", []):
+            if alias:
+                connection_by_name[alias.lower()] = conn
+
+    filtered_entities = []
+    connection_updates = []
+
+    for entity in entities:
+        # Only route relationship entities (people)
+        if entity.entity_type != "relationship":
+            filtered_entities.append(entity)
+            continue
+
+        # Try to match by name or aliases
+        matched_connection = None
+        names_to_check = [entity.name.lower()] + [a.lower() for a in entity.aliases]
+
+        for name in names_to_check:
+            if name in connection_by_name:
+                matched_connection = connection_by_name[name]
+                break
+
+        if matched_connection:
+            # Route to Connection.arca_notes
+            latest_context = entity.context_snippets[-1] if entity.context_snippets else ""
+            connection_id = matched_connection.get("connection_id")
+            # Only create update if we have both context and a valid connection_id
+            if latest_context and connection_id:
+                connection_updates.append({
+                    "connection_id": connection_id,
+                    "note": {
+                        "date": context_date,
+                        "note": latest_context,
+                        "context": "ask_the_stars"
+                    }
+                })
+            # Don't add to filtered entities - person is tracked via Connection
+        else:
+            # No matching connection - keep in entity bank
+            filtered_entities.append(entity)
+
+    return filtered_entities, connection_updates

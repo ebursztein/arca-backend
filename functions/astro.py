@@ -348,6 +348,7 @@ class NatalChartData(BaseModel):
     houses: list[HouseCusp] = Field(min_length=12, max_length=12)
     aspects: list[AspectData]
     distributions: ChartDistributions
+    summary: Optional[str] = Field(None, description="LLM-generated chart interpretation (3-4 sentences)")
 
     class Config:
         json_schema_extra = {
@@ -874,7 +875,9 @@ def compute_birth_chart(
         # TODO: Convert local time to UTC using timezone (needs pytz)
         # For now, assume birth_time is already in UTC format
         # This will be properly implemented when we add timezone support
-        assert birth_lat and birth_lon
+        # Note: has_full_info already ensures these are not None
+        # Using 'is not None' check since 0.0 is valid (equator/prime meridian)
+        assert birth_lat is not None and birth_lon is not None
         utc_dt = f"{birth_date} {birth_time}"
         lat = birth_lat
         lon = birth_lon
@@ -894,8 +897,9 @@ def compute_birth_chart(
         chart_type=ChartType.NATAL
     )
 
-    # Return as dict
-    return chart.model_dump(), exact_chart
+    # Return as JSON-serializable dict (enums converted to strings)
+    # This is required for Firestore storage
+    return chart.model_dump(mode='json'), exact_chart
 
 
 def calculate_solar_house(sun_sign: str, transit_sign: str) -> House:

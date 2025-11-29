@@ -14,7 +14,7 @@ from typing import Optional
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 from google.genai import types
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import httpx
 import uuid
@@ -45,8 +45,10 @@ from models import (
     Entity,
     EntityCategory,
     RelationshipMention,
+    RelationshipWeather,
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
+from compatibility import CompatibilityResult
 from astrometers.meter_groups import build_all_meter_groups, get_group_state_label
 from astrometers.summary import meter_groups_summary
 from astrometers.core import AspectContribution
@@ -58,6 +60,147 @@ import json
 # Initialize Jinja2 environment
 TEMPLATE_DIR = Path(__file__).parent / "templates" / "horoscope"
 jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+
+
+# =============================================================================
+# Natal Chart Summary Generation
+# =============================================================================
+
+def generate_natal_chart_summary(
+    chart_dict: dict,
+    sun_sign_profile: SunSignProfile,
+    user_name: str,
+    api_key: str,
+    user_id: str = "",
+    posthog_api_key: Optional[str] = None,
+    model_name: str = "gemini-2.5-flash-lite"
+) -> str:
+    """
+    Generate personalized natal chart interpretation.
+
+    Args:
+        chart_dict: NatalChartData as dict
+        sun_sign_profile: User's sun sign profile
+        user_name: User's first name for personalization
+        api_key: Gemini API key
+        user_id: User ID for PostHog tracking
+        posthog_api_key: PostHog API key for observability
+        model_name: Model to use
+
+    Returns:
+        3-4 sentence summary covering sun, moon, rising, and key aspects
+    """
+    import time
+    start_time = time.time()
+
+    # Get PostHog key
+    if not posthog_api_key:
+        posthog_api_key = os.environ.get("POSTHOG_API_KEY")
+
+    # Load voice guidelines
+    voice_path = Path(__file__).parent / "templates" / "voice.md"
+    voice_content = voice_path.read_text() if voice_path.exists() else ""
+
+    # Extract key chart elements
+    sun_sign = sun_sign_profile.name
+
+    # Find moon sign
+    moon_sign = None
+    for planet in chart_dict.get("planets", []):
+        planet_name = planet.get("name")
+        if isinstance(planet_name, str):
+            planet_name = planet_name.lower()
+        elif hasattr(planet_name, "value"):
+            planet_name = planet_name.value.lower()
+        if planet_name == "moon":
+            moon_sign = planet.get("sign")
+            if hasattr(moon_sign, "value"):
+                moon_sign = moon_sign.value
+            break
+
+    # Get ascendant sign
+    asc_data = chart_dict.get("angles", {}).get("ascendant", {})
+    asc_sign = asc_data.get("sign")
+    if hasattr(asc_sign, "value"):
+        asc_sign = asc_sign.value
+
+    # Get top aspects (first 3 by orb)
+    aspects = chart_dict.get("aspects", [])[:3]
+    aspects_text = []
+    for asp in aspects:
+        p1 = asp.get("planet1", "")
+        p2 = asp.get("planet2", "")
+        asp_type = asp.get("aspect_type", "")
+        if hasattr(p1, "value"):
+            p1 = p1.value
+        if hasattr(p2, "value"):
+            p2 = p2.value
+        if hasattr(asp_type, "value"):
+            asp_type = asp_type.value
+        aspects_text.append(f"{p1} {asp_type} {p2}")
+
+    prompt = f"""{voice_content}
+
+---
+
+Generate a natal chart summary for {user_name}.
+
+CHART DATA:
+- Sun Sign: {sun_sign}
+- Moon Sign: {moon_sign or 'unknown'}
+- Rising Sign (Ascendant): {asc_sign or 'unknown'}
+- Key Aspects: {', '.join(aspects_text) if aspects_text else 'none identified'}
+
+SUN SIGN CONTEXT:
+- Element: {sun_sign_profile.element.value}
+- Modality: {sun_sign_profile.modality.value}
+- Life Lesson: {sun_sign_profile.life_lesson}
+
+INSTRUCTIONS:
+Write 3-4 sentences that:
+1. Open with their sun sign core identity (who they ARE)
+2. Add their rising sign (how they APPEAR to others)
+3. Include their moon sign (how they FEEL and process emotions)
+4. Weave in one key aspect pattern if notable
+
+Use {user_name}'s name once naturally. Write like a wise friend, not an astrology textbook.
+No jargon. No "energy" or "vibe". Be specific and grounded.
+
+Return ONLY the summary text, no JSON wrapping."""
+
+    # Initialize Gemini client
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.7,
+            max_output_tokens=300
+        )
+    )
+
+    latency_seconds = time.time() - start_time
+    result_text = response.text.strip()
+
+    # Track with PostHog
+    if posthog_api_key and user_id:
+        try:
+            capture_llm_generation(
+                posthog_api_key=posthog_api_key,
+                distinct_id=user_id,
+                model=model_name,
+                provider="gemini",
+                prompt=prompt,
+                response=result_text,
+                usage=response.usage_metadata if hasattr(response, 'usage_metadata') else None,
+                latency=latency_seconds,
+                generation_type="natal_chart_summary"
+            )
+        except Exception:
+            pass  # Don't fail on PostHog errors
+
+    return result_text
 
 
 # =============================================================================
@@ -516,17 +659,112 @@ def select_featured_relationship(
     return max(relationship_entities, key=lambda e: e.importance_score)
 
 
+def select_featured_connection(
+    connections: list[dict],
+    memory: MemoryCollection,
+    date: str
+) -> Optional[dict]:
+    """
+    Select ONE connection to feature in today's relationship_weather.
+
+    Uses round-robin rotation, prioritizing connections not recently featured.
+    Uses connection_mentions in memory to track what was last featured.
+
+    Args:
+        connections: List of connection dicts from Firestore
+        memory: User's memory collection with connection_mentions
+        date: Today's date (YYYY-MM-DD)
+
+    Returns:
+        Connection dict to feature, or None if no connections exist
+    """
+    if not connections:
+        return None
+
+    # Get recently featured connection IDs from memory
+    recent_mentions = memory.connection_mentions or []
+    recently_featured_ids = {m.connection_id for m in recent_mentions[-10:]}
+
+    # Prioritize connections NOT recently featured
+    not_recently_featured = [
+        c for c in connections
+        if c.get("connection_id") not in recently_featured_ids
+    ]
+
+    if not_recently_featured:
+        # Pick first not recently featured (could add priority by relationship_type)
+        return not_recently_featured[0]
+
+    # All have been featured recently - pick the one featured longest ago
+    if recent_mentions:
+        mention_dates = {m.connection_id: m.date for m in recent_mentions}
+        sorted_by_oldest = sorted(
+            connections,
+            key=lambda c: mention_dates.get(c.get("connection_id"), "1900-01-01")
+        )
+        return sorted_by_oldest[0]
+
+    # Fallback: just pick the first one
+    return connections[0]
+
+
+def update_memory_with_connection_mention(
+    memory: MemoryCollection,
+    featured_connection: Optional[dict],
+    date: str,
+    context: str
+) -> MemoryCollection:
+    """
+    Update memory with connection mention after horoscope generation.
+
+    Appends to connection_mentions (capped at 20, FIFO).
+    This tracks what was said to avoid repetition in rotation.
+
+    Args:
+        memory: User's memory collection
+        featured_connection: Connection dict that was featured (or None)
+        date: ISO date string
+        context: What was said about this connection (vibe text)
+
+    Returns:
+        Updated MemoryCollection
+    """
+    if not featured_connection:
+        return memory
+
+    # Import here to avoid circular import
+    from models import ConnectionMention
+
+    # Create new mention
+    mention = ConnectionMention(
+        connection_id=featured_connection.get("connection_id", ""),
+        connection_name=featured_connection.get("name", ""),
+        relationship_type=featured_connection.get("relationship_type", "friend"),
+        date=date,
+        context=context[:500] if context else ""  # Cap context length
+    )
+
+    # Append to list
+    memory.connection_mentions.append(mention)
+
+    # FIFO: Keep only last 20
+    if len(memory.connection_mentions) > 20:
+        memory.connection_mentions = memory.connection_mentions[-20:]
+
+    return memory
+
+
 def generate_daily_horoscope(
     date: str,
     user_profile: UserProfile,
     sun_sign_profile: SunSignProfile,
     transit_summary: dict,
     memory: MemoryCollection,
-    entities: Optional[list[Entity]] = None,
+    featured_connection: Optional[dict] = None,
     api_key: Optional[str] = None,
     posthog_api_key: Optional[str] = None,
     model_name: str = "gemini-2.5-flash-lite",
-) -> tuple[DailyHoroscope, Optional[Entity]]:
+) -> DailyHoroscope:
     """
     Generate daily horoscope (Prompt 1) - core transit analysis (async internal).
 
@@ -536,15 +774,13 @@ def generate_daily_horoscope(
         sun_sign_profile: Complete sun sign profile
         transit_summary: Enhanced transit summary dict from format_transit_summary_for_ui()
         memory: User's memory collection
-        entities: Optional list of user's tracked entities for relationship weather
+        featured_connection: Optional connection dict for relationship_weather spotlight
         api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
         posthog_api_key: PostHog API key for observability
         model_name: Model to use (default: gemini-2.5-flash-lite)
 
     Returns:
-        Tuple of (DailyHoroscope, Optional[Entity]):
-        - DailyHoroscope: Validated horoscope with all fields
-        - Entity: The featured relationship entity (for memory tracking), or None
+        DailyHoroscope with all fields populated
     """
 
     MAX_TOKENS = 4096
@@ -697,17 +933,7 @@ def generate_daily_horoscope(
         for meter in meters:
             featured_meters.append(meter)
 
-    # Group entities by category for relationship weather
-    grouped_entities = group_entities_by_category(entities or [])
-
-    # Select featured relationship for this pull (rotating highlight)
-    featured_relationship = select_featured_relationship(
-        entities=entities or [],
-        memory=memory,
-        date=date
-    )
-
-    # Render dynamic template
+    # Render dynamic template with featured connection (replacing entities)
     dynamic_template = jinja_env.get_template("daily_dynamic.j2")
     dynamic_prompt = dynamic_template.render(
         date=date,
@@ -715,15 +941,9 @@ def generate_daily_horoscope(
         featured_meters=featured_meters,  # 2-3 featured meters for emphasis
         upcoming_transits=upcoming_transits_formatted,
         moon_summary=moon_summary_for_llm,
-        # Relationship data for conditional weather section
-        has_relationships=grouped_entities["has_relationships"],
-        has_partner=grouped_entities["has_partner"],
-        partner=grouped_entities["partner"],
-        family=grouped_entities["family"],
-        friends=grouped_entities["friends"],
-        coworkers=grouped_entities["coworkers"],
-        # Featured relationship for personalized highlight
-        featured_relationship=featured_relationship
+        # Connection data for relationship weather section
+        has_relationships=featured_connection is not None,
+        featured_connection=featured_connection
     )
 
     # Calculate age and generation
@@ -891,7 +1111,12 @@ def generate_daily_horoscope(
             moon_detail=moon_detail,
             look_ahead_preview=parsed.look_ahead_preview,
             energy_rhythm=parsed.energy_rhythm,
-            relationship_weather=parsed.relationship_weather,
+            # Wrap LLM string response in RelationshipWeather object
+            # connection_vibes will be populated separately when connections exist
+            relationship_weather=RelationshipWeather(
+                overview=parsed.relationship_weather,
+                connection_vibes=[]
+            ) if parsed.relationship_weather else None,
             collective_energy=parsed.collective_energy,
             follow_up_questions=parsed.follow_up_questions,
             model_used=model_name,
@@ -899,7 +1124,226 @@ def generate_daily_horoscope(
             usage=usage
         )
 
-        return horoscope, featured_relationship
+        return horoscope
 
     except Exception as e:
         raise RuntimeError(f"Error generating daily horoscope: {e}")
+
+
+# =============================================================================
+# Compatibility Interpretation (LLM-generated personalized text)
+# =============================================================================
+
+class AspectInterpretation(BaseModel):
+    """Single aspect interpretation for compatibility."""
+    aspect_id: str = Field(description="Aspect ID from the compatibility result")
+    interpretation: str = Field(description="1-2 sentence interpretation")
+
+
+class CompatibilityInterpretationResponse(BaseModel):
+    """Structured response for compatibility interpretation."""
+    headline: str = Field(description="5-8 word headline capturing their dynamic")
+    summary: str = Field(description="2-3 sentences overall summary")
+    strengths: str = Field(description="2-3 sentences about natural connection points")
+    growth_areas: str = Field(description="1-2 sentences about growth opportunities")
+    advice: str = Field(description="1 actionable sentence")
+    category_summaries: dict[str, str] = Field(description="Per-category summaries keyed by category ID")
+    aspect_interpretations: list[AspectInterpretation] = Field(
+        default_factory=list,
+        description="Per-aspect interpretations"
+    )
+
+
+def generate_compatibility_interpretation(
+    user_name: str,
+    user_sun_sign: str,
+    connection_name: str,
+    connection_sun_sign: str,
+    relationship_type: str,
+    compatibility_result: CompatibilityResult,
+    api_key: Optional[str] = None,
+    user_id: str = "",
+    posthog_api_key: Optional[str] = None,
+    model_name: str = "gemini-2.5-flash-lite"
+) -> dict:
+    """
+    Generate personalized compatibility interpretation using LLM.
+
+    Includes:
+    - Overall summary (headline, strengths, growth areas, advice)
+    - Per-category summaries for "Why?" drill-down
+    - Per-aspect interpretations for key aspects
+
+    Args:
+        user_name: User's first name
+        user_sun_sign: User's zodiac sign
+        connection_name: Connection's name
+        connection_sun_sign: Connection's zodiac sign
+        relationship_type: "romantic", "friend", "family", or "coworker"
+        compatibility_result: Full compatibility analysis result
+        api_key: Gemini API key
+        user_id: User ID for PostHog tracking
+        posthog_api_key: PostHog API key for observability
+        model_name: Model to use
+
+    Returns:
+        dict with overall interpretation, category summaries, and aspect interpretations
+    """
+    import time
+    start_time = time.time()
+
+    # Get API key
+    gemini_api_key = api_key or os.environ.get("GEMINI_API_KEY")
+    if not gemini_api_key:
+        raise ValueError("GEMINI_API_KEY not found")
+
+    # Get PostHog key
+    if not posthog_api_key:
+        posthog_api_key = os.environ.get("POSTHOG_API_KEY")
+
+    # Load voice guidelines
+    voice_path = Path(__file__).parent / "templates" / "voice.md"
+    voice_content = voice_path.read_text() if voice_path.exists() else ""
+
+    # Get the relevant mode based on relationship type
+    mode_map = {
+        "romantic": compatibility_result.romantic,
+        "friend": compatibility_result.friendship,
+        "family": compatibility_result.friendship,
+        "coworker": compatibility_result.coworker
+    }
+    mode = mode_map.get(relationship_type, compatibility_result.friendship)
+
+    # Build category context with IDs for JSON keys
+    category_ids = []
+    categories_context = []
+    for cat in mode.categories:
+        category_ids.append(cat.id)
+        score_label = "strong" if cat.score > 60 else "moderate" if cat.score > 30 else "challenging" if cat.score > -30 else "difficult"
+        categories_context.append(
+            f"- {cat.id} ({cat.name}): {cat.score}/100 [{score_label}]"
+        )
+
+    # Format top aspects (limit to 8 for token efficiency)
+    top_aspects = compatibility_result.aspects[:8]
+    aspects_context = []
+    aspect_ids_for_prompt = []
+    for aspect in top_aspects:
+        harmony = "harmonious" if aspect.is_harmonious else "challenging"
+        aspects_context.append(
+            f"- {aspect.id}: {user_name}'s {aspect.user_planet} {aspect.aspect_type} {connection_name}'s {aspect.their_planet} (orb: {aspect.orb}, {harmony})"
+        )
+        aspect_ids_for_prompt.append(aspect.id)
+
+    # Build the category_summaries JSON structure hint
+    category_summaries_hint = ", ".join([f'"{cid}": "1-2 sentences..."' for cid in category_ids])
+
+    # Build the aspect_interpretations hint
+    aspect_interp_hint = []
+    for aspect in top_aspects[:3]:  # Show example format for first 3
+        aspect_interp_hint.append(
+            f'{{"aspect_id": "{aspect.id}", "interpretation": "Your {aspect.user_planet} {aspect.aspect_type} their {aspect.their_planet}..."}}'
+        )
+
+    prompt = f"""{voice_content}
+
+---
+
+Generate a complete compatibility interpretation for {user_name} ({user_sun_sign}) and {connection_name} ({connection_sun_sign}).
+
+Relationship type: {relationship_type}
+Overall score: {mode.overall_score}/100
+
+CATEGORY SCORES:
+{chr(10).join(categories_context)}
+
+KEY SYNASTRY ASPECTS:
+{chr(10).join(aspects_context) if aspects_context else "Basic sun sign compatibility only (no birth times)"}
+
+INSTRUCTIONS:
+1. Use both names naturally (not repetitively)
+2. Be specific to their sun signs and aspects
+3. For challenging aspects, frame constructively - the obstacle AND the path through
+4. Each category summary should explain WHY that score exists based on their aspects
+5. Each aspect interpretation should be 1-2 sentences explaining what it means for them
+
+REQUIRED KEYS:
+- category_summaries must include ALL these keys: {', '.join(category_ids)}
+- aspect_interpretations must include ALL these aspect_ids: {', '.join(aspect_ids_for_prompt)}
+- Keep category summaries to 1-2 sentences each
+- Keep aspect interpretations to 1-2 sentences each"""
+
+    # Initialize Gemini client
+    client = genai.Client(api_key=gemini_api_key)
+
+    # Generate with Pydantic schema
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.7,
+            response_mime_type="application/json",
+            response_schema=CompatibilityInterpretationResponse
+        )
+    )
+
+    generation_time_ms = int((time.time() - start_time) * 1000)
+
+    # Parse response using Pydantic schema
+    try:
+        # Try to use parsed response if available
+        if hasattr(response, 'parsed') and response.parsed:
+            parsed: CompatibilityInterpretationResponse = response.parsed
+            result = parsed.model_dump()
+        else:
+            # Fallback to JSON parsing
+            result = json.loads(response.text)
+
+        # Ensure category_summaries exists with all keys
+        if "category_summaries" not in result:
+            result["category_summaries"] = {}
+        for cid in category_ids:
+            if cid not in result["category_summaries"]:
+                result["category_summaries"][cid] = ""
+
+        # Ensure aspect_interpretations is a list
+        if "aspect_interpretations" not in result:
+            result["aspect_interpretations"] = []
+
+        result["generation_time_ms"] = generation_time_ms
+        result["model_used"] = model_name
+
+        # Track with PostHog
+        latency_seconds = generation_time_ms / 1000.0
+        if posthog_api_key and user_id:
+            try:
+                capture_llm_generation(
+                    posthog_api_key=posthog_api_key,
+                    distinct_id=user_id,
+                    model=model_name,
+                    provider="gemini",
+                    prompt=prompt,
+                    response=json.dumps(result),
+                    usage=response.usage_metadata if hasattr(response, 'usage_metadata') else None,
+                    latency=latency_seconds,
+                    generation_type="compatibility_interpretation"
+                )
+            except Exception:
+                pass  # Don't fail on PostHog errors
+
+        return result
+
+    except Exception as e:
+        # Fallback if parsing fails
+        return {
+            "headline": f"{user_sun_sign} meets {connection_sun_sign}",
+            "summary": response.text[:300] if response.text else "Your connection has unique potential.",
+            "strengths": "",
+            "growth_areas": "",
+            "advice": "",
+            "category_summaries": {cid: "" for cid in category_ids},
+            "aspect_interpretations": [],
+            "generation_time_ms": generation_time_ms,
+            "model_used": model_name,
+            "parse_error": str(e)
+        }

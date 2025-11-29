@@ -39,8 +39,8 @@ def show_meter_configurations():
     print()
 
     # Group by meter group
-    for group in [MeterGroupV2.MIND, MeterGroupV2.EMOTIONS, MeterGroupV2.BODY,
-                  MeterGroupV2.SPIRIT, MeterGroupV2.GROWTH]:
+    for group in [MeterGroupV2.MIND, MeterGroupV2.HEART, MeterGroupV2.BODY,
+                  MeterGroupV2.INSTINCTS, MeterGroupV2.GROWTH]:
         print('=' * 90)
         print(f'{group.value.upper()} GROUP')
         print('=' * 90)

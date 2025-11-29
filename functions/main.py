@@ -22,10 +22,8 @@ from models import (
     UserProfile,
     MemoryCollection,
     create_empty_memory,
-    Entity,
-    UserEntities,
 )
-from llm import generate_daily_horoscope, update_memory_with_relationship_mention
+from llm import generate_daily_horoscope
 
 # Import shared secrets (centralized to avoid duplicate declarations)
 from firebase_secrets import GEMINI_API_KEY, POSTHOG_API_KEY
@@ -220,10 +218,10 @@ def user_transit(req: https_fn.CallableRequest) -> dict:
             message=f"Error generating user transit: {str(e)}"
         )
 
-@https_fn.on_call()
+@https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
 def create_user_profile(req: https_fn.CallableRequest) -> dict:
     """
-    Create user profile with birth chart computation.
+    Create user profile with birth chart computation and LLM-generated summary.
 
     Supports V1 (minimal) and V2 (full birth data) modes:
     - V1: Only birth_date required → sun sign + approximate chart
@@ -276,6 +274,9 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         # Calculate sun sign (always works with just birth_date)
         sun_sign = get_sun_sign(birth_date)
 
+        # Get sun sign profile for summary generation
+        sun_sign_profile = get_sun_sign_profile(sun_sign)
+
         # Compute birth chart (handles both V1 and V2 modes)
         natal_chart, exact_chart = compute_birth_chart(
             birth_date=birth_date,
@@ -284,6 +285,18 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
             birth_lat=birth_lat,
             birth_lon=birth_lon
         )
+
+        # Generate natal chart summary (LLM call)
+        from llm import generate_natal_chart_summary
+        natal_chart_summary = generate_natal_chart_summary(
+            chart_dict=natal_chart,
+            sun_sign_profile=sun_sign_profile,
+            user_name=name.split()[0],  # First name only
+            api_key=GEMINI_API_KEY.value,
+            user_id=user_id,
+            posthog_api_key=POSTHOG_API_KEY.value
+        )
+        natal_chart["summary"] = natal_chart_summary
 
         # Determine mode
         has_full_info = all([birth_time, birth_timezone, birth_lat, birth_lon])
@@ -384,6 +397,159 @@ def get_user_profile(req: https_fn.CallableRequest) -> dict:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
             message=f"Error retrieving user profile: {str(e)}"
+        )
+
+
+@https_fn.on_call(secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
+def update_user_profile(req: https_fn.CallableRequest) -> dict:
+    """
+    Update user profile with optional natal chart regeneration.
+
+    Supports two use cases:
+    1. Photo update only (existing)
+    2. Extended setup with birth time/location (NEW) - triggers natal chart regeneration
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+
+        // Optional: Photo update
+        "photo_path": "profiles/abc123/photo.jpg",
+
+        // Optional: Extended setup (triggers natal chart regeneration)
+        "birth_time": "14:30",
+        "birth_timezone": "America/New_York",
+        "birth_lat": 40.7128,
+        "birth_lon": -74.0060
+    }
+
+    Returns:
+    {
+        "success": true,
+        "profile": {
+            "user_id": "abc123",
+            "birth_time": "14:30",
+            "birth_timezone": "America/New_York",
+            "birth_lat": 40.7128,
+            "birth_lon": -74.0060,
+            "exact_chart": true,
+            "natal_chart": { ... }
+        }
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+
+        if not user_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: user_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        user_ref = db.collection("users").document(user_id)
+        user_doc = user_ref.get()
+
+        if not user_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"User profile not found: {user_id}"
+            )
+
+        user_data = user_doc.to_dict()
+        updates = {}
+
+        # Handle photo update
+        photo_path = data.get("photo_path")
+        if photo_path is not None:
+            updates["photo_path"] = photo_path
+
+        # Handle extended setup (birth time/location)
+        birth_time = data.get("birth_time")
+        birth_timezone = data.get("birth_timezone")
+        birth_lat = data.get("birth_lat")
+        birth_lon = data.get("birth_lon")
+
+        # Check if any birth data is being updated
+        has_birth_update = any([
+            birth_time is not None,
+            birth_timezone is not None,
+            birth_lat is not None,
+            birth_lon is not None
+        ])
+
+        if has_birth_update:
+            # Update birth fields
+            if birth_time is not None:
+                updates["birth_time"] = birth_time
+            if birth_timezone is not None:
+                updates["birth_timezone"] = birth_timezone
+            if birth_lat is not None:
+                updates["birth_lat"] = birth_lat
+            if birth_lon is not None:
+                updates["birth_lon"] = birth_lon
+
+            # Merge with existing user data to get complete birth info
+            final_birth_time = birth_time or user_data.get("birth_time")
+            final_birth_timezone = birth_timezone or user_data.get("birth_timezone")
+            final_birth_lat = birth_lat if birth_lat is not None else user_data.get("birth_lat")
+            final_birth_lon = birth_lon if birth_lon is not None else user_data.get("birth_lon")
+
+            # Regenerate natal chart with updated birth data
+            natal_chart, exact_chart = compute_birth_chart(
+                birth_date=user_data["birth_date"],
+                birth_time=final_birth_time,
+                birth_timezone=final_birth_timezone,
+                birth_lat=final_birth_lat,
+                birth_lon=final_birth_lon
+            )
+
+            # Regenerate summary with new chart data
+            from llm import generate_natal_chart_summary
+            sun_sign = get_sun_sign(user_data["birth_date"])
+            sun_sign_profile = get_sun_sign_profile(sun_sign)
+
+            natal_chart_summary = generate_natal_chart_summary(
+                chart_dict=natal_chart,
+                sun_sign_profile=sun_sign_profile,
+                user_name=user_data.get("name", "").split()[0],
+                api_key=GEMINI_API_KEY.value,
+                user_id=user_id,
+                posthog_api_key=POSTHOG_API_KEY.value
+            )
+            natal_chart["summary"] = natal_chart_summary
+
+            updates["natal_chart"] = natal_chart
+            updates["exact_chart"] = exact_chart
+
+        # Update last_active timestamp
+        updates["last_active"] = datetime.now().isoformat()
+
+        # Apply updates to Firestore
+        if updates:
+            user_ref.update(updates)
+
+        # Get the updated profile
+        updated_doc = user_ref.get()
+        updated_profile = updated_doc.to_dict()
+
+        return {
+            "success": True,
+            "profile": updated_profile
+        }
+
+    except https_fn.HttpsError:
+        raise
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            message=f"Invalid parameter values: {str(e)}"
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error updating user profile: {str(e)}"
         )
 
 
@@ -551,15 +717,13 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         # Memory collection: Using empty memory for all users
         memory = create_empty_memory(user_id)
 
-        # Fetch user entities for relationship weather
-        entities_doc = db.collection("users").document(user_id).collection("entities").document("all").get()
-        entities = []
-        if entities_doc.exists:
-            try:
-                user_entities = UserEntities(**entities_doc.to_dict())
-                entities = user_entities.entities
-            except Exception as e:
-                print(f"Warning: Could not parse entities for user {user_id}: {e}")
+        # Fetch user connections for relationship weather (replacing entities)
+        from connections import get_connections_for_horoscope
+        connections = get_connections_for_horoscope(db, user_id, limit=20)
+
+        # Select ONE featured connection for today (rotation)
+        from llm import select_featured_connection
+        featured_connection = select_featured_connection(connections, memory, date)
 
         # Compute transit chart for today
         transit_chart, _ = compute_birth_chart(
@@ -574,25 +738,92 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         transit_summary = format_transit_summary_for_ui(natal_chart, transit_chart, max_aspects=5)
 
         # Generate daily horoscope (Prompt 1)
-        daily_horoscope, featured_relationship = generate_daily_horoscope(
+        from llm import update_memory_with_connection_mention
+        daily_horoscope = generate_daily_horoscope(
             date=date,
             user_profile=user_profile,
             sun_sign_profile=sun_sign_profile,
             transit_summary=transit_summary,
             memory=memory,
-            entities=entities,  # Pass entities for relationship weather
+            featured_connection=featured_connection,
             api_key=GEMINI_API_KEY.value,
             posthog_api_key=POSTHOG_API_KEY.value,
             model_name=model_name
         )
 
-        # Update memory with relationship mention (for rotation tracking)
-        if featured_relationship:
-            memory = update_memory_with_relationship_mention(
-                memory=memory,
-                featured_relationship=featured_relationship,
+        # Calculate connection vibe and add to relationship_weather
+        if featured_connection and featured_connection.get("synastry_points"):
+            from compatibility import find_transits_to_synastry, calculate_vibe_score
+            from models import ConnectionVibe
+            from astro import NatalChartData
+
+            transit_chart_data = NatalChartData(**transit_chart)
+            active_transits = find_transits_to_synastry(
+                transit_chart=transit_chart_data,
+                synastry_points=featured_connection["synastry_points"],
+                orb=3.0
+            )
+            vibe_score = calculate_vibe_score(active_transits)
+
+            # Generate template-based vibe text
+            name = featured_connection.get("name", "")
+            if vibe_score >= 75:
+                vibe_text = f"Great energy between you and {name} today"
+            elif vibe_score >= 50:
+                vibe_text = f"Steady connection with {name}"
+            elif vibe_score >= 25:
+                vibe_text = f"Give {name} a little space today"
+            else:
+                vibe_text = f"Low-key day with {name}"
+
+            connection_vibe = ConnectionVibe(
+                connection_id=featured_connection.get("connection_id", ""),
+                name=name,
+                relationship_type=featured_connection.get("relationship_type", "friend"),
+                vibe=vibe_text,
+                vibe_score=vibe_score,
+                key_transit=active_transits[0]["description"] if active_transits else None
+            )
+
+            # Add to relationship_weather
+            if daily_horoscope.relationship_weather:
+                daily_horoscope.relationship_weather.connection_vibes = [connection_vibe]
+
+            # Store vibe on connection (FIFO last 10, like Co-Star updates)
+            from connections import StoredVibe
+            stored_vibe = StoredVibe(
                 date=date,
-                relationship_weather=daily_horoscope.relationship_weather or ""
+                vibe=vibe_text,
+                vibe_score=vibe_score,
+                key_transit=active_transits[0]["description"] if active_transits else None
+            )
+
+            # Update connection with new vibe (FIFO)
+            conn_ref = db.collection("users").document(user_id).collection("connections").document(featured_connection["connection_id"])
+            conn_doc = conn_ref.get()
+            if conn_doc.exists:
+                conn_data = conn_doc.to_dict()
+                vibes = conn_data.get("vibes", [])
+
+                # Don't add duplicate for same date
+                vibes = [v for v in vibes if v.get("date") != date]
+
+                # Add new vibe at front, keep last 10
+                vibes.insert(0, stored_vibe.model_dump())
+                vibes = vibes[:10]
+
+                conn_ref.update({"vibes": vibes, "updated_at": datetime.now().isoformat()})
+
+        # Update memory with connection mention (for rotation tracking)
+        if featured_connection:
+            vibe_context = ""
+            if daily_horoscope.relationship_weather and daily_horoscope.relationship_weather.connection_vibes:
+                vibe_context = daily_horoscope.relationship_weather.connection_vibes[0].vibe
+            memory = update_memory_with_connection_mention(
+                memory=memory,
+                featured_connection=featured_connection,
+                date=date,
+                context=vibe_context
             )
             # Save updated memory to Firestore
             memory_ref = db.collection("memory").document(user_id)
@@ -780,3 +1011,826 @@ from conversation_helpers import (
 # - get_user_entities: Callable function
 # - update_entity: Callable function
 # - delete_entity: Callable function
+
+
+# =============================================================================
+# Connections & Compatibility - Charts API
+# =============================================================================
+
+from connections import (
+    get_or_create_share_link,
+    get_public_profile as get_public_profile_fn,
+    import_connection as import_connection_fn,
+    create_connection as create_connection_fn,
+    update_connection as update_connection_fn,
+    delete_connection as delete_connection_fn,
+    list_connections as list_connections_fn,
+    list_connection_requests as list_connection_requests_fn,
+    update_share_mode as update_share_mode_fn,
+    respond_to_request as respond_to_request_fn,
+    register_device_token as register_device_token_fn,
+)
+from compatibility import (
+    calculate_compatibility,
+    get_compatibility_from_birth_data,
+)
+
+
+@https_fn.on_call()
+def get_share_link(req: https_fn.CallableRequest) -> dict:
+    """
+    Get user's shareable profile link for "Add me on Arca".
+
+    Creates share link if doesn't exist.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id"
+    }
+
+    Returns:
+    {
+        "share_url": "https://arca-app.com/u/abc123xyz",
+        "share_mode": "public",
+        "qr_code_data": "https://arca-app.com/u/abc123xyz"
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+
+        if not user_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: user_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        user_doc = db.collection("users").document(user_id).get()
+
+        if not user_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"User not found: {user_id}"
+            )
+
+        result = get_or_create_share_link(db, user_id, user_doc.to_dict())
+        return result.model_dump()
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error getting share link: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def get_public_profile(req: https_fn.CallableRequest) -> dict:
+    """
+    Fetch public profile data from a share link.
+
+    Expected request data:
+    {
+        "share_secret": "abc123xyz"
+    }
+
+    Returns (public mode):
+    {
+        "profile": { "name": "John", "birth_date": "...", "sun_sign": "gemini" },
+        "share_mode": "public",
+        "can_add": true
+    }
+
+    Returns (request mode):
+    {
+        "profile": { "name": "John", "sun_sign": "gemini" },
+        "share_mode": "request",
+        "can_add": false,
+        "message": "John requires approval..."
+    }
+    """
+    try:
+        data = req.data
+        share_secret = data.get("share_secret")
+
+        if not share_secret:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: share_secret"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        result = get_public_profile_fn(db, share_secret)
+        return result.model_dump()
+
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.NOT_FOUND,
+            message=str(e)
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error getting public profile: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def import_connection(req: https_fn.CallableRequest) -> dict:
+    """
+    Add a connection from a share link.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "share_secret": "abc123xyz",
+        "relationship_type": "friend"
+    }
+
+    Returns:
+    {
+        "success": true,
+        "connection_id": "conn_xyz789",
+        "connection": { "name": "John", "sun_sign": "gemini" },
+        "notification_sent": true
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        share_secret = data.get("share_secret")
+        relationship_type = data.get("relationship_type", "friend")
+
+        if not user_id or not share_secret:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, share_secret"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        result = import_connection_fn(db, user_id, share_secret, relationship_type)
+        return result.model_dump()
+
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+            message=str(e)
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error importing connection: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def create_connection(req: https_fn.CallableRequest) -> dict:
+    """
+    Manually create a connection (not via share link).
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "connection": {
+            "name": "Sarah",
+            "birth_date": "1990-05-15",
+            "birth_time": "14:30",  // Optional
+            "birth_lat": 40.7128,   // Optional
+            "birth_lon": -74.0060,  // Optional
+            "birth_timezone": "America/New_York",  // Optional
+            "relationship_type": "romantic"
+        }
+    }
+
+    Returns:
+        Created connection data
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        conn_data = data.get("connection", {})
+
+        if not user_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: user_id"
+            )
+
+        name = conn_data.get("name")
+        birth_date = conn_data.get("birth_date")
+        relationship_type = conn_data.get("relationship_type", "friend")
+
+        if not name or not birth_date:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required connection fields: name, birth_date"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        connection = create_connection_fn(
+            db=db,
+            user_id=user_id,
+            name=name,
+            birth_date=birth_date,
+            relationship_type=relationship_type,
+            birth_time=conn_data.get("birth_time"),
+            birth_lat=conn_data.get("birth_lat"),
+            birth_lon=conn_data.get("birth_lon"),
+            birth_timezone=conn_data.get("birth_timezone")
+        )
+        return connection.model_dump()
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error creating connection: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def update_connection(req: https_fn.CallableRequest) -> dict:
+    """
+    Update a connection's details.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "connection_id": "conn_abc123",
+        "updates": {
+            "name": "New Name",
+            "relationship_type": "romantic"
+        }
+    }
+
+    Returns:
+        Updated connection data
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        connection_id = data.get("connection_id")
+        updates = data.get("updates", {})
+
+        if not user_id or not connection_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, connection_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        connection = update_connection_fn(db, user_id, connection_id, updates)
+        return connection.model_dump()
+
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.NOT_FOUND,
+            message=str(e)
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error updating connection: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def delete_connection(req: https_fn.CallableRequest) -> dict:
+    """
+    Delete a connection.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "connection_id": "conn_abc123"
+    }
+
+    Returns:
+        { "success": true }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        connection_id = data.get("connection_id")
+
+        if not user_id or not connection_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, connection_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        delete_connection_fn(db, user_id, connection_id)
+        return {"success": True}
+
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.NOT_FOUND,
+            message=str(e)
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error deleting connection: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def list_connections(req: https_fn.CallableRequest) -> dict:
+    """
+    List all user's connections.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "limit": 50  // Optional, default 50
+    }
+
+    Returns:
+    {
+        "connections": [...],
+        "total_count": 5
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        limit = data.get("limit", 50)
+
+        if not user_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: user_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        result = list_connections_fn(db, user_id, limit)
+        return result.model_dump()
+
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error listing connections: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def list_connection_requests(req: https_fn.CallableRequest) -> dict:
+    """
+    List pending connection requests for a user.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id"
+    }
+
+    Returns:
+    {
+        "requests": [...]
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+
+        if not user_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameter: user_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        requests = list_connection_requests_fn(db, user_id)
+        return {"requests": requests}
+
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error listing connection requests: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def update_share_mode(req: https_fn.CallableRequest) -> dict:
+    """
+    Toggle between public and request-only share modes.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "share_mode": "request"  // or "public"
+    }
+
+    Returns:
+        { "share_mode": "request" }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        share_mode = data.get("share_mode")
+
+        if not user_id or share_mode not in ["public", "request"]:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing/invalid parameters: user_id, share_mode (public|request)"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        result = update_share_mode_fn(db, user_id, share_mode)
+        return result
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error updating share mode: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def respond_to_request(req: https_fn.CallableRequest) -> dict:
+    """
+    Approve or reject a connection request.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "request_id": "req_abc123",
+        "action": "approve"  // or "reject"
+    }
+
+    Returns:
+        { "success": true, "action": "approved", "connection_id": "..." }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        request_id = data.get("request_id")
+        action = data.get("action")
+
+        if not user_id or not request_id or action not in ["approve", "reject"]:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing/invalid parameters: user_id, request_id, action (approve|reject)"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        result = respond_to_request_fn(db, user_id, request_id, action)
+        return result
+
+    except ValueError as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.NOT_FOUND,
+            message=str(e)
+        )
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error responding to request: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def register_device_token(req: https_fn.CallableRequest) -> dict:
+    """
+    Register device token for push notifications.
+
+    Called by iOS on login/app launch.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "device_token": "fcm_device_token"
+    }
+
+    Returns:
+        { "success": true }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        device_token = data.get("device_token")
+
+        if not user_id or not device_token:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, device_token"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+        success = register_device_token_fn(db, user_id, device_token)
+        return {"success": success}
+
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error registering device token: {str(e)}"
+        )
+
+
+@https_fn.on_call()
+def get_natal_chart_for_connection(req: https_fn.CallableRequest) -> dict:
+    """
+    Get natal chart for a connection.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "connection_id": "conn_abc123"
+    }
+
+    Returns:
+        Natal chart data for the connection
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        connection_id = data.get("connection_id")
+
+        if not user_id or not connection_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, connection_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+
+        # Get connection
+        conn_doc = db.collection("users").document(user_id).collection(
+            "connections"
+        ).document(connection_id).get()
+
+        if not conn_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"Connection not found: {connection_id}"
+            )
+
+        conn_data = conn_doc.to_dict()
+
+        # Compute natal chart from connection's birth data
+        chart_dict, has_exact = compute_birth_chart(
+            birth_date=conn_data.get("birth_date"),
+            birth_time=conn_data.get("birth_time"),
+            birth_timezone=conn_data.get("birth_timezone"),
+            birth_lat=conn_data.get("birth_lat"),
+            birth_lon=conn_data.get("birth_lon")
+        )
+
+        return {
+            "chart": chart_dict,
+            "has_exact_chart": has_exact,
+            "connection_name": conn_data.get("name"),
+            "sun_sign": conn_data.get("sun_sign")
+        }
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error getting connection chart: {str(e)}"
+        )
+
+
+@https_fn.on_call(memory=512, secrets=[GEMINI_API_KEY, POSTHOG_API_KEY])
+def get_compatibility(req: https_fn.CallableRequest) -> dict:
+    """
+    Get compatibility analysis between user and a connection.
+
+    Returns all three modes (romantic, friendship, coworker) in single response.
+    Always includes LLM-generated personalized interpretation.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "connection_id": "conn_abc123"
+    }
+
+    Returns:
+    {
+        "romantic": { "overall_score": 78, "categories": [...] },
+        "friendship": { "overall_score": 85, "categories": [...] },
+        "coworker": { "overall_score": 72, "categories": [...] },
+        "aspects": [...],
+        "composite_summary": { "composite_sun": "Libra", ... },
+        "calculated_at": "2025-11-25T14:30:00Z",
+        "interpretation": { "headline": "...", "summary": "...", ... }
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        connection_id = data.get("connection_id")
+
+        if not user_id or not connection_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, connection_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+
+        # Get user profile
+        user_doc = db.collection("users").document(user_id).get()
+        if not user_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"User not found: {user_id}"
+            )
+        user_data = user_doc.to_dict()
+
+        # Get connection
+        conn_doc = db.collection("users").document(user_id).collection(
+            "connections"
+        ).document(connection_id).get()
+
+        if not conn_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"Connection not found: {connection_id}"
+            )
+        conn_data = conn_doc.to_dict()
+
+        # Calculate compatibility
+        from astro import NatalChartData
+
+        user_chart = NatalChartData(**user_data.get("natal_chart", {}))
+
+        # Build connection chart from birth data
+        conn_chart_dict, _ = compute_birth_chart(
+            birth_date=conn_data.get("birth_date"),
+            birth_time=conn_data.get("birth_time"),
+            birth_timezone=conn_data.get("birth_timezone"),
+            birth_lat=conn_data.get("birth_lat"),
+            birth_lon=conn_data.get("birth_lon")
+        )
+        conn_chart = NatalChartData(**conn_chart_dict)
+
+        result = calculate_compatibility(user_chart, conn_chart)
+        response = result.model_dump()
+
+        # Generate LLM interpretation (always)
+        from llm import generate_compatibility_interpretation
+        from astro import get_sun_sign
+
+        # Get user's sun sign and name
+        user_sun_sign = user_data.get("sun_sign", "")
+        user_name = user_data.get("name", "").split()[0] if user_data.get("name") else "You"
+
+        # Get connection's sun sign (calculate from birth date if not stored)
+        conn_sun_sign = conn_data.get("sun_sign")
+        if not conn_sun_sign and conn_data.get("birth_date"):
+            conn_sun_sign = get_sun_sign(conn_data["birth_date"]).value
+        conn_name = conn_data.get("name", "Your connection")
+
+        interpretation = generate_compatibility_interpretation(
+            user_name=user_name,
+            user_sun_sign=user_sun_sign,
+            connection_name=conn_name,
+            connection_sun_sign=conn_sun_sign or "Unknown",
+            relationship_type=conn_data.get("relationship_type", "friend"),
+            compatibility_result=result,
+            api_key=GEMINI_API_KEY.value,
+            user_id=user_id,
+            posthog_api_key=POSTHOG_API_KEY.value
+        )
+
+        # Merge category summaries into response
+        category_summaries = interpretation.get("category_summaries", {})
+        for mode_key in ["romantic", "friendship", "coworker"]:
+            if mode_key in response:
+                for cat in response[mode_key].get("categories", []):
+                    cat_id = cat.get("id")
+                    if cat_id and cat_id in category_summaries:
+                        cat["summary"] = category_summaries[cat_id]
+
+        # Merge aspect interpretations into response
+        aspect_interps = {
+            ai.get("aspect_id"): ai.get("interpretation")
+            for ai in interpretation.get("aspect_interpretations", [])
+            if ai.get("aspect_id")
+        }
+        for aspect in response.get("aspects", []):
+            asp_id = aspect.get("id")
+            if asp_id and asp_id in aspect_interps:
+                aspect["interpretation"] = aspect_interps[asp_id]
+
+        # Add overall interpretation for headline/summary/etc
+        response["interpretation"] = {
+            "headline": interpretation.get("headline", ""),
+            "summary": interpretation.get("summary", ""),
+            "strengths": interpretation.get("strengths", ""),
+            "growth_areas": interpretation.get("growth_areas", ""),
+            "advice": interpretation.get("advice", ""),
+            "generation_time_ms": interpretation.get("generation_time_ms", 0),
+            "model_used": interpretation.get("model_used", ""),
+        }
+
+        return response
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error calculating compatibility: {str(e)}"
+        )
+
+
+@https_fn.on_call(memory=512)
+def get_synastry_chart(req: https_fn.CallableRequest) -> dict:
+    """
+    Get both natal charts and synastry aspects in a single call.
+
+    Reduces round trips for iOS chart visualization - returns user's chart,
+    connection's chart, and all synastry aspects between them.
+
+    Expected request data:
+    {
+        "user_id": "firebase_auth_id",
+        "connection_id": "conn_abc123"
+    }
+
+    Returns:
+    {
+        "user_chart": { NatalChartData },
+        "connection_chart": { NatalChartData },
+        "synastry_aspects": [ SynastryAspect ]
+    }
+    """
+    try:
+        data = req.data
+        user_id = data.get("user_id")
+        connection_id = data.get("connection_id")
+
+        if not user_id or not connection_id:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
+                message="Missing required parameters: user_id, connection_id"
+            )
+
+        db = firestore.client(database_id=DATABASE_ID)
+
+        # Get user profile with natal chart
+        user_doc = db.collection("users").document(user_id).get()
+        if not user_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"User not found: {user_id}"
+            )
+        user_data = user_doc.to_dict()
+
+        if not user_data.get("natal_chart"):
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.FAILED_PRECONDITION,
+                message="User natal chart not found"
+            )
+
+        # Get connection
+        conn_doc = db.collection("users").document(user_id).collection(
+            "connections"
+        ).document(connection_id).get()
+
+        if not conn_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"Connection not found: {connection_id}"
+            )
+        conn_data = conn_doc.to_dict()
+
+        # Build charts
+        from astro import NatalChartData
+        from compatibility import calculate_synastry_aspects
+
+        user_chart = NatalChartData(**user_data.get("natal_chart", {}))
+
+        conn_chart_dict, _ = compute_birth_chart(
+            birth_date=conn_data.get("birth_date"),
+            birth_time=conn_data.get("birth_time"),
+            birth_timezone=conn_data.get("birth_timezone"),
+            birth_lat=conn_data.get("birth_lat"),
+            birth_lon=conn_data.get("birth_lon")
+        )
+        conn_chart = NatalChartData(**conn_chart_dict)
+
+        # Calculate synastry aspects
+        synastry_aspects = calculate_synastry_aspects(user_chart, conn_chart)
+
+        return {
+            "user_chart": user_chart.model_dump(),
+            "connection_chart": conn_chart.model_dump(),
+            "synastry_aspects": [a.model_dump() for a in synastry_aspects]
+        }
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error getting synastry chart: {str(e)}"
+        )

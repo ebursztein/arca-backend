@@ -18,7 +18,8 @@ from models import (
 from entity_extraction import (
     extract_entities_from_message,
     merge_entities_with_existing,
-    execute_merge_actions
+    execute_merge_actions,
+    route_people_to_connections
 )
 
 # Import shared secrets (centralized to avoid duplicate declarations)
@@ -27,6 +28,7 @@ from firebase_secrets import GEMINI_API_KEY, POSTHOG_API_KEY
 
 @firestore_fn.on_document_written(
     document="conversations/{conversationId}",
+    memory=512,  # Entity extraction uses LLM
     secrets=[GEMINI_API_KEY, POSTHOG_API_KEY]
 )
 def extract_entities_on_message(
@@ -123,12 +125,35 @@ async def _extract_and_merge_entities(
         current_time=datetime.now()
     )
 
-    # Update entities document (1 write)
+    # Fetch user's connections to route people mentions
+    connections_ref = db.collection('users').document(user_id).collection('connections')
+    connections_docs = connections_ref.get()
+    connections = []
+    for doc in connections_docs:
+        conn_data = doc.to_dict()
+        conn_data['connection_id'] = doc.id
+        connections.append(conn_data)
+
+    # Route people entities to Connection.arca_notes if matching connection exists
+    filtered_entities, connection_updates = route_people_to_connections(
+        entities=updated_entities,
+        connections=connections,
+        context_date=horoscope_date
+    )
+
+    # Update entities document (1 write) - only non-person or unmatched entities
     entities_ref.set({
         'user_id': user_id,
-        'entities': [e.model_dump() for e in updated_entities],
+        'entities': [e.model_dump() for e in filtered_entities],
         'updated_at': datetime.now().isoformat()
     })
+
+    # Update Connection.arca_notes for matched people
+    for update in connection_updates:
+        conn_ref = connections_ref.document(update['connection_id'])
+        conn_ref.update({
+            'arca_notes': firestore.ArrayUnion([update['note']])
+        })
 
     # Update memory collection (1 write)
     memory_ref = db.collection('memory').document(user_id)
@@ -136,7 +161,7 @@ async def _extract_and_merge_entities(
 
     if memory_doc.exists:
         entity_summary = {}
-        for entity in updated_entities:
+        for entity in filtered_entities:
             entity_summary[entity.entity_type] = entity_summary.get(entity.entity_type, 0) + 1
 
         memory_ref.update({

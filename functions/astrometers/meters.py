@@ -356,7 +356,7 @@ def get_state_label(meter_name: str, intensity: float, harmony: float) -> str:
         "body": ("Depleted", "Low Power Mode", "Powering Through", "Surging"),
         "instincts": ("Disconnected", "Noisy", "Tuned In", "Aligned"),
         "growth": ("Uphill", "Pacing", "Climbing", "Unstoppable"),
-        "overall": ("Challenging", "Chaotic", "Peaceful", "Flowing"),
+        "overall": ("Challenging", "Turbulent", "Peaceful", "Flowing"),
     }
 
     labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))

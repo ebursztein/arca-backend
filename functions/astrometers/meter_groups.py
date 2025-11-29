@@ -71,7 +71,7 @@ def get_group_state_label(group_name: str, intensity: float, harmony: float) -> 
         "body": ("Depleted", "Low Power Mode", "Powering Through", "Surging"),
         "instincts": ("Disconnected", "Noisy", "Tuned In", "Aligned"),
         "growth": ("Uphill", "Pacing", "Climbing", "Unstoppable"),
-        "overall": ("Challenging", "Chaotic", "Peaceful", "Flowing"),
+        "overall": ("Challenging", "Turbulent", "Peaceful", "Flowing"),
     }
 
     labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))

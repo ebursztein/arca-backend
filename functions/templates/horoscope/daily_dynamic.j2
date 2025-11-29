@@ -12,25 +12,15 @@ TODAY'S ENERGY ({{ date }})
 {% endfor %}
 {% if has_relationships %}
 [RELATIONSHIPS - for relationship_weather field]
-{% if featured_relationship %}
-SPOTLIGHT: {{ featured_relationship.name }}{% if featured_relationship.relationship_label %} ({{ featured_relationship.relationship_label }}){% endif %} [{{ featured_relationship.category.value }}]
-{% if featured_relationship.notes %}Notes: {{ featured_relationship.notes }}{% endif %}
-
-Give this person extra attention in relationship_weather - a personalized sentence about this dynamic today.
+{% if featured_connection %}
+SPOTLIGHT: {{ featured_connection.name }} [{{ featured_connection.relationship_type }}]
+{% if featured_connection.sun_sign %}Sun sign: {{ featured_connection.sun_sign }}{% endif %}
+{% if featured_connection.arca_notes %}
+Recent context: {% for note in featured_connection.arca_notes[-3:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}
 {% endif %}
-{% if has_partner %}Partner: {{ partner.name }}{% if partner.relationship_label %} ({{ partner.relationship_label }}){% endif %}{% if partner.notes %} - {{ partner.notes }}{% endif %}
 
+Write a personalized sentence about the dynamic with {{ featured_connection.name }} today.
 {% endif %}
-{% if family %}Family: {% for f in family %}{{ f.name }}{% if f.relationship_label %} ({{ f.relationship_label }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
-
-{% endif %}
-{% if friends %}Friends: {% for f in friends %}{{ f.name }}{% if not loop.last %}, {% endif %}{% endfor %}
-
-{% endif %}
-{% if coworkers %}Work: {% for c in coworkers %}{{ c.name }}{% if c.relationship_label %} ({{ c.relationship_label }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
-
-{% endif %}
-Write 1-2 sentences per category that has people. Focus spotlight person first, then brief notes on other dynamics.
 {% endif %}
 [MOON]
 {{ moon_summary }}

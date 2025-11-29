@@ -11,6 +11,18 @@
       "get_daily_horoscope": {
         "memory": "512MB"
       },
+      "ask_the_stars": {
+        "memory": "512MB"
+      },
+      "get_compatibility": {
+        "memory": "512MB"
+      },
+      "get_synastry_chart": {
+        "memory": "512MB"
+      },
+      "extract_entities_on_message": {
+        "memory": "512MB"
+      },
       "ignore": [
         "venv",
         ".git",

@@ -157,7 +157,7 @@ Returns a `DailyHoroscope` object with the following structure:
 
 #### Overall Metrics
 
-- `overall_unified_score` (float, 0-100): Primary overall value balancing intensity and harmony
+- `overall_unified_score` (float, -100 to +100): Primary overall value - bipolar scale (positive = harmonious, negative = challenging)
 - `overall_intensity` (float, 0-100): Overall astrological activity level across all meters
 - `overall_harmony` (float, 0-100): Overall supportive vs challenging quality
 - `overall_quality` (string): Simple category - `harmonious | challenging | mixed | quiet | peaceful`
@@ -284,9 +284,9 @@ Each `meters` array contains 3-4 `MeterForIOS` objects:
 ```
 
 ##### Meter Scores
-- `unified_score` (float, 0-100): Primary display value (balanced view of intensity + harmony)
+- `unified_score` (float, -100 to +100): Primary display value - bipolar scale (positive = harmonious, negative = challenging). NOT 0-100, see unified-score-guide.md
 - `intensity` (float, 0-100): Activity level - how much is happening
-- `harmony` (float, 0-100): Quality - supportive (high) vs challenging (low)
+- `harmony` (float, 0-100): Quality - supportive (high) vs challenging (low), where 50 is neutral
 
 ##### Meter Labels
 - `unified_quality` (string): Simple category - `harmonious | challenging | mixed | quiet | peaceful`

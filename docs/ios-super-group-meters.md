@@ -219,7 +219,7 @@ Super-group meters are **aggregate scores** that combine multiple individual met
 
 | Field | Type | Range | Description |
 |-------|------|-------|-------------|
-| `unified_score` | Float | 0-100 | **Primary display value** - Use for bar length/circle fill |
+| `unified_score` | Float | -100 to +100 | **Primary display value** - Bipolar scale (positive = harmonious, negative = challenging). See unified-score-guide.md |
 | `unified_quality` | String | enum | Quality label: "quiet", "peaceful", "harmonious", "mixed", "challenging" |
 | `intensity` | Float | 0-100 | How much is happening (activity level) |
 | `harmony` | Float | 0-100 | Quality of what's happening (supportive vs challenging) |

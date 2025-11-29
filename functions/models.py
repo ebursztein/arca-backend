@@ -4,16 +4,37 @@ Pydantic models for Arca Backend V1
 All data structures used throughout the application for type safety and validation.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING, Any
 from enum import Enum
+import re
 
 # Import new 17-meter hierarchy system
 from astrometers.hierarchy import MeterGroupV2
 
 if TYPE_CHECKING:
     from astrometers.meters import MeterReading
+
+
+# =============================================================================
+# Constants for validation
+# =============================================================================
+
+MAX_NAME_LENGTH = 500
+MAX_CONTEXT_LENGTH = 10000
+MAX_ALIASES = 100
+MAX_RELATED_ENTITIES = 100
+MAX_CONTEXT_SNIPPETS = 10
+DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+TIME_PATTERN = re.compile(r"^\d{2}:\d{2}$")
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+# Valid zodiac signs
+VALID_SUN_SIGNS = {
+    "aries", "taurus", "gemini", "cancer", "leo", "virgo",
+    "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"
+}
 
 
 # =============================================================================
@@ -42,6 +63,42 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
 
 
+class ActionType(str, Enum):
+    """Valid action types for entity merge actions."""
+    CREATE = "create"
+    UPDATE = "update"
+    MERGE = "merge"
+    LINK = "link"
+
+
+class QualityType(str, Enum):
+    """Valid quality types for meter group state."""
+    EXCELLENT = "excellent"
+    SUPPORTIVE = "supportive"
+    HARMONIOUS = "harmonious"
+    PEACEFUL = "peaceful"
+    MIXED = "mixed"
+    QUIET = "quiet"
+    CHALLENGING = "challenging"
+    INTENSE = "intense"
+
+
+class DirectionType(str, Enum):
+    """Valid direction types for trend metrics."""
+    IMPROVING = "improving"
+    WORSENING = "worsening"
+    STABLE = "stable"
+    INCREASING = "increasing"
+    DECREASING = "decreasing"
+
+
+class ChangeRateType(str, Enum):
+    """Valid change rate types for trend metrics."""
+    RAPID = "rapid"
+    MODERATE = "moderate"
+    SLOW = "slow"
+
+
 # =============================================================================
 # User Profile Models
 # =============================================================================
@@ -52,19 +109,24 @@ class UserProfile(BaseModel):
 
     Contains birth information, natal chart data, and preferences.
     """
-    user_id: str = Field(description="Firebase Auth user ID")
-    name: str = Field(description="User's name from auth provider")
-    email: str = Field(description="User's email from auth provider")
+    user_id: str = Field(min_length=1, max_length=128, description="Firebase Auth user ID")
+    name: str = Field(min_length=1, max_length=MAX_NAME_LENGTH, description="User's name from auth provider")
+    email: str = Field(pattern=EMAIL_PATTERN, description="User's email from auth provider")
 
-    # subscription
+    # Subscription
     is_premium: bool = Field(False, description="True if user has premium subscription")
     premium_expiry: Optional[str] = Field(None,
         description="ISO date of premium subscription expiry (None if non-premium)")
 
+    # Trial
+    is_trial_active: bool = Field(False, description="Whether user is currently in trial")
+    trial_end_date: Optional[str] = Field(None,
+        description="ISO date when trial ends (YYYY-MM-DD)")
+
     # Birth information
-    birth_date: str = Field(description="Birth date in YYYY-MM-DD format")
-    birth_time: Optional[str] = Field(None, description="Birth time in HH:MM format (optional, V2+)")
-    birth_timezone: Optional[str] = Field(None, description="IANA timezone (optional, V2+)")
+    birth_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$", description="Birth date in YYYY-MM-DD format")
+    birth_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$", description="Birth time in HH:MM format (optional, V2+)")
+    birth_timezone: Optional[str] = Field(None, max_length=64, description="IANA timezone (optional, V2+)")
     birth_lat: Optional[float] = Field(None, ge=-90, le=90, description="Birth latitude (optional)")
     birth_lon: Optional[float] = Field(None, ge=-180, le=180, description="Birth longitude (optional)")
 
@@ -73,9 +135,42 @@ class UserProfile(BaseModel):
     natal_chart: dict = Field(description="Complete NatalChartData from get_astro_chart()")
     exact_chart: bool = Field(description="True if birth_time + timezone provided")
 
+    # Photo
+    photo_path: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Firebase Storage path for user photo"
+    )
+
     # Timestamps
     created_at: str = Field(description="ISO datetime of profile creation")
     last_active: str = Field(description="ISO datetime of last activity")
+
+    @field_validator('sun_sign')
+    @classmethod
+    def validate_sun_sign(cls, v: str) -> str:
+        if v.lower() not in VALID_SUN_SIGNS:
+            raise ValueError(f"Invalid sun sign: {v}. Must be one of {VALID_SUN_SIGNS}")
+        return v.lower()
+
+    @field_validator('birth_date')
+    @classmethod
+    def validate_birth_date_not_future(cls, v: str) -> str:
+        try:
+            date = datetime.strptime(v, "%Y-%m-%d")
+            if date > datetime.now():
+                raise ValueError("Birth date cannot be in the future")
+        except ValueError as e:
+            if "Birth date cannot" in str(e):
+                raise
+            raise ValueError(f"Invalid date format or value: {v}")
+        return v
+
+    @model_validator(mode='after')
+    def validate_lat_lon_together(self):
+        if (self.birth_lat is None) != (self.birth_lon is None):
+            raise ValueError("birth_lat and birth_lon must both be set or both be None")
+        return self
 
 
 # =============================================================================
@@ -99,6 +194,15 @@ class RelationshipMention(BaseModel):
     context: str = Field(description="What was said about this relationship")
 
 
+class ConnectionMention(BaseModel):
+    """Tracks when a connection was featured in daily horoscope relationship_weather."""
+    connection_id: str = Field(description="Connection ID")
+    connection_name: str = Field(description="Connection's name")
+    relationship_type: str = Field(description="friend/romantic/family/coworker")
+    date: str = Field(description="ISO date when featured")
+    context: str = Field(description="What was said about this connection")
+
+
 class MemoryCollection(BaseModel):
     """
     Memory collection stored in Firestore: memory/{userId}
@@ -112,6 +216,24 @@ class MemoryCollection(BaseModel):
     categories: dict[MeterGroupV2, CategoryEngagement] = Field(
         description="Engagement counts per meter group"
     )
+
+    @field_validator('categories', mode='before')
+    @classmethod
+    def migrate_old_category_names(cls, v):
+        """Backward compat: map old category names to new MeterGroupV2 names."""
+        if not isinstance(v, dict):
+            return v
+        # Map old names to new names
+        name_mapping = {
+            'spirit': 'growth',
+            'emotions': 'heart',
+            # Add more mappings if needed
+        }
+        migrated = {}
+        for key, value in v.items():
+            new_key = name_mapping.get(key, key)
+            migrated[new_key] = value
+        return migrated
 
     # Ask the Stars - Conversation tracking
     entity_summary: dict[str, int] = Field(
@@ -132,10 +254,16 @@ class MemoryCollection(BaseModel):
         description="Question category counts for analytics"
     )
 
-    # Horoscope relationship rotation (capped at 20)
+    # Horoscope relationship rotation (capped at 20) - DEPRECATED: use connection_mentions
     relationship_mentions: list[RelationshipMention] = Field(
         default_factory=list,
         description="Last 20 relationship mentions in horoscopes for rotation tracking"
+    )
+
+    # Connection rotation for relationship_weather (capped at 20)
+    connection_mentions: list[ConnectionMention] = Field(
+        default_factory=list,
+        description="Last 20 connection mentions in horoscopes for rotation tracking"
     )
 
     # Timestamp
@@ -192,11 +320,11 @@ class Entity(BaseModel):
 
     Stored in: users/{userId}/entities/all (single doc with entities array)
     """
-    entity_id: str = Field(description="UUID for this entity")
-    name: str = Field(description="Entity name (e.g., 'John', 'Job Search', 'Meditation Practice')")
-    entity_type: str = Field(description="Open string: 'relationship', 'career_goal', 'challenge', etc.")
+    entity_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$", description="UUID for this entity")
+    name: str = Field(min_length=1, max_length=MAX_NAME_LENGTH, description="Entity name (e.g., 'John', 'Job Search', 'Meditation Practice')")
+    entity_type: str = Field(min_length=1, max_length=64, description="Open string: 'relationship', 'career_goal', 'challenge', etc.")
     status: EntityStatus = Field(default=EntityStatus.ACTIVE, description="Entity status")
-    aliases: list[str] = Field(default_factory=list, description="Alternative names for deduplication")
+    aliases: list[str] = Field(default_factory=list, max_length=MAX_ALIASES, description="Alternative names for deduplication")
 
     # Category for relationship tracking (iOS dropdown)
     category: Optional[EntityCategory] = Field(
@@ -205,25 +333,29 @@ class Entity(BaseModel):
     )
     relationship_label: Optional[str] = Field(
         None,
+        max_length=64,
         description="Specific relationship label from iOS dropdown: mother, sister, boss, etc."
     )
 
     # User notes (editable by user in iOS)
     notes: Optional[str] = Field(
         None,
+        max_length=MAX_CONTEXT_LENGTH,
         description="User-written notes about this entity"
     )
 
     # Rich metadata (flexible key-value pairs)
     attributes: list[AttributeKV] = Field(
         default_factory=list,
+        max_length=100,
         description="Entity attributes: birthday_season, works_at, role, relationship_to_user, etc."
     )
 
     # Relationships between entities
     related_entities: list[str] = Field(
         default_factory=list,
-        description="Entity IDs this entity is related to (e.g., 'Bob' → ['ent_005'] where ent_005 is TechCorp)"
+        max_length=MAX_RELATED_ENTITIES,
+        description="Entity IDs this entity is related to (e.g., 'Bob' -> ['ent_005'] where ent_005 is TechCorp)"
     )
 
     # Tracking
@@ -234,6 +366,7 @@ class Entity(BaseModel):
     # Context (FIFO queue, max 10)
     context_snippets: list[str] = Field(
         default_factory=list,
+        max_length=MAX_CONTEXT_SNIPPETS,
         description="Last 10 context snippets where entity was mentioned"
     )
 
@@ -248,12 +381,28 @@ class Entity(BaseModel):
     # Connection link (for compatibility feature)
     connection_id: Optional[str] = Field(
         None,
+        max_length=64,
         description="Links to Connection with birth data for compatibility"
     )
 
     # Timestamps
     created_at: str = Field(description="ISO timestamp of creation")
     updated_at: str = Field(description="ISO timestamp of last update")
+
+    @field_validator('context_snippets')
+    @classmethod
+    def validate_context_snippet_length(cls, v: list[str]) -> list[str]:
+        for snippet in v:
+            if len(snippet) > MAX_CONTEXT_LENGTH:
+                raise ValueError(f"Context snippet exceeds max length of {MAX_CONTEXT_LENGTH}")
+        return v
+
+    @model_validator(mode='after')
+    def validate_entity_constraints(self):
+        # Don't allow self-reference in related_entities
+        if self.entity_id in self.related_entities:
+            raise ValueError("Entity cannot reference itself in related_entities")
+        return self
 
 
 class Message(BaseModel):
@@ -262,10 +411,17 @@ class Message(BaseModel):
 
     Stored in Conversation.messages array.
     """
-    message_id: str = Field(description="UUID for this message")
+    message_id: str = Field(min_length=1, max_length=64, description="UUID for this message")
     role: MessageRole = Field(description="Message role")
-    content: str = Field(description="Message text content")
+    content: str = Field(min_length=1, max_length=50000, description="Message text content")
     timestamp: str = Field(description="ISO timestamp")
+
+    @field_validator('content')
+    @classmethod
+    def validate_content_not_whitespace_only(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Message content cannot be whitespace only")
+        return v
 
 
 class Conversation(BaseModel):
@@ -275,12 +431,12 @@ class Conversation(BaseModel):
     Stored in: conversations/{conversationId}
     All messages stored in single document (messages array).
     """
-    conversation_id: str = Field(description="UUID for this conversation")
-    user_id: str = Field(description="Firebase Auth user ID")
-    horoscope_date: str = Field(description="ISO date (e.g., '2025-01-20')")
+    conversation_id: str = Field(min_length=1, max_length=64, description="UUID for this conversation")
+    user_id: str = Field(min_length=1, max_length=128, description="Firebase Auth user ID")
+    horoscope_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$", description="ISO date (e.g., '2025-01-20')")
 
     # All messages in single array (cost optimization)
-    messages: list[Message] = Field(default_factory=list, description="All messages in conversation")
+    messages: list[Message] = Field(default_factory=list, max_length=1000, description="All messages in conversation")
 
     # Timestamps
     created_at: str = Field(description="ISO timestamp of creation")
@@ -305,13 +461,14 @@ class UserEntities(BaseModel):
 class ExtractedEntity(BaseModel):
     """
     Single entity extracted from user message (LLM output).
+    Note: No max_length on lists - Gemini structured output can't handle nested array limits.
     """
     name: str = Field(description="Entity name")
     entity_type: str = Field(description="Entity type (open string)")
     context: str = Field(description="Context snippet from message")
     confidence: float = Field(ge=0.0, le=1.0, description="Extraction confidence")
 
-    # Rich metadata
+    # Rich metadata (no max_length - Gemini schema constraint)
     attributes: list[AttributeKV] = Field(
         default_factory=list,
         description="Extracted attributes (e.g., birthday_season, role, works_at)"
@@ -325,28 +482,31 @@ class ExtractedEntity(BaseModel):
 class ExtractedEntities(BaseModel):
     """
     Structured output from entity extraction LLM call.
+    Note: No max_length - Gemini structured output can't handle nested array limits.
     """
-    entities: list[ExtractedEntity] = Field(description="Extracted entities")
+    entities: list[ExtractedEntity] = Field(default_factory=list, description="Extracted entities")
 
 
 class EntityMergeAction(BaseModel):
     """
     Single merge action from entity merging LLM call.
     """
-    action: str = Field(description="Action type: 'create', 'update', 'merge', 'link'")
-    entity_name: str = Field(description="Entity name")
-    entity_type: str = Field(description="Entity type")
-    merge_with_id: Optional[str] = Field(None, description="Entity ID to merge with (if action='merge')")
-    new_alias: Optional[str] = Field(None, description="Alias to add (if action='merge')")
-    context_update: Optional[str] = Field(None, description="Context snippet to add")
+    action: ActionType = Field(description="Action type: 'create', 'update', 'merge', 'link'")
+    entity_name: str = Field(min_length=1, max_length=MAX_NAME_LENGTH, description="Entity name")
+    entity_type: str = Field(min_length=1, max_length=64, description="Entity type")
+    merge_with_id: Optional[str] = Field(None, max_length=64, description="Entity ID to merge with (if action='merge')")
+    new_alias: Optional[str] = Field(None, max_length=MAX_NAME_LENGTH, description="Alias to add (if action='merge')")
+    context_update: Optional[str] = Field(None, max_length=MAX_CONTEXT_LENGTH, description="Context snippet to add")
 
     # Rich metadata updates
     attribute_updates: list[AttributeKV] = Field(
         default_factory=list,
+        max_length=50,
         description="Attributes to add/update (e.g., [{'key': 'birthday_season', 'value': 'January'}])"
     )
     link_to_entity_id: Optional[str] = Field(
         None,
+        max_length=64,
         description="Entity ID to link/relate to (if action='link' or creating relationship)"
     )
 
@@ -355,7 +515,7 @@ class MergedEntities(BaseModel):
     """
     Structured output from entity merging LLM call.
     """
-    actions: list[EntityMergeAction] = Field(description="List of merge actions to execute")
+    actions: list[EntityMergeAction] = Field(default_factory=list, max_length=100, description="List of merge actions to execute")
 
 
 # =============================================================================
@@ -366,9 +526,64 @@ class ActionableAdvice(BaseModel):
     """
     Structured actionable guidance with do/don't/reflect format.
     """
-    do: str = Field(description="Specific action aligned with transit energy")
-    dont: str = Field(description="Specific thing to avoid (shadow/pitfall)")
-    reflect_on: str = Field(description="Powerful journaling question for self-awareness")
+    do: str = Field(min_length=1, max_length=500, description="Specific action aligned with transit energy")
+    dont: str = Field(min_length=1, max_length=500, description="Specific thing to avoid (shadow/pitfall)")
+    reflect_on: str = Field(min_length=1, max_length=500, description="Powerful journaling question for self-awareness")
+
+
+# =============================================================================
+# Relationship Weather Models (for Connections feature)
+# =============================================================================
+
+class RelationshipType(str, Enum):
+    """Relationship type for connections."""
+    FRIEND = "friend"
+    ROMANTIC = "romantic"
+    FAMILY = "family"
+    COWORKER = "coworker"
+
+
+class ConnectionVibe(BaseModel):
+    """
+    Daily vibe for a specific connection.
+
+    Generated based on transits hitting synastry points.
+    """
+    connection_id: str = Field(min_length=1, max_length=64, description="Connection ID from user's connections")
+    name: str = Field(min_length=1, max_length=MAX_NAME_LENGTH, description="Connection's name")
+    relationship_type: RelationshipType = Field(
+        description="Relationship category"
+    )
+    vibe: str = Field(
+        min_length=1, max_length=500,
+        description="Personalized vibe sentence with their name, e.g., 'Great day to connect with Sarah'"
+    )
+    vibe_score: int = Field(
+        ge=0, le=100,
+        description="0-100 score (70-100=positive, 40-70=neutral, 0-40=challenging)"
+    )
+    key_transit: str = Field(
+        min_length=1, max_length=500,
+        description="Most significant transit, e.g., 'Transit Venus trine your emotional connection point'"
+    )
+
+
+class RelationshipWeather(BaseModel):
+    """
+    Complete relationship weather for daily horoscope.
+
+    Includes general overview + connection-specific vibes.
+    BREAKING CHANGE: Previously this was just a string.
+    """
+    overview: str = Field(
+        min_length=1, max_length=1000,
+        description="2-3 sentences covering general vibe for all relationship types today"
+    )
+    connection_vibes: list[ConnectionVibe] = Field(
+        default_factory=list,
+        max_length=20,
+        description="Personalized vibes for top 10 connections (empty if no connections)"
+    )
 
 
 # =============================================================================
@@ -379,17 +594,17 @@ class MeterGroupScores(BaseModel):
     """
     Aggregated scores for a meter group (arithmetic mean of member meters).
     """
-    unified_score: float = Field(description="Primary display value (-100 to +100), average of member meters")
-    harmony: float = Field(description="Supportive vs challenging quality (0-100)")
-    intensity: float = Field(description="Activity level (0-100)")
+    unified_score: float = Field(ge=-100, le=100, description="Primary display value (-100 to +100), average of member meters")
+    harmony: float = Field(ge=0, le=100, description="Supportive vs challenging quality (0-100)")
+    intensity: float = Field(ge=0, le=100, description="Activity level (0-100)")
 
 
 class MeterGroupState(BaseModel):
     """
     Quality assessment for a meter group based on harmony and intensity.
     """
-    label: str = Field(description="Human-readable state: Excellent, Supportive, Challenging, etc.")
-    quality: str = Field(description="Enum value: excellent, supportive, harmonious, peaceful, mixed, quiet, challenging, intense")
+    label: str = Field(min_length=1, max_length=50, description="Human-readable state: Excellent, Supportive, Challenging, etc.")
+    quality: QualityType = Field(description="Quality type: excellent, supportive, harmonious, peaceful, mixed, quiet, challenging, intense")
 
 
 class TrendMetric(BaseModel):
@@ -398,8 +613,8 @@ class TrendMetric(BaseModel):
     """
     previous: float = Field(description="Yesterday's value")
     delta: float = Field(description="Change amount (can be negative)")
-    direction: str = Field(description="improving, worsening, stable, increasing, or decreasing")
-    change_rate: str = Field(description="rapid, moderate, or slow")
+    direction: DirectionType = Field(description="Trend direction: improving, worsening, stable, increasing, or decreasing")
+    change_rate: ChangeRateType = Field(description="Change rate: rapid, moderate, or slow")
 
 
 class MeterGroupTrend(BaseModel):
@@ -482,9 +697,9 @@ class DailyHoroscope(BaseModel):
         None,
         description="Energy pattern throughout day based on intensity curve and Moon movement (1-2 sentences)"
     )
-    relationship_weather: Optional[str] = Field(
+    relationship_weather: Optional[RelationshipWeather] = Field(
         None,
-        description="Interpersonal dynamics (romantic, platonic, professional) from relationship meters (2-3 sentences)"
+        description="Relationship weather with overview + connection-specific vibes (BREAKING: was string, now object)"
     )
     collective_energy: Optional[str] = Field(
         None,
@@ -562,7 +777,7 @@ class CompressedHoroscope(BaseModel):
     actionable_advice: ActionableAdvice
     look_ahead_preview: Optional[str] = None
     energy_rhythm: Optional[str] = None
-    relationship_weather: Optional[str] = None
+    relationship_weather: Optional[RelationshipWeather] = None  # Backward compat: accepts str or RelationshipWeather
     collective_energy: Optional[str] = None
     follow_up_questions: Optional[list[str]] = None
 
@@ -583,6 +798,16 @@ class CompressedHoroscope(BaseModel):
 
     # Metadata
     created_at: str = Field(description="ISO datetime of generation")
+
+    @field_validator('relationship_weather', mode='before')
+    @classmethod
+    def convert_string_to_relationship_weather(cls, v):
+        """Backward compat: convert old string format to RelationshipWeather object."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return RelationshipWeather(overview=v, connection_vibes=[])
+        return v
 
 
 class UserHoroscopes(BaseModel):
@@ -736,18 +961,30 @@ def calculate_entity_importance_score(
     if current_time is None:
         current_time = datetime.now()
 
-    # Parse last_seen timestamp
-    last_seen_dt = datetime.fromisoformat(entity.last_seen.replace('Z', '+00:00'))
+    # Parse last_seen timestamp, handling timezone-aware formats
+    last_seen_str = entity.last_seen.replace('Z', '+00:00')
+    last_seen_dt = datetime.fromisoformat(last_seen_str)
+
+    # Normalize both datetimes to naive UTC for comparison
+    if last_seen_dt.tzinfo is not None:
+        # Convert timezone-aware to naive UTC
+        from datetime import timezone
+        last_seen_dt = last_seen_dt.astimezone(timezone.utc).replace(tzinfo=None)
+    if hasattr(current_time, 'tzinfo') and current_time.tzinfo is not None:
+        from datetime import timezone
+        current_time = current_time.astimezone(timezone.utc).replace(tzinfo=None)
 
     # Calculate recency (decays over 30 days)
     days_since_mention = (current_time - last_seen_dt).days
-    recency = max(0.0, 1.0 - (days_since_mention / 30.0))
+    # Clamp recency to [0.0, 1.0] to handle future dates
+    recency = max(0.0, min(1.0, 1.0 - (days_since_mention / 30.0)))
 
     # Calculate frequency (caps at 10 mentions)
     frequency = min(1.0, entity.mention_count / 10.0)
 
-    # Weighted combination
+    # Weighted combination, clamped to [0.0, 1.0]
     importance_score = (recency * 0.6) + (frequency * 0.4)
+    importance_score = max(0.0, min(1.0, importance_score))
 
     return importance_score
 

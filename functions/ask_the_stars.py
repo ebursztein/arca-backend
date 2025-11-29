@@ -46,8 +46,9 @@ def stream_ask_the_stars_response(
     entities: list,
     memory: MemoryCollection,
     conversation_messages: list[Message],
-    gemini_client: genai.Client,
+    mentioned_connections: Optional[list] = None,
     posthog_api_key: Optional[str] = None,
+    api_key: Optional[str] = None,
     model: str = "gemini-2.5-flash-lite",
     temperature: float = 0.7,
     max_tokens: int = 500
@@ -56,6 +57,15 @@ def stream_ask_the_stars_response(
     import time
     start_time = time.time()
 
+    # Get API key (same pattern as llm.py)
+    if not api_key:
+        api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY not provided")
+
+    # Create client (same pattern as llm.py)
+    gemini_client = genai.Client(api_key=api_key)
+
     template = template_env.get_template('ask_the_stars.j2')
     prompt = template.render(
         user_name=user_profile.name,
@@ -63,6 +73,7 @@ def stream_ask_the_stars_response(
         horoscope_date=horoscope_date,
         horoscope=horoscope,
         entities=entities,
+        mentioned_connections=mentioned_connections or [],
         messages=conversation_messages,
         question=question
     )
@@ -111,6 +122,7 @@ def stream_ask_the_stars_response(
 
 
 @https_fn.on_request(
+    memory=512,  # Bumped from default 256MB to avoid OOM
     cors=options.CorsOptions(
         cors_origins="*",
         cors_methods=["POST", "OPTIONS"]
@@ -197,7 +209,8 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
                 status=404,
                 headers={"Content-Type": "application/json"}
             )
-        user_profile = UserProfile(**user_doc.to_dict())
+        user_data = user_doc.to_dict()
+        user_profile = UserProfile(**user_data)
 
         # 2. Horoscope (compressed)
         horoscope_doc = db.collection('users').document(user_id).collection('horoscopes').document('latest').get()
@@ -225,6 +238,74 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
         else:
             top_entities = []
 
+        # 3b. Connections - check if question mentions any connection names
+        connections_ref = db.collection('users').document(user_id).collection('connections')
+        connections_docs = connections_ref.limit(20).get()
+        all_connections = []
+        mentioned_connections = []
+
+        # Normalize question for matching (lowercase, split into words)
+        import re
+        question_lower = question.lower()
+        question_words = set(re.findall(r'\b\w+\b', question_lower))
+
+        for doc in connections_docs:
+            conn_data = doc.to_dict()
+            conn_data['connection_id'] = doc.id
+            all_connections.append(conn_data)
+
+            # Check if connection name (or any part of it) appears in question
+            # This handles "John" matching "John Smith" and vice versa
+            conn_name = conn_data.get('name', '').lower()
+            if not conn_name:
+                continue
+
+            conn_name_words = set(re.findall(r'\b\w+\b', conn_name))
+
+            # Match if ANY word from connection name appears in question
+            # This catches "John" in "What about John?" or "Johnny" won't match "John"
+            if conn_name_words & question_words:  # Set intersection
+                mentioned_connections.append(conn_data)
+
+        # 3c. Calculate synastry aspects for mentioned connections (use cached if available)
+        if mentioned_connections and user_data.get('natal_chart'):
+            from astro import NatalChartData, compute_birth_chart
+            from compatibility import calculate_compatibility
+
+            user_chart = NatalChartData(**user_data['natal_chart'])
+
+            for conn in mentioned_connections:
+                # Skip if already has cached synastry_aspects
+                if conn.get('synastry_aspects'):
+                    continue
+
+                # Calculate on-the-fly if not cached
+                if conn.get('birth_date'):
+                    try:
+                        conn_chart_dict, _ = compute_birth_chart(
+                            birth_date=conn['birth_date'],
+                            birth_time=conn.get('birth_time'),
+                            birth_timezone=conn.get('birth_timezone'),
+                            birth_lat=conn.get('birth_lat'),
+                            birth_lon=conn.get('birth_lon')
+                        )
+                        conn_chart = NatalChartData(**conn_chart_dict)
+                        compatibility = calculate_compatibility(user_chart, conn_chart)
+
+                        # Get top 5 tightest aspects
+                        sorted_aspects = sorted(compatibility.aspects, key=lambda a: a.orb)[:5]
+                        conn['synastry_aspects'] = [
+                            {
+                                "user_planet": asp.user_planet,
+                                "their_planet": asp.their_planet,
+                                "aspect_type": asp.aspect_type,
+                                "is_harmonious": asp.is_harmonious
+                            }
+                            for asp in sorted_aspects
+                        ]
+                    except Exception as e:
+                        print(f"Failed to calc synastry for {conn.get('name')}: {e}")
+
         # 4. Memory
         memory_doc = db.collection('memory').document(user_id).get()
         if memory_doc.exists:
@@ -248,9 +329,6 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             headers={"Content-Type": "application/json"}
         )
 
-    # Initialize Gemini
-    gemini_client = genai.Client(api_key=GEMINI_API_KEY.value)
-
     # Stream response
     def generate():
         full_response = ""
@@ -262,7 +340,8 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             entities=top_entities,
             memory=memory,
             conversation_messages=conversation_messages,
-            gemini_client=gemini_client
+            mentioned_connections=mentioned_connections,
+            api_key=GEMINI_API_KEY.value
         ):
             chunk_data = json.loads(chunk.split('data: ')[1])
             full_response += chunk_data.get('text', '')

@@ -43,7 +43,7 @@ from astro import (
 )
 
 # Import our LLM modules
-from llm import generate_daily_horoscope, update_memory_with_relationship_mention
+from llm import generate_daily_horoscope, select_featured_connection, update_memory_with_connection_mention
 
 # Import our Pydantic models
 from models import (
@@ -217,93 +217,53 @@ def main():
 
     console.print(f"[green]✓ Memory collection initialized (John mentioned yesterday)[/green]")
 
-    # Create sample entities with categories for relationship weather
-    now = datetime.now()
-    sample_entities = [
-        Entity(
-            entity_id="ent_001",
-            name="John",
-            entity_type="relationship",
-            status=EntityStatus.ACTIVE,
-            category=EntityCategory.PARTNER,
-            relationship_label="boyfriend",
-            notes="Met at coffee shop last year. Anniversary in June.",
-            aliases=["boyfriend", "partner"],
-            attributes=[
-                AttributeKV(key="relationship_status", value="dating")
+    # Create sample connections for relationship weather
+    sample_connections = [
+        {
+            "connection_id": "conn_001",
+            "name": "John",
+            "relationship_type": "romantic",
+            "sun_sign": "Leo",
+            "birth_date": "1992-08-15",
+            "arca_notes": [
+                {"date": "2025-11-20", "note": "Feeling some tension lately", "context": "ask_the_stars"}
             ],
-            related_entities=[],
-            first_seen=now.isoformat(),
-            last_seen=now.isoformat(),
-            mention_count=5,
-            context_snippets=["Feeling some tension lately"],
-            importance_score=0.85,
-            created_at=now.isoformat(),
-            updated_at=now.isoformat()
-        ),
-        Entity(
-            entity_id="ent_002",
-            name="Mom",
-            entity_type="relationship",
-            status=EntityStatus.ACTIVE,
-            category=EntityCategory.FAMILY,
-            relationship_label="mother",
-            notes="Lives nearby. Weekly Sunday dinners.",
-            aliases=["mother"],
-            attributes=[],
-            related_entities=[],
-            first_seen=now.isoformat(),
-            last_seen=now.isoformat(),
-            mention_count=3,
-            context_snippets=["Planning her birthday party"],
-            importance_score=0.70,
-            created_at=now.isoformat(),
-            updated_at=now.isoformat()
-        ),
-        Entity(
-            entity_id="ent_003",
-            name="Sarah",
-            entity_type="relationship",
-            status=EntityStatus.ACTIVE,
-            category=EntityCategory.FRIEND,
-            relationship_label=None,
-            notes="Best friend since college.",
-            aliases=[],
-            attributes=[],
-            related_entities=[],
-            first_seen=now.isoformat(),
-            last_seen=now.isoformat(),
-            mention_count=4,
-            context_snippets=["Planning a trip together"],
-            importance_score=0.75,
-            created_at=now.isoformat(),
-            updated_at=now.isoformat()
-        ),
-        Entity(
-            entity_id="ent_004",
-            name="Mike",
-            entity_type="relationship",
-            status=EntityStatus.ACTIVE,
-            category=EntityCategory.COWORKER,
-            relationship_label="boss",
-            notes="Direct manager at TechCorp. Fair but demanding.",
-            aliases=["manager"],
-            attributes=[AttributeKV(key="company", value="TechCorp")],
-            related_entities=[],
-            first_seen=now.isoformat(),
-            last_seen=now.isoformat(),
-            mention_count=2,
-            context_snippets=["Performance review coming up"],
-            importance_score=0.65,
-            created_at=now.isoformat(),
-            updated_at=now.isoformat()
-        ),
+        },
+        {
+            "connection_id": "conn_002",
+            "name": "Mom",
+            "relationship_type": "family",
+            "sun_sign": "Cancer",
+            "birth_date": "1965-07-10",
+            "arca_notes": [
+                {"date": "2025-11-18", "note": "Planning her birthday party", "context": "journal"}
+            ],
+        },
+        {
+            "connection_id": "conn_003",
+            "name": "Sarah",
+            "relationship_type": "friend",
+            "sun_sign": "Gemini",
+            "birth_date": "1995-06-05",
+            "arca_notes": [
+                {"date": "2025-11-15", "note": "Planning a trip together", "context": "ask_the_stars"}
+            ],
+        },
+        {
+            "connection_id": "conn_004",
+            "name": "Mike",
+            "relationship_type": "coworker",
+            "sun_sign": "Capricorn",
+            "birth_date": "1980-01-12",
+            "arca_notes": [
+                {"date": "2025-11-22", "note": "Performance review coming up", "context": "journal"}
+            ],
+        },
     ]
 
-    console.print(f"[green]✓ Sample entities created: {len(sample_entities)} relationships[/green]")
-    for entity in sample_entities:
-        label = f" ({entity.relationship_label})" if entity.relationship_label else ""
-        console.print(f"  - {entity.name}{label} [{entity.category.value}]")
+    console.print(f"[green]✓ Sample connections created: {len(sample_connections)} relationships[/green]")
+    for conn in sample_connections:
+        console.print(f"  - {conn['name']} [{conn['relationship_type']}] - {conn['sun_sign']}")
 
     # ========================================================================
     # 2. DAILY HOROSCOPE GENERATION
@@ -360,26 +320,37 @@ def main():
     # Generate horoscope with ENHANCED TRANSIT SYSTEM
     console.print(f"\n[cyan]Generating daily horoscope[/cyan]")
 
+    # Select featured connection for relationship weather (ONE per day, rotated)
+    featured_connection = select_featured_connection(sample_connections, memory, today)
+    if featured_connection:
+        console.print(f"[green]✓ Featured connection selected: {featured_connection['name']} ({featured_connection['relationship_type']})[/green]")
+    else:
+        console.print(f"[yellow]No connection to feature today[/yellow]")
+
     # Generate daily horoscope with new transit summary
-    daily_horoscope, featured_relationship = generate_daily_horoscope(
+    daily_horoscope = generate_daily_horoscope(
         date=today,
         user_profile=user_profile,
         sun_sign_profile=sun_sign_profile,
-        transit_summary=transit_summary,  # NEW: Enhanced transit summary dict
+        transit_summary=transit_summary,  # Enhanced transit summary dict
         memory=memory,
-        entities=sample_entities,  # Pass entities for relationship weather
+        featured_connection=featured_connection,  # Pass selected connection for relationship weather
         model_name=model_name)
     console.print(f"[green]✓ Daily horoscope generated ({daily_horoscope.generation_time_ms}ms)[/green]")
 
-    # Update memory with relationship mention (for rotation tracking)
-    if featured_relationship:
-        memory = update_memory_with_relationship_mention(
+    # Update memory with connection mention (for rotation tracking)
+    if featured_connection:
+        # Extract overview string from RelationshipWeather object
+        rw_overview = ""
+        if daily_horoscope.relationship_weather:
+            rw_overview = daily_horoscope.relationship_weather.overview or ""
+        memory = update_memory_with_connection_mention(
             memory=memory,
-            featured_relationship=featured_relationship,
+            featured_connection=featured_connection,
             date=today,
-            relationship_weather=daily_horoscope.relationship_weather or ""
+            context=rw_overview
         )
-        console.print(f"[green]✓ Memory updated with featured relationship: {featured_relationship.name}[/green]")
+        console.print(f"[green]✓ Memory updated with featured connection: {featured_connection['name']}[/green]")
 
     # Save horoscope AND transit summary to JSON for inspection
     with open('debug_daily_horoscope.json', 'w') as f:
@@ -609,8 +580,6 @@ Groups Summary:"""
     if not gemini_api_key:
         console.print("[red]⚠️  GEMINI_API_KEY not set, skipping Ask the Stars test[/red]")
     else:
-        gemini_client = genai.Client(api_key=gemini_api_key)
-
         # Create sample entities (simulating existing user data)
         now = datetime.now()
         sample_entities = [
@@ -683,60 +652,60 @@ Groups Summary:"""
         console.print(f"\n[yellow]User Question:[/yellow]")
         console.print(f"  \"{user_question}\"")
 
-        # Create async function to run all async operations in single event loop
-        import asyncio
-        async def run_ask_the_stars_flow():
-            # Step 1: Extract entities from message
-            console.print(f"\n[cyan]Step 1: Extracting entities from message...[/cyan]")
-            extracted, perf_extract = await extract_entities_from_message(
-                user_message=user_question,
-                current_date=today,
-                gemini_client=gemini_client,
-                user_id=user_profile.user_id,
-                posthog_api_key=posthog_api_key
-            )
-            console.print(f"[green]✓ Extracted {len(extracted.entities)} entities ({perf_extract['time_ms']}ms)[/green]")
-            for ent in extracted.entities:
-                console.print(f"  • {ent.name} ({ent.entity_type}) - \"{ent.context}\"")
-                if ent.attributes:
-                    attrs_dict = {attr.key: attr.value for attr in ent.attributes}
-                    console.print(f"    Attributes: {attrs_dict}")
+        # Step 1: Extract entities from message (synchronous)
+        console.print(f"\n[cyan]Step 1: Extracting entities from message...[/cyan]")
+        extracted, perf_extract = extract_entities_from_message(
+            user_message=user_question,
+            current_date=today,
+            user_id=user_profile.user_id,
+            posthog_api_key=posthog_api_key
+        )
+        console.print(f"[green]✓ Extracted {len(extracted.entities)} entities ({perf_extract['time_ms']}ms)[/green]")
+        for ent in extracted.entities:
+            console.print(f"  • {ent.name} ({ent.entity_type}) - \"{ent.context}\"")
+            if ent.attributes:
+                attrs_dict = {attr.key: attr.value for attr in ent.attributes}
+                console.print(f"    Attributes: {attrs_dict}")
 
-            # Use sample entities directly (no merging in prototype)
-            top_entities = sample_entities
+        # Use sample entities directly (no merging in prototype)
+        top_entities = sample_entities
 
-            # Step 2: Generate answer using Ask the Stars
-            console.print(f"\n[cyan]Step 2: Generating answer with Ask the Stars...[/cyan]")
-            start_time = time.time()
-            answer_chunks = []
+        # Step 2: Generate answer using Ask the Stars
+        console.print(f"\n[cyan]Step 2: Generating answer with Ask the Stars...[/cyan]")
+        start_time = time.time()
+        answer_chunks = []
 
-            # Stream answer from LLM (sync generator, not async)
-            for chunk in stream_ask_the_stars_response(
-                question=user_question,
-                horoscope_date=today,
-                user_profile=user_profile,
-                horoscope=daily_horoscope,
-                entities=top_entities,
-                memory=memory,
-                conversation_messages=[],  # First question in conversation
-                gemini_client=gemini_client,
-                posthog_api_key=posthog_api_key,
-                model=model_name
-            ):
-                # Parse SSE format: "data: {json}\n\n"
-                import json
-                if chunk.startswith("data: "):
-                    chunk_json = json.loads(chunk[6:])  # Remove "data: " prefix
-                    if chunk_json['type'] == 'chunk':
-                        answer_chunks.append(chunk_json['text'])
+        # Check if question mentions any connections (word-boundary matching)
+        import re
+        question_words = set(re.findall(r'\b\w+\b', user_question.lower()))
+        mentioned_connections = []
+        for conn in sample_connections:
+            conn_name_words = set(re.findall(r'\b\w+\b', conn['name'].lower()))
+            if conn_name_words & question_words:  # Set intersection
+                mentioned_connections.append(conn)
 
-            answer = "".join(answer_chunks)
-            answer_time_ms = (time.time() - start_time) * 1000
+        # Stream answer from LLM (sync generator)
+        for chunk in stream_ask_the_stars_response(
+            question=user_question,
+            horoscope_date=today,
+            user_profile=user_profile,
+            horoscope=daily_horoscope,
+            entities=top_entities,
+            memory=memory,
+            conversation_messages=[],  # First question in conversation
+            mentioned_connections=mentioned_connections,
+            posthog_api_key=posthog_api_key,
+            model=model_name
+        ):
+            # Parse SSE format: "data: {json}\n\n"
+            import json
+            if chunk.startswith("data: "):
+                chunk_json = json.loads(chunk[6:])  # Remove "data: " prefix
+                if chunk_json['type'] == 'chunk':
+                    answer_chunks.append(chunk_json['text'])
 
-            return answer, answer_time_ms, perf_extract
-
-        # Run all async operations in single event loop
-        answer, answer_time_ms, perf_extract = asyncio.run(run_ask_the_stars_flow())
+        answer = "".join(answer_chunks)
+        answer_time_ms = (time.time() - start_time) * 1000
 
         console.print(f"[green]✓ Generated answer ({answer_time_ms:.0f}ms)[/green]")
         console.print(f"\n[yellow]Answer:[/yellow]")
