@@ -43,12 +43,11 @@ from .constants import (
 # =============================================================================
 
 class QualityLabel(str, Enum):
-    """Unified quality labels for meter readings."""
-    HARMONIOUS = "harmonious"
-    CHALLENGING = "challenging"
-    MIXED = "mixed"
-    QUIET = "quiet"
-    PEACEFUL = "peaceful"
+    """Unified quality labels based on unified_score quadrants."""
+    CHALLENGING = "challenging"  # unified_score < -25
+    TURBULENT = "turbulent"      # unified_score -25 to 10
+    PEACEFUL = "peaceful"        # unified_score 10 to 50
+    FLOWING = "flowing"          # unified_score >= 50
 
 
 class TrendData(BaseModel):
@@ -372,16 +371,16 @@ def get_state_label(meter_name: str, intensity: float, harmony: float) -> str:
         return labels[3]  # Peak bucket
 
 
-def get_quality_label(intensity: float, harmony: float) -> QualityLabel:
-    """Determine unified quality label."""
-    if intensity < INTENSITY_QUIET_THRESHOLD:
-        return QualityLabel.QUIET if harmony >= 50 else QualityLabel.CHALLENGING
-    elif harmony >= HARMONY_HARMONIOUS_THRESHOLD:
-        return QualityLabel.HARMONIOUS
-    elif harmony <= HARMONY_CHALLENGING_THRESHOLD:
+def get_quality_label(unified_score: float) -> QualityLabel:
+    """Determine quality label from unified_score quadrants."""
+    if unified_score < -25:
         return QualityLabel.CHALLENGING
+    elif unified_score < 10:
+        return QualityLabel.TURBULENT
+    elif unified_score < 50:
+        return QualityLabel.PEACEFUL
     else:
-        return QualityLabel.MIXED
+        return QualityLabel.FLOWING
 
 
 def calculate_unified_score(intensity: float, harmony: float) -> tuple[float, QualityLabel]:
@@ -431,7 +430,7 @@ def calculate_unified_score(intensity: float, harmony: float) -> tuple[float, Qu
     else:
         unified_score = max(-100, round(stretched * UNIFIED_SCORE_NEGATIVE_DAMPEN, 1))
 
-    quality = get_quality_label(intensity, harmony)
+    quality = get_quality_label(unified_score)
     return unified_score, quality
 
 
@@ -602,7 +601,7 @@ def calculate_meter(
 
     # Step 6: Get labels
     state_label = get_state_label(meter_name, intensity, harmony)
-    quality_label = get_quality_label(intensity, harmony)
+    quality_label = get_quality_label(unified_score)
 
     # Step 7: Get interpretation and advice
     try:

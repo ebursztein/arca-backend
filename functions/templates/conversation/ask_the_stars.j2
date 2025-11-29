@@ -33,11 +33,11 @@ GOOD: "You're feeling pulled in two directions - that's real, not just you. Pick
 {{ user_name }} ({{ sun_sign }}) asked: "{{ question }}"
 
 {% if horoscope and horoscope.astrometers %}
-Today's vibe: {{ horoscope.astrometers.overall_state | default("mixed") }}
+Today's vibe: {{ horoscope.astrometers.overall_state | default("Turbulent") }}
 What's working: {{ horoscope.astrometers.top_flowing_meters | default([]) | join(", ") or "nothing standout" }}
 What's hard: {{ horoscope.astrometers.top_challenging_meters | default([]) | join(", ") or "nothing major" }}
 {% else %}
-Today's vibe: mixed
+Today's vibe: Turbulent
 What's working: nothing standout
 What's hard: nothing major
 {% endif %}

@@ -418,15 +418,15 @@ def build_astrometers_for_ios(
         avg_intensity = sum(m.intensity for m in meters_for_ios) / len(meters_for_ios)
         avg_harmony = sum(m.harmony for m in meters_for_ios) / len(meters_for_ios)
 
-        # Determine group quality (same logic as meter quality)
-        if avg_intensity < 25:
-            quality = "quiet"
-        elif avg_harmony >= 70:
-            quality = "harmonious"
-        elif avg_harmony < 40:
+        # Determine group quality from unified_score quadrants
+        if avg_unified < -25:
             quality = "challenging"
+        elif avg_unified < 10:
+            quality = "turbulent"
+        elif avg_unified < 50:
+            quality = "peaceful"
         else:
-            quality = "mixed"
+            quality = "flowing"
 
         # State label computed by backend - iOS uses unified_score to map to bucket labels
         state_label = get_group_state_label(group_name, avg_intensity, avg_harmony)

@@ -31,6 +31,8 @@ from pydantic.fields import FieldInfo
 
 OUTPUT_FILE = Path(__file__).parent.parent / "docs" / "PUBLIC_API_GENERATED.md"
 MAIN_PY = Path(__file__).parent / "main.py"
+CONVERSATION_HELPERS_PY = Path(__file__).parent / "conversation_helpers.py"
+ASK_THE_STARS_PY = Path(__file__).parent / "ask_the_stars.py"
 
 
 # =============================================================================
@@ -178,9 +180,12 @@ def extract_enum(enum_class: type) -> list[dict]:
 # Function Extraction from main.py
 # =============================================================================
 
-def parse_main_py() -> list[dict]:
-    """Parse main.py to extract Cloud Function definitions."""
-    with open(MAIN_PY, "r") as f:
+def parse_python_file(filepath: Path, decorator_pattern: str = "https_fn.on_call") -> list[dict]:
+    """Parse a Python file to extract Cloud Function definitions."""
+    if not filepath.exists():
+        return []
+
+    with open(filepath, "r") as f:
         source = f.read()
 
     tree = ast.parse(source)
@@ -188,15 +193,19 @@ def parse_main_py() -> list[dict]:
 
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
-            # Check for @https_fn.on_call decorator
+            # Check for decorator
             is_callable = False
+            is_http = False
             memory = None
             secrets = []
 
             for decorator in node.decorator_list:
                 dec_str = ast.unparse(decorator)
-                if "https_fn.on_call" in dec_str:
+                if decorator_pattern in dec_str:
                     is_callable = True
+                    # Check if HTTP endpoint
+                    if "on_request" in dec_str:
+                        is_http = True
                     # Extract memory parameter
                     if "memory=" in dec_str:
                         match = re.search(r"memory=(\d+)", dec_str)
@@ -224,16 +233,60 @@ def parse_main_py() -> list[dict]:
                     "memory": memory,
                     "secrets": secrets,
                     "line": node.lineno,
+                    "is_http": is_http,
+                    "source_file": filepath.name,
                 })
 
     return functions
 
 
+def parse_main_py() -> list[dict]:
+    """Parse all Python files to extract Cloud Function definitions."""
+    functions = []
+
+    # Parse main.py
+    functions.extend(parse_python_file(MAIN_PY))
+
+    # Parse conversation_helpers.py
+    functions.extend(parse_python_file(CONVERSATION_HELPERS_PY))
+
+    # Parse ask_the_stars.py (HTTP endpoints use on_request)
+    functions.extend(parse_python_file(ASK_THE_STARS_PY, "https_fn.on_request"))
+
+    return functions
+
+
 def parse_docstring_params(docstring: str) -> list[dict]:
-    """Parse request parameters from docstring Expected request data section."""
+    """Parse request parameters from docstring Args section or Expected request data."""
     params = []
 
-    # Find the JSON block in Expected request data
+    # Try Args: format first (Google-style docstrings)
+    args_match = re.search(r"Args:\s*\n((?:\s+\w+.*\n?)+)", docstring)
+    if args_match:
+        args_block = args_match.group(1)
+        for line in args_block.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            # Match: param_name (type, optional): description
+            param_match = re.match(r"(\w+)\s*\(([^)]+)\):\s*(.*)", line)
+            if param_match:
+                name = param_match.group(1)
+                type_info = param_match.group(2)
+                desc = param_match.group(3)
+                is_optional = "optional" in type_info.lower()
+                # Extract base type
+                type_str = type_info.split(",")[0].strip()
+                params.append({
+                    "name": name,
+                    "type": type_str,
+                    "required": not is_optional,
+                    "description": desc or "-"
+                })
+        if params:
+            return params
+
+    # Fall back to Expected request data format
     match = re.search(r"Expected request data:\s*\{([^}]+)\}", docstring, re.DOTALL)
     if not match:
         return params
@@ -320,8 +373,9 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict) -> str:
     # Group functions by category
     categories = {
         "Charts": ["natal_chart", "daily_transit", "user_transit", "get_synastry_chart", "get_natal_chart_for_connection"],
-        "User Management": ["create_user_profile", "get_user_profile", "get_memory", "get_sun_sign_from_date", "register_device_token"],
+        "User Management": ["create_user_profile", "get_user_profile", "update_user_profile", "get_memory", "get_sun_sign_from_date", "register_device_token"],
         "Horoscope": ["get_daily_horoscope", "get_astrometers"],
+        "Conversations": ["ask_the_stars", "get_conversation_history", "get_user_entities", "update_entity", "delete_entity"],
         "Connections": ["create_connection", "update_connection", "delete_connection", "list_connections"],
         "Sharing": ["get_share_link", "get_public_profile", "import_connection", "update_share_mode", "list_connection_requests", "respond_to_request"],
         "Compatibility": ["get_compatibility"],
@@ -407,6 +461,11 @@ def generate_function_docs(func: dict) -> list[str]:
         f"#### `{func['name']}`",
         "",
     ]
+
+    # Add type indicator for HTTP endpoints
+    if func.get("is_http"):
+        lines.append("**Type:** HTTP Endpoint (SSE streaming)")
+        lines.append("")
 
     # Add memory/secrets if present
     notes = []

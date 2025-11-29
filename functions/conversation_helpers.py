@@ -23,19 +23,11 @@ def get_conversation_history(req: https_fn.CallableRequest) -> dict:
     """
     Get full conversation with all messages.
 
-    Input:
-    {
-      "conversation_id": "conv_xyz"
-    }
+    Args:
+        conversation_id (str): Conversation ID to fetch
 
     Returns:
-    {
-      "conversation": {
-        "conversation_id": "...",
-        "horoscope_date": "...",
-        "messages": [...]
-      }
-    }
+        { "conversation": Conversation }
     """
     # Authenticate
     if not req.auth:
@@ -80,17 +72,12 @@ def get_user_entities(req: https_fn.CallableRequest) -> dict:
     """
     Get user's entities with optional filtering.
 
-    Input:
-    {
-      "status": "active",  // optional: "active", "archived", "resolved"
-      "limit": 50          // optional: max entities to return
-    }
+    Args:
+        status (str, optional): Filter by status: "active", "archived", "resolved"
+        limit (int, optional): Max entities to return (default 50)
 
     Returns:
-    {
-      "entities": [...],
-      "total_count": 123
-    }
+        { "entities": Entity[], "total_count": int }
     """
     if not req.auth:
         raise https_fn.HttpsError(
@@ -140,19 +127,14 @@ def update_entity(req: https_fn.CallableRequest) -> dict:
     """
     Update an entity (status, aliases, context).
 
-    Input:
-    {
-      "entity_id": "ent_001",
-      "status": "archived",           // optional
-      "add_aliases": ["ex"],          // optional
-      "add_context": "We broke up"    // optional
-    }
+    Args:
+        entity_id (str): Entity ID to update
+        status (str, optional): New status: "active", "archived", "resolved"
+        add_aliases (str[], optional): Aliases to add
+        add_context (str, optional): Context snippet to add
 
     Returns:
-    {
-      "success": true,
-      "entity": {...}
-    }
+        { "success": true, "entity": Entity }
     """
     if not req.auth:
         raise https_fn.HttpsError(
@@ -236,15 +218,11 @@ def delete_entity(req: https_fn.CallableRequest) -> dict:
     """
     Delete an entity permanently.
 
-    Input:
-    {
-      "entity_id": "ent_001"
-    }
+    Args:
+        entity_id (str): Entity ID to delete
 
     Returns:
-    {
-      "success": true
-    }
+        { "success": true }
     """
     if not req.auth:
         raise https_fn.HttpsError(

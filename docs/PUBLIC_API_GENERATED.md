@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-11-29 13:46:52
+> Auto-generated on 2025-11-29 14:40:52
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -133,6 +133,27 @@ Get user profile from Firestore.
 
 ---
 
+#### `update_user_profile`
+
+*Requires: GEMINI_API_KEY, POSTHOG_API_KEY*
+
+Update user profile with optional natal chart regeneration.
+
+**Request Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | str | Yes | Firebase auth user ID |
+| `photo_path` | str | No | Firebase Storage path for profile photo |
+| `birth_time` | str | No | Birth time HH:MM - triggers chart regeneration |
+| `birth_timezone` | str | No | IANA timezone for birth time |
+| `birth_lat` | float | No | Birth latitude |
+| `birth_lon` | float | No | Birth longitude |
+
+**Response:** `UserProfile`
+
+---
+
 #### `get_memory`
 
 Get memory collection for a user (for LLM personalization).
@@ -207,6 +228,80 @@ Calculate all 17 astrological meters for a user on a given date.
 | `date` | string | No | Optional, defaults to today |
 
 **Response:** `{`
+
+---
+
+### Conversations
+
+#### `get_conversation_history`
+
+Get full conversation with all messages.
+
+**Request Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `conversation_id` | str | Yes | Conversation ID to fetch |
+
+**Response:** `{ "conversation": Conversation }`
+
+---
+
+#### `get_user_entities`
+
+Get user's entities with optional filtering.
+
+**Request Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | str | No | Filter by status: "active", "archived", "resolved" |
+| `limit` | int | No | Max entities to return (default 50) |
+
+**Response:** `{ "entities": Entity[], "total_count": int }`
+
+---
+
+#### `update_entity`
+
+Update an entity (status, aliases, context).
+
+**Request Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entity_id` | str | Yes | Entity ID to update |
+| `status` | str | No | New status: "active", "archived", "resolved" |
+| `add_aliases` | str[] | No | Aliases to add |
+| `add_context` | str | No | Context snippet to add |
+
+**Response:** `{ "success": true, "entity": Entity }`
+
+---
+
+#### `delete_entity`
+
+Delete an entity permanently.
+
+**Request Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entity_id` | str | Yes | Entity ID to delete |
+
+**Response:** `{ "success": true }`
+
+---
+
+#### `ask_the_stars`
+
+**Type:** HTTP Endpoint (SSE streaming)
+
+*Memory: 512MB | Requires: GEMINI_API_KEY*
+
+HTTPS endpoint: Ask the Stars with SSE streaming.
+
+**Response:** `object`
 
 ---
 
@@ -392,29 +487,6 @@ Get compatibility analysis between user and a connection.
 
 ---
 
-### Other
-
-#### `update_user_profile`
-
-*Requires: GEMINI_API_KEY, POSTHOG_API_KEY*
-
-Update user profile with optional natal chart regeneration.
-
-**Request Parameters:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
-| `photo_path` | string | Yes | - |
-| `birth_time` | string | Yes | - |
-| `birth_timezone` | string | Yes | - |
-| `birth_lat` | float | Yes | - |
-| `birth_lon` | float | Yes | - |
-
-**Response:** `{`
-
----
-
 ---
 
 ## Model Definitions
@@ -545,7 +617,7 @@ Update user profile with optional natal chart regeneration.
 | `overall_unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | Overall unified score across all meters (-100 to +100) |
 | `overall_intensity` | MeterReading | Yes | PydanticUndefined | - | Overall intensity meter with state_label |
 | `overall_harmony` | MeterReading | Yes | PydanticUndefined | - | Overall harmony meter with state_label |
-| `overall_quality` | string | Yes | PydanticUndefined | - | Overall quality: harmonious, challenging, mixed, quiet, p... |
+| `overall_quality` | string | Yes | PydanticUndefined | - | Overall quality from unified_score quadrant: challenging,... |
 | `overall_state` | string | Yes | PydanticUndefined | - | Overall state label for the day (e.g., 'Quiet Reflection'... |
 | `groups` | MeterGroupForIOS[] | Yes | PydanticUndefined | - | All 5 groups containing 17 total meters |
 | `top_active_meters` | string[] | Yes | PydanticUndefined | - | Top 3-5 meter names by intensity (e.g., ['vitality', 'dri... |
@@ -562,7 +634,7 @@ Update user profile with optional natal chart regeneration.
 | `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average intensity of member meters |
 | `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average harmony of member meters |
 | `state_label` | string | Yes | PydanticUndefined | - | Aggregated state label from group JSON (contextual to group) |
-| `quality` | string | Yes | PydanticUndefined | - | Generic enum: excellent, supportive, harmonious, peaceful... |
+| `quality` | string | Yes | PydanticUndefined | - | Quality from unified_score quadrant: challenging, turbule... |
 | `interpretation` | string | Yes | PydanticUndefined | - | Group-level interpretation from existing LLM flow |
 | `meters` | MeterForIOS[] | Yes | PydanticUndefined | - | Individual meters in this group (3-4 meters) |
 | `trend_delta` | float | null | No | null | - | Change in group unified_score from yesterday |
@@ -581,7 +653,7 @@ Update user profile with optional natal chart regeneration.
 | `unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | Primary display value (-100 to +100, polar-style from int... |
 | `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Activity level - how much is happening |
 | `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Quality - supportive (high) vs challenging (low) |
-| `unified_quality` | string | Yes | PydanticUndefined | - | Simple category: harmonious, challenging, mixed, quiet, p... |
+| `unified_quality` | string | Yes | PydanticUndefined | - | Quality from unified_score quadrant: challenging, turbule... |
 | `state_label` | string | Yes | PydanticUndefined | - | Rich contextual state from JSON: 'Peak Performance', 'Pus... |
 | `interpretation` | string | Yes | PydanticUndefined | - | Personalized daily interpretation referencing today's tra... |
 | `trend_delta` | float | null | No | null | - | Change in unified_score from yesterday |
@@ -631,7 +703,7 @@ Update user profile with optional natal chart regeneration.
 | `unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | - |
 | `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | - |
 | `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | - |
-| `unified_quality` | string (enum: QualityLabel) | Yes | PydanticUndefined | - | - |
+| `unified_quality` | "challenging" | "turbulent" | "peaceful" | "flowing" | Yes | PydanticUndefined | - | - |
 | `state_label` | string | Yes | PydanticUndefined | - | - |
 | `interpretation` | string | Yes | PydanticUndefined | - | - |
 | `advice` | string[] | Yes | PydanticUndefined | - | - |
@@ -1156,7 +1228,7 @@ Update user profile with optional natal chart regeneration.
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
 | `label` | string | Yes | PydanticUndefined | min_length: 1, max_length: 50 | Human-readable state: Excellent, Supportive, Challenging,... |
-| `quality` | string (enum: QualityType) | Yes | PydanticUndefined | - | Quality type: excellent, supportive, harmonious, peaceful... |
+| `quality` | "challenging" | "turbulent" | "peaceful" | "flowing" | Yes | PydanticUndefined | - | Quality type based on unified_score: challenging, turbule... |
 
 #### `MeterGroupTrend`
 
@@ -1323,14 +1395,10 @@ Update user profile with optional natal chart regeneration.
 
 | Name | Value |
 |------|-------|
-| `EXCELLENT` | `"excellent"` |
-| `SUPPORTIVE` | `"supportive"` |
-| `HARMONIOUS` | `"harmonious"` |
-| `PEACEFUL` | `"peaceful"` |
-| `MIXED` | `"mixed"` |
-| `QUIET` | `"quiet"` |
 | `CHALLENGING` | `"challenging"` |
-| `INTENSE` | `"intense"` |
+| `TURBULENT` | `"turbulent"` |
+| `PEACEFUL` | `"peaceful"` |
+| `FLOWING` | `"flowing"` |
 
 #### `RelationshipType`
 

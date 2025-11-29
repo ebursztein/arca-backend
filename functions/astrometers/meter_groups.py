@@ -110,30 +110,27 @@ def get_group_description(group_name: str) -> Dict[str, str]:
 
 def determine_quality_label(harmony: float, intensity: float) -> tuple[str, str]:
     """
-    Determine quality label and display label based on harmony and intensity.
+    Determine quality label based on unified_score quadrants.
+
+    Calculates unified_score internally and maps to quadrant labels.
 
     Returns:
-        (quality, label) tuple
-        quality: enum value ("excellent", "supportive", "harmonious", etc.)
-        label: human-readable string ("Excellent", "Supportive", etc.)
+        (quality, label) tuple based on unified_score:
+        - < -25: ("challenging", "Challenging")
+        - -25 to 10: ("turbulent", "Turbulent")
+        - 10 to 50: ("peaceful", "Peaceful")
+        - >= 50: ("flowing", "Flowing")
     """
-    if harmony >= 75:
-        if intensity >= 75:
-            return ("excellent", "Excellent")
-        elif intensity >= 40:
-            return ("supportive", "Supportive")
-        else:
-            return ("peaceful", "Peaceful")
-    elif harmony >= 50:
-        if intensity >= 60:
-            return ("mixed", "Mixed")
-        else:
-            return ("quiet", "Quiet")
+    unified_score, _ = calculate_unified_score(intensity, harmony)
+
+    if unified_score < -25:
+        return ("challenging", "Challenging")
+    elif unified_score < 10:
+        return ("turbulent", "Turbulent")
+    elif unified_score < 50:
+        return ("peaceful", "Peaceful")
     else:
-        if intensity >= 60:
-            return ("intense", "Intense")
-        else:
-            return ("challenging", "Challenging")
+        return ("flowing", "Flowing")
 
 
 # =============================================================================

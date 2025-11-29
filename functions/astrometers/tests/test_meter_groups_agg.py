@@ -24,9 +24,15 @@ def create_mock_meter(
     harmony: float
 ) -> MeterReading:
     """Create a mock MeterReading for testing."""
-    unified_quality = QualityLabel.HARMONIOUS if harmony >= 70 else (
-        QualityLabel.CHALLENGING if harmony < 50 else QualityLabel.MIXED
-    )
+    # Quality based on unified_score quadrants
+    if unified_score < -25:
+        unified_quality = QualityLabel.CHALLENGING
+    elif unified_score < 10:
+        unified_quality = QualityLabel.TURBULENT
+    elif unified_score < 50:
+        unified_quality = QualityLabel.PEACEFUL
+    else:
+        unified_quality = QualityLabel.FLOWING
 
     return MeterReading(
         meter_name=meter_name,
@@ -80,39 +86,24 @@ def test_get_group_state_label():
 
 
 def test_determine_quality_label():
-    """Test quality label determination."""
-    # Excellent: high harmony, high intensity
-    quality, label = determine_quality_label(75, 75)
-    assert quality == "excellent"
-    assert label == "Excellent"
+    """Test quality label determination based on unified_score quadrants."""
+    # Flowing: high harmony (unified_score >= 50)
+    quality, label = determine_quality_label(85, 70)
+    assert quality == "flowing"
+    assert label == "Flowing"
 
-    # Supportive: high harmony, moderate intensity
-    quality, label = determine_quality_label(75, 50)
-    assert quality == "supportive"
-    assert label == "Supportive"
-
-    # Peaceful: high harmony, low intensity
-    quality, label = determine_quality_label(75, 30)
+    # Peaceful: good harmony (unified_score 10-50)
+    quality, label = determine_quality_label(65, 50)
     assert quality == "peaceful"
     assert label == "Peaceful"
 
-    # Mixed: moderate harmony, high intensity
-    quality, label = determine_quality_label(50, 60)
-    assert quality == "mixed"
-    assert label == "Mixed"
+    # Turbulent: mixed (unified_score -25 to 10)
+    quality, label = determine_quality_label(50, 50)
+    assert quality == "turbulent"
+    assert label == "Turbulent"
 
-    # Quiet: moderate harmony, low intensity
-    quality, label = determine_quality_label(50, 30)
-    assert quality == "quiet"
-    assert label == "Quiet"
-
-    # Intense: low harmony, high intensity
-    quality, label = determine_quality_label(30, 60)
-    assert quality == "intense"
-    assert label == "Intense"
-
-    # Challenging: low harmony, low intensity
-    quality, label = determine_quality_label(30, 30)
+    # Challenging: low harmony (unified_score < -25)
+    quality, label = determine_quality_label(20, 70)
     assert quality == "challenging"
     assert label == "Challenging"
 

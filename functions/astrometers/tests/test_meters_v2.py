@@ -267,25 +267,29 @@ class TestRetrogradeModifiers:
 class TestUnifiedScore:
     """Test unified score calculation (polar-style with sigmoid stretch)."""
 
-    def test_quiet_low_intensity(self):
-        """Test quiet quality for low intensity."""
-        score, quality = calculate_unified_score(15, 50)
-        assert quality == QualityLabel.QUIET
-
-    def test_harmonious_high_harmony(self):
-        """Test harmonious quality for high harmony."""
+    def test_flowing_high_unified_score(self):
+        """Test flowing quality for unified_score >= 50."""
         score, quality = calculate_unified_score(60, 80)
-        assert quality == QualityLabel.HARMONIOUS
+        assert score >= 50
+        assert quality == QualityLabel.FLOWING
 
-    def test_challenging_low_harmony(self):
-        """Test challenging quality for low harmony."""
-        score, quality = calculate_unified_score(60, 20)
-        assert quality == QualityLabel.CHALLENGING
+    def test_peaceful_moderate_unified_score(self):
+        """Test peaceful quality for unified_score 10-50."""
+        score, quality = calculate_unified_score(30, 65)
+        assert 10 <= score < 50
+        assert quality == QualityLabel.PEACEFUL
 
-    def test_mixed_medium_harmony(self):
-        """Test mixed quality for medium harmony."""
+    def test_turbulent_low_positive_unified_score(self):
+        """Test turbulent quality for unified_score -25 to 10."""
         score, quality = calculate_unified_score(60, 50)
-        assert quality == QualityLabel.MIXED
+        assert -25 <= score < 10
+        assert quality == QualityLabel.TURBULENT
+
+    def test_challenging_negative_unified_score(self):
+        """Test challenging quality for unified_score < -25."""
+        score, quality = calculate_unified_score(60, 20)
+        assert score < -25
+        assert quality == QualityLabel.CHALLENGING
 
     def test_unified_score_range(self):
         """Test that unified score is in valid range (-100 to +100)."""
@@ -306,7 +310,8 @@ class TestUnifiedScore:
         score, quality = calculate_unified_score(0, 80)
         # Even at 0 intensity, base weight preserves some harmony signal
         assert score >= 0, "Positive harmony should give positive score even at 0 intensity"
-        assert quality == QualityLabel.QUIET  # Low intensity = quiet
+        # Quality is based on unified_score now, not intensity
+        assert quality in [QualityLabel.PEACEFUL, QualityLabel.FLOWING, QualityLabel.TURBULENT]
 
     def test_unified_score_empowering_asymmetry(self):
         """Test that positive scores are boosted and negative dampened."""

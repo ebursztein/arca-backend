@@ -405,37 +405,20 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
     """
     Update user profile with optional natal chart regeneration.
 
-    Supports two use cases:
-    1. Photo update only (existing)
-    2. Extended setup with birth time/location (NEW) - triggers natal chart regeneration
+    Two use cases:
+    1. Photo update only
+    2. Extended setup with birth time/location - triggers natal chart regeneration
 
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id",
-
-        // Optional: Photo update
-        "photo_path": "profiles/abc123/photo.jpg",
-
-        // Optional: Extended setup (triggers natal chart regeneration)
-        "birth_time": "14:30",
-        "birth_timezone": "America/New_York",
-        "birth_lat": 40.7128,
-        "birth_lon": -74.0060
-    }
+    Args:
+        user_id (str): Firebase auth user ID
+        photo_path (str, optional): Firebase Storage path for profile photo
+        birth_time (str, optional): Birth time HH:MM - triggers chart regeneration
+        birth_timezone (str, optional): IANA timezone for birth time
+        birth_lat (float, optional): Birth latitude
+        birth_lon (float, optional): Birth longitude
 
     Returns:
-    {
-        "success": true,
-        "profile": {
-            "user_id": "abc123",
-            "birth_time": "14:30",
-            "birth_timezone": "America/New_York",
-            "birth_lat": 40.7128,
-            "birth_lon": -74.0060,
-            "exact_chart": true,
-            "natal_chart": { ... }
-        }
-    }
+        { "success": true, "profile": UserProfile with natal_chart and summary }
     """
     try:
         data = req.data

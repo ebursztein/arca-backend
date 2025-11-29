@@ -72,15 +72,11 @@ class ActionType(str, Enum):
 
 
 class QualityType(str, Enum):
-    """Valid quality types for meter group state."""
-    EXCELLENT = "excellent"
-    SUPPORTIVE = "supportive"
-    HARMONIOUS = "harmonious"
-    PEACEFUL = "peaceful"
-    MIXED = "mixed"
-    QUIET = "quiet"
-    CHALLENGING = "challenging"
-    INTENSE = "intense"
+    """Valid quality types based on unified_score quadrants."""
+    CHALLENGING = "challenging"  # unified_score < -25
+    TURBULENT = "turbulent"      # unified_score -25 to 10
+    PEACEFUL = "peaceful"        # unified_score 10 to 50
+    FLOWING = "flowing"          # unified_score >= 50
 
 
 class DirectionType(str, Enum):
@@ -604,7 +600,7 @@ class MeterGroupState(BaseModel):
     Quality assessment for a meter group based on harmony and intensity.
     """
     label: str = Field(min_length=1, max_length=50, description="Human-readable state: Excellent, Supportive, Challenging, etc.")
-    quality: QualityType = Field(description="Quality type: excellent, supportive, harmonious, peaceful, mixed, quiet, challenging, intense")
+    quality: QualityType = Field(description="Quality type based on unified_score: challenging, turbulent, peaceful, flowing")
 
 
 class TrendMetric(BaseModel):
@@ -1062,7 +1058,7 @@ class MeterForIOS(BaseModel):
     harmony: float = Field(ge=0, le=100, description="Quality - supportive (high) vs challenging (low)")
 
     # Labels (two different purposes!)
-    unified_quality: str = Field(description="Simple category: harmonious, challenging, mixed, quiet, peaceful")
+    unified_quality: str = Field(description="Quality from unified_score quadrant: challenging, turbulent, peaceful, flowing")
     state_label: str = Field(description="Rich contextual state from JSON: 'Peak Performance', 'Pushing Through', 'Sluggish', etc.")
 
     # LLM-generated interpretation (1-2 sentences, 80-150 chars)
@@ -1102,7 +1098,7 @@ class MeterGroupForIOS(BaseModel):
 
     # State
     state_label: str = Field(description="Aggregated state label from group JSON (contextual to group)")
-    quality: str = Field(description="Generic enum: excellent, supportive, harmonious, peaceful, mixed, quiet, challenging, intense")
+    quality: str = Field(description="Quality from unified_score quadrant: challenging, turbulent, peaceful, flowing")
 
     # LLM interpretation (2-3 sentences, 150-300 chars)
     interpretation: str = Field(description="Group-level interpretation from existing LLM flow")
@@ -1133,7 +1129,7 @@ class AstrometersForIOS(BaseModel):
     overall_unified_score: float = Field(ge=-100, le=100, description="Overall unified score across all meters (-100 to +100)")
     overall_intensity: "MeterReading" = Field(description="Overall intensity meter with state_label")
     overall_harmony: "MeterReading" = Field(description="Overall harmony meter with state_label")
-    overall_quality: str = Field(description="Overall quality: harmonious, challenging, mixed, quiet, peaceful")
+    overall_quality: str = Field(description="Overall quality from unified_score quadrant: challenging, turbulent, peaceful, flowing")
     overall_state: str = Field(description="Overall state label for the day (e.g., 'Quiet Reflection', 'Peak Energy', 'Under Pressure')")
 
     # 5 meter groups with their member meters nested (17 total meters)
