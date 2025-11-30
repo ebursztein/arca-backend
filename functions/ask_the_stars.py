@@ -33,9 +33,10 @@ from posthog_utils import capture_llm_generation
 # Import shared secrets (centralized to avoid duplicate declarations)
 from firebase_secrets import GEMINI_API_KEY
 
-# Template path relative to this file
-TEMPLATE_DIR = Path(__file__).parent / 'templates' / 'conversation'
-template_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+# Template path relative to this file - include both conversation and parent for voice.md
+TEMPLATES_BASE = Path(__file__).parent / 'templates'
+TEMPLATE_DIR = TEMPLATES_BASE / 'conversation'
+template_env = Environment(loader=FileSystemLoader([str(TEMPLATE_DIR), str(TEMPLATES_BASE)]))
 
 
 def stream_ask_the_stars_response(
@@ -66,13 +67,20 @@ def stream_ask_the_stars_response(
     # Create client (same pattern as llm.py)
     gemini_client = genai.Client(api_key=api_key)
 
+    # Calculate age from birth date
+    birth_year = int(user_profile.birth_date.split("-")[0])
+    age = datetime.now().year - birth_year
+
     template = template_env.get_template('ask_the_stars.j2')
     prompt = template.render(
         user_name=user_profile.name,
         sun_sign=user_profile.sun_sign,
+        birth_date=user_profile.birth_date,
+        age=age,
         horoscope_date=horoscope_date,
         horoscope=horoscope,
         entities=entities,
+        memory=memory,
         mentioned_connections=mentioned_connections or [],
         messages=conversation_messages,
         question=question
@@ -133,11 +141,33 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
     """
     HTTPS endpoint: Ask the Stars with SSE streaming.
 
-    iOS sends:
-    - Authorization: Bearer <firebase_id_token>
-    - Body: {"question": "...", "horoscope_date": "2025-01-20", "conversation_id": "..."}
+    Conversational Q&A about today's horoscope. Streams responses in real-time
+    via Server-Sent Events (SSE). Uses the user's latest stored horoscope.
 
-    Returns: Server-Sent Events stream
+    Authentication:
+        Authorization: Bearer <firebase_id_token>
+        Dev mode: Bearer dev_arca_2025 (requires user_id in body)
+
+    Expected request data:
+    {
+        "question": "string",       // The user's question (required)
+        "conversation_id": "string", // Optional - continue existing conversation
+        "user_id": "string"         // Optional - required only with dev token
+    }
+
+    SSE Response Events:
+        Content-Type: text/event-stream
+
+        Chunk events (streamed as LLM generates):
+            data: {"type": "chunk", "text": "partial response text..."}
+
+        Done event (sent when complete):
+            data: {"type": "done", "conversation_id": "conv_abc123", "message_id": "msg_xyz789"}
+
+    Returns:
+        AskTheStarsSSEResponse - SSE stream with events:
+        - type="chunk": Partial text (string) as LLM generates
+        - type="done": Final event with conversation_id (string) and message_id (string)
     """
     if req.method == "OPTIONS":
         return https_fn.Response(status=204)
@@ -146,12 +176,11 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
     try:
         body = req.get_json()
         question = body.get('question')
-        horoscope_date = body.get('horoscope_date')
         conversation_id = body.get('conversation_id')
 
-        if not question or not horoscope_date:
+        if not question:
             return https_fn.Response(
-                json.dumps({"error": "Missing question or horoscope_date"}),
+                json.dumps({"error": "Missing question"}),
                 status=400,
                 headers={"Content-Type": "application/json"}
             )
@@ -198,7 +227,7 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
         )
 
     # Fetch data (4-5 reads total)
-    db = firestore.client()
+    db = firestore.client(database_id="(default)")
 
     try:
         # 1. User profile
@@ -212,7 +241,7 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
         user_data = user_doc.to_dict()
         user_profile = UserProfile(**user_data)
 
-        # 2. Horoscope (compressed)
+        # 2. Horoscope (compressed) - use most recent from latest document
         horoscope_doc = db.collection('users').document(user_id).collection('horoscopes').document('latest').get()
         if not horoscope_doc.exists:
             return https_fn.Response(
@@ -221,14 +250,16 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
                 headers={"Content-Type": "application/json"}
             )
         horoscopes_data = UserHoroscopes(**horoscope_doc.to_dict())
-        if horoscope_date not in horoscopes_data.horoscopes:
+        if not horoscopes_data.horoscopes:
             return https_fn.Response(
-                json.dumps({"error": f"Horoscope for {horoscope_date} not found"}),
+                json.dumps({"error": "No horoscopes found"}),
                 status=404,
                 headers={"Content-Type": "application/json"}
             )
+        # Use the most recent horoscope (sorted by date descending)
         from models import CompressedHoroscope
-        horoscope = CompressedHoroscope(**horoscopes_data.horoscopes[horoscope_date])
+        latest_date = sorted(horoscopes_data.horoscopes.keys(), reverse=True)[0]
+        horoscope = CompressedHoroscope(**horoscopes_data.horoscopes[latest_date])
 
         # 3. Entities
         entities_doc = db.collection('users').document(user_id).collection('entities').document('all').get()
@@ -334,7 +365,7 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
         full_response = ""
         for chunk in stream_ask_the_stars_response(
             question=question,
-            horoscope_date=horoscope_date,
+            horoscope_date=latest_date,
             user_profile=user_profile,
             horoscope=horoscope,
             entities=top_entities,
@@ -368,7 +399,7 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             conversation = Conversation(
                 conversation_id=new_conversation_id,
                 user_id=user_id,
-                horoscope_date=horoscope_date,
+                horoscope_date=latest_date,
                 messages=[user_message, assistant_message],
                 created_at=datetime.now().isoformat(),
                 updated_at=datetime.now().isoformat()

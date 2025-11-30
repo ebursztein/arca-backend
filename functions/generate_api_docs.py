@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Union, get_args, get_origin
+from typing import Any, Literal, Optional, Union, get_args, get_origin
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -62,6 +62,10 @@ def format_type(annotation: Any, simplify: bool = True) -> str:
         if len(non_none) == 1:
             return f"{format_type(non_none[0])} | null"
         return " | ".join(format_type(a) for a in args)
+
+    # Literal["a", "b"] -> "a" | "b"
+    if origin is Literal:
+        return " | ".join(f'"{v}"' if isinstance(v, str) else str(v) for v in args)
 
     # list[X] -> X[]
     if origin is list:
@@ -225,6 +229,9 @@ def parse_python_file(filepath: Path, decorator_pattern: str = "https_fn.on_call
                 # Parse return type from docstring
                 returns = parse_docstring_returns(docstring)
 
+                # Parse SSE events if HTTP endpoint
+                sse_events = parse_sse_events(docstring) if is_http else []
+
                 functions.append({
                     "name": node.name,
                     "docstring": docstring,
@@ -234,6 +241,7 @@ def parse_python_file(filepath: Path, decorator_pattern: str = "https_fn.on_call
                     "secrets": secrets,
                     "line": node.lineno,
                     "is_http": is_http,
+                    "sse_events": sse_events,
                     "source_file": filepath.name,
                 })
 
@@ -287,46 +295,81 @@ def parse_docstring_params(docstring: str) -> list[dict]:
             return params
 
     # Fall back to Expected request data format
-    match = re.search(r"Expected request data:\s*\{([^}]+)\}", docstring, re.DOTALL)
-    if not match:
+    # Find the start of the JSON block
+    start_match = re.search(r"Expected request data:\s*\{", docstring)
+    if not start_match:
         return params
 
-    json_block = match.group(1)
+    # Find matching closing brace using balanced bracket matching
+    start_idx = start_match.end() - 1  # Include the opening brace
+    brace_count = 0
+    end_idx = start_idx
+    for i, char in enumerate(docstring[start_idx:], start_idx):
+        if char == '{':
+            brace_count += 1
+        elif char == '}':
+            brace_count -= 1
+            if brace_count == 0:
+                end_idx = i + 1
+                break
 
-    # Parse each line like "field": value  // comment
+    json_block = docstring[start_idx:end_idx]
+
+    # Parse only top-level fields (depth 1)
+    # Track brace depth to skip nested objects
+    depth = 0
+
     for line in json_block.split("\n"):
-        line = line.strip()
-        if not line or line.startswith("//"):
-            continue
+        stripped = line.strip()
 
-        # Match "field_name": type_hint // comment
-        param_match = re.match(r'"(\w+)":\s*([^,/]+)(?:,)?\s*(?://\s*(.*))?', line)
-        if param_match:
-            name = param_match.group(1)
-            value_hint = param_match.group(2).strip()
-            comment = param_match.group(3) or ""
+        # Check depth at start of line (before processing this line's braces)
+        # Only parse fields at depth 1 (inside the root object)
+        if depth == 1 and stripped and not stripped.startswith("//") and stripped != "{":
+            # Match "field_name": type_hint // comment
+            param_match = re.match(r'"(\w+)":\s*([^,/\n]+)(?:,)?\s*(?://\s*(.*))?', stripped)
+            if param_match:
+                name = param_match.group(1)
+                value_hint = param_match.group(2).strip()
+                comment = param_match.group(3) or ""
 
-            # Determine type from value hint
-            if value_hint.startswith('"'):
-                type_str = "string"
-            elif value_hint in ("true", "false"):
-                type_str = "boolean"
-            elif "." in value_hint and value_hint.replace(".", "").replace("-", "").isdigit():
-                type_str = "float"
-            elif value_hint.replace("-", "").isdigit():
-                type_str = "int"
-            else:
-                type_str = "string"
+                # Determine type from value hint
+                if value_hint == '{':
+                    type_str = "object"
+                elif value_hint == '[':
+                    type_str = "array"
+                elif value_hint.startswith('"'):
+                    type_str = "string"
+                elif value_hint in ("true", "false"):
+                    type_str = "boolean"
+                elif "." in value_hint and value_hint.replace(".", "").replace("-", "").isdigit():
+                    type_str = "float"
+                elif value_hint.replace("-", "").isdigit():
+                    type_str = "int"
+                else:
+                    type_str = "string"
 
-            # Check if optional
-            is_optional = "optional" in comment.lower() or "Optional" in comment
+                # Check if optional
+                is_optional = "optional" in comment.lower() or "Optional" in comment
 
-            params.append({
-                "name": name,
-                "type": type_str,
-                "required": not is_optional,
-                "description": comment.strip() if comment else "-",
-            })
+                # Build description - combine value with comment for choice fields
+                description = comment.strip() if comment else "-"
+                if description.startswith("or ") and value_hint.startswith('"'):
+                    # Comment like "or 'public'" - prepend the example value
+                    description = f"{value_hint} {description}"
+
+                params.append({
+                    "name": name,
+                    "type": type_str,
+                    "required": not is_optional,
+                    "description": description,
+                })
+
+        # Count braces AFTER parsing to track depth for next line
+        for char in line:
+            if char == '{':
+                depth += 1
+            elif char == '}':
+                depth -= 1
 
     return params
 
@@ -337,12 +380,56 @@ def parse_docstring_returns(docstring: str) -> str:
     match = re.search(r"Returns:\s*\n\s*(.+?)(?:\n\s*\n|\Z)", docstring, re.DOTALL)
     if match:
         returns_text = match.group(1).strip()
-        # Extract model name if present
-        model_match = re.search(r"(\w+(?:Data|Horoscope|Profile|Response|Result))", returns_text)
+        # Extract model name if present (preferred - links to model docs)
+        model_match = re.search(r"(\w+(?:Data|Horoscope|Profile|Response|Result|ForIOS|SSEResponse))", returns_text)
         if model_match:
             return model_match.group(1)
+
+        # If it's a JSON example, extract all keys to show response shape
+        if returns_text.startswith("{"):
+            # Extract all keys (including nested) so iOS knows full structure
+            keys = re.findall(r'"(\w+)":', returns_text)
+            if keys:
+                # Deduplicate while preserving order
+                seen = []
+                for k in keys:
+                    if k not in seen:
+                        seen.append(k)
+                # Show more keys (up to 10) for better iOS visibility
+                return "{ " + ", ".join(f'"{k}": ...' for k in seen[:10]) + " }"
+
         return returns_text.split("\n")[0]
     return "object"
+
+
+def parse_sse_events(docstring: str) -> list[dict]:
+    """Parse SSE event schemas from docstring."""
+    events = []
+
+    # Look for SSE Response Events section
+    sse_match = re.search(r"SSE Response Events:\s*\n(.+?)(?:\n\s*Returns:|\Z)", docstring, re.DOTALL)
+    if not sse_match:
+        return events
+
+    sse_block = sse_match.group(1)
+
+    # Extract event types with their JSON schemas
+    # Pattern: data: {"type": "...", ...}
+    event_matches = re.findall(r'data:\s*(\{[^}]+\})', sse_block)
+    for event_json in event_matches:
+        # Extract type field
+        type_match = re.search(r'"type":\s*"(\w+)"', event_json)
+        if type_match:
+            event_type = type_match.group(1)
+            # Extract other fields
+            fields = re.findall(r'"(\w+)":\s*("[^"]+"|[\w.]+)', event_json)
+            events.append({
+                "type": event_type,
+                "schema": event_json,
+                "fields": {k: v for k, v in fields if k != "type"}
+            })
+
+    return events
 
 
 # =============================================================================
@@ -360,9 +447,45 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict) -> str:
         "",
         "## Table of Contents",
         "",
+        "- [Authentication](#authentication)",
         "- [Callable Functions](#callable-functions)",
         "- [Model Definitions](#model-definitions)",
         "- [Enum Definitions](#enum-definitions)",
+        "",
+        "---",
+        "",
+        "## Authentication",
+        "",
+        "All callable functions require Firebase Authentication. The backend verifies the auth token",
+        "and uses `req.auth.uid` as the user ID - clients do NOT need to pass `user_id`.",
+        "",
+        "### How It Works",
+        "",
+        "1. iOS client signs in via Firebase Auth",
+        "2. `httpsCallable()` automatically attaches the auth token",
+        "3. Backend extracts user ID from the verified token",
+        "",
+        "### Dev Account Override",
+        "",
+        "For testing connection sharing flows, dev accounts can pass `user_id` in the request",
+        "to impersonate other users. This is restricted to the following Firebase Auth UIDs:",
+        "",
+        "| Dev Account | Firebase UID |",
+        "|-------------|--------------|",
+        "| Dev A | `test_user_a` |",
+        "| Dev B | `test_user_b` |",
+        "| Dev C | `test_user_c` |",
+        "| Dev D | `test_user_d` |",
+        "| Dev E | `test_user_e` |",
+        "",
+        "**Usage (dev accounts only):**",
+        "```swift",
+        "// Normal user - no user_id needed",
+        "let result = try await callable.call([\"date\": \"2025-01-15\"])",
+        "",
+        "// Dev account impersonating another user",
+        "let result = try await callable.call([\"user_id\": \"target_user_uid\", \"date\": \"2025-01-15\"])",
+        "```",
         "",
         "---",
         "",
@@ -483,9 +606,18 @@ def generate_function_docs(func: dict) -> list[str]:
         lines.append(desc)
         lines.append("")
 
+    # Authentication note for HTTP endpoints
+    if func.get("is_http"):
+        lines.append("**Authentication:**")
+        lines.append("- Production: `Authorization: Bearer <firebase_id_token>`")
+        # Check for dev mode in docstring
+        if "dev_arca_2025" in func.get("docstring", ""):
+            lines.append("- Dev mode: `Authorization: Bearer dev_arca_2025` (requires `user_id` in body)")
+        lines.append("")
+
     # Request parameters
     if func["params"]:
-        lines.append("**Request Parameters:**")
+        lines.append("**Request Body:**")
         lines.append("")
         lines.append("| Field | Type | Required | Description |")
         lines.append("|-------|------|----------|-------------|")
@@ -494,9 +626,34 @@ def generate_function_docs(func: dict) -> list[str]:
             lines.append(f"| `{param['name']}` | {param['type']} | {req} | {param['description']} |")
         lines.append("")
 
-    # Response
-    lines.append(f"**Response:** `{func['returns']}`")
-    lines.append("")
+    # SSE events for HTTP endpoints
+    if func.get("sse_events"):
+        lines.append("**SSE Response Events:**")
+        lines.append("")
+        lines.append("Content-Type: `text/event-stream`")
+        lines.append("")
+        for event in func["sse_events"]:
+            lines.append(f"**`type=\"{event['type']}\"`**")
+            lines.append("```json")
+            lines.append(event["schema"])
+            lines.append("```")
+            if event["fields"]:
+                lines.append("")
+                lines.append("| Field | Type | Description |")
+                lines.append("|-------|------|-------------|")
+                for field_name, field_val in event["fields"].items():
+                    # Infer type from value
+                    if field_val.startswith('"'):
+                        field_type = "string"
+                    else:
+                        field_type = "string"
+                    lines.append(f"| `{field_name}` | {field_type} | - |")
+            lines.append("")
+    else:
+        # Regular response for non-SSE functions
+        lines.append(f"**Response:** `{func['returns']}`")
+        lines.append("")
+
     lines.append("---")
     lines.append("")
 
@@ -590,6 +747,7 @@ def main():
 
     # astrometers
     from astrometers.meters import MeterReading
+    from astrometers.hierarchy import Meter, MeterGroupV2
 
     # Collect all models
     pydantic_models = [
@@ -623,6 +781,8 @@ def main():
         EntityStatus, EntityCategory, MessageRole, ActionType, QualityType, DirectionType, ChangeRateType,
         RelationshipType,
         ZodiacSign, Planet, CelestialBody, Element, Modality, AspectType, ChartType, House,
+        # Astrometers
+        Meter, MeterGroupV2,
     ]
 
     # Extract model fields

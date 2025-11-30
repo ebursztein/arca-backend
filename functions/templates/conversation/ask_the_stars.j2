@@ -1,4 +1,4 @@
-{% include '../voice.md' %}
+{% include 'voice.md' %}
 
 ---
 
@@ -30,7 +30,7 @@ GOOD: "You're feeling pulled in two directions - that's real, not just you. Pick
 
 # CONTEXT
 
-{{ user_name }} ({{ sun_sign }}) asked: "{{ question }}"
+{{ user_name }} ({{ sun_sign }}, age {{ age }}) asked: "{{ question }}"
 
 {% if horoscope and horoscope.astrometers %}
 Today's vibe: {{ horoscope.astrometers.overall_state | default("Turbulent") }}
@@ -72,6 +72,10 @@ NOTE: Multiple people matched. Use the context above to determine which person {
 {% for entity in entities[:5] %}
 - {{ entity.name }} ({{ entity.entity_type }})
 {% endfor %}
+{% endif %}
+
+{% if memory %}
+{{ memory.format_for_llm() }}
 {% endif %}
 
 {% if messages %}

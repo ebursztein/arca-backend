@@ -475,24 +475,23 @@ class TestConnectionsBugHunt:
             )
 
     def test_connection_birth_date_invalid_date(self):
-        """Test Connection with syntactically valid but semantically invalid date."""
+        """Test Connection rejects syntactically valid but semantically invalid date."""
         from connections import Connection
+        from pydantic import ValidationError
         from models import RelationshipType
 
         now = datetime.now().isoformat()
 
-        # BUG HUNT: Pattern only checks format, not validity
-        # "2000-13-45" passes regex but is invalid date
-        conn = Connection(
-            connection_id="conn_001",
-            name="Test",
-            birth_date="2000-13-45",  # Passes regex, but invalid!
-            relationship_type=RelationshipType.FRIEND,
-            created_at=now,
-            updated_at=now
-        )
-        # This creates a connection with invalid date - BUG!
-        assert conn.birth_date == "2000-13-45"
+        # Validation should reject invalid dates like "2000-13-45"
+        with pytest.raises(ValidationError):
+            Connection(
+                connection_id="conn_001",
+                name="Test",
+                birth_date="2000-13-45",  # Invalid date - should be rejected
+                relationship_type=RelationshipType.FRIEND,
+                created_at=now,
+                updated_at=now
+            )
 
     def test_connection_empty_name(self):
         """Test Connection with empty name."""

@@ -10,6 +10,12 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Critical Rules
 
+### Always Run Tests After Code Changes
+- After ANY code change, run BOTH unit AND integration tests before considering work complete
+- Unit tests: `uv run pytest functions/tests/unit/ -v`
+- Integration tests: `uv run pytest functions/tests/integration/ -v`
+- ALL tests must pass before marking a task as done
+
 ### Never Use Theoretical Constants for Normalization
 - DO NOT use `DTI_MAX_ESTIMATE`, `HQS_MAX_POSITIVE_ESTIMATE`, `HQS_MAX_NEGATIVE_ESTIMATE`
 - ALWAYS use empirical calibration data from `calibration_constants.json`
@@ -101,6 +107,9 @@ uv sync                 # Sync dependencies
 ```
 
 ### Testing
+
+**Note:** GEMINI_API_KEY is always available in the environment. The Firebase emulator is always running in a screen session.
+
 ```bash
 # All tests
 uv run pytest functions/tests/
@@ -108,16 +117,27 @@ uv run pytest functions/tests/
 # Unit tests only (fast)
 uv run pytest functions/tests/unit/
 
-# Integration tests (requires GEMINI_API_KEY)
-GEMINI_API_KEY=xxx uv run pytest functions/tests/integration/
+# Integration tests
+uv run pytest functions/tests/integration/
+
+# E2E tests (emulator is always running)
+uv run pytest functions/tests/e2e/
 
 # Single file with verbose
 uv run pytest functions/tests/unit/test_models.py -v
 ```
 
-### Firebase
+### Firebase Emulator
+
+**The emulator is always running in a screen session** with auto-reload enabled and GEMINI_API_KEY configured. Code changes are picked up automatically.
+
+To view emulator logs:
 ```bash
-firebase emulators:start          # Local development
+screen -r                         # Attach to emulator screen session
+# Press Ctrl+A then D to detach
+```
+
+```bash
 firebase deploy --only functions  # Deploy functions
 firebase deploy                   # Deploy everything
 ```

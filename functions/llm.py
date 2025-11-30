@@ -57,8 +57,8 @@ from posthog_utils import capture_llm_generation
 import json
 
 
-# Initialize Jinja2 environment
-TEMPLATE_DIR = Path(__file__).parent / "templates" / "horoscope"
+# Initialize Jinja2 environment (point to templates root to allow includes across subdirs)
+TEMPLATE_DIR = Path(__file__).parent / "templates"
 jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 
 
@@ -102,7 +102,7 @@ def generate_natal_chart_summary(
     voice_content = voice_path.read_text() if voice_path.exists() else ""
 
     # Extract key chart elements
-    sun_sign = sun_sign_profile.name
+    sun_sign = sun_sign_profile.sign
 
     # Find moon sign
     moon_sign = None
@@ -296,16 +296,15 @@ def convert_aspect_contribution_to_meter_aspect(
     days_to_exact = None
 
     if aspect.today_deviation is not None and aspect.tomorrow_deviation is not None:
-        if abs(aspect.tomorrow_deviation) < abs(aspect.today_deviation):
-            phase = "applying"
-            # Rough estimate: if orb changes by 1° per day, days = orb
-            daily_change = abs(aspect.today_deviation - aspect.tomorrow_deviation)
-            if daily_change > 0:
+        daily_change = abs(aspect.today_deviation - aspect.tomorrow_deviation)
+        if daily_change > 0:
+            if abs(aspect.tomorrow_deviation) < abs(aspect.today_deviation):
+                phase = "applying"
                 days_to_exact = abs(aspect.today_deviation) / daily_change
-        else:
-            phase = "separating"
-            # Already past exact
-            days_to_exact = -1 * (abs(aspect.today_deviation) / (abs(aspect.tomorrow_deviation - aspect.today_deviation)))
+            else:
+                phase = "separating"
+                days_to_exact = -1 * (abs(aspect.today_deviation) / daily_change)
+        # If daily_change == 0, keep phase as "exact" (stationary)
 
     # Exact aspect (orb < 0.5°)
     if aspect.orb_deviation < 0.5:
@@ -895,7 +894,7 @@ def generate_daily_horoscope(
     # fixme cache static
     cache_content = None
 
-    static_template = jinja_env.get_template("daily_static.j2")
+    static_template = jinja_env.get_template("horoscope/daily_static.j2")
     static_prompt = static_template.render()  # Static template has no variables now
 
     # Build all_groups with unified_score, trend direction, and word inspirations
@@ -934,7 +933,7 @@ def generate_daily_horoscope(
             featured_meters.append(meter)
 
     # Render dynamic template with featured connection (replacing entities)
-    dynamic_template = jinja_env.get_template("daily_dynamic.j2")
+    dynamic_template = jinja_env.get_template("horoscope/daily_dynamic.j2")
     dynamic_prompt = dynamic_template.render(
         date=date,
         all_groups=all_groups,  # All 5 groups with scores + words
@@ -965,7 +964,7 @@ def generate_daily_horoscope(
         generation = "Silent Generation"
 
     # this is user specific can't be cached
-    personalization_template = jinja_env.get_template("personalization.j2")
+    personalization_template = jinja_env.get_template("horoscope/personalization.j2")
     personalization_prompt = personalization_template.render(
         user=user_profile,
         sign=sun_sign_profile,
@@ -1140,6 +1139,12 @@ class AspectInterpretation(BaseModel):
     interpretation: str = Field(description="1-2 sentence interpretation")
 
 
+class CategorySummary(BaseModel):
+    """Single category summary for compatibility."""
+    category_id: str = Field(description="Category ID (e.g., emotional, communication)")
+    summary: str = Field(description="1-2 sentence summary for this category")
+
+
 class CompatibilityInterpretationResponse(BaseModel):
     """Structured response for compatibility interpretation."""
     headline: str = Field(description="5-8 word headline capturing their dynamic")
@@ -1147,7 +1152,10 @@ class CompatibilityInterpretationResponse(BaseModel):
     strengths: str = Field(description="2-3 sentences about natural connection points")
     growth_areas: str = Field(description="1-2 sentences about growth opportunities")
     advice: str = Field(description="1 actionable sentence")
-    category_summaries: dict[str, str] = Field(description="Per-category summaries keyed by category ID")
+    category_summaries: list[CategorySummary] = Field(
+        default_factory=list,
+        description="Per-category summaries as list of objects with category_id and summary"
+    )
     aspect_interpretations: list[AspectInterpretation] = Field(
         default_factory=list,
         description="Per-aspect interpretations"
@@ -1179,7 +1187,7 @@ def generate_compatibility_interpretation(
         user_sun_sign: User's zodiac sign
         connection_name: Connection's name
         connection_sun_sign: Connection's zodiac sign
-        relationship_type: "romantic", "friend", "family", or "coworker"
+        relationship_type: "partner", "friend", "family", or "coworker"
         compatibility_result: Full compatibility analysis result
         api_key: Gemini API key
         user_id: User ID for PostHog tracking
@@ -1208,6 +1216,7 @@ def generate_compatibility_interpretation(
     # Get the relevant mode based on relationship type
     mode_map = {
         "romantic": compatibility_result.romantic,
+        "partner": compatibility_result.romantic,
         "friend": compatibility_result.friendship,
         "family": compatibility_result.friendship,
         "coworker": compatibility_result.coworker
@@ -1267,11 +1276,11 @@ INSTRUCTIONS:
 4. Each category summary should explain WHY that score exists based on their aspects
 5. Each aspect interpretation should be 1-2 sentences explaining what it means for them
 
-REQUIRED KEYS:
-- category_summaries must include ALL these keys: {', '.join(category_ids)}
+REQUIRED FORMAT:
+- category_summaries must be a list containing objects for ALL these category_ids: {', '.join(category_ids)}
+  Each object has: {{"category_id": "...", "summary": "1-2 sentences..."}}
 - aspect_interpretations must include ALL these aspect_ids: {', '.join(aspect_ids_for_prompt)}
-- Keep category summaries to 1-2 sentences each
-- Keep aspect interpretations to 1-2 sentences each"""
+  Each object has: {{"aspect_id": "...", "interpretation": "1-2 sentences..."}}"""
 
     # Initialize Gemini client
     client = genai.Client(api_key=gemini_api_key)
@@ -1299,8 +1308,16 @@ REQUIRED KEYS:
             # Fallback to JSON parsing
             result = json.loads(response.text)
 
+        # Convert category_summaries from list to dict for backward compatibility
+        if "category_summaries" in result and isinstance(result["category_summaries"], list):
+            summaries_dict = {}
+            for item in result["category_summaries"]:
+                if isinstance(item, dict) and "category_id" in item and "summary" in item:
+                    summaries_dict[item["category_id"]] = item["summary"]
+            result["category_summaries"] = summaries_dict
+
         # Ensure category_summaries exists with all keys
-        if "category_summaries" not in result:
+        if "category_summaries" not in result or not isinstance(result["category_summaries"], dict):
             result["category_summaries"] = {}
         for cid in category_ids:
             if cid not in result["category_summaries"]:

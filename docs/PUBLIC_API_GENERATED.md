@@ -1,14 +1,50 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-11-29 14:40:52
+> Auto-generated on 2025-11-30 10:21:13
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
 ## Table of Contents
 
+- [Authentication](#authentication)
 - [Callable Functions](#callable-functions)
 - [Model Definitions](#model-definitions)
 - [Enum Definitions](#enum-definitions)
+
+---
+
+## Authentication
+
+All callable functions require Firebase Authentication. The backend verifies the auth token
+and uses `req.auth.uid` as the user ID - clients do NOT need to pass `user_id`.
+
+### How It Works
+
+1. iOS client signs in via Firebase Auth
+2. `httpsCallable()` automatically attaches the auth token
+3. Backend extracts user ID from the verified token
+
+### Dev Account Override
+
+For testing connection sharing flows, dev accounts can pass `user_id` in the request
+to impersonate other users. This is restricted to the following Firebase Auth UIDs:
+
+| Dev Account | Firebase UID |
+|-------------|--------------|
+| Dev A | `test_user_a` |
+| Dev B | `test_user_b` |
+| Dev C | `test_user_c` |
+| Dev D | `test_user_d` |
+| Dev E | `test_user_e` |
+
+**Usage (dev accounts only):**
+```swift
+// Normal user - no user_id needed
+let result = try await callable.call(["date": "2025-01-15"])
+
+// Dev account impersonating another user
+let result = try await callable.call(["user_id": "target_user_uid", "date": "2025-01-15"])
+```
 
 ---
 
@@ -20,7 +56,7 @@
 
 Generate a natal (birth) chart.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -36,7 +72,7 @@ Generate a natal (birth) chart.
 
 TIER 1: Generate daily transit chart (universal, no location).
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -50,7 +86,7 @@ TIER 1: Generate daily transit chart (universal, no location).
 
 TIER 2: Generate user-specific transit chart overlay.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -66,7 +102,7 @@ TIER 2: Generate user-specific transit chart overlay.
 
 Get natal chart for a connection.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -83,7 +119,7 @@ Get natal chart for a connection.
 
 Get both natal charts and synastry aspects in a single call.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -102,7 +138,7 @@ Get both natal charts and synastry aspects in a single call.
 
 Create user profile with birth chart computation and LLM-generated summary.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -115,7 +151,7 @@ Create user profile with birth chart computation and LLM-generated summary.
 | `birth_lat` | float | No | Latitude (optional) |
 | `birth_lon` | float | No | Longitude (optional) |
 
-**Response:** `{`
+**Response:** `{ "success": ..., "user_id": ..., "sun_sign": ..., "exact_chart": ..., "mode": ... }`
 
 ---
 
@@ -123,7 +159,7 @@ Create user profile with birth chart computation and LLM-generated summary.
 
 Get user profile from Firestore.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -139,7 +175,7 @@ Get user profile from Firestore.
 
 Update user profile with optional natal chart regeneration.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -158,7 +194,7 @@ Update user profile with optional natal chart regeneration.
 
 Get memory collection for a user (for LLM personalization).
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -172,13 +208,13 @@ Get memory collection for a user (for LLM personalization).
 
 Get sun sign from birth date.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `birth_date` | string | Yes | YYYY-MM-DD |
 
-**Response:** `{`
+**Response:** `{ "sun_sign": ..., "element": ..., "modality": ..., "ruling_planet": ..., "keywords": ..., "summary": ... }`
 
 ---
 
@@ -186,14 +222,14 @@ Get sun sign from birth date.
 
 Register device token for push notifications.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `device_token` | string | Yes | - |
 
-**Response:** `{ "success": true }`
+**Response:** `{ "success": ... }`
 
 ---
 
@@ -205,7 +241,7 @@ Register device token for push notifications.
 
 Generate daily horoscope - complete reading with meter groups.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -220,14 +256,14 @@ Generate daily horoscope - complete reading with meter groups.
 
 Calculate all 17 astrological meters for a user on a given date.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `date` | string | No | Optional, defaults to today |
 
-**Response:** `{`
+**Response:** `AstrometersForIOS`
 
 ---
 
@@ -237,13 +273,13 @@ Calculate all 17 astrological meters for a user on a given date.
 
 Get full conversation with all messages.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `conversation_id` | str | Yes | Conversation ID to fetch |
 
-**Response:** `{ "conversation": Conversation }`
+**Response:** `{ "conversation": ... }`
 
 ---
 
@@ -251,14 +287,14 @@ Get full conversation with all messages.
 
 Get user's entities with optional filtering.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `status` | str | No | Filter by status: "active", "archived", "resolved" |
 | `limit` | int | No | Max entities to return (default 50) |
 
-**Response:** `{ "entities": Entity[], "total_count": int }`
+**Response:** `{ "entities": ..., "total_count": ... }`
 
 ---
 
@@ -266,7 +302,7 @@ Get user's entities with optional filtering.
 
 Update an entity (status, aliases, context).
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -275,7 +311,7 @@ Update an entity (status, aliases, context).
 | `add_aliases` | str[] | No | Aliases to add |
 | `add_context` | str | No | Context snippet to add |
 
-**Response:** `{ "success": true, "entity": Entity }`
+**Response:** `{ "success": ..., "entity": ... }`
 
 ---
 
@@ -283,13 +319,13 @@ Update an entity (status, aliases, context).
 
 Delete an entity permanently.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `entity_id` | str | Yes | Entity ID to delete |
 
-**Response:** `{ "success": true }`
+**Response:** `{ "success": ... }`
 
 ---
 
@@ -301,7 +337,40 @@ Delete an entity permanently.
 
 HTTPS endpoint: Ask the Stars with SSE streaming.
 
-**Response:** `object`
+**Authentication:**
+- Production: `Authorization: Bearer <firebase_id_token>`
+- Dev mode: `Authorization: Bearer dev_arca_2025` (requires `user_id` in body)
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `question` | string | Yes | The user's question (required) |
+| `conversation_id` | string | No | Optional - continue existing conversation |
+| `user_id` | string | No | Optional - required only with dev token |
+
+**SSE Response Events:**
+
+Content-Type: `text/event-stream`
+
+**`type="chunk"`**
+```json
+{"type": "chunk", "text": "partial response text..."}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | - |
+
+**`type="done"`**
+```json
+{"type": "done", "conversation_id": "conv_abc123", "message_id": "msg_xyz789"}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `conversation_id` | string | - |
+| `message_id` | string | - |
 
 ---
 
@@ -311,19 +380,12 @@ HTTPS endpoint: Ask the Stars with SSE streaming.
 
 Manually create a connection (not via share link).
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
-| `connection` | string | Yes | - |
-| `name` | string | Yes | - |
-| `birth_date` | string | Yes | - |
-| `birth_time` | string | No | Optional |
-| `birth_lat` | float | No | Optional |
-| `birth_lon` | float | No | Optional |
-| `birth_timezone` | string | Yes | - |
-| `relationship_type` | string | Yes | - |
+| `connection` | object | Yes | - |
 
 **Response:** `Created connection data`
 
@@ -333,15 +395,13 @@ Manually create a connection (not via share link).
 
 Update a connection's details.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
-| `updates` | string | Yes | - |
-| `name` | string | Yes | - |
-| `relationship_type` | string | Yes | - |
+| `updates` | object | Yes | - |
 
 **Response:** `Updated connection data`
 
@@ -351,14 +411,14 @@ Update a connection's details.
 
 Delete a connection.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 
-**Response:** `{ "success": true }`
+**Response:** `{ "success": ... }`
 
 ---
 
@@ -366,14 +426,14 @@ Delete a connection.
 
 List all user's connections.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `limit` | int | No | Optional, default 50 |
 
-**Response:** `{`
+**Response:** `{ "connections": ..., "total_count": ... }`
 
 ---
 
@@ -383,13 +443,13 @@ List all user's connections.
 
 Get user's shareable profile link for "Add me on Arca".
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 
-**Response:** `{`
+**Response:** `{ "share_url": ..., "share_mode": ..., "qr_code_data": ... }`
 
 ---
 
@@ -397,7 +457,7 @@ Get user's shareable profile link for "Add me on Arca".
 
 Fetch public profile data from a share link.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -411,7 +471,7 @@ Fetch public profile data from a share link.
 
 Add a connection from a share link.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -419,7 +479,7 @@ Add a connection from a share link.
 | `share_secret` | string | Yes | - |
 | `relationship_type` | string | Yes | - |
 
-**Response:** `{`
+**Response:** `{ "success": ..., "connection_id": ..., "connection": ..., "name": ..., "sun_sign": ..., "notification_sent": ... }`
 
 ---
 
@@ -427,13 +487,13 @@ Add a connection from a share link.
 
 List pending connection requests for a user.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 
-**Response:** `{`
+**Response:** `{ "requests": ... }`
 
 ---
 
@@ -441,14 +501,14 @@ List pending connection requests for a user.
 
 Toggle between public and request-only share modes.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
-| `share_mode` | string | Yes | or "public" |
+| `share_mode` | string | Yes | "request" or "public" |
 
-**Response:** `{ "share_mode": "request" }`
+**Response:** `{ "share_mode": ... }`
 
 ---
 
@@ -456,15 +516,15 @@ Toggle between public and request-only share modes.
 
 Approve or reject a connection request.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `request_id` | string | Yes | - |
-| `action` | string | Yes | or "reject" |
+| `action` | string | Yes | "approve" or "reject" |
 
-**Response:** `{ "success": true, "action": "approved", "connection_id": "..." }`
+**Response:** `{ "success": ..., "action": ..., "connection_id": ... }`
 
 ---
 
@@ -476,14 +536,14 @@ Approve or reject a connection request.
 
 Get compatibility analysis between user and a connection.
 
-**Request Parameters:**
+**Request Body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 
-**Response:** `{`
+**Response:** `CompatibilityResult`
 
 ---
 
@@ -543,7 +603,7 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `connection_id` | string | Yes | PydanticUndefined | - | Connection ID |
 | `connection_name` | string | Yes | PydanticUndefined | - | Connection's name |
-| `relationship_type` | string | Yes | PydanticUndefined | - | friend/romantic/family/coworker |
+| `relationship_type` | string | Yes | PydanticUndefined | - | friend/partner/family/coworker |
 | `date` | string | Yes | PydanticUndefined | - | ISO date when featured |
 | `context` | string | Yes | PydanticUndefined | - | What was said about this connection |
 
@@ -602,7 +662,7 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `connection_id` | string | Yes | PydanticUndefined | min_length: 1, max_length: 64 | Connection ID from user's connections |
 | `name` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Connection's name |
-| `relationship_type` | "friend" | "romantic" | "family" | "coworker" | Yes | PydanticUndefined | - | Relationship category |
+| `relationship_type` | "friend" | "partner" | "family" | "coworker" | Yes | PydanticUndefined | - | Relationship category |
 | `vibe` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Personalized vibe sentence with their name, e.g., 'Great ... |
 | `vibe_score` | int | Yes | PydanticUndefined | >= 0, <= 100 | 0-100 score (70-100=positive, 40-70=neutral, 0-40=challen... |
 | `key_transit` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Most significant transit, e.g., 'Transit Venus trine your... |
@@ -846,7 +906,7 @@ Get compatibility analysis between user and a connection.
 | `birth_lat` | float | null | No | null | >= -90, <= 90 | - |
 | `birth_lon` | float | null | No | null | >= -180, <= 180 | - |
 | `birth_timezone` | string | null | No | null | max_length: 64 | IANA timezone |
-| `relationship_type` | "friend" | "romantic" | "family" | "coworker" | Yes | PydanticUndefined | - | Relationship category |
+| `relationship_type` | "friend" | "partner" | "family" | "coworker" | Yes | PydanticUndefined | - | Relationship category |
 | `source_user_id` | string | null | No | null | max_length: 128 | User ID if imported via share link |
 | `sun_sign` | string | null | No | null | - | Calculated sun sign |
 | `photo_path` | string | null | No | null | max_length: 500 | Firebase Storage path for connection photo |
@@ -879,7 +939,7 @@ Get compatibility analysis between user and a connection.
 | `request_id` | string | Yes | PydanticUndefined | min_length: 1, max_length: 64 | Unique request ID |
 | `from_user_id` | string | Yes | PydanticUndefined | min_length: 1, max_length: 128 | Requester's user ID |
 | `from_name` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Requester's name |
-| `status` | Literal | No | 'pending' | - | - |
+| `status` | "pending" | "approved" | "rejected" | No | 'pending' | - | - |
 | `created_at` | string | Yes | PydanticUndefined | - | ISO timestamp |
 
 #### `ShareLinkResponse`
@@ -887,7 +947,7 @@ Get compatibility analysis between user and a connection.
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
 | `share_url` | string | Yes | PydanticUndefined | - | - |
-| `share_mode` | Literal | Yes | PydanticUndefined | - | - |
+| `share_mode` | "public" | "request" | Yes | PydanticUndefined | - | - |
 | `qr_code_data` | string | Yes | PydanticUndefined | - | - |
 
 #### `PublicProfileResponse`
@@ -895,7 +955,7 @@ Get compatibility analysis between user and a connection.
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
 | `profile` | object | Yes | PydanticUndefined | - | Public profile data |
-| `share_mode` | Literal | Yes | PydanticUndefined | - | - |
+| `share_mode` | "public" | "request" | Yes | PydanticUndefined | - | - |
 | `can_add` | boolean | Yes | PydanticUndefined | - | - |
 | `message` | string | null | No | null | - | - |
 
@@ -1030,14 +1090,14 @@ Get compatibility analysis between user and a connection.
 | `merge_with_id` | string | null | No | null | max_length: 64 | Entity ID to merge with (if action='merge') |
 | `new_alias` | string | null | No | null | max_length: 500 | Alias to add (if action='merge') |
 | `context_update` | string | null | No | null | max_length: 10000 | Context snippet to add |
-| `attribute_updates` | AttributeKV[] | No | PydanticUndefined | max_length: 50 | Attributes to add/update (e.g., [{'key': 'birthday_season... |
-| `link_to_entity_id` | string | null | No | null | max_length: 64 | Entity ID to link/relate to (if action='link' or creating... |
+| `attribute_updates` | AttributeKV[] | No | PydanticUndefined | - | Attributes to add/update (e.g., [{'key': 'birthday_season... |
+| `link_to_entity_id` | string | null | No | null | max_length: 200 | Entity ID to link/relate to (if action='link' or creating... |
 
 #### `MergedEntities`
 
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
-| `actions` | EntityMergeAction[] | No | PydanticUndefined | max_length: 100 | List of merge actions to execute |
+| `actions` | EntityMergeAction[] | No | PydanticUndefined | - | List of merge actions to execute |
 
 #### `AttributeKV`
 
@@ -1367,6 +1427,38 @@ Get compatibility analysis between user and a connection.
 | `USER` | `"user"` |
 | `ASSISTANT` | `"assistant"` |
 
+#### `Meter`
+
+| Name | Value |
+|------|-------|
+| `CLARITY` | `"clarity"` |
+| `FOCUS` | `"focus"` |
+| `COMMUNICATION` | `"communication"` |
+| `RESILIENCE` | `"resilience"` |
+| `CONNECTIONS` | `"connections"` |
+| `VULNERABILITY` | `"vulnerability"` |
+| `ENERGY` | `"energy"` |
+| `DRIVE` | `"drive"` |
+| `STRENGTH` | `"strength"` |
+| `VISION` | `"vision"` |
+| `FLOW` | `"flow"` |
+| `INTUITION` | `"intuition"` |
+| `CREATIVITY` | `"creativity"` |
+| `MOMENTUM` | `"momentum"` |
+| `AMBITION` | `"ambition"` |
+| `EVOLUTION` | `"evolution"` |
+| `CIRCLE` | `"circle"` |
+
+#### `MeterGroupV2`
+
+| Name | Value |
+|------|-------|
+| `MIND` | `"mind"` |
+| `HEART` | `"heart"` |
+| `BODY` | `"body"` |
+| `INSTINCTS` | `"instincts"` |
+| `GROWTH` | `"growth"` |
+
 #### `Modality`
 
 | Name | Value |
@@ -1405,7 +1497,7 @@ Get compatibility analysis between user and a connection.
 | Name | Value |
 |------|-------|
 | `FRIEND` | `"friend"` |
-| `ROMANTIC` | `"romantic"` |
+| `PARTNER` | `"partner"` |
 | `FAMILY` | `"family"` |
 | `COWORKER` | `"coworker"` |
 

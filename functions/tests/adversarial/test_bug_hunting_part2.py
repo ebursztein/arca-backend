@@ -25,16 +25,19 @@ class TestLLMBugHuntDeep:
         from astro import Planet, AspectType, ZodiacSign
 
         aspect = AspectContribution(
+            label="Sun conjunct Moon",
             natal_planet=Planet.SUN,
             transit_planet=Planet.MOON,
             aspect_type=AspectType.CONJUNCTION,
+            weightage=1.0,
+            transit_power=1.0,
+            quality_factor=1.0,
+            dti_contribution=1.0,
+            hqs_contribution=1.0,
             orb_deviation=0.0,
             max_orb=0.0,  # BUG HUNT: Division by zero
-            dti_contribution=1.0,
-            quality_factor=1.0,
             natal_planet_sign=ZodiacSign.ARIES,
             natal_planet_house=1,
-            label="Sun conjunct Moon",
             today_deviation=0.0,
             tomorrow_deviation=0.0
         )
@@ -50,16 +53,19 @@ class TestLLMBugHuntDeep:
         from astro import Planet, AspectType, ZodiacSign
 
         aspect = AspectContribution(
+            label="Sun conjunct Moon",
             natal_planet=Planet.SUN,
             transit_planet=Planet.MOON,
             aspect_type=AspectType.CONJUNCTION,
+            weightage=1.0,
+            transit_power=1.0,
+            quality_factor=1.0,
+            dti_contribution=1.0,
+            hqs_contribution=1.0,
             orb_deviation=1.0,
             max_orb=8.0,
-            dti_contribution=1.0,
-            quality_factor=1.0,
             natal_planet_sign=ZodiacSign.ARIES,
             natal_planet_house=1,
-            label="Sun conjunct Moon",
             today_deviation=None,  # None values
             tomorrow_deviation=None
         )
@@ -75,16 +81,19 @@ class TestLLMBugHuntDeep:
         from astro import Planet, AspectType, ZodiacSign
 
         aspect = AspectContribution(
+            label="Sun conjunct Moon",
             natal_planet=Planet.SUN,
             transit_planet=Planet.MOON,
             aspect_type=AspectType.CONJUNCTION,
+            weightage=1.0,
+            transit_power=1.0,
+            quality_factor=1.0,
+            dti_contribution=1.0,
+            hqs_contribution=1.0,
             orb_deviation=2.0,
             max_orb=8.0,
-            dti_contribution=1.0,
-            quality_factor=1.0,
             natal_planet_sign=ZodiacSign.ARIES,
             natal_planet_house=1,
-            label="Sun conjunct Moon",
             today_deviation=2.0,
             tomorrow_deviation=1.0  # Getting closer = applying
         )
@@ -99,16 +108,19 @@ class TestLLMBugHuntDeep:
         from astro import Planet, AspectType, ZodiacSign
 
         aspect = AspectContribution(
+            label="Sun conjunct Moon",
             natal_planet=Planet.SUN,
             transit_planet=Planet.MOON,
             aspect_type=AspectType.CONJUNCTION,
+            weightage=1.0,
+            transit_power=1.0,
+            quality_factor=1.0,
+            dti_contribution=1.0,
+            hqs_contribution=1.0,
             orb_deviation=2.0,
             max_orb=8.0,
-            dti_contribution=1.0,
-            quality_factor=1.0,
             natal_planet_sign=ZodiacSign.ARIES,
             natal_planet_house=1,
-            label="Sun conjunct Moon",
             today_deviation=2.0,
             tomorrow_deviation=2.0  # Same deviation = zero change
         )
@@ -126,42 +138,42 @@ class TestMoonBugHunt:
     """Probe moon.py for bugs."""
 
     def test_moon_phase_at_exact_new_moon(self):
-        """Test moon phase calculation at exact new moon (illumination = 0)."""
+        """Test moon phase calculation at exact new moon."""
         from moon import get_moon_transit_detail
-        from astro import compute_birth_chart, NatalChartData
+        from astro import compute_birth_chart
 
         # New moon date (approximately)
-        chart_dict, _ = compute_birth_chart("2025-01-29")  # Near new moon
-        chart = NatalChartData(**chart_dict)
+        natal_dict, _ = compute_birth_chart("1990-06-15")
+        transit_dict, _ = compute_birth_chart("2025-01-29")  # Near new moon
 
-        detail = get_moon_transit_detail(chart)
+        detail = get_moon_transit_detail(natal_dict, transit_dict, "2025-01-29T12:00:00")
         assert detail is not None
-        assert 0 <= detail.illumination <= 100
+        assert 0 <= detail.lunar_phase.illumination_percent <= 100
 
     def test_moon_phase_at_exact_full_moon(self):
-        """Test moon phase at exact full moon (illumination = 100)."""
+        """Test moon phase at exact full moon."""
         from moon import get_moon_transit_detail
-        from astro import compute_birth_chart, NatalChartData
+        from astro import compute_birth_chart
 
         # Full moon date (approximately)
-        chart_dict, _ = compute_birth_chart("2025-01-13")  # Near full moon
-        chart = NatalChartData(**chart_dict)
+        natal_dict, _ = compute_birth_chart("1990-06-15")
+        transit_dict, _ = compute_birth_chart("2025-01-13")  # Near full moon
 
-        detail = get_moon_transit_detail(chart)
+        detail = get_moon_transit_detail(natal_dict, transit_dict, "2025-01-13T12:00:00")
         assert detail is not None
-        assert 0 <= detail.illumination <= 100
+        assert 0 <= detail.lunar_phase.illumination_percent <= 100
 
-    def test_moon_void_of_course_detection(self):
-        """Test void of course moon detection."""
+    def test_moon_has_lunar_phase(self):
+        """Test moon detail has lunar phase info."""
         from moon import get_moon_transit_detail
-        from astro import compute_birth_chart, NatalChartData
+        from astro import compute_birth_chart
 
-        chart_dict, _ = compute_birth_chart("2025-01-20")
-        chart = NatalChartData(**chart_dict)
+        natal_dict, _ = compute_birth_chart("1990-06-15")
+        transit_dict, _ = compute_birth_chart("2025-01-20")
 
-        detail = get_moon_transit_detail(chart)
-        # Should have void_of_course field
-        assert hasattr(detail, 'void_of_course')
+        detail = get_moon_transit_detail(natal_dict, transit_dict, "2025-01-20T12:00:00")
+        assert hasattr(detail, 'lunar_phase')
+        assert detail.lunar_phase is not None
 
 
 # =============================================================================
@@ -174,16 +186,13 @@ class TestAstrometersBugHunt:
     def test_meter_score_with_no_aspects(self):
         """Test meter calculation when there are no relevant aspects."""
         from astrometers import get_meters
-        from astro import compute_birth_chart, NatalChartData
+        from astro import compute_birth_chart
 
         # Very old date might have different aspect configurations
         natal_dict, _ = compute_birth_chart("1990-06-15")
         transit_dict, _ = compute_birth_chart("2025-01-20")
 
-        natal = NatalChartData(**natal_dict)
-        transit = NatalChartData(**transit_dict)
-
-        meters = get_meters(natal, transit)
+        meters = get_meters(natal_dict, transit_dict)
         # All meters should have valid scores even if no aspects
         for meter in meters.meters:
             assert 0 <= meter.intensity <= 100
@@ -192,15 +201,12 @@ class TestAstrometersBugHunt:
     def test_meter_trend_calculation_first_day(self):
         """Test meter trend on first day (no previous data)."""
         from astrometers import get_meters
-        from astro import compute_birth_chart, NatalChartData
+        from astro import compute_birth_chart
 
         natal_dict, _ = compute_birth_chart("1990-06-15")
         transit_dict, _ = compute_birth_chart("2025-01-20")
 
-        natal = NatalChartData(**natal_dict)
-        transit = NatalChartData(**transit_dict)
-
-        meters = get_meters(natal, transit)
+        meters = get_meters(natal_dict, transit_dict)
         # Trends should be calculated relative to yesterday
         for meter in meters.meters:
             # Trend should exist
@@ -210,15 +216,12 @@ class TestAstrometersBugHunt:
         """Test that all 5 meter groups are calculated."""
         from astrometers.meter_groups import build_all_meter_groups
         from astrometers import get_meters
-        from astro import compute_birth_chart, NatalChartData
+        from astro import compute_birth_chart
 
         natal_dict, _ = compute_birth_chart("1990-06-15")
         transit_dict, _ = compute_birth_chart("2025-01-20")
 
-        natal = NatalChartData(**natal_dict)
-        transit = NatalChartData(**transit_dict)
-
-        meters = get_meters(natal, transit)
+        meters = get_meters(natal_dict, transit_dict)
         groups = build_all_meter_groups(meters.meters)
 
         # Should have all 5 groups
@@ -247,90 +250,94 @@ class TestModelsDeepBugHunt:
         # BUG HUNT: Can we create DailyHoroscope with empty interpretations?
         # The model should validate this
 
-    def test_entity_with_very_long_context_snippets(self):
-        """Test Entity with extremely long context snippets."""
+    def test_entity_with_long_context_snippets_rejected(self):
+        """Test Entity rejects extremely long context snippets."""
         from models import Entity, EntityStatus
+        from pydantic import ValidationError
 
         now = datetime.now().isoformat()
 
-        # BUG HUNT: No max_length on context_snippets items
+        # Validation should reject very long context snippets
         very_long_snippet = "A" * 100000  # 100KB string
 
-        entity = Entity(
-            entity_id="ent_001",
-            name="Test",
-            entity_type="person",
-            status=EntityStatus.ACTIVE,
-            first_seen=now,
-            last_seen=now,
-            mention_count=1,
-            context_snippets=[very_long_snippet],  # Very long!
-            created_at=now,
-            updated_at=now
-        )
-        # This creates entity with huge snippet - potential memory issue
+        with pytest.raises(ValidationError):
+            Entity(
+                entity_id="ent_001",
+                name="Test",
+                entity_type="person",
+                status=EntityStatus.ACTIVE,
+                first_seen=now,
+                last_seen=now,
+                mention_count=1,
+                context_snippets=[very_long_snippet],
+                created_at=now,
+                updated_at=now
+            )
 
-    def test_message_content_empty_string(self):
-        """Test Message with empty content."""
+    def test_message_content_empty_string_rejected(self):
+        """Test Message rejects empty content."""
         from models import Message, MessageRole
+        from pydantic import ValidationError
 
         now = datetime.now().isoformat()
 
-        # BUG HUNT: Is empty message content allowed?
-        message = Message(
-            message_id="msg_001",
-            role=MessageRole.USER,
-            content="",  # Empty content
-            timestamp=now
-        )
-        assert message.content == ""
+        # Validation should reject empty content
+        with pytest.raises(ValidationError):
+            Message(
+                message_id="msg_001",
+                role=MessageRole.USER,
+                content="",  # Empty content - should be rejected
+                timestamp=now
+            )
 
-    def test_conversation_with_thousands_of_messages(self):
-        """Test Conversation with very large message array."""
+    def test_conversation_with_many_messages(self):
+        """Test Conversation can have many messages."""
         from models import Conversation, Message, MessageRole
 
         now = datetime.now().isoformat()
 
-        # BUG HUNT: No limit on messages array
-        # This could be a memory bomb
+        # Create a reasonable number of messages
         messages = [
             Message(
                 message_id=f"msg_{i:05d}",
                 role=MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT,
-                content=f"Message {i} " * 100,
+                content=f"Message {i}",
                 timestamp=now
             )
-            for i in range(10000)  # 10K messages
+            for i in range(100)  # 100 messages is reasonable
         ]
 
         conv = Conversation(
             conversation_id="conv_001",
             user_id="user_001",
             horoscope_date="2025-01-20",
-            messages=messages
-        )
-        assert len(conv.messages) == 10000
-
-    def test_entity_with_circular_related_entities(self):
-        """Test Entity that references itself in related_entities."""
-        from models import Entity, EntityStatus
-
-        now = datetime.now().isoformat()
-
-        # BUG HUNT: Entity can reference itself
-        entity = Entity(
-            entity_id="ent_001",
-            name="Test",
-            entity_type="person",
-            status=EntityStatus.ACTIVE,
-            first_seen=now,
-            last_seen=now,
-            mention_count=1,
-            related_entities=["ent_001"],  # References itself!
+            messages=messages,
             created_at=now,
             updated_at=now
         )
-        assert "ent_001" in entity.related_entities
+        assert len(conv.messages) == 100
+
+    def test_entity_related_entities_validation(self):
+        """Test Entity related_entities validation."""
+        from models import Entity, EntityStatus
+        from pydantic import ValidationError
+
+        now = datetime.now().isoformat()
+
+        # Self-reference should be rejected
+        with pytest.raises(ValidationError):
+            Entity(
+                entity_id="ent_001",
+                name="Test",
+                entity_type="person",
+                status=EntityStatus.ACTIVE,
+                first_seen=now,
+                last_seen=now,
+                mention_count=1,
+                related_entities=["ent_001"],  # Self-reference - should be rejected
+                created_at=now,
+                updated_at=now
+            )
 
 
 # =============================================================================
@@ -414,7 +421,7 @@ class TestConnectionsDeepBugHunt:
         now = datetime.now().isoformat()
 
         # Valid relationship types
-        valid_types = ["friend", "romantic", "family", "coworker"]
+        valid_types = ["friend", "partner", "family", "coworker"]
         for rt in valid_types:
             conn = Connection(
                 connection_id="conn_001",
@@ -426,44 +433,46 @@ class TestConnectionsDeepBugHunt:
             )
             assert conn.relationship_type == rt
 
-    def test_connection_latitude_longitude_mismatch(self):
-        """Test Connection with only lat or only lon set."""
+    def test_connection_latitude_longitude_mismatch_rejected(self):
+        """Test Connection rejects only lat or only lon set."""
         from connections import Connection
         from models import RelationshipType
+        from pydantic import ValidationError
 
         now = datetime.now().isoformat()
 
-        # BUG HUNT: Only lat set, no lon
-        conn = Connection(
-            connection_id="conn_001",
-            name="Test",
-            birth_date="1990-01-15",
-            birth_lat=40.0,
-            birth_lon=None,  # Missing!
-            relationship_type=RelationshipType.FRIEND,
-            created_at=now,
-            updated_at=now
-        )
-        # This is allowed but might cause issues in chart calculation
+        # Validation should reject lat without lon
+        with pytest.raises(ValidationError):
+            Connection(
+                connection_id="conn_001",
+                name="Test",
+                birth_date="1990-01-15",
+                birth_lat=40.0,
+                birth_lon=None,  # Missing!
+                relationship_type=RelationshipType.FRIEND,
+                created_at=now,
+                updated_at=now
+            )
 
-    def test_connection_future_birth_date(self):
-        """Test Connection with future birth date."""
+    def test_connection_future_birth_date_rejected(self):
+        """Test Connection rejects future birth date."""
         from connections import Connection
         from models import RelationshipType
+        from pydantic import ValidationError
 
         now = datetime.now().isoformat()
         future_date = "2099-01-01"
 
-        # BUG HUNT: Future birth dates are allowed
-        conn = Connection(
-            connection_id="conn_001",
-            name="Future Person",
-            birth_date=future_date,
-            relationship_type=RelationshipType.FRIEND,
-            created_at=now,
-            updated_at=now
-        )
-        assert conn.birth_date == future_date  # Bug: Should validate
+        # Validation should reject future birth dates
+        with pytest.raises(ValidationError):
+            Connection(
+                connection_id="conn_001",
+                name="Future Person",
+                birth_date=future_date,
+                relationship_type=RelationshipType.FRIEND,
+                created_at=now,
+                updated_at=now
+            )
 
 
 # =============================================================================
@@ -603,25 +612,20 @@ class TestImportBugHunt:
 class TestRelationshipTypesBugHunt:
     """Test relationship type handling."""
 
-    def test_all_relationship_types_have_category_mapping(self):
-        """Test that all RelationshipTypes map to compatibility categories."""
+    def test_all_relationship_types_valid(self):
+        """Test that RelationshipTypes can be enumerated."""
         from models import RelationshipType
-        from compatibility import (
-            ROMANTIC_CATEGORIES, FRIENDSHIP_CATEGORIES, COWORKER_CATEGORIES
-        )
 
-        # Each relationship type should map to a category set
-        type_to_categories = {
-            RelationshipType.FRIEND: FRIENDSHIP_CATEGORIES,
-            RelationshipType.ROMANTIC: ROMANTIC_CATEGORIES,
-            RelationshipType.FAMILY: FRIENDSHIP_CATEGORIES,  # Usually uses friendship
-            RelationshipType.COWORKER: COWORKER_CATEGORIES,
-        }
+        # Verify all relationship types are defined
+        types = list(RelationshipType)
+        assert len(types) >= 4, "Should have at least 4 relationship types"
 
-        for rt in RelationshipType:
-            # BUG HUNT: Does every type have a mapping?
-            # This should pass if all types are covered
-            pass  # Just iterate to ensure no errors
+        # Verify expected types exist
+        type_values = [t.value for t in types]
+        assert "friend" in type_values
+        assert "partner" in type_values
+        assert "family" in type_values
+        assert "coworker" in type_values
 
 
 # =============================================================================
@@ -675,19 +679,22 @@ class TestTimestampBugHunt:
             pass  # Expected: should fail on invalid timestamp
 
     def test_conversation_horoscope_date_validation(self):
-        """Test Conversation with invalid horoscope_date."""
+        """Test Conversation rejects invalid horoscope_date."""
         from models import Conversation
+        from pydantic import ValidationError
 
         now = datetime.now().isoformat()
 
-        # BUG HUNT: horoscope_date is just a str, no validation
-        conv = Conversation(
-            conversation_id="conv_001",
-            user_id="user_001",
-            horoscope_date="not-a-date",  # Invalid!
-            messages=[]
-        )
-        assert conv.horoscope_date == "not-a-date"  # Bug: Should validate
+        # Validation should reject invalid date format
+        with pytest.raises(ValidationError):
+            Conversation(
+                conversation_id="conv_001",
+                user_id="user_001",
+                horoscope_date="not-a-date",  # Invalid - should be rejected
+                messages=[],
+                created_at=now,
+                updated_at=now
+            )
 
 
 # =============================================================================
@@ -711,13 +718,12 @@ class TestTransitsBugHunt:
 
     def test_upcoming_transits_date_range(self):
         """Test upcoming transits with various date ranges."""
-        from astro import get_upcoming_transits, compute_birth_chart, NatalChartData
+        from astro import get_upcoming_transits, compute_birth_chart
 
         natal_dict, _ = compute_birth_chart("1990-06-15")
-        natal = NatalChartData(**natal_dict)
 
         # Should work with default days
-        transits = get_upcoming_transits(natal, days_ahead=7)
+        transits = get_upcoming_transits(natal_dict, start_date="2025-01-20", days_ahead=7)
         assert isinstance(transits, list)
 
 

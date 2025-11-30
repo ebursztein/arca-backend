@@ -18,24 +18,17 @@ class TestEntityExtractionAdversarial:
     """Adversarial tests for entity_extraction.py"""
 
     def test_execute_merge_actions_with_invalid_action_type(self):
-        """Test execute_merge_actions with an invalid action type."""
-        from entity_extraction import execute_merge_actions
+        """Test EntityMergeAction rejects invalid action type."""
+        from pydantic import ValidationError
         from models import MergedEntities, EntityMergeAction
 
-        # Invalid action type - not create/update/merge/link
-        merged = MergedEntities(
-            actions=[
-                EntityMergeAction(
-                    action="delete",  # Invalid action type
-                    entity_name="Test",
-                    entity_type="person"
-                )
-            ]
-        )
-
-        # Should not crash, but should silently ignore invalid action
-        result = execute_merge_actions(merged, [], datetime.now())
-        assert len(result) == 0  # No entities created
+        # Validation should reject invalid action types at model creation
+        with pytest.raises(ValidationError):
+            EntityMergeAction(
+                action="delete",  # Invalid action type - should be rejected
+                entity_name="Test",
+                entity_type="person"
+            )
 
     def test_execute_merge_actions_merge_with_nonexistent_id(self):
         """Test merge action with a merge_with_id that doesn't exist."""

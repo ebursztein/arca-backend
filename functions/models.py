@@ -194,7 +194,7 @@ class ConnectionMention(BaseModel):
     """Tracks when a connection was featured in daily horoscope relationship_weather."""
     connection_id: str = Field(description="Connection ID")
     connection_name: str = Field(description="Connection's name")
-    relationship_type: str = Field(description="friend/romantic/family/coworker")
+    relationship_type: str = Field(description="friend/partner/family/coworker")
     date: str = Field(description="ISO date when featured")
     context: str = Field(description="What was said about this connection")
 
@@ -497,12 +497,11 @@ class EntityMergeAction(BaseModel):
     # Rich metadata updates
     attribute_updates: list[AttributeKV] = Field(
         default_factory=list,
-        max_length=50,
         description="Attributes to add/update (e.g., [{'key': 'birthday_season', 'value': 'January'}])"
     )
     link_to_entity_id: Optional[str] = Field(
         None,
-        max_length=64,
+        max_length=200,
         description="Entity ID to link/relate to (if action='link' or creating relationship)"
     )
 
@@ -511,7 +510,7 @@ class MergedEntities(BaseModel):
     """
     Structured output from entity merging LLM call.
     """
-    actions: list[EntityMergeAction] = Field(default_factory=list, max_length=100, description="List of merge actions to execute")
+    actions: list[EntityMergeAction] = Field(default_factory=list, description="List of merge actions to execute")
 
 
 # =============================================================================
@@ -534,7 +533,7 @@ class ActionableAdvice(BaseModel):
 class RelationshipType(str, Enum):
     """Relationship type for connections."""
     FRIEND = "friend"
-    ROMANTIC = "romantic"
+    PARTNER = "partner"
     FAMILY = "family"
     COWORKER = "coworker"
 

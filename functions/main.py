@@ -42,6 +42,54 @@ DEFAULT_MODEL = "gemini-2.5-flash-lite"
 # ! don't know how to change it -- the firestore.json don't sees to work
 DATABASE_ID = "(default)"
 
+# =============================================================================
+# Dev Accounts - Can impersonate other users for testing
+# =============================================================================
+# These Firebase Auth UIDs can pass user_id in request to act as another user.
+# Used for testing connection sharing flows without multiple physical devices.
+DEV_ACCOUNT_UIDS = {
+    "test_user_a",
+    "test_user_b",
+    "test_user_c",
+    "test_user_d",
+    "test_user_e",
+}
+
+
+def get_authenticated_user_id(req: https_fn.CallableRequest, allow_override: bool = True) -> str:
+    """
+    Get authenticated user ID from request, with optional dev account override.
+
+    Security: Always verifies Firebase auth token first. Only dev accounts
+    listed in DEV_ACCOUNT_UIDS can override the user_id for testing.
+
+    Args:
+        req: The callable request object
+        allow_override: If True, dev accounts can pass user_id to impersonate
+
+    Returns:
+        The authenticated user's ID (or overridden ID for dev accounts)
+
+    Raises:
+        HttpsError: If not authenticated
+    """
+    if not req.auth:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
+            message="Authentication required"
+        )
+
+    user_id = req.auth.uid
+
+    # Dev account override for testing
+    if allow_override and req.auth.uid in DEV_ACCOUNT_UIDS:
+        override_id = req.data.get("user_id") if req.data else None
+        if override_id:
+            user_id = override_id
+
+    return user_id
+
+
 # Initialize Firebase app (but only if not already initialized)
 initialize_app()
 
@@ -251,18 +299,18 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
     }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
 
         # Required fields (V1 minimum)
-        user_id = data.get("user_id")
         name = data.get("name")
         email = data.get("email")
         birth_date = data.get("birth_date")
 
-        if not all([user_id, name, email, birth_date]):
+        if not all([name, email, birth_date]):
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required fields: user_id, name, email, birth_date"
+                message="Missing required fields: name, email, birth_date"
             )
 
         # Optional fields (V2 for precise chart)
@@ -366,14 +414,7 @@ def get_user_profile(req: https_fn.CallableRequest) -> dict:
         Complete user profile dictionary or error if not found
     """
     try:
-        data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
+        user_id = get_authenticated_user_id(req)
 
         db = firestore.client(database_id=DATABASE_ID)
         doc = db.collection("users").document(user_id).get()
@@ -421,14 +462,8 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
         { "success": true, "profile": UserProfile with natal_chart and summary }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
 
         db = firestore.client(database_id=DATABASE_ID)
         user_ref = db.collection("users").document(user_id)
@@ -550,14 +585,7 @@ def get_memory(req: https_fn.CallableRequest) -> dict:
         Memory collection dictionary
     """
     try:
-        data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
+        user_id = get_authenticated_user_id(req)
 
         db = firestore.client(database_id=DATABASE_ID)
         doc = db.collection("memory").document(user_id).get()
@@ -661,14 +689,8 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         DailyHoroscope model as dictionary
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
 
         # Optional parameters
         date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
@@ -890,31 +912,13 @@ def get_astrometers(req: https_fn.CallableRequest) -> dict:
     }
 
     Returns:
-    {
-        "date": "2025-10-26T00:00:00",
-        "natal_chart_summary": {
-            "sun_sign": "gemini",
-            "ascendant_sign": "leo",
-            "moon_sign": "pisces"
-        },
-        "aspect_count": 12,
-        "overall_intensity": {...},  // MeterReading with intensity, harmony, unified_score
-        "overall_harmony": {...},
-        "clarity": {...},
-        ... // All 17 individual meters
-    }
+        AstrometersForIOS - Complete astrometers data with 17 meters in 5 groups
     """
     try:
         from astrometers import get_meters
 
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
 
         # Optional parameters
         date_str = data.get("date", datetime.now().strftime("%Y-%m-%d"))
@@ -1039,14 +1043,7 @@ def get_share_link(req: https_fn.CallableRequest) -> dict:
     }
     """
     try:
-        data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
+        user_id = get_authenticated_user_id(req)
 
         db = firestore.client(database_id=DATABASE_ID)
         user_doc = db.collection("users").document(user_id).get()
@@ -1141,15 +1138,15 @@ def import_connection(req: https_fn.CallableRequest) -> dict:
     }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         share_secret = data.get("share_secret")
         relationship_type = data.get("relationship_type", "friend")
 
-        if not user_id or not share_secret:
+        if not share_secret:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, share_secret"
+                message="Missing required parameter: share_secret"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1183,7 +1180,7 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
             "birth_lat": 40.7128,   // Optional
             "birth_lon": -74.0060,  // Optional
             "birth_timezone": "America/New_York",  // Optional
-            "relationship_type": "romantic"
+            "relationship_type": "partner"
         }
     }
 
@@ -1191,15 +1188,9 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
         Created connection data
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         conn_data = data.get("connection", {})
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
 
         name = conn_data.get("name")
         birth_date = conn_data.get("birth_date")
@@ -1212,6 +1203,15 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
             )
 
         db = firestore.client(database_id=DATABASE_ID)
+
+        # Validate user exists
+        user_doc = db.collection("users").document(user_id).get()
+        if not user_doc.exists:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.NOT_FOUND,
+                message=f"User not found: {user_id}"
+            )
+
         connection = create_connection_fn(
             db=db,
             user_id=user_id,
@@ -1245,7 +1245,7 @@ def update_connection(req: https_fn.CallableRequest) -> dict:
         "connection_id": "conn_abc123",
         "updates": {
             "name": "New Name",
-            "relationship_type": "romantic"
+            "relationship_type": "partner"
         }
     }
 
@@ -1253,15 +1253,15 @@ def update_connection(req: https_fn.CallableRequest) -> dict:
         Updated connection data
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         connection_id = data.get("connection_id")
         updates = data.get("updates", {})
 
-        if not user_id or not connection_id:
+        if not connection_id:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, connection_id"
+                message="Missing required parameter: connection_id"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1295,14 +1295,14 @@ def delete_connection(req: https_fn.CallableRequest) -> dict:
         { "success": true }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         connection_id = data.get("connection_id")
 
-        if not user_id or not connection_id:
+        if not connection_id:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, connection_id"
+                message="Missing required parameter: connection_id"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1339,15 +1339,9 @@ def list_connections(req: https_fn.CallableRequest) -> dict:
     }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
-        limit = data.get("limit", 50)
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
+        limit = data.get("limit", 50) if data else 50
 
         db = firestore.client(database_id=DATABASE_ID)
         result = list_connections_fn(db, user_id, limit)
@@ -1376,14 +1370,7 @@ def list_connection_requests(req: https_fn.CallableRequest) -> dict:
     }
     """
     try:
-        data = req.data
-        user_id = data.get("user_id")
-
-        if not user_id:
-            raise https_fn.HttpsError(
-                code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameter: user_id"
-            )
+        user_id = get_authenticated_user_id(req)
 
         db = firestore.client(database_id=DATABASE_ID)
         requests = list_connection_requests_fn(db, user_id)
@@ -1411,14 +1398,14 @@ def update_share_mode(req: https_fn.CallableRequest) -> dict:
         { "share_mode": "request" }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         share_mode = data.get("share_mode")
 
-        if not user_id or share_mode not in ["public", "request"]:
+        if share_mode not in ["public", "request"]:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing/invalid parameters: user_id, share_mode (public|request)"
+                message="Invalid parameter: share_mode must be 'public' or 'request'"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1450,15 +1437,15 @@ def respond_to_request(req: https_fn.CallableRequest) -> dict:
         { "success": true, "action": "approved", "connection_id": "..." }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         request_id = data.get("request_id")
         action = data.get("action")
 
-        if not user_id or not request_id or action not in ["approve", "reject"]:
+        if not request_id or action not in ["approve", "reject"]:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing/invalid parameters: user_id, request_id, action (approve|reject)"
+                message="Missing/invalid parameters: request_id, action (approve|reject)"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1494,14 +1481,14 @@ def register_device_token(req: https_fn.CallableRequest) -> dict:
         { "success": true }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         device_token = data.get("device_token")
 
-        if not user_id or not device_token:
+        if not device_token:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, device_token"
+                message="Missing required parameter: device_token"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1530,14 +1517,14 @@ def get_natal_chart_for_connection(req: https_fn.CallableRequest) -> dict:
         Natal chart data for the connection
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         connection_id = data.get("connection_id")
 
-        if not user_id or not connection_id:
+        if not connection_id:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, connection_id"
+                message="Missing required parameter: connection_id"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1595,25 +1582,17 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
     }
 
     Returns:
-    {
-        "romantic": { "overall_score": 78, "categories": [...] },
-        "friendship": { "overall_score": 85, "categories": [...] },
-        "coworker": { "overall_score": 72, "categories": [...] },
-        "aspects": [...],
-        "composite_summary": { "composite_sun": "Libra", ... },
-        "calculated_at": "2025-11-25T14:30:00Z",
-        "interpretation": { "headline": "...", "summary": "...", ... }
-    }
+        CompatibilityResult - Complete compatibility analysis across all three modes
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         connection_id = data.get("connection_id")
 
-        if not user_id or not connection_id:
+        if not connection_id:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, connection_id"
+                message="Missing required parameter: connection_id"
             )
 
         db = firestore.client(database_id=DATABASE_ID)
@@ -1747,14 +1726,14 @@ def get_synastry_chart(req: https_fn.CallableRequest) -> dict:
     }
     """
     try:
+        user_id = get_authenticated_user_id(req)
         data = req.data
-        user_id = data.get("user_id")
         connection_id = data.get("connection_id")
 
-        if not user_id or not connection_id:
+        if not connection_id:
             raise https_fn.HttpsError(
                 code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
-                message="Missing required parameters: user_id, connection_id"
+                message="Missing required parameter: connection_id"
             )
 
         db = firestore.client(database_id=DATABASE_ID)

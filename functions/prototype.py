@@ -222,7 +222,7 @@ def main():
         {
             "connection_id": "conn_001",
             "name": "John",
-            "relationship_type": "romantic",
+            "relationship_type": "partner",
             "sun_sign": "Leo",
             "birth_date": "1992-08-15",
             "arca_notes": [

@@ -41,16 +41,16 @@ class TestMoreModelValidationBugs:
         assert entity.confidence == 1.0
 
     def test_entity_merge_action_invalid_action_type(self):
-        """Test EntityMergeAction with invalid action type."""
+        """Test EntityMergeAction rejects invalid action type."""
         from models import EntityMergeAction
 
-        # BUG HUNT: action is just a str, not validated against enum
-        action = EntityMergeAction(
-            action="destroy",  # Invalid action type!
-            entity_name="Test",
-            entity_type="person"
-        )
-        assert action.action == "destroy"  # Bug: Should reject invalid actions
+        # Validation should reject invalid action types
+        with pytest.raises(ValidationError):
+            EntityMergeAction(
+                action="destroy",  # Invalid action type - should be rejected
+                entity_name="Test",
+                entity_type="person"
+            )
 
     def test_connection_vibe_score_boundary(self):
         """Test ConnectionVibe vibe_score at boundaries."""
@@ -103,16 +103,16 @@ class TestMoreModelValidationBugs:
             )
 
     def test_actionable_advice_empty_strings(self):
-        """Test ActionableAdvice with empty strings."""
+        """Test ActionableAdvice rejects empty strings."""
         from models import ActionableAdvice
 
-        # BUG HUNT: No min_length on fields
-        advice = ActionableAdvice(
-            do="",  # Empty!
-            dont="",
-            reflect_on=""
-        )
-        assert advice.do == ""  # Bug: Empty advice is allowed
+        # Validation should reject empty advice fields
+        with pytest.raises(ValidationError):
+            ActionableAdvice(
+                do="",  # Empty - should be rejected
+                dont="",
+                reflect_on=""
+            )
 
     def test_daily_theme_headline_too_long(self):
         """Test DailyHoroscope with headline exceeding word limit."""
@@ -125,41 +125,41 @@ class TestMoreModelValidationBugs:
         # But the model allows any length headline - potential bug
 
     def test_meter_group_state_invalid_quality(self):
-        """Test MeterGroupState with invalid quality value."""
+        """Test MeterGroupState rejects invalid quality value."""
         from models import MeterGroupState
 
-        # BUG HUNT: quality is just str, not validated against enum
-        state = MeterGroupState(
-            label="Good",
-            quality="super_awesome"  # Invalid quality value!
-        )
-        assert state.quality == "super_awesome"  # Bug: Should validate
+        # Validation should reject invalid quality values
+        with pytest.raises(ValidationError):
+            MeterGroupState(
+                label="Good",
+                quality="super_awesome"  # Invalid quality - should be rejected
+            )
 
     def test_trend_metric_invalid_direction(self):
-        """Test TrendMetric with invalid direction value."""
+        """Test TrendMetric rejects invalid direction value."""
         from models import TrendMetric
 
-        # BUG HUNT: direction is just str
-        trend = TrendMetric(
-            previous=50.0,
-            delta=5.0,
-            direction="backwards",  # Invalid!
-            change_rate="moderate"
-        )
-        assert trend.direction == "backwards"  # Bug: Should validate
+        # Validation should reject invalid direction values
+        with pytest.raises(ValidationError):
+            TrendMetric(
+                previous=50.0,
+                delta=5.0,
+                direction="backwards",  # Invalid - should be rejected
+                change_rate="moderate"
+            )
 
     def test_trend_metric_invalid_change_rate(self):
-        """Test TrendMetric with invalid change_rate value."""
+        """Test TrendMetric rejects invalid change_rate value."""
         from models import TrendMetric
 
-        # BUG HUNT: change_rate is just str
-        trend = TrendMetric(
-            previous=50.0,
-            delta=5.0,
-            direction="improving",
-            change_rate="super_fast"  # Invalid!
-        )
-        assert trend.change_rate == "super_fast"  # Bug: Should validate
+        # Validation should reject invalid change_rate values
+        with pytest.raises(ValidationError):
+            TrendMetric(
+                previous=50.0,
+                delta=5.0,
+                direction="improving",
+                change_rate="super_fast"  # Invalid - should be rejected
+            )
 
 
 # =============================================================================
@@ -557,30 +557,26 @@ class TestConnectionMatchingBugs:
         # BUG HUNT: Does connection alias matching work?
         assert len(updates) == 1, "Should match by connection alias"
 
-    def test_route_people_empty_entity_name(self):
-        """Test route_people with entity that has empty name."""
-        from entity_extraction import route_people_to_connections
+    def test_route_people_empty_entity_name_rejected(self):
+        """Test Entity rejects empty name."""
         from models import Entity, EntityStatus
 
         now = datetime.now()
-        entity = Entity(
-            entity_id="ent_001",
-            name="",  # Empty name!
-            entity_type="relationship",
-            status=EntityStatus.ACTIVE,
-            first_seen=now.isoformat(),
-            last_seen=now.isoformat(),
-            mention_count=1,
-            context_snippets=["Met someone"],
-            created_at=now.isoformat(),
-            updated_at=now.isoformat()
-        )
 
-        connections = [{"name": "", "connection_id": "conn_001"}]
-
-        # BUG HUNT: What happens with empty name matching?
-        filtered, updates = route_people_to_connections([entity], connections, "2025-01-20")
-        # Should probably not match empty to empty
+        # Validation should reject empty entity names
+        with pytest.raises(ValidationError):
+            Entity(
+                entity_id="ent_001",
+                name="",  # Empty name - should be rejected
+                entity_type="relationship",
+                status=EntityStatus.ACTIVE,
+                first_seen=now.isoformat(),
+                last_seen=now.isoformat(),
+                mention_count=1,
+                context_snippets=["Met someone"],
+                created_at=now.isoformat(),
+                updated_at=now.isoformat()
+            )
 
 
 # =============================================================================
