@@ -1,0 +1,36 @@
+{
+  "function_name": "create_connection",
+  "request": {
+    "user_id": "test_user_b",
+    "connection": {
+      "name": "Partner",
+      "birth_date": "1988-12-01",
+      "birth_time": "10:00",
+      "birth_timezone": "America/Los_Angeles",
+      "birth_lat": 34.0522,
+      "birth_lon": -118.2437,
+      "relationship_category": "love",
+      "relationship_label": "partner"
+    }
+  },
+  "response": {
+    "arca_notes": [],
+    "birth_date": "1988-12-01",
+    "birth_lat": 34.0522,
+    "birth_lon": -118.2437,
+    "birth_time": "10:00",
+    "birth_timezone": "America/Los_Angeles",
+    "connection_id": "cO51oIGgrHq7claYVq9Idw",
+    "created_at": "2025-12-02T03:49:33.438725",
+    "name": "Partner",
+    "photo_path": null,
+    "relationship_category": "love",
+    "relationship_label": "partner",
+    "source_user_id": null,
+    "sun_sign": "sagittarius",
+    "synastry_points": null,
+    "updated_at": "2025-12-02T03:49:33.438725",
+    "vibes": []
+  },
+  "captured_at": "2025-12-02T03:49:33.456955+00:00"
+}

@@ -157,13 +157,16 @@ SUN SIGN CONTEXT:
 - Life Lesson: {sun_sign_profile.life_lesson}
 
 INSTRUCTIONS:
-Write 3-4 sentences that:
-1. Open with their sun sign core identity (who they ARE)
-2. Add their rising sign (how they APPEAR to others)
-3. Include their moon sign (how they FEEL and process emotions)
-4. Weave in one key aspect pattern if notable
+Write exactly 4 sentences (approx. 50-60 words total) using this structure:
 
-Use {user_name}'s name once naturally. Write like a wise friend, not an astrology textbook.
+1. THE CORE: Open with the Sun sign to define their essential nature (e.g., "As a [Sun], you are...").
+2. THE MASK: Connect the Rising sign to their outward style/approach (e.g., "Your [Rising] rising adds a layer of...").
+3. THE HEART: Describe the Moon sign's emotional landscape (e.g., "With a [Moon] moon, you process feelings...").
+4. THE SYNTHESIS: Write a final "bridge" sentence that resolves the tension or harmony between these three.
+   - Look for Elemental conflict (e.g., Fire vs. Water) or Modality friction (Fixed vs. Mutable).
+   - Example: "This creates a dynamic where your head wants to race ahead (Gemini), but your heart needs time to drift (Pisces)."
+
+Use {user_name}'s name once naturally in sentence 1. Write like a wise friend, not an astrology textbook.
 No jargon. No "energy" or "vibe". Be specific and grounded.
 
 Return ONLY the summary text, no JSON wrapping."""
@@ -182,6 +185,22 @@ Return ONLY the summary text, no JSON wrapping."""
 
     latency_seconds = time.time() - start_time
     result_text = response.text.strip()
+
+    # Debug: dump prompt and response to file (only when DEBUG_LLM is set)
+    if os.environ.get("DEBUG_LLM"):
+        import json
+        debug_path = Path(__file__).parent / "debug_natal_chart_summary.json"
+        debug_data = {
+            "user_name": user_name,
+            "prompt": prompt,
+            "response": result_text,
+            "sun_sign": str(sun_sign),
+            "moon_sign": moon_sign,
+            "asc_sign": asc_sign,
+        }
+        debug_path.write_text(json.dumps(debug_data, indent=2))
+        print(f"[DEBUG] Natal chart summary dumped to {debug_path}")
+        print(f"[DEBUG] user_name passed: '{user_name}'")
 
     # Track with PostHog
     if posthog_api_key and user_id:
@@ -691,7 +710,7 @@ def select_featured_connection(
     ]
 
     if not_recently_featured:
-        # Pick first not recently featured (could add priority by relationship_type)
+        # Pick first not recently featured (could add priority by relationship_category/label)
         return not_recently_featured[0]
 
     # All have been featured recently - pick the one featured longest ago
@@ -738,7 +757,8 @@ def update_memory_with_connection_mention(
     mention = ConnectionMention(
         connection_id=featured_connection.get("connection_id", ""),
         connection_name=featured_connection.get("name", ""),
-        relationship_type=featured_connection.get("relationship_type", "friend"),
+        relationship_category=featured_connection.get("relationship_category", "friend"),
+        relationship_label=featured_connection.get("relationship_label", "friend"),
         date=date,
         context=context[:500] if context else ""  # Cap context length
     )
@@ -1149,9 +1169,17 @@ class CompatibilityInterpretationResponse(BaseModel):
     """Structured response for compatibility interpretation."""
     headline: str = Field(description="5-8 word headline capturing their dynamic")
     summary: str = Field(description="2-3 sentences overall summary")
+    relationship_purpose: str = Field(
+        default="",
+        description="1-2 sentences about the relationship's purpose based on composite chart"
+    )
     strengths: str = Field(description="2-3 sentences about natural connection points")
     growth_areas: str = Field(description="1-2 sentences about growth opportunities")
     advice: str = Field(description="1 actionable sentence")
+    destiny_note: str = Field(
+        default="",
+        description="1-2 sentences about karmic/fated connection (only if karmic aspects exist)"
+    )
     category_summaries: list[CategorySummary] = Field(
         default_factory=list,
         description="Per-category summaries as list of objects with category_id and summary"
@@ -1167,7 +1195,8 @@ def generate_compatibility_interpretation(
     user_sun_sign: str,
     connection_name: str,
     connection_sun_sign: str,
-    relationship_type: str,
+    relationship_category: str,
+    relationship_label: str,
     compatibility_result: CompatibilityResult,
     api_key: Optional[str] = None,
     user_id: str = "",
@@ -1187,7 +1216,8 @@ def generate_compatibility_interpretation(
         user_sun_sign: User's zodiac sign
         connection_name: Connection's name
         connection_sun_sign: Connection's zodiac sign
-        relationship_type: "partner", "friend", "family", or "coworker"
+        relationship_category: Main category (love/friend/family/coworker/other)
+        relationship_label: Specific label (crush/partner/best_friend/boss/etc)
         compatibility_result: Full compatibility analysis result
         api_key: Gemini API key
         user_id: User ID for PostHog tracking
@@ -1198,6 +1228,12 @@ def generate_compatibility_interpretation(
         dict with overall interpretation, category summaries, and aspect interpretations
     """
     import time
+    from relationships import (
+        RelationshipCategory,
+        RelationshipLabel,
+        get_compatibility_mode,
+        get_llm_guidance,
+    )
     start_time = time.time()
 
     # Get API key
@@ -1213,15 +1249,24 @@ def generate_compatibility_interpretation(
     voice_path = Path(__file__).parent / "templates" / "voice.md"
     voice_content = voice_path.read_text() if voice_path.exists() else ""
 
-    # Get the relevant mode based on relationship type
+    # Get the relevant compatibility mode based on relationship category
+    try:
+        cat_enum = RelationshipCategory(relationship_category)
+        label_enum = RelationshipLabel(relationship_label)
+        compatibility_mode = get_compatibility_mode(cat_enum)
+        llm_guidance = get_llm_guidance(cat_enum, label_enum)
+    except ValueError:
+        # Fallback for invalid values
+        compatibility_mode = "friendship"
+        llm_guidance = ""
+
+    # Map compatibility mode to result
     mode_map = {
         "romantic": compatibility_result.romantic,
-        "partner": compatibility_result.romantic,
-        "friend": compatibility_result.friendship,
-        "family": compatibility_result.friendship,
+        "friendship": compatibility_result.friendship,
         "coworker": compatibility_result.coworker
     }
-    mode = mode_map.get(relationship_type, compatibility_result.friendship)
+    mode = mode_map.get(compatibility_mode, compatibility_result.friendship)
 
     # Build category context with IDs for JSON keys
     category_ids = []
@@ -1254,33 +1299,127 @@ def generate_compatibility_interpretation(
             f'{{"aspect_id": "{aspect.id}", "interpretation": "Your {aspect.user_planet} {aspect.aspect_type} their {aspect.their_planet}..."}}'
         )
 
+    # Build composite context (the "Purpose" - where is this relationship going?)
+    composite = compatibility_result.composite_summary
+    composite_context = ""
+    if composite:
+        parts = []
+        if composite.composite_sun:
+            parts.append(f"Sun in {composite.composite_sun.title()}")
+        if composite.composite_moon:
+            parts.append(f"Moon in {composite.composite_moon.title()}")
+        if composite.composite_ascendant:
+            parts.append(f"Rising in {composite.composite_ascendant.title()}")
+        if parts:
+            composite_context = ", ".join(parts)
+
+    # Build karmic context (the "Destiny" - is this fated?)
+    karmic = compatibility_result.karmic_summary
+    karmic_context = ""
+    is_karmic = False
+    if karmic and karmic.is_karmic:
+        is_karmic = True
+        karmic_aspects_text = []
+        for ka in karmic.karmic_aspects[:3]:  # Top 3 karmic aspects
+            owner = user_name if ka.planet_owner == "user" else connection_name
+            node_owner = connection_name if ka.node_owner == "connection" else user_name
+            karmic_aspects_text.append(
+                f"- {owner}'s {ka.planet} {ka.aspect_type} {node_owner}'s {ka.node} (orb: {ka.orb}) - {ka.interpretation_hint}"
+            )
+        karmic_context = chr(10).join(karmic_aspects_text)
+
     prompt = f"""{voice_content}
 
 ---
 
 Generate a complete compatibility interpretation for {user_name} ({user_sun_sign}) and {connection_name} ({connection_sun_sign}).
 
-Relationship type: {relationship_type}
+Relationship category: {relationship_category}
+Relationship label: {relationship_label}
+Compatibility mode: {compatibility_mode}
 Overall score: {mode.overall_score}/100
 
-CATEGORY SCORES:
+RELATIONSHIP CONTEXT (CRITICAL - Your interpretation guidance):
+{llm_guidance if llm_guidance else "Standard compatibility reading."}
+
+CATEGORY SCORES (The Mechanics - how well do the gears mesh?):
 {chr(10).join(categories_context)}
 
 KEY SYNASTRY ASPECTS:
 {chr(10).join(aspects_context) if aspects_context else "Basic sun sign compatibility only (no birth times)"}
 
-INSTRUCTIONS:
-1. Use both names naturally (not repetitively)
-2. Be specific to their sun signs and aspects
-3. For challenging aspects, frame constructively - the obstacle AND the path through
-4. Each category summary should explain WHY that score exists based on their aspects
-5. Each aspect interpretation should be 1-2 sentences explaining what it means for them
+COMPOSITE CHART (The Purpose - where is this relationship going?):
+{composite_context if composite_context else "Not available (missing birth times)"}
+
+KARMIC STATUS (The Destiny - is this fated?):
+Is Karmic: {is_karmic}
+{karmic_context if karmic_context else "No significant karmic aspects detected."}
+
+INTERPRETATION RULES:
+
+0. THE LENS (CRITICAL - READ FIRST):
+   Everything you write MUST be interpreted STRICTLY through the lens of "{relationship_category}/{relationship_label}".
+   Use the RELATIONSHIP CONTEXT above to guide your tone and focus.
+
+   PROHIBITED LANGUAGE BY CATEGORY:
+   - If coworker: NEVER use "love," "romance," "passion," "intimacy," "heart," "soulmate"
+   - If friend/family: NEVER use "romance," "passion," "intimacy," "lover," "partner" (in romantic sense)
+   - If love: You MAY use romantic language, but calibrate to the label (crush = lighter, spouse = deeper)
+
+   DESTINY/KARMIC FRAMING BY CATEGORY:
+   - coworker: "Destiny" = "Professional mentorship," "Empire building," "Career catalyst," "Business alignment"
+   - friend/family: "Destiny" = "Platonic soulmates," "Growth allies," "Kindred spirits," "Lifelong support"
+   - love: "Destiny" = "Partnership," "Love," "Twin flame," "Romantic fate"
+
+   This is NON-NEGOTIABLE. A coworker reading must never sound romantic.
+
+1. USE BOTH NAMES:
+   - Address {user_name} directly AND mention {connection_name} by name
+   - Example: "{user_name}, your connection with {connection_name} is built on..."
+   - Use each name 1-2 times naturally throughout the interpretation
+   - In category summaries, reference whose planet/trait is contributing
+
+2. THE HEADLINE (Combine Mode + Composite):
+   - Use the composite signs to determine the relationship's PURPOSE/VIBE
+   - Earth composite (Taurus/Virgo/Capricorn): Focus on building, stability, legacy
+   - Fire composite (Aries/Leo/Sagittarius): Focus on passion, adventure, inspiration
+   - Air composite (Gemini/Libra/Aquarius): Focus on ideas, communication, social connection
+   - Water composite (Cancer/Scorpio/Pisces): Focus on emotional depth, intuition, healing
+   - REMEMBER: Frame through {relationship_category}/{relationship_label} lens
+
+3. RELATIONSHIP PURPOSE (from Composite):
+   - Write 1-2 sentences about what this relationship is "built for" based on composite signs
+   - love: Focus on shared life purpose, partnership goals
+   - friend/family: Focus on shared growth, adventures, mutual support
+   - coworker: Focus on professional mission, what you'll build/achieve together
+
+4. THE KARMIC CHECK (Only if is_karmic is True):
+   - Include a "destiny_note" field with 1-2 sentences
+   - love: "This feels fated; there's past-life unfinished business around [planet theme]"
+   - friend/family: "You and {connection_name} were meant to meet to help each other grow in [planet theme]"
+   - coworker: "This is a pivotal professional connection - you're meant to [achieve/build/learn] together around [planet theme]"
+   - If NOT karmic, leave destiny_note empty string
+
+5. HANDLING CHALLENGES:
+   - Look at low score categories
+   - Use the composite to explain WHY the struggle is worth it
+   - Coworker example: "Communication takes work, but your shared purpose is building something lasting"
+   - Friend example: "You push each other's buttons, but that's how {connection_name} helps you grow"
+   - Romantic example: "Communication takes work, but your shared purpose is building security together"
+
+6. GENERAL RULES:
+   - Be specific to their sun signs and aspects
+   - Frame challenges constructively - the obstacle AND the path through
+   - Each category summary should explain WHY that score exists and name whose energy contributes
+   - CRITICAL: NEVER include numeric scores in category summaries (e.g., "scoring 50/100"). The score field already has the exact number. Only describe quality: "strong connection", "takes effort", "challenging", etc.
 
 REQUIRED FORMAT:
 - category_summaries must be a list containing objects for ALL these category_ids: {', '.join(category_ids)}
   Each object has: {{"category_id": "...", "summary": "1-2 sentences..."}}
 - aspect_interpretations must include ALL these aspect_ids: {', '.join(aspect_ids_for_prompt)}
-  Each object has: {{"aspect_id": "...", "interpretation": "1-2 sentences..."}}"""
+  Each object has: {{"aspect_id": "...", "interpretation": "1-2 sentences..."}}
+- relationship_purpose: 1-2 sentences based on composite chart
+- destiny_note: 1-2 sentences if karmic, empty string if not"""
 
     # Initialize Gemini client
     client = genai.Client(api_key=gemini_api_key)
@@ -1327,6 +1466,12 @@ REQUIRED FORMAT:
         if "aspect_interpretations" not in result:
             result["aspect_interpretations"] = []
 
+        # Ensure new fields exist
+        if "relationship_purpose" not in result:
+            result["relationship_purpose"] = ""
+        if "destiny_note" not in result:
+            result["destiny_note"] = ""
+
         result["generation_time_ms"] = generation_time_ms
         result["model_used"] = model_name
 
@@ -1355,9 +1500,11 @@ REQUIRED FORMAT:
         return {
             "headline": f"{user_sun_sign} meets {connection_sun_sign}",
             "summary": response.text[:300] if response.text else "Your connection has unique potential.",
+            "relationship_purpose": "",
             "strengths": "",
             "growth_areas": "",
             "advice": "",
+            "destiny_note": "",
             "category_summaries": {cid: "" for cid in category_ids},
             "aspect_interpretations": [],
             "generation_time_ms": generation_time_ms,

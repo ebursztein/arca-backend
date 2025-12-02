@@ -53,8 +53,8 @@ class TestNatalChartGeneration:
 
         print(f"Exact chart has all components")
 
-    def test_chart_has_11_planets(self):
-        """Test that chart contains all 11 celestial bodies."""
+    def test_chart_has_12_planets(self):
+        """Test that chart contains all 12 celestial bodies."""
         chart, _ = compute_birth_chart("1987-06-02")
 
         # Planet names are now Planet enums
@@ -62,11 +62,11 @@ class TestNatalChartGeneration:
         expected_planets = {
             Planet.SUN, Planet.MOON, Planet.MERCURY, Planet.VENUS, Planet.MARS,
             Planet.JUPITER, Planet.SATURN, Planet.URANUS, Planet.NEPTUNE, Planet.PLUTO,
-            Planet.NORTH_NODE
+            Planet.NORTH_NODE, Planet.SOUTH_NODE
         }
 
         assert planet_names == expected_planets
-        print(f"Chart has all 11 celestial bodies")
+        print(f"Chart has all 12 celestial bodies")
 
     def test_chart_has_12_houses(self):
         """Test that chart contains all 12 houses."""
@@ -89,7 +89,7 @@ class TestNatalChartGeneration:
 
         valid_planets = {
             "sun", "moon", "mercury", "venus", "mars", "jupiter",
-            "saturn", "uranus", "neptune", "pluto", "north node"
+            "saturn", "uranus", "neptune", "pluto", "north node", "south node"
         }
         valid_signs = {
             "aries", "taurus", "gemini", "cancer", "leo", "virgo",
@@ -186,7 +186,8 @@ class TestNatalChartDistributions:
 
         assert keys == expected_keys
 
-        # Total should equal number of planets (11)
+        # Total should equal 11 (traditional planets + North Node from natal lib)
+        # Note: South Node is added separately by our code, not in distributions
         total = sum(element_dist.values())
         assert total == 11
 
@@ -206,7 +207,7 @@ class TestNatalChartDistributions:
 
         assert keys == expected_keys
 
-        # Total should equal number of planets (11)
+        # Total should equal 11 (traditional planets + North Node from natal lib)
         total = sum(modality_dist.values())
         assert total == 11
 
@@ -224,7 +225,7 @@ class TestNatalChartDistributions:
         expected_keys = {"first", "second", "third", "fourth"}
         assert set(quadrant_dist.keys()) == expected_keys
 
-        # Total should equal number of planets (11)
+        # Total should equal 11 (traditional planets + North Node from natal lib)
         total = sum(quadrant_dist.values())
         assert total == 11
 
@@ -305,7 +306,7 @@ class TestTransitCharts:
         )
 
         # Should have all planets
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
         # Transits use noon UTC at 0,0 coordinates
         print(f"Transit chart generated successfully")
@@ -502,21 +503,21 @@ class TestChartEdgeCases:
         """Test chart generation on leap year date."""
         chart, _ = compute_birth_chart("2024-02-29")
 
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         print(f"Leap year date works")
 
     def test_very_old_date(self):
         """Test chart generation for very old date."""
         chart, _ = compute_birth_chart("1900-01-01")
 
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         print(f"Very old date works")
 
     def test_future_date(self):
         """Test chart generation for future date."""
         chart, _ = compute_birth_chart("2050-12-31")
 
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         print(f"Future date works")
 
 
@@ -533,7 +534,7 @@ class TestGetAstroChartFunction:
         )
 
         assert chart_data.chart_type == ChartType.NATAL
-        assert len(chart_data.planets) == 11
+        assert len(chart_data.planets) == 12
         assert len(chart_data.houses) == 12
 
         print(f"get_astro_chart with NATAL type works")
@@ -548,7 +549,7 @@ class TestGetAstroChartFunction:
         )
 
         assert chart_data.chart_type == ChartType.TRANSIT
-        assert len(chart_data.planets) == 11
+        assert len(chart_data.planets) == 12
 
         print(f"get_astro_chart with TRANSIT type works")
 

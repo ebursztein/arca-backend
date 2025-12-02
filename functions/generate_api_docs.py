@@ -538,7 +538,7 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict) -> str:
         "Astrometers": ["AstrometersForIOS", "MeterGroupForIOS", "MeterForIOS", "MeterAspect", "AstrologicalFoundation", "MeterReading"],
         "Charts": ["NatalChartData", "ChartAngles", "AnglePosition", "PlanetPosition", "HouseCusp", "AspectData", "ChartDistributions", "ElementDistribution", "ModalityDistribution", "QuadrantDistribution", "HemisphereDistribution"],
         "Connections": ["Connection", "StoredVibe", "ShareLink", "ConnectionRequest", "ShareLinkResponse", "PublicProfileResponse", "ImportConnectionResponse", "ConnectionListResponse"],
-        "Compatibility": ["CompatibilityResult", "ModeCompatibility", "CompatibilityCategory", "SynastryAspect", "CompositeSummary"],
+        "Compatibility": ["CompatibilityResult", "CompatibilityInterpretation", "ModeCompatibility", "CompatibilityCategory", "SynastryAspect", "CompositeSummary", "KarmicSummary", "KarmicAspect"],
         "Entities": ["Entity", "UserEntities", "ExtractedEntity", "ExtractedEntities", "EntityMergeAction", "MergedEntities", "AttributeKV"],
         "Conversations": ["Conversation", "Message"],
         "Compressed Storage": ["CompressedHoroscope", "CompressedMeterGroup", "CompressedMeter", "CompressedAstrometers", "CompressedTransitSummary", "CompressedTransit", "UserHoroscopes"],
@@ -723,8 +723,11 @@ def main():
         CompressedMeter, CompressedMeterGroup, CompressedTransit, CompressedTransitSummary,
         CompressedAstrometers, CompressedHoroscope, UserHoroscopes,
         MeterAspect, AstrologicalFoundation, MeterForIOS, MeterGroupForIOS, AstrometersForIOS,
-        EntityStatus, EntityCategory, MessageRole, ActionType, QualityType, DirectionType, ChangeRateType, RelationshipType,
+        EntityStatus, EntityCategory, MessageRole, ActionType, QualityType, DirectionType, ChangeRateType,
     )
+
+    # relationships.py
+    from relationships import RelationshipCategory, RelationshipLabel
 
     # astro.py
     from astro import (
@@ -743,6 +746,7 @@ def main():
     # compatibility.py
     from compatibility import (
         SynastryAspect, CompatibilityCategory, CompositeSummary, ModeCompatibility, CompatibilityResult,
+        KarmicSummary, KarmicAspect, CompatibilityInterpretation,
     )
 
     # astrometers
@@ -775,11 +779,12 @@ def main():
         ShareLinkResponse, PublicProfileResponse, ImportConnectionResponse, ConnectionListResponse,
         # Compatibility
         SynastryAspect, CompatibilityCategory, CompositeSummary, ModeCompatibility, CompatibilityResult,
+        KarmicSummary, KarmicAspect, CompatibilityInterpretation,
     ]
 
     enum_classes = [
         EntityStatus, EntityCategory, MessageRole, ActionType, QualityType, DirectionType, ChangeRateType,
-        RelationshipType,
+        RelationshipCategory, RelationshipLabel,
         ZodiacSign, Planet, CelestialBody, Element, Modality, AspectType, ChartType, House,
         # Astrometers
         Meter, MeterGroupV2,

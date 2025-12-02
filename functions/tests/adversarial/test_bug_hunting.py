@@ -158,7 +158,7 @@ class TestAstroBugHunt:
         # Should not crash
         chart, is_exact = compute_birth_chart("2000-02-29")
         assert chart is not None
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
     def test_compute_birth_chart_year_1900(self):
         """Test birth chart for very old date (ephemeris boundary)."""
@@ -167,7 +167,7 @@ class TestAstroBugHunt:
         # 1900 is at the edge of many ephemeris files
         chart, is_exact = compute_birth_chart("1900-01-01")
         assert chart is not None
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
     def test_compute_birth_chart_year_2100(self):
         """Test birth chart for far future date."""

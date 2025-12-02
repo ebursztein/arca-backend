@@ -16,6 +16,15 @@ This file provides guidance to Claude Code when working with code in this reposi
 - Integration tests: `uv run pytest functions/tests/integration/ -v`
 - ALL tests must pass before marking a task as done
 
+### Always Run mypy Type Checking
+- After ANY code change, run mypy to catch type errors: `uv run mypy functions/ --ignore-missing-imports --exclude venv`
+- Fix all type errors before considering work complete
+- Pay special attention to:
+  - Function signature mismatches (wrong parameter names like `api_key` vs `gemini_client`)
+  - Sync vs async function calls (don't `await` sync functions)
+  - Return type mismatches (function returns `None` but signature says `str`)
+  - Missing required arguments for Pydantic models
+
 ### Never Use Theoretical Constants for Normalization
 - DO NOT use `DTI_MAX_ESTIMATE`, `HQS_MAX_POSITIVE_ESTIMATE`, `HQS_MAX_NEGATIVE_ESTIMATE`
 - ALWAYS use empirical calibration data from `calibration_constants.json`

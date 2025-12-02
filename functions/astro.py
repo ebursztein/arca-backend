@@ -37,6 +37,7 @@ class Planet(str, Enum):
     NEPTUNE = "neptune"
     PLUTO = "pluto"
     NORTH_NODE = "north node"
+    SOUTH_NODE = "south node"
 
 
 class CelestialBody(str, Enum):
@@ -57,6 +58,7 @@ class CelestialBody(str, Enum):
     NEPTUNE = "neptune"
     PLUTO = "pluto"
     NORTH_NODE = "north node"
+    SOUTH_NODE = "south node"
 
     # Chart Angles
     ASCENDANT = "asc"
@@ -698,6 +700,51 @@ def get_astro_chart(
                 retrograde=north_node.retro if hasattr(north_node, 'retro') else False,
                 element=north_node.sign.element,
                 modality=north_node.sign.modality
+            )
+        )
+
+        # South Node is always exactly opposite North Node (180 degrees)
+        south_node_degree = (north_node.degree + 180) % 360
+        south_node_sign_index = int(south_node_degree / 30)
+        south_node_signs = [
+            ZodiacSign.ARIES, ZodiacSign.TAURUS, ZodiacSign.GEMINI, ZodiacSign.CANCER,
+            ZodiacSign.LEO, ZodiacSign.VIRGO, ZodiacSign.LIBRA, ZodiacSign.SCORPIO,
+            ZodiacSign.SAGITTARIUS, ZodiacSign.CAPRICORN, ZodiacSign.AQUARIUS, ZodiacSign.PISCES
+        ]
+        south_node_sign = south_node_signs[south_node_sign_index]
+        south_node_degree_in_sign = south_node_degree % 30
+
+        # Get element and modality for South Node sign
+        sign_elements = {
+            ZodiacSign.ARIES: Element.FIRE, ZodiacSign.TAURUS: Element.EARTH,
+            ZodiacSign.GEMINI: Element.AIR, ZodiacSign.CANCER: Element.WATER,
+            ZodiacSign.LEO: Element.FIRE, ZodiacSign.VIRGO: Element.EARTH,
+            ZodiacSign.LIBRA: Element.AIR, ZodiacSign.SCORPIO: Element.WATER,
+            ZodiacSign.SAGITTARIUS: Element.FIRE, ZodiacSign.CAPRICORN: Element.EARTH,
+            ZodiacSign.AQUARIUS: Element.AIR, ZodiacSign.PISCES: Element.WATER
+        }
+        sign_modalities = {
+            ZodiacSign.ARIES: Modality.CARDINAL, ZodiacSign.TAURUS: Modality.FIXED,
+            ZodiacSign.GEMINI: Modality.MUTABLE, ZodiacSign.CANCER: Modality.CARDINAL,
+            ZodiacSign.LEO: Modality.FIXED, ZodiacSign.VIRGO: Modality.MUTABLE,
+            ZodiacSign.LIBRA: Modality.CARDINAL, ZodiacSign.SCORPIO: Modality.FIXED,
+            ZodiacSign.SAGITTARIUS: Modality.MUTABLE, ZodiacSign.CAPRICORN: Modality.CARDINAL,
+            ZodiacSign.AQUARIUS: Modality.FIXED, ZodiacSign.PISCES: Modality.MUTABLE
+        }
+
+        planets.append(
+            PlanetPosition(
+                name=Planet.SOUTH_NODE,
+                symbol="☋",
+                position_dms=f"{int(south_node_degree_in_sign)}°{south_node_sign.value[:3].upper()}",
+                sign=south_node_sign,
+                degree_in_sign=round(south_node_degree_in_sign, 2),
+                absolute_degree=min(round(south_node_degree, 2), 359.99),
+                house=((data.house_of(north_node) + 5) % 12) + 1,  # Opposite house
+                speed=round(north_node.speed, 4),
+                retrograde=north_node.retro if hasattr(north_node, 'retro') else False,
+                element=sign_elements[south_node_sign],
+                modality=sign_modalities[south_node_sign]
             )
         )
 

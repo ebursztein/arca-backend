@@ -13,13 +13,13 @@ TODAY'S ENERGY ({{ date }})
 {% if has_relationships %}
 [RELATIONSHIPS - for relationship_weather field]
 {% if featured_connection %}
-SPOTLIGHT: {{ featured_connection.name }} [{{ featured_connection.relationship_type }}]
+SPOTLIGHT: {{ featured_connection.name }} [{{ featured_connection.relationship_category }}: {{ featured_connection.relationship_label }}]
 {% if featured_connection.sun_sign %}Sun sign: {{ featured_connection.sun_sign }}{% endif %}
 {% if featured_connection.arca_notes %}
 Recent context: {% for note in featured_connection.arca_notes[-3:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}
 {% endif %}
 
-Write a personalized sentence about the dynamic with {{ featured_connection.name }} today.
+Write a personalized sentence about the dynamic with {{ featured_connection.name }} today, appropriate for a {{ featured_connection.relationship_label }} relationship.
 {% endif %}
 {% endif %}
 [MOON]

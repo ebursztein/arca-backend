@@ -37,7 +37,7 @@ DEV_AUTH_HEADERS = {
 @pytest.fixture(scope="module")
 def ask_stars_user_id():
     """Fixed user ID for ask_the_stars tests (module-scoped)."""
-    return f"test_ask_stars_{uuid.uuid4().hex[:12]}"
+    return "test_user_d"  # Dev account from DEV_ACCOUNT_UIDS
 
 
 @pytest.fixture(scope="module")

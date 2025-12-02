@@ -16,6 +16,7 @@ from models import (
     Entity,
     EntityStatus
 )
+from auth import get_authenticated_user_id
 
 
 @https_fn.on_call()
@@ -29,14 +30,7 @@ def get_conversation_history(req: https_fn.CallableRequest) -> dict:
     Returns:
         { "conversation": Conversation }
     """
-    # Authenticate
-    if not req.auth:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
-            message="Authentication required"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_authenticated_user_id(req)
     conversation_id = req.data.get('conversation_id')
 
     if not conversation_id:
@@ -79,13 +73,7 @@ def get_user_entities(req: https_fn.CallableRequest) -> dict:
     Returns:
         { "entities": Entity[], "total_count": int }
     """
-    if not req.auth:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
-            message="Authentication required"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_authenticated_user_id(req)
     status_filter = req.data.get('status')
     limit = req.data.get('limit', 50)
 
@@ -136,13 +124,7 @@ def update_entity(req: https_fn.CallableRequest) -> dict:
     Returns:
         { "success": true, "entity": Entity }
     """
-    if not req.auth:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
-            message="Authentication required"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_authenticated_user_id(req)
     entity_id = req.data.get('entity_id')
 
     if not entity_id:
@@ -224,13 +206,7 @@ def delete_entity(req: https_fn.CallableRequest) -> dict:
     Returns:
         { "success": true }
     """
-    if not req.auth:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
-            message="Authentication required"
-        )
-
-    user_id = req.auth.uid
+    user_id = get_authenticated_user_id(req)
     entity_id = req.data.get('entity_id')
 
     if not entity_id:

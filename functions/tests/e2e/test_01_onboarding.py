@@ -99,7 +99,7 @@ class TestNatalChart:
         assert "houses" in result
         assert "aspects" in result
         assert "angles" in result
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12
 
     def test_missing_params_raises_error(self):
         """Test missing parameters raises error."""
@@ -127,7 +127,7 @@ class TestNatalChart:
 
         planet_names = {p["name"] for p in result["planets"]}
         expected = {"sun", "moon", "mercury", "venus", "mars", "jupiter",
-                    "saturn", "uranus", "neptune", "pluto", "north node"}
+                    "saturn", "uranus", "neptune", "pluto", "north node", "south node"}
         assert planet_names == expected
 
 
@@ -140,14 +140,14 @@ class TestDailyTransit:
 
         assert "planets" in result
         assert "aspects" in result
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12
 
     def test_specific_date(self):
         """Test daily transit for specific date."""
         result = call_function("daily_transit", {"utc_dt": "2025-01-15 00:00"})
 
         assert "planets" in result
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12
 
 
 class TestUserTransit:
@@ -162,7 +162,7 @@ class TestUserTransit:
 
         assert "planets" in result
         assert "houses" in result
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12
 
     def test_missing_location_raises_error(self):
         """Test missing location raises error."""
@@ -219,12 +219,12 @@ class TestCreateUserProfile:
 class TestGetUserProfile:
     """E2E tests for get_user_profile Cloud Function."""
 
-    def test_not_found(self):
-        """Test get_user_profile returns NOT_FOUND for missing user."""
+    def test_unauthenticated_rejected(self):
+        """Test get_user_profile rejects unauthenticated requests."""
         with pytest.raises(Exception) as exc_info:
-            call_function("get_user_profile", {"user_id": "nonexistent_user_xyz_999"})
+            call_function("get_user_profile", {"user_id": "not_a_dev_account"})
 
-        assert "NOT_FOUND" in str(exc_info.value)
+        assert "UNAUTHENTICATED" in str(exc_info.value)
 
     @pytest.mark.llm
     def test_returns_profile(self, test_user_id):
@@ -243,6 +243,53 @@ class TestGetUserProfile:
         assert result["user_id"] == test_user_id
         assert result["sun_sign"] == "gemini"
         assert result["natal_chart"] is not None
+
+    @pytest.mark.llm
+    def test_create_user_and_get_natal_chart(self, test_user_id):
+        """Test creating test_user_a and retrieving its natal chart."""
+        # Create profile for test_user_a
+        create_result = call_function("create_user_profile", {
+            "user_id": test_user_id,
+            "name": "Test User A",
+            "email": f"{test_user_id}@test.com",
+            "birth_date": "1990-12-10",  # Sagittarius
+        })
+
+        assert create_result["success"] is True
+        assert create_result["user_id"] == test_user_id
+        assert create_result["sun_sign"] == "sagittarius"
+
+        # Get the profile and verify natal chart structure
+        profile = call_function("get_user_profile", {"user_id": test_user_id})
+
+        assert profile["user_id"] == test_user_id
+        assert profile["sun_sign"] == "sagittarius"
+        assert profile["name"] == "Test User A"
+
+        # Verify natal chart exists and has expected structure
+        natal_chart = profile["natal_chart"]
+        assert natal_chart is not None
+
+        # Check planets
+        assert "planets" in natal_chart
+        assert len(natal_chart["planets"]) >= 10  # At least 10 planets
+
+        planet_names = {p["name"] for p in natal_chart["planets"]}
+        assert "sun" in planet_names
+        assert "moon" in planet_names
+        assert "mercury" in planet_names
+
+        # Verify sun is in Sagittarius
+        sun = next(p for p in natal_chart["planets"] if p["name"] == "sun")
+        assert sun["sign"] == "sagittarius"
+
+        # Check aspects exist
+        assert "aspects" in natal_chart
+
+        # Check summary was generated
+        assert "summary" in natal_chart
+        assert natal_chart["summary"] is not None
+        assert len(natal_chart["summary"]) > 0
 
     @pytest.mark.llm
     def test_updates_last_active(self, test_user_id):

@@ -194,11 +194,32 @@ class CompatibilityCategory(BaseModel):
     aspect_ids: list[str] = Field(default_factory=list, description="Contributing aspect IDs")
 
 
+class KarmicAspect(BaseModel):
+    """A single karmic aspect (planet touching a Node)."""
+    planet: str = Field(description="The planet touching the Node")
+    planet_owner: str = Field(description="'user' or 'connection' - whose planet")
+    node: str = Field(description="'north node' or 'south node'")
+    node_owner: str = Field(description="'user' or 'connection' - whose node")
+    aspect_type: str = Field(description="conjunction, opposition, trine, square, sextile")
+    orb: float = Field(ge=0, le=10, description="Orb in degrees")
+    interpretation_hint: str = Field(description="Brief hint for LLM interpretation")
+
+
+class KarmicSummary(BaseModel):
+    """Summary of karmic/fated connections between two charts."""
+    is_karmic: bool = Field(description="True if any tight Node aspects exist")
+    karmic_aspects: list[KarmicAspect] = Field(default_factory=list)
+    primary_theme: Optional[str] = Field(None, description="Main karmic theme if applicable")
+    destiny_note: Optional[str] = Field(None, description="LLM-generated destiny interpretation")
+
+
 class CompositeSummary(BaseModel):
     """Composite chart summary (midpoints of both charts)."""
     composite_sun: Optional[str] = Field(None, description="Composite Sun sign")
     composite_moon: Optional[str] = Field(None, description="Composite Moon sign")
+    composite_ascendant: Optional[str] = Field(None, description="Composite Ascendant sign")
     summary: Optional[str] = Field(None, description="LLM-generated composite summary")
+    relationship_purpose: Optional[str] = Field(None, description="LLM-generated purpose statement")
     strengths: list[str] = Field(default_factory=list)
     challenges: list[str] = Field(default_factory=list)
 
@@ -211,6 +232,19 @@ class ModeCompatibility(BaseModel):
     missing_data_prompts: list[str] = Field(default_factory=list)
 
 
+class CompatibilityInterpretation(BaseModel):
+    """LLM-generated interpretation for compatibility reading."""
+    headline: str = Field(description="5-8 word headline capturing their dynamic")
+    summary: str = Field(description="2-3 sentences overall summary")
+    relationship_purpose: str = Field(default="", description="1-2 sentences about the relationship's purpose")
+    strengths: str = Field(description="2-3 sentences about natural connection points")
+    growth_areas: str = Field(description="1-2 sentences about growth opportunities")
+    advice: str = Field(description="1 actionable sentence")
+    destiny_note: str = Field(default="", description="1-2 sentences about karmic connection (only if karmic)")
+    generation_time_ms: int = Field(default=0, description="LLM generation time in milliseconds")
+    model_used: str = Field(default="", description="Model used for generation")
+
+
 class CompatibilityResult(BaseModel):
     """Complete compatibility analysis across all three modes."""
     romantic: ModeCompatibility
@@ -218,6 +252,8 @@ class CompatibilityResult(BaseModel):
     coworker: ModeCompatibility
     aspects: list[SynastryAspect] = Field(description="All synastry aspects found")
     composite_summary: Optional[CompositeSummary] = None
+    karmic_summary: Optional[KarmicSummary] = None
+    interpretation: Optional["CompatibilityInterpretation"] = Field(default=None, description="LLM-generated interpretation")
     calculated_at: str = Field(description="ISO timestamp")
 
 
@@ -448,14 +484,19 @@ def calculate_composite_summary(
     Returns:
         CompositeSummary with midpoint signs
     """
-    # Get Sun and Moon degrees
+    # Get Sun, Moon, and Ascendant degrees
     sun1 = get_planet_degree(chart1, "sun")
     sun2 = get_planet_degree(chart2, "sun")
     moon1 = get_planet_degree(chart1, "moon")
     moon2 = get_planet_degree(chart2, "moon")
 
+    # Get Ascendant from houses (1st house cusp)
+    asc1 = chart1.houses[0].absolute_degree if chart1.houses else None
+    asc2 = chart2.houses[0].absolute_degree if chart2.houses else None
+
     composite_sun = None
     composite_moon = None
+    composite_ascendant = None
 
     if sun1 is not None and sun2 is not None:
         composite_sun = calculate_composite_sign(sun1, sun2)
@@ -463,12 +504,130 @@ def calculate_composite_summary(
     if moon1 is not None and moon2 is not None:
         composite_moon = calculate_composite_sign(moon1, moon2)
 
+    if asc1 is not None and asc2 is not None:
+        composite_ascendant = calculate_composite_sign(asc1, asc2)
+
     return CompositeSummary(
         composite_sun=composite_sun,
         composite_moon=composite_moon,
+        composite_ascendant=composite_ascendant,
         summary=None,  # Will be filled by LLM
+        relationship_purpose=None,  # Will be filled by LLM
         strengths=[],
         challenges=[]
+    )
+
+
+# =============================================================================
+# Karmic/Nodal Aspect Detection
+# =============================================================================
+
+# Karmic orb threshold - tight aspects indicate stronger karmic connection
+KARMIC_ORB_THRESHOLD = 4.0
+
+# Interpretation hints for karmic aspects by planet
+KARMIC_PLANET_HINTS = {
+    "sun": "Core identity and life purpose connection",
+    "moon": "Deep emotional and soul-level familiarity",
+    "mercury": "Destined communication and mental exchange",
+    "venus": "Fated love, values, and relationship lessons",
+    "mars": "Karmic passion, drive, and action patterns",
+    "jupiter": "Shared growth and spiritual expansion destiny",
+    "saturn": "Serious karmic debt or responsibility together",
+    "uranus": "Destined awakening and liberation themes",
+    "neptune": "Spiritual or creative soul connection",
+    "pluto": "Intense transformational karma to work through",
+}
+
+
+def calculate_karmic_aspects(
+    chart1: NatalChartData,
+    chart2: NatalChartData
+) -> KarmicSummary:
+    """
+    Detect karmic/fated aspects between two charts.
+
+    Checks for planets touching North/South Nodes with tight orbs.
+    These indicate past-life connections and destined encounters.
+
+    Args:
+        chart1: User's natal chart
+        chart2: Connection's natal chart
+
+    Returns:
+        KarmicSummary with is_karmic flag and aspect details
+    """
+    karmic_aspects = []
+    nodes = ["north node", "south node"]
+    key_planets = ["sun", "moon", "venus", "mars", "saturn", "jupiter", "mercury"]
+
+    # Check user's planets to connection's nodes
+    for planet_name in key_planets:
+        planet_deg = get_planet_degree(chart1, planet_name)
+        if planet_deg is None:
+            continue
+
+        for node_name in nodes:
+            node_deg = get_planet_degree(chart2, node_name)
+            if node_deg is None:
+                continue
+
+            aspect_result = calculate_aspect(planet_deg, node_deg, planet_name, node_name)
+            if aspect_result:
+                aspect_type, orb, _ = aspect_result
+                if orb <= KARMIC_ORB_THRESHOLD:
+                    karmic_aspects.append(KarmicAspect(
+                        planet=planet_name,
+                        planet_owner="user",
+                        node=node_name,
+                        node_owner="connection",
+                        aspect_type=aspect_type,
+                        orb=round(orb, 2),
+                        interpretation_hint=KARMIC_PLANET_HINTS.get(planet_name, "")
+                    ))
+
+    # Check connection's planets to user's nodes
+    for planet_name in key_planets:
+        planet_deg = get_planet_degree(chart2, planet_name)
+        if planet_deg is None:
+            continue
+
+        for node_name in nodes:
+            node_deg = get_planet_degree(chart1, node_name)
+            if node_deg is None:
+                continue
+
+            aspect_result = calculate_aspect(planet_deg, node_deg, planet_name, node_name)
+            if aspect_result:
+                aspect_type, orb, _ = aspect_result
+                if orb <= KARMIC_ORB_THRESHOLD:
+                    karmic_aspects.append(KarmicAspect(
+                        planet=planet_name,
+                        planet_owner="connection",
+                        node=node_name,
+                        node_owner="user",
+                        aspect_type=aspect_type,
+                        orb=round(orb, 2),
+                        interpretation_hint=KARMIC_PLANET_HINTS.get(planet_name, "")
+                    ))
+
+    # Sort by orb (tightest first)
+    karmic_aspects.sort(key=lambda a: a.orb)
+
+    # Determine primary theme from tightest aspect
+    primary_theme = None
+    if karmic_aspects:
+        tightest = karmic_aspects[0]
+        if tightest.node == "north node":
+            primary_theme = f"Future growth through {tightest.planet}"
+        else:
+            primary_theme = f"Past-life connection through {tightest.planet}"
+
+    return KarmicSummary(
+        is_karmic=len(karmic_aspects) > 0,
+        karmic_aspects=karmic_aspects,
+        primary_theme=primary_theme,
+        destiny_note=None  # Will be filled by LLM
     )
 
 
@@ -483,23 +642,32 @@ def calculate_compatibility(
     """
     Calculate full compatibility analysis between two charts.
 
+    Includes:
+    - Synastry aspects (planet-to-planet)
+    - Mode scores (romantic/friendship/coworker)
+    - Composite chart (the "Us" midpoint chart)
+    - Karmic aspects (planets touching Nodes - the "Destiny" check)
+
     Args:
         user_chart: User's natal chart (NatalChartData)
         connection_chart: Connection's natal chart (NatalChartData)
 
     Returns:
-        CompatibilityResult with all three modes and synastry aspects
+        CompatibilityResult with all three modes, synastry aspects, and karmic data
     """
     # Calculate all synastry aspects
     aspects = calculate_synastry_aspects(user_chart, connection_chart)
 
-    # Calculate each mode
+    # Calculate each mode (the "Mechanics")
     romantic = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES)
     friendship = calculate_mode_compatibility(aspects, FRIENDSHIP_CATEGORIES)
     coworker = calculate_mode_compatibility(aspects, COWORKER_CATEGORIES)
 
-    # Calculate composite
+    # Calculate composite (the "Purpose")
     composite = calculate_composite_summary(user_chart, connection_chart)
+
+    # Calculate karmic aspects (the "Destiny")
+    karmic = calculate_karmic_aspects(user_chart, connection_chart)
 
     return CompatibilityResult(
         romantic=romantic,
@@ -507,6 +675,7 @@ def calculate_compatibility(
         coworker=coworker,
         aspects=aspects,
         composite_summary=composite,
+        karmic_summary=karmic,
         calculated_at=datetime.now().isoformat()
     )
 

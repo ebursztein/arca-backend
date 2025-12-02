@@ -4,7 +4,6 @@ Firestore triggers for Ask the Stars feature.
 Background processing for entity extraction and updates.
 """
 
-import asyncio
 from datetime import datetime
 from firebase_functions import firestore_fn, params
 from firebase_admin import firestore
@@ -60,24 +59,31 @@ def extract_entities_on_message(
     if latest_message.role != MessageRole.USER:
         return
 
-    # Run async entity extraction
-    asyncio.run(_extract_and_merge_entities(
+    # Run entity extraction (sync function)
+    _extract_and_merge_entities(
         user_id=conversation.user_id,
         user_message=latest_message.content,
         horoscope_date=conversation.horoscope_date,
         gemini_api_key=GEMINI_API_KEY.value,
         posthog_api_key=POSTHOG_API_KEY.value
-    ))
+    )
 
 
-async def _extract_and_merge_entities(
+def _extract_and_merge_entities(
     user_id: str,
     user_message: str,
     horoscope_date: str,
     gemini_api_key: str,
     posthog_api_key: str
 ) -> None:
-    """Extract entities from message and merge with existing."""
+    """
+    Extract entities from message and merge with existing.
+
+    Note: Both extract_entities_from_message and merge_entities_with_existing
+    are synchronous functions. extract_entities_from_message creates its own
+    client internally using api_key, while merge_entities_with_existing takes
+    a gemini_client parameter.
+    """
     client = genai.Client(api_key=gemini_api_key)
     db = firestore.client()
 
@@ -92,10 +98,11 @@ async def _extract_and_merge_entities(
         existing_entities = []
 
     # LLM CALL 1: Extract entities (with PostHog tracking)
-    extracted, _ = await extract_entities_from_message(
+    # extract_entities_from_message is SYNC and takes api_key (not gemini_client)
+    extracted, _ = extract_entities_from_message(
         user_message=user_message,
         current_date=horoscope_date,
-        gemini_client=client,
+        api_key=gemini_api_key,
         user_id=user_id,
         posthog_api_key=posthog_api_key,
         model="gemini-2.0-flash-exp"
@@ -105,7 +112,8 @@ async def _extract_and_merge_entities(
         return
 
     # LLM CALL 2: Merge with existing (with PostHog tracking)
-    merged, _ = await merge_entities_with_existing(
+    # merge_entities_with_existing is SYNC and takes gemini_client
+    merged, _ = merge_entities_with_existing(
         extracted_entities=extracted,
         existing_entities=existing_entities,
         current_date=horoscope_date,

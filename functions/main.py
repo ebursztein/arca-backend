@@ -42,52 +42,7 @@ DEFAULT_MODEL = "gemini-2.5-flash-lite"
 # ! don't know how to change it -- the firestore.json don't sees to work
 DATABASE_ID = "(default)"
 
-# =============================================================================
-# Dev Accounts - Can impersonate other users for testing
-# =============================================================================
-# These Firebase Auth UIDs can pass user_id in request to act as another user.
-# Used for testing connection sharing flows without multiple physical devices.
-DEV_ACCOUNT_UIDS = {
-    "test_user_a",
-    "test_user_b",
-    "test_user_c",
-    "test_user_d",
-    "test_user_e",
-}
-
-
-def get_authenticated_user_id(req: https_fn.CallableRequest, allow_override: bool = True) -> str:
-    """
-    Get authenticated user ID from request, with optional dev account override.
-
-    Security: Always verifies Firebase auth token first. Only dev accounts
-    listed in DEV_ACCOUNT_UIDS can override the user_id for testing.
-
-    Args:
-        req: The callable request object
-        allow_override: If True, dev accounts can pass user_id to impersonate
-
-    Returns:
-        The authenticated user's ID (or overridden ID for dev accounts)
-
-    Raises:
-        HttpsError: If not authenticated
-    """
-    if not req.auth:
-        raise https_fn.HttpsError(
-            code=https_fn.FunctionsErrorCode.UNAUTHENTICATED,
-            message="Authentication required"
-        )
-
-    user_id = req.auth.uid
-
-    # Dev account override for testing
-    if allow_override and req.auth.uid in DEV_ACCOUNT_UIDS:
-        override_id = req.data.get("user_id") if req.data else None
-        if override_id:
-            user_id = override_id
-
-    return user_id
+from auth import get_authenticated_user_id, DEV_ACCOUNT_UIDS
 
 
 # Initialize Firebase app (but only if not already initialized)
@@ -163,7 +118,7 @@ def daily_transit(req: https_fn.CallableRequest) -> dict:
     }
 
     Returns:
-        Transit chart data with planets and aspects (houses will be at 0,0)
+        NatalChartData - houses/angles use (0,0) so are not meaningful
     """
     try:
         # Extract parameters from request
@@ -221,7 +176,7 @@ def user_transit(req: https_fn.CallableRequest) -> dict:
     }
 
     Returns:
-        Transit chart data with houses relative to user's natal chart location
+        NatalChartData - houses calculated for user's birth location
     """
     try:
         # Extract parameters from request
@@ -277,7 +232,6 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
 
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "name": "User Name",
         "email": "user@example.com",
         "birth_date": "1990-06-15",  // YYYY-MM-DD (REQUIRED)
@@ -288,6 +242,8 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         "birth_lat": 40.7128,  // Latitude (optional)
         "birth_lon": -74.0060  // Longitude (optional)
     }
+
+    Note: user_id is extracted from Firebase auth token, not passed in request.
 
     Returns:
     {
@@ -393,6 +349,8 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
             code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
             message=f"Invalid parameter values: {str(e)}"
         )
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -405,10 +363,7 @@ def get_user_profile(req: https_fn.CallableRequest) -> dict:
     """
     Get user profile from Firestore.
 
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id"
-    }
+    Note: user_id is extracted from Firebase auth token, not passed in request.
 
     Returns:
         Complete user profile dictionary or error if not found
@@ -450,8 +405,9 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
     1. Photo update only
     2. Extended setup with birth time/location - triggers natal chart regeneration
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Args:
-        user_id (str): Firebase auth user ID
         photo_path (str, optional): Firebase Storage path for profile photo
         birth_time (str, optional): Birth time HH:MM - triggers chart regeneration
         birth_timezone (str, optional): IANA timezone for birth time
@@ -459,7 +415,7 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
         birth_lon (float, optional): Birth longitude
 
     Returns:
-        { "success": true, "profile": UserProfile with natal_chart and summary }
+        UserProfile
     """
     try:
         user_id = get_authenticated_user_id(req)
@@ -576,10 +532,7 @@ def get_memory(req: https_fn.CallableRequest) -> dict:
     """
     Get memory collection for a user (for LLM personalization).
 
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id"
-    }
+    Note: user_id is extracted from Firebase auth token, not passed in request.
 
     Returns:
         Memory collection dictionary
@@ -597,6 +550,8 @@ def get_memory(req: https_fn.CallableRequest) -> dict:
 
         return doc.to_dict()
 
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -679,14 +634,15 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
     - Look ahead: Upcoming transits preview (next 7 days)
     - Astrometers: Complete 17-meter reading
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
-        "date": "2025-10-18",  // Optional, defaults to today
+        "date": "2025-10-18"  // Optional, defaults to today
     }
 
     Returns:
-        DailyHoroscope model as dictionary
+        DailyHoroscope
     """
     try:
         user_id = get_authenticated_user_id(req)
@@ -784,7 +740,8 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
             connection_vibe = ConnectionVibe(
                 connection_id=featured_connection.get("connection_id", ""),
                 name=name,
-                relationship_type=featured_connection.get("relationship_type", "friend"),
+                relationship_category=featured_connection.get("relationship_category", "friend"),
+                relationship_label=featured_connection.get("relationship_label", "friend"),
                 vibe=vibe_text,
                 vibe_score=vibe_score,
                 key_transit=active_transits[0]["description"] if active_transits else None
@@ -905,14 +862,15 @@ def get_astrometers(req: https_fn.CallableRequest) -> dict:
     - Instincts (4): vision, flow, intuition, creativity
     - Growth (4): momentum, ambition, evolution, circle
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
-        "date": "2025-10-26",  // Optional, defaults to today
+        "date": "2025-10-26"  // Optional, defaults to today
     }
 
     Returns:
-        AstrometersForIOS - Complete astrometers data with 17 meters in 5 groups
+        AstrometersForIOS
     """
     try:
         from astrometers import get_meters
@@ -1020,6 +978,7 @@ from connections import (
 from compatibility import (
     calculate_compatibility,
     get_compatibility_from_birth_data,
+    CompatibilityInterpretation,
 )
 
 
@@ -1030,10 +989,7 @@ def get_share_link(req: https_fn.CallableRequest) -> dict:
 
     Creates share link if doesn't exist.
 
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id"
-    }
+    Note: user_id is extracted from Firebase auth token, not passed in request.
 
     Returns:
     {
@@ -1122,18 +1078,22 @@ def import_connection(req: https_fn.CallableRequest) -> dict:
     """
     Add a connection from a share link.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "share_secret": "abc123xyz",
-        "relationship_type": "friend"
+        "relationship_category": "love",
+        "relationship_label": "crush"
     }
 
     Returns:
     {
         "success": true,
         "connection_id": "conn_xyz789",
-        "connection": { "name": "John", "sun_sign": "gemini" },
+        "connection": { ... },
+        "name": "John",
+        "sun_sign": "gemini",
         "notification_sent": true
     }
     """
@@ -1141,7 +1101,8 @@ def import_connection(req: https_fn.CallableRequest) -> dict:
         user_id = get_authenticated_user_id(req)
         data = req.data
         share_secret = data.get("share_secret")
-        relationship_type = data.get("relationship_type", "friend")
+        relationship_category = data.get("relationship_category", "friend")
+        relationship_label = data.get("relationship_label", "friend")
 
         if not share_secret:
             raise https_fn.HttpsError(
@@ -1150,7 +1111,7 @@ def import_connection(req: https_fn.CallableRequest) -> dict:
             )
 
         db = firestore.client(database_id=DATABASE_ID)
-        result = import_connection_fn(db, user_id, share_secret, relationship_type)
+        result = import_connection_fn(db, user_id, share_secret, relationship_category, relationship_label)
         return result.model_dump()
 
     except ValueError as e:
@@ -1158,6 +1119,8 @@ def import_connection(req: https_fn.CallableRequest) -> dict:
             code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT,
             message=str(e)
         )
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1170,9 +1133,10 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
     """
     Manually create a connection (not via share link).
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "connection": {
             "name": "Sarah",
             "birth_date": "1990-05-15",
@@ -1180,7 +1144,8 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
             "birth_lat": 40.7128,   // Optional
             "birth_lon": -74.0060,  // Optional
             "birth_timezone": "America/New_York",  // Optional
-            "relationship_type": "partner"
+            "relationship_category": "love",
+            "relationship_label": "partner"
         }
     }
 
@@ -1194,7 +1159,8 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
 
         name = conn_data.get("name")
         birth_date = conn_data.get("birth_date")
-        relationship_type = conn_data.get("relationship_type", "friend")
+        relationship_category = conn_data.get("relationship_category", "friend")
+        relationship_label = conn_data.get("relationship_label", "friend")
 
         if not name or not birth_date:
             raise https_fn.HttpsError(
@@ -1217,7 +1183,8 @@ def create_connection(req: https_fn.CallableRequest) -> dict:
             user_id=user_id,
             name=name,
             birth_date=birth_date,
-            relationship_type=relationship_type,
+            relationship_category=relationship_category,
+            relationship_label=relationship_label,
             birth_time=conn_data.get("birth_time"),
             birth_lat=conn_data.get("birth_lat"),
             birth_lon=conn_data.get("birth_lon"),
@@ -1239,13 +1206,15 @@ def update_connection(req: https_fn.CallableRequest) -> dict:
     """
     Update a connection's details.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "connection_id": "conn_abc123",
         "updates": {
             "name": "New Name",
-            "relationship_type": "partner"
+            "relationship_category": "love",
+            "relationship_label": "partner"
         }
     }
 
@@ -1273,6 +1242,8 @@ def update_connection(req: https_fn.CallableRequest) -> dict:
             code=https_fn.FunctionsErrorCode.NOT_FOUND,
             message=str(e)
         )
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1285,9 +1256,10 @@ def delete_connection(req: https_fn.CallableRequest) -> dict:
     """
     Delete a connection.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "connection_id": "conn_abc123"
     }
 
@@ -1314,6 +1286,8 @@ def delete_connection(req: https_fn.CallableRequest) -> dict:
             code=https_fn.FunctionsErrorCode.NOT_FOUND,
             message=str(e)
         )
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1326,9 +1300,10 @@ def list_connections(req: https_fn.CallableRequest) -> dict:
     """
     List all user's connections.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "limit": 50  // Optional, default 50
     }
 
@@ -1347,6 +1322,8 @@ def list_connections(req: https_fn.CallableRequest) -> dict:
         result = list_connections_fn(db, user_id, limit)
         return result.model_dump()
 
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1359,10 +1336,7 @@ def list_connection_requests(req: https_fn.CallableRequest) -> dict:
     """
     List pending connection requests for a user.
 
-    Expected request data:
-    {
-        "user_id": "firebase_auth_id"
-    }
+    Note: user_id is extracted from Firebase auth token, not passed in request.
 
     Returns:
     {
@@ -1376,6 +1350,8 @@ def list_connection_requests(req: https_fn.CallableRequest) -> dict:
         requests = list_connection_requests_fn(db, user_id)
         return {"requests": requests}
 
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1388,9 +1364,10 @@ def update_share_mode(req: https_fn.CallableRequest) -> dict:
     """
     Toggle between public and request-only share modes.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "share_mode": "request"  // or "public"
     }
 
@@ -1426,9 +1403,10 @@ def respond_to_request(req: https_fn.CallableRequest) -> dict:
     """
     Approve or reject a connection request.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "request_id": "req_abc123",
         "action": "approve"  // or "reject"
     }
@@ -1457,6 +1435,8 @@ def respond_to_request(req: https_fn.CallableRequest) -> dict:
             code=https_fn.FunctionsErrorCode.NOT_FOUND,
             message=str(e)
         )
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1471,9 +1451,10 @@ def register_device_token(req: https_fn.CallableRequest) -> dict:
 
     Called by iOS on login/app launch.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "device_token": "fcm_device_token"
     }
 
@@ -1495,6 +1476,8 @@ def register_device_token(req: https_fn.CallableRequest) -> dict:
         success = register_device_token_fn(db, user_id, device_token)
         return {"success": success}
 
+    except https_fn.HttpsError:
+        raise
     except Exception as e:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
@@ -1507,14 +1490,25 @@ def get_natal_chart_for_connection(req: https_fn.CallableRequest) -> dict:
     """
     Get natal chart for a connection.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "connection_id": "conn_abc123"
     }
 
     Returns:
-        Natal chart data for the connection
+        {
+            "chart": {},
+            "has_exact_chart": true,
+            "connection_name": "Mom",
+            "sun_sign": "cancer"
+        }
+
+        - chart: NatalChartData - full natal chart with planets, houses, aspects
+        - has_exact_chart: bool - false if birth time unknown (houses/angles unreliable)
+        - connection_name: string - the connection's display name
+        - sun_sign: string - lowercase zodiac sign e.g. "cancer"
     """
     try:
         user_id = get_authenticated_user_id(req)
@@ -1575,14 +1569,15 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
     Returns all three modes (romantic, friendship, coworker) in single response.
     Always includes LLM-generated personalized interpretation.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "connection_id": "conn_abc123"
     }
 
     Returns:
-        CompatibilityResult - Complete compatibility analysis across all three modes
+        CompatibilityResult
     """
     try:
         user_id = get_authenticated_user_id(req)
@@ -1655,7 +1650,8 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
             user_sun_sign=user_sun_sign,
             connection_name=conn_name,
             connection_sun_sign=conn_sun_sign or "Unknown",
-            relationship_type=conn_data.get("relationship_type", "friend"),
+            relationship_category=conn_data.get("relationship_category", "friend"),
+            relationship_label=conn_data.get("relationship_label", "friend"),
             compatibility_result=result,
             api_key=GEMINI_API_KEY.value,
             user_id=user_id,
@@ -1683,15 +1679,25 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
                 aspect["interpretation"] = aspect_interps[asp_id]
 
         # Add overall interpretation for headline/summary/etc
-        response["interpretation"] = {
-            "headline": interpretation.get("headline", ""),
-            "summary": interpretation.get("summary", ""),
-            "strengths": interpretation.get("strengths", ""),
-            "growth_areas": interpretation.get("growth_areas", ""),
-            "advice": interpretation.get("advice", ""),
-            "generation_time_ms": interpretation.get("generation_time_ms", 0),
-            "model_used": interpretation.get("model_used", ""),
-        }
+        response["interpretation"] = CompatibilityInterpretation(
+            headline=interpretation.get("headline", ""),
+            summary=interpretation.get("summary", ""),
+            relationship_purpose=interpretation.get("relationship_purpose", ""),
+            strengths=interpretation.get("strengths", ""),
+            growth_areas=interpretation.get("growth_areas", ""),
+            advice=interpretation.get("advice", ""),
+            destiny_note=interpretation.get("destiny_note", ""),
+            generation_time_ms=interpretation.get("generation_time_ms", 0),
+            model_used=interpretation.get("model_used", ""),
+        ).model_dump()
+
+        # Also populate karmic_summary.destiny_note if it exists
+        if response.get("karmic_summary") and interpretation.get("destiny_note"):
+            response["karmic_summary"]["destiny_note"] = interpretation["destiny_note"]
+
+        # Also populate composite_summary.relationship_purpose if it exists
+        if response.get("composite_summary") and interpretation.get("relationship_purpose"):
+            response["composite_summary"]["relationship_purpose"] = interpretation["relationship_purpose"]
 
         return response
 
@@ -1712,18 +1718,15 @@ def get_synastry_chart(req: https_fn.CallableRequest) -> dict:
     Reduces round trips for iOS chart visualization - returns user's chart,
     connection's chart, and all synastry aspects between them.
 
+    Note: user_id is extracted from Firebase auth token, not passed in request.
+
     Expected request data:
     {
-        "user_id": "firebase_auth_id",
         "connection_id": "conn_abc123"
     }
 
     Returns:
-    {
-        "user_chart": { NatalChartData },
-        "connection_chart": { NatalChartData },
-        "synastry_aspects": [ SynastryAspect ]
-    }
+        NatalChartData
     """
     try:
         user_id = get_authenticated_user_id(req)

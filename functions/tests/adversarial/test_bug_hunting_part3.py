@@ -404,7 +404,7 @@ class TestAstroCalculationBugs:
             birth_lon=-74.0060
         )
         assert chart is not None
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
     def test_compute_birth_chart_with_23_59_time(self):
         """Test birth chart at 23:59."""
@@ -418,7 +418,7 @@ class TestAstroCalculationBugs:
             birth_lon=-74.0060
         )
         assert chart is not None
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
     def test_sun_sign_for_all_dates_in_year(self):
         """Test sun sign calculation for every day of the year."""

@@ -23,7 +23,7 @@ from .conftest import call_function
 @pytest.fixture(scope="module")
 def synastry_user_id():
     """Fixed user ID for synastry tests (module-scoped)."""
-    return f"test_synastry_{uuid.uuid4().hex[:12]}"
+    return "test_user_c"  # Dev account from DEV_ACCOUNT_UIDS
 
 
 @pytest.fixture(scope="module")
@@ -54,7 +54,8 @@ def synastry_connection_id(synastry_user_profile):
             "birth_timezone": "America/Los_Angeles",
             "birth_lat": 34.0522,
             "birth_lon": -118.2437,
-            "relationship_type": "partner",
+            "relationship_category": "love",
+            "relationship_label": "partner",
         }
     })
     return conn_result["connection_id"]

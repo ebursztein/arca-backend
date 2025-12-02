@@ -7,7 +7,9 @@ Provides:
 - Firebase emulator fixtures
 - Sample data fixtures for users, connections, charts
 - Auto-marking for slow/llm/emulator tests
+- Backend output capture for iOS mocks
 """
+import json
 import os
 import sys
 import uuid
@@ -16,6 +18,38 @@ from datetime import datetime, timezone
 
 import pytest
 from dotenv import load_dotenv
+
+
+# ---------------------------------------------------------------------------
+# Backend Output Capture for iOS Mocks
+# ---------------------------------------------------------------------------
+
+BACKEND_OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "backend_output"
+
+
+def save_backend_output(function_name: str, request_data: dict, response_data: dict) -> None:
+    """
+    Save backend response to backend_output/ for iOS mocks.
+
+    Args:
+        function_name: Name of the Cloud Function
+        request_data: The request payload
+        response_data: The response data
+    """
+    BACKEND_OUTPUT_DIR.mkdir(exist_ok=True)
+
+    output = {
+        "function_name": function_name,
+        "request": request_data,
+        "response": response_data,
+        "captured_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    output_file = BACKEND_OUTPUT_DIR / f"{function_name}.json"
+    with open(output_file, "w") as f:
+        json.dump(output, f, indent=2, default=str)
+
+    print(f"[E2E] Saved mock to {output_file.name}")
 
 # Load environment variables from .env
 load_dotenv()
@@ -77,7 +111,7 @@ def firestore_emulator():
     Get Firestore client connected to emulator.
     Skip if emulator not running on localhost:8080.
     """
-    from emulator_helpers import is_emulator_running, get_emulator_client
+    from .emulator_helpers import is_emulator_running, get_emulator_client
 
     if not is_emulator_running():
         pytest.skip("Firestore emulator not running on localhost:8080")
@@ -91,7 +125,7 @@ def clean_firestore(firestore_emulator, test_user_id):
     Fixture that cleans up test data after each test.
     Yields the Firestore client, then cleans up.
     """
-    from emulator_helpers import clear_test_data
+    from .emulator_helpers import clear_test_data
 
     yield firestore_emulator
 
@@ -105,8 +139,11 @@ def clean_firestore(firestore_emulator, test_user_id):
 
 @pytest.fixture
 def test_user_id():
-    """Generate unique user ID per test for isolation."""
-    return f"test_user_{uuid.uuid4().hex[:12]}"
+    """
+    Return a dev account user ID that bypasses authentication.
+    Uses test_user_a from DEV_ACCOUNT_UIDS in auth.py.
+    """
+    return "test_user_a"
 
 
 @pytest.fixture
@@ -148,6 +185,25 @@ def sample_connection_birth_data():
         "birth_timezone": "America/Los_Angeles",
         "birth_lat": 34.0522,
         "birth_lon": -118.2437,
+    }
+
+
+@pytest.fixture
+def ios_default_connection_birth_data():
+    """
+    iOS default birth data when user only knows birth date.
+
+    These are the defaults iOS uses:
+    - birth_time: "12:00" (noon)
+    - birth_lat: 0.0 (equator)
+    - birth_lon: 0.0 (prime meridian)
+    """
+    return {
+        "birth_date": "1994-04-20",
+        "birth_time": "12:00",
+        "birth_timezone": "UTC",
+        "birth_lat": 0.0,
+        "birth_lon": 0.0,
     }
 
 
@@ -251,15 +307,41 @@ def sample_memory(test_user_id):
 
 @pytest.fixture
 def sample_connections():
-    """List of sample Connection data dicts for testing."""
+    """
+    List of sample Connection data dicts for testing.
+
+    Includes default birth_time/lat/lon to match iOS defaults:
+    - birth_time: "12:00" (noon default when unknown)
+    - birth_lat: 0.0 (equator default when unknown)
+    - birth_lon: 0.0 (prime meridian default when unknown)
+    """
     now = datetime.now(timezone.utc).isoformat()
 
     return [
         {
-            "connection_id": "conn_john_001",
+            "connection_id": "conn_crush_001",
+            "name": "Alex",
+            "birth_date": "1994-04-20",
+            "birth_time": "12:00",
+            "birth_lat": 0.0,
+            "birth_lon": 0.0,
+            "relationship_category": "love",
+            "relationship_label": "crush",
+            "sun_sign": "aries",
+            "created_at": now,
+            "updated_at": now,
+            "arca_notes": [],
+            "vibes": [],
+        },
+        {
+            "connection_id": "conn_john_002",
             "name": "John",
             "birth_date": "1992-08-15",
-            "relationship_type": "partner",
+            "birth_time": "12:00",
+            "birth_lat": 0.0,
+            "birth_lon": 0.0,
+            "relationship_category": "love",
+            "relationship_label": "partner",
             "sun_sign": "leo",
             "created_at": now,
             "updated_at": now,
@@ -267,10 +349,14 @@ def sample_connections():
             "vibes": [],
         },
         {
-            "connection_id": "conn_sarah_002",
+            "connection_id": "conn_sarah_003",
             "name": "Sarah",
             "birth_date": "1995-06-05",
-            "relationship_type": "friend",
+            "birth_time": "12:00",
+            "birth_lat": 0.0,
+            "birth_lon": 0.0,
+            "relationship_category": "friend",
+            "relationship_label": "best_friend",
             "sun_sign": "gemini",
             "created_at": now,
             "updated_at": now,
@@ -278,10 +364,14 @@ def sample_connections():
             "vibes": [],
         },
         {
-            "connection_id": "conn_mom_003",
+            "connection_id": "conn_mom_004",
             "name": "Mom",
             "birth_date": "1965-07-10",
-            "relationship_type": "family",
+            "birth_time": "12:00",
+            "birth_lat": 0.0,
+            "birth_lon": 0.0,
+            "relationship_category": "family",
+            "relationship_label": "mother",
             "sun_sign": "cancer",
             "created_at": now,
             "updated_at": now,
@@ -293,7 +383,11 @@ def sample_connections():
 
 @pytest.fixture
 def sample_connection_full(test_connection_id, sample_connection_birth_data):
-    """Single connection with full birth data."""
+    """
+    Single connection with full birth data.
+
+    Defaults to love/crush to match iOS TestData defaults.
+    """
     from astro import compute_birth_chart, get_sun_sign
 
     chart_dict, exact = compute_birth_chart(
@@ -314,7 +408,8 @@ def sample_connection_full(test_connection_id, sample_connection_birth_data):
         "birth_timezone": sample_connection_birth_data["birth_timezone"],
         "birth_lat": sample_connection_birth_data["birth_lat"],
         "birth_lon": sample_connection_birth_data["birth_lon"],
-        "relationship_type": "friend",
+        "relationship_category": "love",
+        "relationship_label": "crush",
         "sun_sign": sun_sign,
         "natal_chart": chart_dict,
         "exact_chart": exact,
@@ -334,13 +429,14 @@ import requests
 EMULATOR_BASE_URL = "http://localhost:5001/arca-baf77/us-central1"
 
 
-def call_function(function_name: str, data: dict) -> dict:
+def call_function(function_name: str, data: dict, save_output: bool = True) -> dict:
     """
     Call a Cloud Function via the Firebase emulator.
 
     Args:
         function_name: Name of the function (e.g., 'get_sun_sign_from_date')
         data: Request data to send
+        save_output: If True, save response to backend_output/ for iOS mocks
 
     Returns:
         The 'result' field from the response
@@ -367,7 +463,13 @@ def call_function(function_name: str, data: dict) -> dict:
         error = result["error"]
         raise Exception(f"{error.get('status', 'ERROR')}: {error.get('message', 'Unknown error')}")
 
-    return result.get("result", result)
+    response_data = result.get("result", result)
+
+    # Save successful responses to backend_output/ for iOS mocks
+    if save_output:
+        save_backend_output(function_name, data, response_data)
+
+    return response_data
 
 
 # ---------------------------------------------------------------------------

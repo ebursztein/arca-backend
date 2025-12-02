@@ -54,7 +54,7 @@ def get_emulator_client():
     except ValueError:
         firebase_admin.initialize_app()
 
-    return firestore.client()
+    return firestore.client(database_id="(default)")
 
 
 def clear_collection(db, collection_path: str) -> int:

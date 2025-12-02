@@ -20,7 +20,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from firebase_admin import firestore, messaging
 
 from astro import get_sun_sign, ZodiacSign, compute_birth_chart, NatalChartData
-from models import RelationshipType, VALID_SUN_SIGNS
+from models import VALID_SUN_SIGNS
+from relationships import RelationshipCategory, RelationshipLabel
 
 from compatibility import calculate_synastry_points, calculate_compatibility
 
@@ -58,8 +59,11 @@ class Connection(BaseModel):
     birth_lat: Optional[float] = Field(None, ge=-90, le=90)
     birth_lon: Optional[float] = Field(None, ge=-180, le=180)
     birth_timezone: Optional[str] = Field(None, max_length=64, description="IANA timezone")
-    relationship_type: RelationshipType = Field(
-        description="Relationship category"
+    relationship_category: RelationshipCategory = Field(
+        description="Main category (love/friend/family/coworker/other)"
+    )
+    relationship_label: RelationshipLabel = Field(
+        description="Specific label (crush/partner/best_friend/boss/etc)"
     )
     source_user_id: Optional[str] = Field(
         None,
@@ -411,7 +415,8 @@ def import_connection(
     db: firestore.Client,
     user_id: str,
     share_secret: str,
-    relationship_type: str
+    relationship_category: str,
+    relationship_label: str
 ) -> ImportConnectionResponse:
     """
     Add a connection from a share link.
@@ -420,7 +425,8 @@ def import_connection(
         db: Firestore client
         user_id: Current user's ID
         share_secret: Share secret from URL
-        relationship_type: Relationship category
+        relationship_category: Main category (love/friend/family/coworker/other)
+        relationship_label: Specific label (crush/partner/best_friend/boss/etc)
 
     Returns:
         ImportConnectionResponse with connection data
@@ -498,6 +504,10 @@ def import_connection(
     if source_data.get("birth_date"):
         sun_sign = get_sun_sign(source_data["birth_date"]).value
 
+    # Convert string params to enums
+    cat_enum = RelationshipCategory(relationship_category)
+    label_enum = RelationshipLabel(relationship_label)
+
     connection = Connection(
         connection_id=connection_id,
         name=source_data.get("name", "Unknown"),
@@ -506,7 +516,8 @@ def import_connection(
         birth_lat=source_data.get("birth_lat"),
         birth_lon=source_data.get("birth_lon"),
         birth_timezone=source_data.get("birth_timezone"),
-        relationship_type=relationship_type,
+        relationship_category=cat_enum,
+        relationship_label=label_enum,
         source_user_id=source_user_id,
         sun_sign=sun_sign,
         created_at=now,
@@ -562,7 +573,8 @@ def create_connection(
     user_id: str,
     name: str,
     birth_date: str,
-    relationship_type: str,
+    relationship_category: str,
+    relationship_label: str,
     birth_time: Optional[str] = None,
     birth_lat: Optional[float] = None,
     birth_lon: Optional[float] = None,
@@ -577,7 +589,8 @@ def create_connection(
         user_id: User's ID
         name: Connection's name
         birth_date: Birth date YYYY-MM-DD
-        relationship_type: Relationship category
+        relationship_category: Main category (love/friend/family/coworker/other)
+        relationship_label: Specific label (crush/partner/best_friend/boss/etc)
         birth_time: Optional birth time
         birth_lat: Optional latitude
         birth_lon: Optional longitude
@@ -595,6 +608,10 @@ def create_connection(
     if birth_date:
         sun_sign = get_sun_sign(birth_date).value
 
+    # Convert string params to enums
+    cat_enum = RelationshipCategory(relationship_category)
+    label_enum = RelationshipLabel(relationship_label)
+
     connection = Connection(
         connection_id=connection_id,
         name=name,
@@ -603,7 +620,8 @@ def create_connection(
         birth_lat=birth_lat,
         birth_lon=birth_lon,
         birth_timezone=birth_timezone,
-        relationship_type=relationship_type,
+        relationship_category=cat_enum,
+        relationship_label=label_enum,
         source_user_id=None,
         sun_sign=sun_sign,
         photo_path=photo_path,
@@ -668,7 +686,7 @@ def update_connection(
     # Filter allowed fields
     allowed_fields = {
         "name", "birth_date", "birth_time", "birth_lat",
-        "birth_lon", "birth_timezone", "relationship_type", "photo_path"
+        "birth_lon", "birth_timezone", "relationship_category", "relationship_label", "photo_path"
     }
     filtered_updates = {k: v for k, v in updates.items() if k in allowed_fields}
 
@@ -854,7 +872,8 @@ def respond_to_request(
         birth_lat=user_data.get("birth_lat"),
         birth_lon=user_data.get("birth_lon"),
         birth_timezone=user_data.get("birth_timezone"),
-        relationship_type="friend",  # Default, they can change later
+        relationship_category=RelationshipCategory.FRIEND,  # Default, they can change later
+        relationship_label=RelationshipLabel.FRIEND,
         source_user_id=user_id,
         sun_sign=sun_sign,
         created_at=now,

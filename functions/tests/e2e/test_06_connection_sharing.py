@@ -95,10 +95,13 @@ class TestImportConnection:
     """E2E tests for import_connection Cloud Function."""
 
     @pytest.mark.llm
-    def test_imports_connection_from_public_profile(self, test_user_id):
+    def test_imports_connection_from_public_profile(self):
         """Test import_connection adds connection from public share link."""
+        # Use dedicated dev accounts for sharing tests
+        source_user_id = "test_sharing_source"
+        importing_user_id = "test_sharing_importer"
+
         # Create source user
-        source_user_id = f"{test_user_id}_source"
         call_function("create_user_profile", {
             "user_id": source_user_id,
             "name": "Source User",
@@ -111,7 +114,6 @@ class TestImportConnection:
         share_secret = share_result["share_url"].split("/")[-1]
 
         # Create importing user
-        importing_user_id = f"{test_user_id}_importer"
         call_function("create_user_profile", {
             "user_id": importing_user_id,
             "name": "Importing User",
@@ -123,7 +125,8 @@ class TestImportConnection:
         result = call_function("import_connection", {
             "user_id": importing_user_id,
             "share_secret": share_secret,
-            "relationship_type": "friend",
+            "relationship_category": "friend",
+            "relationship_label": "friend",
         })
 
         assert result["success"] is True
@@ -154,7 +157,8 @@ class TestImportConnection:
             call_function("import_connection", {
                 "user_id": test_user_id,
                 "share_secret": share_secret,
-                "relationship_type": "friend",
+                "relationship_category": "friend",
+                "relationship_label": "friend",
             })
 
         assert "yourself" in str(exc_info.value).lower()

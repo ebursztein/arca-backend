@@ -39,11 +39,11 @@ class TestNatalChartFunction:
             "lon": -74.0060
         })
 
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12
 
         planet_names = {p["name"] for p in result["planets"]}
         expected = {"sun", "moon", "mercury", "venus", "mars",
-                    "jupiter", "saturn", "uranus", "neptune", "pluto", "north node"}
+                    "jupiter", "saturn", "uranus", "neptune", "pluto", "north node", "south node"}
         assert planet_names == expected
 
     def test_has_12_houses(self):
@@ -221,7 +221,8 @@ class TestGetNatalChartForConnection:
             "connection": {
                 "name": "John",
                 "birth_date": "1992-08-15",
-                "relationship_type": "friend",
+                "relationship_category": "friend",
+                "relationship_label": "friend",
             }
         })
 

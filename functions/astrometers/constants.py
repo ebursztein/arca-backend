@@ -39,6 +39,9 @@ PLANET_BASE_SCORES: Dict[Planet, float] = {
 
     # North Node - karmic/destiny point (similar to outer planets)
     Planet.NORTH_NODE: 3.0,
+
+    # South Node - karmic/destiny point (same as North Node)
+    Planet.SOUTH_NODE: 3.0,
 }
 
 # =============================================================================
@@ -241,6 +244,9 @@ TRANSIT_PLANET_WEIGHTS: Dict[Planet, float] = {
 
     # North Node: karmic/destiny point (slow-moving, similar to outer planets)
     Planet.NORTH_NODE: 1.5,
+
+    # South Node: karmic/destiny point (same as North Node)
+    Planet.SOUTH_NODE: 1.5,
 }
 
 # =============================================================================

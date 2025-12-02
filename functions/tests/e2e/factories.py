@@ -220,11 +220,12 @@ class ConnectionFactory:
         connection_id: str = None,
         name: str = "Test Connection",
         birth_date: str = "1992-03-22",
-        relationship_type: str = "friend",
-        birth_time: Optional[str] = None,
-        birth_lat: Optional[float] = None,
-        birth_lon: Optional[float] = None,
-        birth_timezone: Optional[str] = None,
+        relationship_category: str = "love",
+        relationship_label: str = "crush",
+        birth_time: Optional[str] = "12:00",
+        birth_lat: Optional[float] = 0.0,
+        birth_lon: Optional[float] = 0.0,
+        birth_timezone: Optional[str] = "UTC",
         compute_chart: bool = False,
         **overrides,
     ) -> dict:
@@ -235,11 +236,12 @@ class ConnectionFactory:
             connection_id: Unique connection ID (auto-generated if not provided)
             name: Connection's name
             birth_date: Birth date YYYY-MM-DD
-            relationship_type: friend/partner/family/coworker
-            birth_time: Birth time HH:MM (optional)
-            birth_lat: Latitude (optional)
-            birth_lon: Longitude (optional)
-            birth_timezone: IANA timezone (optional)
+            relationship_category: love/friend/family/coworker/other
+            relationship_label: crush/partner/best_friend/boss/etc
+            birth_time: Birth time HH:MM (default: "12:00" - iOS default)
+            birth_lat: Latitude (default: 0.0 - iOS default)
+            birth_lon: Longitude (default: 0.0 - iOS default)
+            birth_timezone: IANA timezone (default: "UTC")
             compute_chart: Whether to compute natal chart
             **overrides: Additional fields to override
 
@@ -273,7 +275,8 @@ class ConnectionFactory:
             "birth_lat": birth_lat,
             "birth_lon": birth_lon,
             "birth_timezone": birth_timezone,
-            "relationship_type": relationship_type,
+            "relationship_category": relationship_category,
+            "relationship_label": relationship_label,
             "sun_sign": sun_sign,
             "natal_chart": chart_dict,
             "exact_chart": exact,
@@ -291,22 +294,22 @@ class ConnectionFactory:
     @classmethod
     def create_romantic(cls, name: str = "Partner", **kwargs) -> dict:
         """Create a romantic connection."""
-        return cls.create(name=name, relationship_type="partner", **kwargs)
+        return cls.create(name=name, relationship_category="love", relationship_label="partner", **kwargs)
 
     @classmethod
     def create_friend(cls, name: str = "Friend", **kwargs) -> dict:
         """Create a friend connection."""
-        return cls.create(name=name, relationship_type="friend", **kwargs)
+        return cls.create(name=name, relationship_category="friend", relationship_label="friend", **kwargs)
 
     @classmethod
     def create_family(cls, name: str = "Family Member", **kwargs) -> dict:
         """Create a family connection."""
-        return cls.create(name=name, relationship_type="family", **kwargs)
+        return cls.create(name=name, relationship_category="family", relationship_label="extended", **kwargs)
 
     @classmethod
     def create_coworker(cls, name: str = "Coworker", **kwargs) -> dict:
         """Create a coworker connection."""
-        return cls.create(name=name, relationship_type="coworker", **kwargs)
+        return cls.create(name=name, relationship_category="coworker", relationship_label="colleague", **kwargs)
 
 
 class EntityFactory:

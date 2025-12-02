@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-11-30 10:21:13
+> Auto-generated on 2025-12-01 22:45:47
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -78,7 +78,7 @@ TIER 1: Generate daily transit chart (universal, no location).
 |-------|------|----------|-------------|
 | `utc_dt` | string | No | Optional, defaults to today midnight UTC |
 
-**Response:** `Transit chart data with planets and aspects (houses will be at 0,0)`
+**Response:** `NatalChartData`
 
 ---
 
@@ -94,7 +94,7 @@ TIER 2: Generate user-specific transit chart overlay.
 | `birth_lat` | float | Yes | User's birth latitude |
 | `birth_lon` | float | Yes | User's birth longitude |
 
-**Response:** `Transit chart data with houses relative to user's natal chart location`
+**Response:** `NatalChartData`
 
 ---
 
@@ -106,10 +106,9 @@ Get natal chart for a connection.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 
-**Response:** `Natal chart data for the connection`
+**Response:** `{ "chart": ..., "has_exact_chart": ..., "connection_name": ..., "sun_sign": ... }`
 
 ---
 
@@ -123,7 +122,6 @@ Get both natal charts and synastry aspects in a single call.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 
 **Response:** `NatalChartData`
@@ -142,7 +140,6 @@ Create user profile with birth chart computation and LLM-generated summary.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `name` | string | Yes | - |
 | `email` | string | Yes | - |
 | `birth_date` | string | Yes | YYYY-MM-DD (REQUIRED) |
@@ -159,12 +156,6 @@ Create user profile with birth chart computation and LLM-generated summary.
 
 Get user profile from Firestore.
 
-**Request Body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
-
 **Response:** `Complete user profile dictionary or error if not found`
 
 ---
@@ -179,7 +170,6 @@ Update user profile with optional natal chart regeneration.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | str | Yes | Firebase auth user ID |
 | `photo_path` | str | No | Firebase Storage path for profile photo |
 | `birth_time` | str | No | Birth time HH:MM - triggers chart regeneration |
 | `birth_timezone` | str | No | IANA timezone for birth time |
@@ -193,12 +183,6 @@ Update user profile with optional natal chart regeneration.
 #### `get_memory`
 
 Get memory collection for a user (for LLM personalization).
-
-**Request Body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 
 **Response:** `Memory collection dictionary`
 
@@ -226,7 +210,6 @@ Register device token for push notifications.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `device_token` | string | Yes | - |
 
 **Response:** `{ "success": ... }`
@@ -245,7 +228,6 @@ Generate daily horoscope - complete reading with meter groups.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `date` | string | No | Optional, defaults to today |
 
 **Response:** `DailyHoroscope`
@@ -260,7 +242,6 @@ Calculate all 17 astrological meters for a user on a given date.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `date` | string | No | Optional, defaults to today |
 
 **Response:** `AstrometersForIOS`
@@ -384,7 +365,6 @@ Manually create a connection (not via share link).
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `connection` | object | Yes | - |
 
 **Response:** `Created connection data`
@@ -399,7 +379,6 @@ Update a connection's details.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 | `updates` | object | Yes | - |
 
@@ -415,7 +394,6 @@ Delete a connection.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 
 **Response:** `{ "success": ... }`
@@ -430,7 +408,6 @@ List all user's connections.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `limit` | int | No | Optional, default 50 |
 
 **Response:** `{ "connections": ..., "total_count": ... }`
@@ -442,12 +419,6 @@ List all user's connections.
 #### `get_share_link`
 
 Get user's shareable profile link for "Add me on Arca".
-
-**Request Body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 
 **Response:** `{ "share_url": ..., "share_mode": ..., "qr_code_data": ... }`
 
@@ -475,9 +446,9 @@ Add a connection from a share link.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `share_secret` | string | Yes | - |
-| `relationship_type` | string | Yes | - |
+| `relationship_category` | string | Yes | - |
+| `relationship_label` | string | Yes | - |
 
 **Response:** `{ "success": ..., "connection_id": ..., "connection": ..., "name": ..., "sun_sign": ..., "notification_sent": ... }`
 
@@ -486,12 +457,6 @@ Add a connection from a share link.
 #### `list_connection_requests`
 
 List pending connection requests for a user.
-
-**Request Body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 
 **Response:** `{ "requests": ... }`
 
@@ -505,7 +470,6 @@ Toggle between public and request-only share modes.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `share_mode` | string | Yes | "request" or "public" |
 
 **Response:** `{ "share_mode": ... }`
@@ -520,7 +484,6 @@ Approve or reject a connection request.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `request_id` | string | Yes | - |
 | `action` | string | Yes | "approve" or "reject" |
 
@@ -540,7 +503,6 @@ Get compatibility analysis between user and a connection.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `user_id` | string | Yes | - |
 | `connection_id` | string | Yes | - |
 
 **Response:** `CompatibilityResult`
@@ -603,7 +565,8 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `connection_id` | string | Yes | PydanticUndefined | - | Connection ID |
 | `connection_name` | string | Yes | PydanticUndefined | - | Connection's name |
-| `relationship_type` | string | Yes | PydanticUndefined | - | friend/partner/family/coworker |
+| `relationship_category` | string | Yes | PydanticUndefined | - | love/friend/family/coworker/other |
+| `relationship_label` | string | Yes | PydanticUndefined | - | crush/partner/best_friend/boss/etc |
 | `date` | string | Yes | PydanticUndefined | - | ISO date when featured |
 | `context` | string | Yes | PydanticUndefined | - | What was said about this connection |
 
@@ -662,7 +625,8 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `connection_id` | string | Yes | PydanticUndefined | min_length: 1, max_length: 64 | Connection ID from user's connections |
 | `name` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Connection's name |
-| `relationship_type` | "friend" | "partner" | "family" | "coworker" | Yes | PydanticUndefined | - | Relationship category |
+| `relationship_category` | string (enum: RelationshipCategory) | Yes | PydanticUndefined | - | Main category (love/friend/family/coworker/other) |
+| `relationship_label` | string (enum: RelationshipLabel) | Yes | PydanticUndefined | - | Specific label (crush/partner/best_friend/boss/etc) |
 | `vibe` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Personalized vibe sentence with their name, e.g., 'Great ... |
 | `vibe_score` | int | Yes | PydanticUndefined | >= 0, <= 100 | 0-100 score (70-100=positive, 40-70=neutral, 0-40=challen... |
 | `key_transit` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Most significant transit, e.g., 'Transit Venus trine your... |
@@ -906,7 +870,8 @@ Get compatibility analysis between user and a connection.
 | `birth_lat` | float | null | No | null | >= -90, <= 90 | - |
 | `birth_lon` | float | null | No | null | >= -180, <= 180 | - |
 | `birth_timezone` | string | null | No | null | max_length: 64 | IANA timezone |
-| `relationship_type` | "friend" | "partner" | "family" | "coworker" | Yes | PydanticUndefined | - | Relationship category |
+| `relationship_category` | string (enum: RelationshipCategory) | Yes | PydanticUndefined | - | Main category (love/friend/family/coworker/other) |
+| `relationship_label` | string (enum: RelationshipLabel) | Yes | PydanticUndefined | - | Specific label (crush/partner/best_friend/boss/etc) |
 | `source_user_id` | string | null | No | null | max_length: 128 | User ID if imported via share link |
 | `sun_sign` | string | null | No | null | - | Calculated sun sign |
 | `photo_path` | string | null | No | null | max_length: 500 | Firebase Storage path for connection photo |
@@ -987,7 +952,23 @@ Get compatibility analysis between user and a connection.
 | `coworker` | ModeCompatibility | Yes | PydanticUndefined | - | - |
 | `aspects` | SynastryAspect[] | Yes | PydanticUndefined | - | All synastry aspects found |
 | `composite_summary` | CompositeSummary | null | No | null | - | - |
+| `karmic_summary` | KarmicSummary | null | No | null | - | - |
+| `interpretation` | CompatibilityInterpretation | null | No | null | - | LLM-generated interpretation |
 | `calculated_at` | string | Yes | PydanticUndefined | - | ISO timestamp |
+
+#### `CompatibilityInterpretation`
+
+| Field | Type | Required | Default | Constraints | Description |
+|-------|------|----------|---------|-------------|-------------|
+| `headline` | string | Yes | PydanticUndefined | - | 5-8 word headline capturing their dynamic |
+| `summary` | string | Yes | PydanticUndefined | - | 2-3 sentences overall summary |
+| `relationship_purpose` | string | No | '' | - | 1-2 sentences about the relationship's purpose |
+| `strengths` | string | Yes | PydanticUndefined | - | 2-3 sentences about natural connection points |
+| `growth_areas` | string | Yes | PydanticUndefined | - | 1-2 sentences about growth opportunities |
+| `advice` | string | Yes | PydanticUndefined | - | 1 actionable sentence |
+| `destiny_note` | string | No | '' | - | 1-2 sentences about karmic connection (only if karmic) |
+| `generation_time_ms` | int | No | 0 | - | LLM generation time in milliseconds |
+| `model_used` | string | No | '' | - | Model used for generation |
 
 #### `ModeCompatibility`
 
@@ -1026,9 +1007,32 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `composite_sun` | string | null | No | null | - | Composite Sun sign |
 | `composite_moon` | string | null | No | null | - | Composite Moon sign |
+| `composite_ascendant` | string | null | No | null | - | Composite Ascendant sign |
 | `summary` | string | null | No | null | - | LLM-generated composite summary |
+| `relationship_purpose` | string | null | No | null | - | LLM-generated purpose statement |
 | `strengths` | string[] | No | PydanticUndefined | - | - |
 | `challenges` | string[] | No | PydanticUndefined | - | - |
+
+#### `KarmicSummary`
+
+| Field | Type | Required | Default | Constraints | Description |
+|-------|------|----------|---------|-------------|-------------|
+| `is_karmic` | boolean | Yes | PydanticUndefined | - | True if any tight Node aspects exist |
+| `karmic_aspects` | KarmicAspect[] | No | PydanticUndefined | - | - |
+| `primary_theme` | string | null | No | null | - | Main karmic theme if applicable |
+| `destiny_note` | string | null | No | null | - | LLM-generated destiny interpretation |
+
+#### `KarmicAspect`
+
+| Field | Type | Required | Default | Constraints | Description |
+|-------|------|----------|---------|-------------|-------------|
+| `planet` | string | Yes | PydanticUndefined | - | The planet touching the Node |
+| `planet_owner` | string | Yes | PydanticUndefined | - | 'user' or 'connection' - whose planet |
+| `node` | string | Yes | PydanticUndefined | - | 'north node' or 'south node' |
+| `node_owner` | string | Yes | PydanticUndefined | - | 'user' or 'connection' - whose node |
+| `aspect_type` | string | Yes | PydanticUndefined | - | conjunction, opposition, trine, square, sextile |
+| `orb` | float | Yes | PydanticUndefined | >= 0, <= 10 | Orb in degrees |
+| `interpretation_hint` | string | Yes | PydanticUndefined | - | Brief hint for LLM interpretation |
 
 ### Entities
 
@@ -1346,6 +1350,7 @@ Get compatibility analysis between user and a connection.
 | `NEPTUNE` | `"neptune"` |
 | `PLUTO` | `"pluto"` |
 | `NORTH_NODE` | `"north node"` |
+| `SOUTH_NODE` | `"south node"` |
 | `ASCENDANT` | `"asc"` |
 | `IMUM_COELI` | `"ic"` |
 | `DESCENDANT` | `"dsc"` |
@@ -1482,6 +1487,7 @@ Get compatibility analysis between user and a connection.
 | `NEPTUNE` | `"neptune"` |
 | `PLUTO` | `"pluto"` |
 | `NORTH_NODE` | `"north node"` |
+| `SOUTH_NODE` | `"south node"` |
 
 #### `QualityType`
 
@@ -1492,14 +1498,51 @@ Get compatibility analysis between user and a connection.
 | `PEACEFUL` | `"peaceful"` |
 | `FLOWING` | `"flowing"` |
 
-#### `RelationshipType`
+#### `RelationshipCategory`
 
 | Name | Value |
 |------|-------|
+| `LOVE` | `"love"` |
 | `FRIEND` | `"friend"` |
-| `PARTNER` | `"partner"` |
 | `FAMILY` | `"family"` |
 | `COWORKER` | `"coworker"` |
+| `OTHER` | `"other"` |
+
+#### `RelationshipLabel`
+
+| Name | Value |
+|------|-------|
+| `CRUSH` | `"crush"` |
+| `DATING` | `"dating"` |
+| `SITUATIONSHIP` | `"situationship"` |
+| `PARTNER` | `"partner"` |
+| `BOYFRIEND` | `"boyfriend"` |
+| `GIRLFRIEND` | `"girlfriend"` |
+| `SPOUSE` | `"spouse"` |
+| `EX` | `"ex"` |
+| `FRIEND` | `"friend"` |
+| `BEST_FRIEND` | `"best_friend"` |
+| `CLOSE_FRIEND` | `"close_friend"` |
+| `NEW_FRIEND` | `"new_friend"` |
+| `MOTHER` | `"mother"` |
+| `FATHER` | `"father"` |
+| `SISTER` | `"sister"` |
+| `BROTHER` | `"brother"` |
+| `DAUGHTER` | `"daughter"` |
+| `SON` | `"son"` |
+| `GRANDPARENT` | `"grandparent"` |
+| `EXTENDED` | `"extended"` |
+| `BOSS` | `"boss"` |
+| `MANAGER` | `"manager"` |
+| `COLLEAGUE` | `"colleague"` |
+| `MENTOR` | `"mentor"` |
+| `MENTEE` | `"mentee"` |
+| `CLIENT` | `"client"` |
+| `BUSINESS_PARTNER` | `"business_partner"` |
+| `ACQUAINTANCE` | `"acquaintance"` |
+| `NEIGHBOR` | `"neighbor"` |
+| `EX_FRIEND` | `"ex_friend"` |
+| `COMPLICATED` | `"complicated"` |
 
 #### `ZodiacSign`
 

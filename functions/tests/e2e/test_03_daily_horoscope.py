@@ -40,7 +40,7 @@ GROUP_METER_MAP = {
 @pytest.fixture(scope="module")
 def astrometers_user_id():
     """Fixed user ID for astrometers tests (module-scoped)."""
-    return f"test_astrometers_{uuid.uuid4().hex[:12]}"
+    return "test_user_b"  # Dev account from DEV_ACCOUNT_UIDS
 
 
 @pytest.fixture(scope="module")
@@ -68,7 +68,7 @@ def astrometers_response(astrometers_user_profile):
 @pytest.fixture(scope="module")
 def horoscope_user_id():
     """Fixed user ID for horoscope tests (module-scoped)."""
-    return f"test_horoscope_{uuid.uuid4().hex[:12]}"
+    return "test_user_c"  # Dev account from DEV_ACCOUNT_UIDS
 
 
 @pytest.fixture(scope="module")

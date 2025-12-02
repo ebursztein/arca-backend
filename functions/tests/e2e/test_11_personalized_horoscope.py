@@ -30,7 +30,7 @@ ASK_THE_STARS_URL = "http://localhost:5001/arca-baf77/us-central1/ask_the_stars"
 @pytest.fixture(scope="module")
 def personalized_user_id():
     """Fixed user ID for personalized horoscope tests (module-scoped)."""
-    return f"test_personalized_{uuid.uuid4().hex[:12]}"
+    return "test_user_d"  # Dev account from DEV_ACCOUNT_UIDS
 
 
 @pytest.fixture(scope="module")
@@ -54,7 +54,7 @@ def personalized_horoscope_response(personalized_user_profile):
 @pytest.fixture(scope="module")
 def v2_user_id():
     """Fixed user ID for V2 horoscope tests (module-scoped)."""
-    return f"test_v2_horoscope_{uuid.uuid4().hex[:12]}"
+    return "test_user_e"  # Dev account from DEV_ACCOUNT_UIDS
 
 
 @pytest.fixture(scope="module")

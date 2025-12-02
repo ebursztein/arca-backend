@@ -77,15 +77,15 @@ class TestNatalChartDataIntegrity:
         print("✓ Chart has all components")
 
     def test_chart_has_11_celestial_bodies(self):
-        """Verify chart contains all 11 planets."""
+        """Verify chart contains all 12 planets."""
         chart, _ = compute_birth_chart("1990-06-15")
 
         # Planet names are enum objects, extract their values
         planet_names = {p["name"].value if hasattr(p["name"], 'value') else p["name"]
                        for p in chart["planets"]}
 
-        # Should have 11 unique planet names
-        assert len(planet_names) == 11
+        # Should have 12 unique planet names
+        assert len(planet_names) == 12
 
         # Check some key planets are present
         assert any('sun' in str(name).lower() for name in planet_names)
@@ -150,7 +150,8 @@ class TestNatalChartDataIntegrity:
 
         dist = chart["distributions"]
 
-        # Element distribution totals 11
+        # Element distribution totals 11 (10 planets + North Node from natal lib)
+        # Note: South Node added separately, not in distributions
         element_total = sum(dist["elements"].values())
         assert element_total == 11
 
@@ -221,19 +222,19 @@ class TestEdgeCases:
     def test_leap_year_date(self):
         """Test chart generation on leap year date."""
         chart, _ = compute_birth_chart("2024-02-29")
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         print("✓ Leap year date works")
 
     def test_very_old_date(self):
         """Test chart generation for very old date."""
         chart, _ = compute_birth_chart("1900-01-01")
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         print("✓ Very old date works")
 
     def test_future_date(self):
         """Test chart generation for future date."""
         chart, _ = compute_birth_chart("2050-12-31")
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         print("✓ Future date works")
 
     def test_different_coordinates(self):
@@ -257,7 +258,7 @@ class TestEdgeCases:
         )
 
         # Both should work
-        assert len(chart_ny["planets"]) == 11
-        assert len(chart_la["planets"]) == 11
+        assert len(chart_ny["planets"]) == 12
+        assert len(chart_la["planets"]) == 12
 
         print("✓ Different geographic locations work")

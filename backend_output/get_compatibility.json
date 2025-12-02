@@ -1,0 +1,967 @@
+{
+  "function_name": "get_compatibility",
+  "request": {
+    "user_id": "test_user_b",
+    "connection_id": "cO51oIGgrHq7claYVq9Idw"
+  },
+  "response": {
+    "aspects": [
+      {
+        "aspect_type": "square",
+        "id": "asp_060",
+        "interpretation": "Test's North Node squaring Partner's Venus brings fated lessons around values and attraction. You're meant to learn how to integrate your desires with what truly matters in partnership.",
+        "is_harmonious": false,
+        "orb": 0.01,
+        "their_planet": "venus",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_066",
+        "interpretation": "Test's South Node squaring Partner's Venus highlights past-life connections and lessons. There's a karmic pull here, guiding you to understand relationship dynamics and personal worth.",
+        "is_harmonious": false,
+        "orb": 0.01,
+        "their_planet": "venus",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_049",
+        "interpretation": "Test's Neptune sextile Partner's Pluto offers a harmonious blend of intuition and transformation. You can deeply understand and heal each other on subconscious levels, fostering profound connection.",
+        "is_harmonious": true,
+        "orb": 0.15,
+        "their_planet": "pluto",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_059",
+        "interpretation": "Test's North Node sextile Partner's Mercury shows a destined path for communication and learning. You are meant to exchange ideas and grow mentally through your interactions.",
+        "is_harmonious": true,
+        "orb": 0.24,
+        "their_planet": "mercury",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_065",
+        "interpretation": "Test's South Node trine Partner's Mercury suggests a natural, perhaps past-life, ease in communication. You can understand each other's thoughts and perspectives with little effort.",
+        "is_harmonious": true,
+        "orb": 0.24,
+        "their_planet": "mercury",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_023",
+        "interpretation": "Test's Mars quincunx Partner's Moon creates a challenging dynamic in emotional expression. You may feel your actions and your partner's feelings are slightly out of sync, requiring adjustments.",
+        "is_harmonious": false,
+        "orb": 0.25,
+        "their_planet": "moon",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_057",
+        "interpretation": "Test's North Node sextile Partner's Sun indicates a fated connection for growth and purpose. You are destined to learn and evolve together, guided by Partner's core identity.",
+        "is_harmonious": true,
+        "orb": 0.25,
+        "their_planet": "sun",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_064",
+        "interpretation": "Test's South Node trine Partner's Sun suggests an innate understanding and comfort. You likely feel a natural ease with each other, as if you've known each other for a long time.",
+        "is_harmonious": true,
+        "orb": 0.25,
+        "their_planet": "sun",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_063",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 0.28,
+        "their_planet": "south node",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_070",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 0.28,
+        "their_planet": "north node",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_041",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 0.64,
+        "their_planet": "neptune",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_014",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 0.77,
+        "their_planet": "mars",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_068",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 0.89,
+        "their_planet": "neptune",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_058",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 1.18,
+        "their_planet": "moon",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_043",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 1.25,
+        "their_planet": "north node",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_044",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 1.25,
+        "their_planet": "south node",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_025",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 1.42,
+        "their_planet": "venus",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_038",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 1.52,
+        "their_planet": "mars",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_037",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 1.54,
+        "their_planet": "venus",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_024",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 1.67,
+        "their_planet": "mercury",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_022",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 1.68,
+        "their_planet": "sun",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_029",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 1.71,
+        "their_planet": "south node",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_054",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 1.84,
+        "their_planet": "pluto",
+        "user_planet": "pluto"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_027",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 2.32,
+        "their_planet": "neptune",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_033",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 2.35,
+        "their_planet": "pluto",
+        "user_planet": "jupiter"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_028",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 2.44,
+        "their_planet": "pluto",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_036",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 2.71,
+        "their_planet": "moon",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_045",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 2.84,
+        "their_planet": "moon",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_017",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 2.93,
+        "their_planet": "neptune",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_061",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 3.05,
+        "their_planet": "mars",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_067",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 3.05,
+        "their_planet": "mars",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_007",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 3.19,
+        "their_planet": "pluto",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_018",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.54,
+        "their_planet": "north node",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_019",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.54,
+        "their_planet": "south node",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_010",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.57,
+        "their_planet": "sun",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_012",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.58,
+        "their_planet": "mercury",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_013",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.83,
+        "their_planet": "venus",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "quincunx",
+        "id": "asp_016",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.84,
+        "their_planet": "saturn",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_062",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.87,
+        "their_planet": "pluto",
+        "user_planet": "north node"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_069",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 3.87,
+        "their_planet": "pluto",
+        "user_planet": "south node"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_046",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 4.01,
+        "their_planet": "venus",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_050",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 4.3,
+        "their_planet": "north node",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_051",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 4.3,
+        "their_planet": "south node",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_026",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 4.48,
+        "their_planet": "mars",
+        "user_planet": "mars"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_052",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 4.53,
+        "their_planet": "moon",
+        "user_planet": "pluto"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_048",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 4.91,
+        "their_planet": "neptune",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_011",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 5.0,
+        "their_planet": "moon",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_030",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.04,
+        "their_planet": "moon",
+        "user_planet": "jupiter"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_021",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 5.34,
+        "their_planet": "pluto",
+        "user_planet": "venus"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_042",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.4,
+        "their_planet": "pluto",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_002",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 5.7,
+        "their_planet": "uranus",
+        "user_planet": "sun"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_053",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.7,
+        "their_planet": "venus",
+        "user_planet": "pluto"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_004",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 5.88,
+        "their_planet": "moon",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_035",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.9,
+        "their_planet": "jupiter",
+        "user_planet": "saturn"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_015",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.94,
+        "their_planet": "jupiter",
+        "user_planet": "mercury"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_055",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.99,
+        "their_planet": "north node",
+        "user_planet": "pluto"
+      },
+      {
+        "aspect_type": "sextile",
+        "id": "asp_056",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 5.99,
+        "their_planet": "south node",
+        "user_planet": "pluto"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_039",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 6.13,
+        "their_planet": "saturn",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_031",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 6.21,
+        "their_planet": "venus",
+        "user_planet": "jupiter"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_034",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 6.5,
+        "their_planet": "north node",
+        "user_planet": "jupiter"
+      },
+      {
+        "aspect_type": "trine",
+        "id": "asp_006",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 7.05,
+        "their_planet": "venus",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_047",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 7.07,
+        "their_planet": "mars",
+        "user_planet": "neptune"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_032",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 7.11,
+        "their_planet": "neptune",
+        "user_planet": "jupiter"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_005",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 7.3,
+        "their_planet": "mercury",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "square",
+        "id": "asp_003",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 7.31,
+        "their_planet": "sun",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_008",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 7.34,
+        "their_planet": "north node",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_009",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 7.34,
+        "their_planet": "south node",
+        "user_planet": "moon"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_001",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 7.8,
+        "their_planet": "saturn",
+        "user_planet": "sun"
+      },
+      {
+        "aspect_type": "conjunction",
+        "id": "asp_040",
+        "interpretation": null,
+        "is_harmonious": true,
+        "orb": 8.23,
+        "their_planet": "uranus",
+        "user_planet": "uranus"
+      },
+      {
+        "aspect_type": "opposition",
+        "id": "asp_020",
+        "interpretation": null,
+        "is_harmonious": false,
+        "orb": 9.2,
+        "their_planet": "venus",
+        "user_planet": "venus"
+      }
+    ],
+    "calculated_at": "2025-12-02T03:49:34.340424",
+    "composite_summary": {
+      "challenges": [],
+      "composite_ascendant": "virgo",
+      "composite_moon": "gemini",
+      "composite_sun": "virgo",
+      "relationship_purpose": "Your composite Sun in Virgo and Moon in Gemini suggest a partnership built on intellectual curiosity and practical collaboration. You're here to learn from each other, refine your ideas, and build a shared reality that feels both stimulating and secure.",
+      "strengths": [],
+      "summary": null
+    },
+    "coworker": {
+      "categories": [
+        {
+          "aspect_ids": [
+            "asp_014",
+            "asp_024",
+            "asp_012",
+            "asp_016"
+          ],
+          "id": "communication",
+          "name": "Communication",
+          "score": 14,
+          "summary": "Communication is a significant hurdle for you both, Test and Partner. Test's energetic approach can sometimes clash with Partner's needs, requiring deliberate effort to ensure you're truly hearing each other."
+        },
+        {
+          "aspect_ids": [
+            "asp_022",
+            "asp_026"
+          ],
+          "id": "collaboration",
+          "name": "Collaboration",
+          "score": 100,
+          "summary": null
+        },
+        {
+          "aspect_ids": [
+            "asp_001"
+          ],
+          "id": "reliability",
+          "name": "Reliability",
+          "score": -100,
+          "summary": null
+        },
+        {
+          "aspect_ids": [
+            "asp_035"
+          ],
+          "id": "ambition",
+          "name": "Ambition Alignment",
+          "score": 100,
+          "summary": null
+        },
+        {
+          "aspect_ids": [
+            "asp_028"
+          ],
+          "id": "powerDynamics",
+          "name": "Power Dynamics",
+          "score": -100,
+          "summary": null
+        }
+      ],
+      "missing_data_prompts": [],
+      "overall_score": 51,
+      "relationship_verb": null
+    },
+    "friendship": {
+      "categories": [
+        {
+          "aspect_ids": [
+            "asp_004",
+            "asp_006",
+            "asp_003"
+          ],
+          "id": "emotional",
+          "name": "Emotional Connection",
+          "score": -33,
+          "summary": "Your emotional connection, Test and Partner, is moderately strong, allowing for a good level of mutual support. While not always seamless, you can find comfort and understanding through your shared growth."
+        },
+        {
+          "aspect_ids": [
+            "asp_010",
+            "asp_012",
+            "asp_015"
+          ],
+          "id": "communication",
+          "name": "Communication",
+          "score": -50,
+          "summary": "Communication is a significant hurdle for you both, Test and Partner. Test's energetic approach can sometimes clash with Partner's needs, requiring deliberate effort to ensure you're truly hearing each other."
+        },
+        {
+          "aspect_ids": [
+            "asp_031"
+          ],
+          "id": "fun",
+          "name": "Fun & Adventure",
+          "score": 100,
+          "summary": null
+        },
+        {
+          "aspect_ids": [
+            "asp_001"
+          ],
+          "id": "loyalty",
+          "name": "Loyalty & Support",
+          "score": -100,
+          "summary": null
+        },
+        {
+          "aspect_ids": [
+            "asp_013",
+            "asp_006",
+            "asp_020"
+          ],
+          "id": "sharedInterests",
+          "name": "Shared Interests",
+          "score": -33,
+          "summary": null
+        }
+      ],
+      "missing_data_prompts": [],
+      "overall_score": 38,
+      "relationship_verb": null
+    },
+    "interpretation": {
+      "advice": "Focus on clear, honest conversations, especially when disagreements arise, to strengthen your bond.",
+      "destiny_note": "This partnership feels fated, Test, with your North Node's destiny tied to Partner's Venus and Mercury. There are significant lessons around love, values, and communication that you are meant to learn and grow through together.",
+      "generation_time_ms": 7068,
+      "growth_areas": "Communication and attraction present challenges, requiring conscious effort from both of you. Test's Mars clashing with Partner's Moon can create moments of friction and misunderstanding. Learning to navigate these differences with patience will be key to keeping the spark alive.",
+      "headline": "Gemini-Sagittarius: Adventure partners building a life",
+      "model_used": "gemini-2.5-flash-lite",
+      "relationship_purpose": "Your composite Sun in Virgo and Moon in Gemini suggest a partnership built on intellectual curiosity and practical collaboration. You're here to learn from each other, refine your ideas, and build a shared reality that feels both stimulating and secure.",
+      "strengths": "You share a powerful intellectual connection and a mutual desire for growth, Test and Partner. Your North Node's connection to Partner's Mercury and Sun shows a destined path of learning and expanding your horizons together. This harmony helps you find common ground and move forward with shared understanding.",
+      "summary": "Test and Partner, your love story is one of constant learning and exploration. While communication can be a hurdle, your shared drive to grow together provides a solid foundation. Embrace the excitement of building a life side-by-side, knowing challenges offer chances for deeper connection."
+    },
+    "karmic_summary": {
+      "destiny_note": "This partnership feels fated, Test, with your North Node's destiny tied to Partner's Venus and Mercury. There are significant lessons around love, values, and communication that you are meant to learn and grow through together.",
+      "is_karmic": true,
+      "karmic_aspects": [
+        {
+          "aspect_type": "square",
+          "interpretation_hint": "Fated love, values, and relationship lessons",
+          "node": "north node",
+          "node_owner": "user",
+          "orb": 0.01,
+          "planet": "venus",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "square",
+          "interpretation_hint": "Fated love, values, and relationship lessons",
+          "node": "south node",
+          "node_owner": "user",
+          "orb": 0.01,
+          "planet": "venus",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "sextile",
+          "interpretation_hint": "Destined communication and mental exchange",
+          "node": "north node",
+          "node_owner": "user",
+          "orb": 0.24,
+          "planet": "mercury",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "trine",
+          "interpretation_hint": "Destined communication and mental exchange",
+          "node": "south node",
+          "node_owner": "user",
+          "orb": 0.24,
+          "planet": "mercury",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "sextile",
+          "interpretation_hint": "Core identity and life purpose connection",
+          "node": "north node",
+          "node_owner": "user",
+          "orb": 0.25,
+          "planet": "sun",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "trine",
+          "interpretation_hint": "Core identity and life purpose connection",
+          "node": "south node",
+          "node_owner": "user",
+          "orb": 0.25,
+          "planet": "sun",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "quincunx",
+          "interpretation_hint": "Deep emotional and soul-level familiarity",
+          "node": "north node",
+          "node_owner": "user",
+          "orb": 1.18,
+          "planet": "moon",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "quincunx",
+          "interpretation_hint": "Karmic passion, drive, and action patterns",
+          "node": "south node",
+          "node_owner": "connection",
+          "orb": 1.71,
+          "planet": "mars",
+          "planet_owner": "user"
+        },
+        {
+          "aspect_type": "sextile",
+          "interpretation_hint": "Karmic passion, drive, and action patterns",
+          "node": "north node",
+          "node_owner": "user",
+          "orb": 3.05,
+          "planet": "mars",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "trine",
+          "interpretation_hint": "Karmic passion, drive, and action patterns",
+          "node": "south node",
+          "node_owner": "user",
+          "orb": 3.05,
+          "planet": "mars",
+          "planet_owner": "connection"
+        },
+        {
+          "aspect_type": "square",
+          "interpretation_hint": "Destined communication and mental exchange",
+          "node": "north node",
+          "node_owner": "connection",
+          "orb": 3.54,
+          "planet": "mercury",
+          "planet_owner": "user"
+        },
+        {
+          "aspect_type": "square",
+          "interpretation_hint": "Destined communication and mental exchange",
+          "node": "south node",
+          "node_owner": "connection",
+          "orb": 3.54,
+          "planet": "mercury",
+          "planet_owner": "user"
+        }
+      ],
+      "primary_theme": "Future growth through venus"
+    },
+    "romantic": {
+      "categories": [
+        {
+          "aspect_ids": [
+            "asp_045",
+            "asp_004",
+            "asp_006"
+          ],
+          "id": "emotional",
+          "name": "Emotional Connection",
+          "score": 43,
+          "summary": "Your emotional connection, Test and Partner, is moderately strong, allowing for a good level of mutual support. While not always seamless, you can find comfort and understanding through your shared growth."
+        },
+        {
+          "aspect_ids": [
+            "asp_012",
+            "asp_013",
+            "asp_011",
+            "asp_005"
+          ],
+          "id": "communication",
+          "name": "Communication",
+          "score": -100,
+          "summary": "Communication is a significant hurdle for you both, Test and Partner. Test's energetic approach can sometimes clash with Partner's needs, requiring deliberate effort to ensure you're truly hearing each other."
+        },
+        {
+          "aspect_ids": [
+            "asp_025",
+            "asp_026",
+            "asp_020"
+          ],
+          "id": "attraction",
+          "name": "Attraction",
+          "score": -25,
+          "summary": "Attraction between you, Test and Partner, is challenging and requires conscious effort. While intellectual sparks fly, deeper magnetic pulls may need nurturing to feel consistently strong."
+        },
+        {
+          "aspect_ids": [
+            "asp_031",
+            "asp_020"
+          ],
+          "id": "values",
+          "name": "Shared Values",
+          "score": 33,
+          "summary": "You share moderate common ground on values, Test and Partner. While there might be some differences, your shared desire to build and grow together helps bridge potential gaps."
+        },
+        {
+          "aspect_ids": [
+            "asp_001"
+          ],
+          "id": "longTerm",
+          "name": "Long-term Potential",
+          "score": -100,
+          "summary": "Building a long-term future together presents significant challenges, Test and Partner. Your differing approaches require consistent compromise and a shared commitment to navigate the path ahead."
+        },
+        {
+          "aspect_ids": [
+            "asp_057",
+            "asp_058",
+            "asp_007",
+            "asp_052",
+            "asp_021",
+            "asp_053",
+            "asp_008"
+          ],
+          "id": "growth",
+          "name": "Growth Together",
+          "score": 40,
+          "summary": "You have a strong potential for growth together, Test and Partner. The challenges you face push you both to learn, adapt, and evolve, making the journey itself rewarding."
+        }
+      ],
+      "missing_data_prompts": [],
+      "overall_score": 41,
+      "relationship_verb": null
+    }
+  },
+  "captured_at": "2025-12-02T03:49:41.524815+00:00"
+}

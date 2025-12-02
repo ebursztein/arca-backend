@@ -88,7 +88,8 @@ RELATIONSHIP_WEATHER_OPTIONAL_FIELDS = {"connection_vibes"}
 CONNECTION_VIBE_REQUIRED_FIELDS = {
     "connection_id",
     "name",
-    "relationship_type",
+    "relationship_category",
+    "relationship_label",
     "vibe",
     "vibe_score",
     "key_transit",
@@ -248,7 +249,8 @@ CONNECTION_REQUIRED_FIELDS = {
     "connection_id",
     "name",
     "birth_date",
-    "relationship_type",
+    "relationship_category",
+    "relationship_label",
     "created_at",
     "updated_at",
 }

@@ -28,7 +28,7 @@ class TestUserCreationNatalChartV1:
         assert "planets" in chart
         assert "houses" in chart
         assert "aspects" in chart
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
     def test_v1_chart_has_correct_sun_sign(self):
         """V1 chart has correct sun sign even without birth time."""
@@ -101,7 +101,7 @@ class TestUserCreationNatalChartV2:
         assert "houses" in chart
         assert "aspects" in chart
         assert "angles" in chart
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         assert len(chart["houses"]) == 12
 
     def test_v2_chart_has_meaningful_houses(self):
@@ -576,7 +576,7 @@ class TestNatalChartUpdateEdgeCases:
 
         assert exact is True
         # Should still produce valid chart
-        assert len(late_chart["planets"]) == 11
+        assert len(late_chart["planets"]) == 12
 
     def test_update_with_negative_longitude(self):
         """Chart generation works with negative longitude (Western hemisphere)."""
@@ -589,7 +589,7 @@ class TestNatalChartUpdateEdgeCases:
         )
 
         assert exact is True
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
 
     def test_update_with_southern_hemisphere(self):
         """Chart generation works in Southern hemisphere."""
@@ -602,5 +602,5 @@ class TestNatalChartUpdateEdgeCases:
         )
 
         assert exact is True
-        assert len(chart["planets"]) == 11
+        assert len(chart["planets"]) == 12
         assert len(chart["houses"]) == 12

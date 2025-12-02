@@ -132,15 +132,15 @@ class TestUpdateUserProfile:
         assert "summary" in chart
         assert len(chart["summary"]) > 0
 
-    def test_update_missing_user_raises_error(self):
-        """Test updating nonexistent user raises error."""
+    def test_update_unauthenticated_rejected(self):
+        """Test updating with unauthenticated user_id is rejected."""
         with pytest.raises(Exception) as exc_info:
             call_function("update_user_profile", {
-                "user_id": "nonexistent_user_xyz_999",
+                "user_id": "not_a_dev_account",
                 "birth_time": "14:30",
             })
 
-        assert "NOT_FOUND" in str(exc_info.value)
+        assert "UNAUTHENTICATED" in str(exc_info.value)
 
     def test_update_missing_user_id_raises_error(self):
         """Test update without user_id raises error."""

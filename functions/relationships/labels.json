@@ -1,0 +1,165 @@
+{
+  "categories": {
+    "love": {
+      "display_name": "Love",
+      "compatibility_mode": "romantic",
+      "description": "Romantic connections - from first sparks to long-term commitment"
+    },
+    "friend": {
+      "display_name": "Friend",
+      "compatibility_mode": "friendship",
+      "description": "Platonic bonds - the people you choose as your tribe"
+    },
+    "family": {
+      "display_name": "Family",
+      "compatibility_mode": "friendship",
+      "description": "Blood or chosen family - the ties that shaped you"
+    },
+    "coworker": {
+      "display_name": "Work",
+      "compatibility_mode": "coworker",
+      "description": "Professional relationships - bosses, colleagues, mentors"
+    },
+    "other": {
+      "display_name": "Other",
+      "compatibility_mode": "friendship",
+      "description": "Everyone else - neighbors, acquaintances, frenemies"
+    }
+  },
+  "labels": {
+    "love": {
+      "crush": {
+        "display_name": "Crush",
+        "llm_guidance": "This is early attraction territory. Focus on chemistry signals and how to read if they're into it. Keep advice grounded - no mind games, just real talk about what the stars say about their vibe together."
+      },
+      "dating": {
+        "display_name": "Dating",
+        "llm_guidance": "They're actively exploring this connection. Highlight compatibility green flags and watch-outs. Help them understand the pacing - when to lean in, when to pump the brakes."
+      },
+      "situationship": {
+        "display_name": "Situationship",
+        "llm_guidance": "The undefined zone. Address the ambiguity head-on - what might each person actually want here? When's the right time to have the talk? No judgment, just clarity."
+      },
+      "partner": {
+        "display_name": "Partner",
+        "llm_guidance": "Committed but not married. Focus on deepening the connection, keeping things interesting, and growing together. Where are the friction points? Where's the magic?"
+      },
+      "boyfriend": {
+        "display_name": "Boyfriend",
+        "llm_guidance": "Committed relationship with a guy. Focus on understanding his communication style, emotional needs, and how they can build something real together."
+      },
+      "girlfriend": {
+        "display_name": "Girlfriend",
+        "llm_guidance": "Committed relationship with a girl. Focus on understanding her emotional landscape, what she needs to feel secure, and how they bring out the best in each other."
+      },
+      "spouse": {
+        "display_name": "Spouse",
+        "llm_guidance": "Long-term commitment. This is about navigating life together - the boring stuff, the hard stuff, keeping the spark alive through it all. Focus on shared purpose and staying connected."
+      },
+      "ex": {
+        "display_name": "Ex",
+        "llm_guidance": "Past romantic connection. Help them understand what went wrong, what lessons to carry forward, and whether reconnection makes sense or if it's time to fully close this chapter."
+      }
+    },
+    "friend": {
+      "friend": {
+        "display_name": "Friend",
+        "llm_guidance": "Regular friendship. Focus on what makes them click, how they support each other, and where misunderstandings might happen. Keep it light but real."
+      },
+      "best_friend": {
+        "display_name": "Best Friend",
+        "llm_guidance": "Ride or die. This is deep platonic love. Focus on loyalty, how they show up for each other, and navigating the inevitable friction that comes with closeness."
+      },
+      "close_friend": {
+        "display_name": "Close Friend",
+        "llm_guidance": "Inner circle but maybe not the bestie. Focus on what strengthens this bond and how to deepen it if that's what they want."
+      },
+      "new_friend": {
+        "display_name": "New Friend",
+        "llm_guidance": "Fresh connection. Focus on compatibility potential, shared interests, and whether this friendship has legs for the long haul."
+      }
+    },
+    "family": {
+      "mother": {
+        "display_name": "Mother",
+        "llm_guidance": "The mother relationship. Focus on approval patterns, boundaries, healing old wounds, and finding adult-to-adult footing. This is deep stuff."
+      },
+      "father": {
+        "display_name": "Father",
+        "llm_guidance": "The father relationship. Focus on expectations, communication gaps, and building connection as adults. Address any distant or complicated dynamics honestly."
+      },
+      "sister": {
+        "display_name": "Sister",
+        "llm_guidance": "Sister bond. Focus on shared history, rivalry patterns, and how to be allies now. Sisters can be best friends or complicated - meet them where they are."
+      },
+      "brother": {
+        "display_name": "Brother",
+        "llm_guidance": "Brother bond. Focus on understanding different communication styles, competitive dynamics, and building adult friendship out of sibling history."
+      },
+      "daughter": {
+        "display_name": "Daughter",
+        "llm_guidance": "Parent to daughter. Focus on nurturing her growth, understanding her needs at this stage, and maintaining connection as she becomes her own person."
+      },
+      "son": {
+        "display_name": "Son",
+        "llm_guidance": "Parent to son. Focus on communication approaches, supporting his development, and building trust as he grows more independent."
+      },
+      "grandparent": {
+        "display_name": "Grandparent",
+        "llm_guidance": "Grandparent connection. Focus on wisdom exchange, bridging generational gaps, and appreciating this relationship while they can."
+      },
+      "extended": {
+        "display_name": "Extended Family",
+        "llm_guidance": "Aunts, uncles, cousins, in-laws. Focus on navigating family politics, setting boundaries, and finding genuine connection within the obligatory."
+      }
+    },
+    "coworker": {
+      "boss": {
+        "display_name": "Boss",
+        "llm_guidance": "Power dynamic alert. Focus on communication style, how to be seen and valued, managing up effectively. What do they need to thrive under this leadership?"
+      },
+      "manager": {
+        "display_name": "Manager",
+        "llm_guidance": "Direct supervisor relationship. Focus on feedback patterns, getting support for growth, and maintaining professional boundaries while building rapport."
+      },
+      "colleague": {
+        "display_name": "Colleague",
+        "llm_guidance": "Work peer. Focus on collaboration style, avoiding office friction, and whether this could become a genuine friendship or should stay professional."
+      },
+      "mentor": {
+        "display_name": "Mentor",
+        "llm_guidance": "Someone guiding their growth. Focus on how to absorb their wisdom, ask the right questions, and show appreciation without being a suck-up."
+      },
+      "mentee": {
+        "display_name": "Mentee",
+        "llm_guidance": "Someone they're guiding. Focus on teaching style, patience patterns, and how to empower without creating dependency."
+      },
+      "client": {
+        "display_name": "Client",
+        "llm_guidance": "Professional service relationship. Focus on understanding their needs, communication preferences, and maintaining boundaries while delivering value."
+      },
+      "business_partner": {
+        "display_name": "Business Partner",
+        "llm_guidance": "Shared stakes relationship. Focus on complementary strengths, decision-making styles, and navigating disagreements without blowing up the partnership."
+      }
+    },
+    "other": {
+      "acquaintance": {
+        "display_name": "Acquaintance",
+        "llm_guidance": "Surface-level connection. Focus on whether to invest more here or keep it casual. What's the potential if they went deeper?"
+      },
+      "neighbor": {
+        "display_name": "Neighbor",
+        "llm_guidance": "Proximity-based relationship. Focus on maintaining peace, setting boundaries, and maybe finding unexpected friendship."
+      },
+      "ex_friend": {
+        "display_name": "Former Friend",
+        "llm_guidance": "Friendship that ended. Help them understand what happened, whether reconciliation makes sense, and how to process any lingering feelings."
+      },
+      "complicated": {
+        "display_name": "It's Complicated",
+        "llm_guidance": "Can't be boxed in. Focus on understanding the unique dynamics at play and finding clarity in the confusion."
+      }
+    }
+  }
+}

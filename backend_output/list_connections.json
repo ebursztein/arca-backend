@@ -1,0 +1,2486 @@
+{
+  "function_name": "list_connections",
+  "request": {
+    "user_id": "test_user_a"
+  },
+  "response": {
+    "connections": [
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "bghsLB_Lvc6vp0z3QISFVA",
+        "created_at": "2025-12-02T03:30:10.562250",
+        "name": "KeepMe",
+        "photo_path": null,
+        "relationship_category": "love",
+        "relationship_label": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "south node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 1.0,
+            "their_planet": "venus",
+            "user_planet": "sun"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.55,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.77,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 5.98,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.58,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.99,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.11,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:10.562250",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "kmm2pTHHqBNLrTTmnZAsEA",
+        "created_at": "2025-12-02T03:30:07.617694",
+        "name": "Jane",
+        "photo_path": null,
+        "relationship_category": "love",
+        "relationship_label": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "south node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 1.0,
+            "their_planet": "venus",
+            "user_planet": "sun"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.55,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.77,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 5.98,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.58,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.99,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.11,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:07.633520",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "vr6SJLS1gNACDs6ncQFo4Q",
+        "created_at": "2025-12-02T03:30:05.904377",
+        "name": "Johnny",
+        "photo_path": null,
+        "relationship_category": "friend",
+        "relationship_label": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:06.720538",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "vR8eBeZ3NH6BpUKHiMbFsQ",
+        "created_at": "2025-12-02T03:30:04.962617",
+        "name": "John",
+        "photo_path": null,
+        "relationship_category": "friend",
+        "relationship_label": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:04.962617",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1965-07-10",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "O8g3sg3tZi4O9suYl5Jt-Q",
+        "created_at": "2025-12-02T03:30:04.099758",
+        "name": "TestMom",
+        "photo_path": null,
+        "relationship_category": "family",
+        "relationship_label": "mother",
+        "source_user_id": null,
+        "sun_sign": "cancer",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.2,
+            "their_planet": "mars",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "pluto",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mercury",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "venus",
+            "user_planet": "mars"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.8,
+            "their_planet": "sun",
+            "user_planet": "venus"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.8,
+            "their_planet": "uranus",
+            "user_planet": "mars"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.06,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 96.06,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 90.22,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 99.44,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 117.36,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 71.35,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:04.099758",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "17BelIqj-vq68O7JuzAWuw",
+        "created_at": "2025-12-02T03:30:04.088221",
+        "name": "TestJane",
+        "photo_path": null,
+        "relationship_category": "love",
+        "relationship_label": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "south node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 1.0,
+            "their_planet": "venus",
+            "user_planet": "sun"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.55,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.77,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 5.98,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.58,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.99,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.11,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:04.088221",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "7ruC1CAmoZzt1NM2txpjNg",
+        "created_at": "2025-12-02T03:30:04.074295",
+        "name": "TestJohn",
+        "photo_path": null,
+        "relationship_category": "friend",
+        "relationship_label": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:04.074295",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": 40.7128,
+        "birth_lon": -74.006,
+        "birth_time": "14:30",
+        "birth_timezone": "America/New_York",
+        "connection_id": "0ImCiuLWb7PpZr-i9Xr9sA",
+        "created_at": "2025-12-02T03:30:01.377885",
+        "name": "Jane",
+        "photo_path": null,
+        "relationship_category": "love",
+        "relationship_label": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 300.29,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.81,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 6.04,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.66,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.98,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.17,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:01.377885",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "754rzr_PNFrYdoYrAT3_cg",
+        "created_at": "2025-12-02T03:30:00.415674",
+        "name": "John",
+        "photo_path": null,
+        "relationship_category": "friend",
+        "relationship_label": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:30:00.415674",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "tSfeROCjkv9PVaiyILsxow",
+        "created_at": "2025-12-02T03:29:41.645686",
+        "name": "John",
+        "photo_path": null,
+        "relationship_category": "friend",
+        "relationship_label": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:29:41.645686",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "N6GkgCaYrBzY2GsRfu_l-Q",
+        "created_at": "2025-12-02T03:14:44.468142",
+        "name": "John",
+        "photo_path": null,
+        "relationship_type": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-02T03:14:44.468142",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "hDeucsCpNgpleTcZuvYgNQ",
+        "created_at": "2025-12-01T20:21:29.969744",
+        "name": "KeepMe",
+        "photo_path": null,
+        "relationship_type": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 1.0,
+            "their_planet": "venus",
+            "user_planet": "sun"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 1.1,
+            "their_planet": "neptune",
+            "user_planet": "sun"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.55,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.77,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 5.98,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.58,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.99,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.11,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:23:27.967473",
+        "vibes": [
+          {
+            "date": "2025-12-01",
+            "key_transit": "Transit Venus sextile your emotional connection point",
+            "vibe": "Great energy between you and KeepMe today",
+            "vibe_score": 81
+          }
+        ]
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "ywCa5kggMv7WkM5of2yf-A",
+        "created_at": "2025-12-01T20:21:27.431801",
+        "name": "Jane",
+        "photo_path": null,
+        "relationship_type": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 1.0,
+            "their_planet": "venus",
+            "user_planet": "sun"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 1.1,
+            "their_planet": "neptune",
+            "user_planet": "sun"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.55,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.77,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 5.98,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.58,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.99,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.11,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:27.444304",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "jr3XjDgBN3ZGMX1psYM-Aw",
+        "created_at": "2025-12-01T20:21:25.730788",
+        "name": "Johnny",
+        "photo_path": null,
+        "relationship_type": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:26.523106",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "07i4oPdEzjsY7lUaVth2MA",
+        "created_at": "2025-12-01T20:21:24.941584",
+        "name": "John",
+        "photo_path": null,
+        "relationship_type": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:24.941584",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1965-07-10",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "DzjrutHY0ycDn0WNJ1t6EA",
+        "created_at": "2025-12-01T20:21:23.901439",
+        "name": "TestMom",
+        "photo_path": null,
+        "relationship_type": "family",
+        "source_user_id": null,
+        "sun_sign": "cancer",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.2,
+            "their_planet": "mars",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "pluto",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mercury",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "venus",
+            "user_planet": "mars"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.8,
+            "their_planet": "sun",
+            "user_planet": "venus"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.8,
+            "their_planet": "uranus",
+            "user_planet": "mars"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.06,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 96.06,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 90.22,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 99.44,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 117.36,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 71.35,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:23.901439",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "LKLmY1A8jt9F6jy687UPEQ",
+        "created_at": "2025-12-01T20:21:23.885955",
+        "name": "TestJane",
+        "photo_path": null,
+        "relationship_type": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 1.0,
+            "their_planet": "venus",
+            "user_planet": "sun"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 1.1,
+            "their_planet": "neptune",
+            "user_planet": "sun"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 299.55,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.77,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 5.98,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.58,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.99,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.11,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:23.885955",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "VEDgcfByeubfhluRQxK5LA",
+        "created_at": "2025-12-01T20:21:23.871423",
+        "name": "TestJohn",
+        "photo_path": null,
+        "relationship_type": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:23.871423",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1995-03-22",
+        "birth_lat": 40.7128,
+        "birth_lon": -74.006,
+        "birth_time": "14:30",
+        "birth_timezone": "America/New_York",
+        "connection_id": "95krxFtqYOyXPADDy_vtaQ",
+        "created_at": "2025-12-01T20:21:21.035822",
+        "name": "Jane",
+        "photo_path": null,
+        "relationship_type": "partner",
+        "source_user_id": null,
+        "sun_sign": "aries",
+        "synastry_aspects": [
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "jupiter",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.5,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "jupiter",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.7,
+            "their_planet": "north node",
+            "user_planet": "uranus"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 300.29,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 42.81,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 6.04,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 23.66,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 90.98,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 347.17,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:21.035822",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "ndu0443x2xLgSNEaVOFMWA",
+        "created_at": "2025-12-01T20:21:20.192639",
+        "name": "John",
+        "photo_path": null,
+        "relationship_type": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:20.192639",
+        "vibes": []
+      },
+      {
+        "arca_notes": [],
+        "birth_date": "1992-08-15",
+        "birth_lat": null,
+        "birth_lon": null,
+        "birth_time": null,
+        "birth_timezone": null,
+        "connection_id": "-9jitlT-xmWlrwQQ0gcYgA",
+        "created_at": "2025-12-01T20:21:16.069832",
+        "name": "John",
+        "photo_path": null,
+        "relationship_type": "friend",
+        "source_user_id": null,
+        "sun_sign": "leo",
+        "synastry_aspects": [
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.0,
+            "their_planet": "moon",
+            "user_planet": "pluto"
+          },
+          {
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "orb": 0.1,
+            "their_planet": "moon",
+            "user_planet": "moon"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.4,
+            "their_planet": "venus",
+            "user_planet": "north node"
+          },
+          {
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "orb": 0.5,
+            "their_planet": "moon",
+            "user_planet": "jupiter"
+          },
+          {
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "orb": 0.6,
+            "their_planet": "mercury",
+            "user_planet": "mercury"
+          },
+          {
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "orb": 0.7,
+            "their_planet": "mars",
+            "user_planet": "neptune"
+          }
+        ],
+        "synastry_points": [
+          {
+            "degree": 345.39,
+            "label": "emotional connection point",
+            "planets": [
+              "moon",
+              "moon"
+            ],
+            "type": "moon_moon_midpoint"
+          },
+          {
+            "degree": 113.52,
+            "label": "core identity point",
+            "planets": [
+              "sun",
+              "sun"
+            ],
+            "type": "sun_sun_midpoint"
+          },
+          {
+            "degree": 104.45,
+            "label": "affection point",
+            "planets": [
+              "venus",
+              "venus"
+            ],
+            "type": "venus_venus_midpoint"
+          },
+          {
+            "degree": 96.0,
+            "label": "communication point",
+            "planets": [
+              "mercury",
+              "mercury"
+            ],
+            "type": "mercury_mercury_midpoint"
+          },
+          {
+            "degree": 60.92,
+            "label": "attraction point",
+            "planets": [
+              "venus",
+              "mars"
+            ],
+            "type": "venus_mars_midpoint"
+          },
+          {
+            "degree": 85.58,
+            "label": "passion point",
+            "planets": [
+              "mars",
+              "venus"
+            ],
+            "type": "mars_venus_midpoint"
+          }
+        ],
+        "updated_at": "2025-12-01T20:21:16.069832",
+        "vibes": []
+      }
+    ],
+    "total_count": 21
+  },
+  "captured_at": "2025-12-02T03:30:10.598232+00:00"
+}

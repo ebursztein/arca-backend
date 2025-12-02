@@ -1,9 +1,15 @@
 """
 Integration tests for LLM module - verify daily horoscope generation
 """
+
 import pytest
 from datetime import datetime
-from astro import compute_birth_chart, get_sun_sign, get_sun_sign_profile, format_transit_summary_for_ui
+from astro import (
+    compute_birth_chart,
+    get_sun_sign,
+    get_sun_sign_profile,
+    format_transit_summary_for_ui,
+)
 from models import UserProfile, create_empty_memory
 from llm import generate_daily_horoscope
 import os
@@ -29,7 +35,7 @@ def sample_user_profile():
         natal_chart=natal_chart,
         exact_chart=is_exact,
         created_at=datetime.now().isoformat(),
-        last_active=datetime.now().isoformat()
+        last_active=datetime.now().isoformat(),
     )
 
 
@@ -44,33 +50,31 @@ def transit_data():
 class TestDailyHoroscopeGeneration:
     """Test daily horoscope generation pipeline."""
 
-    @pytest.mark.xfail(reason="KNOWN ISSUE: quality_factor validation error - astrometer computation being reworked")
     @pytest.mark.skipif(
         not os.environ.get("GEMINI_API_KEY") or not os.environ.get("POSTHOG_API_KEY"),
-        reason="Requires GEMINI_API_KEY and POSTHOG_API_KEY environment variables"
+        reason="Requires GEMINI_API_KEY and POSTHOG_API_KEY environment variables",
     )
-    def test_generate_daily_horoscope_returns_all_fields(self, sample_user_profile, transit_data):
+    def test_generate_daily_horoscope_returns_all_fields(
+        self, sample_user_profile, transit_data
+    ):
         """Verify that generate_daily_horoscope returns all expected fields."""
         today = datetime.now().strftime("%Y-%m-%d")
         sun_sign = get_sun_sign(sample_user_profile.birth_date)
         sun_sign_profile = get_sun_sign_profile(sun_sign)
 
         transit_summary = format_transit_summary_for_ui(
-            sample_user_profile.natal_chart,
-            transit_data,
-            max_aspects=5
+            sample_user_profile.natal_chart, transit_data, max_aspects=5
         )
 
         memory = create_empty_memory(sample_user_profile.user_id)
 
-        horoscope, _ = generate_daily_horoscope(
+        horoscope = generate_daily_horoscope(
             date=today,
             user_profile=sample_user_profile,
             sun_sign_profile=sun_sign_profile,
             transit_summary=transit_summary,
             memory=memory,
-            entities=[],  # No entities for test
-            model_name="gemini-2.5-flash-lite"
+            model_name="gemini-2.5-flash-lite",
         )
 
         # Check core LLM fields
@@ -107,10 +111,12 @@ class TestDailyHoroscopeGeneration:
             assert group.interpretation
             assert len(group.interpretation) > 50
 
-            # Verify all meters in group have interpretations
+            # Verify meters exist in each group (interpretations are intentionally empty)
+            assert len(group.meters) > 0
             for meter in group.meters:
-                assert meter.interpretation
-                assert len(meter.interpretation) > 20
+                # Meters have display_name and scores but no individual LLM interpretations
+                assert meter.display_name
+                assert meter.unified_score is not None
 
         # Check metadata
         assert horoscope.date == today
@@ -138,11 +144,11 @@ class TestMoonDetailIntegration:
         moon_detail = get_moon_transit_detail(
             natal_chart=natal_chart,
             transit_chart=transit_chart,
-            current_datetime="2025-11-06T12:00:00"
+            current_datetime="2025-11-06T12:00:00",
         )
 
         # Should have default empty interpretation
-        assert hasattr(moon_detail, 'interpretation')
+        assert hasattr(moon_detail, "interpretation")
         assert moon_detail.interpretation == ""  # Default value
 
         # Should be able to set it

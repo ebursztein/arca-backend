@@ -1,0 +1,571 @@
+{
+  "function_name": "natal_chart",
+  "request": {
+    "utc_dt": "1990-06-15 14:30",
+    "lat": 40.7128,
+    "lon": -74.006
+  },
+  "response": {
+    "angles": {
+      "ascendant": {
+        "absolute_degree": 146.14,
+        "degree_in_sign": 26.13,
+        "position_dms": "26\u00b0 \u264c 08'",
+        "sign": "leo"
+      },
+      "descendant": {
+        "absolute_degree": 326.14,
+        "degree_in_sign": 26.13,
+        "position_dms": "26\u00b0 \u2652 08'",
+        "sign": "aquarius"
+      },
+      "imum_coeli": {
+        "absolute_degree": 229.56,
+        "degree_in_sign": 19.55,
+        "position_dms": "19\u00b0 \u264f 33'",
+        "sign": "scorpio"
+      },
+      "midheaven": {
+        "absolute_degree": 49.56,
+        "degree_in_sign": 19.55,
+        "position_dms": "19\u00b0 \u2649 33'",
+        "sign": "taurus"
+      }
+    },
+    "aspects": [
+      {
+        "applying": true,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "sun",
+        "body2": "asc",
+        "exact_degree": 60,
+        "orb": 1.91
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "moon",
+        "body2": "venus",
+        "exact_degree": 60,
+        "orb": 2.15
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "moon",
+        "body2": "jupiter",
+        "exact_degree": 120,
+        "orb": 0.84
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "moon",
+        "body2": "neptune",
+        "exact_degree": 60,
+        "orb": 3.04
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "moon",
+        "body2": "pluto",
+        "exact_degree": 120,
+        "orb": 1.35
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "moon",
+        "body2": "mc",
+        "exact_degree": 60,
+        "orb": 2.81
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "venus",
+        "body2": "jupiter",
+        "exact_degree": 60,
+        "orb": 2.99
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "venus",
+        "body2": "saturn",
+        "exact_degree": 120,
+        "orb": 5.13
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "venus",
+        "body2": "neptune",
+        "exact_degree": 120,
+        "orb": 5.19
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u260d",
+        "aspect_type": "opposition",
+        "body1": "venus",
+        "body2": "pluto",
+        "exact_degree": 180,
+        "orb": 3.5
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u260c",
+        "aspect_type": "conjunction",
+        "body1": "venus",
+        "body2": "mc",
+        "exact_degree": 0,
+        "orb": 0.66
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u25a1",
+        "aspect_type": "square",
+        "body1": "mars",
+        "body2": "jupiter",
+        "exact_degree": 90,
+        "orb": 4.8
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u25a1",
+        "aspect_type": "square",
+        "body1": "mars",
+        "body2": "uranus",
+        "exact_degree": 90,
+        "orb": 2.96
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u25a1",
+        "aspect_type": "square",
+        "body1": "mars",
+        "body2": "neptune",
+        "exact_degree": 90,
+        "orb": 2.6
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u260d",
+        "aspect_type": "opposition",
+        "body1": "jupiter",
+        "body2": "neptune",
+        "exact_degree": 180,
+        "orb": 2.2
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "jupiter",
+        "body2": "pluto",
+        "exact_degree": 120,
+        "orb": 0.51
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "jupiter",
+        "body2": "mc",
+        "exact_degree": 60,
+        "orb": 3.65
+      },
+      {
+        "applying": true,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "saturn",
+        "body2": "mc",
+        "exact_degree": 120,
+        "orb": 4.47
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u260c",
+        "aspect_type": "conjunction",
+        "body1": "uranus",
+        "body2": "neptune",
+        "exact_degree": 0,
+        "orb": 5.55
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u26b9",
+        "aspect_type": "sextile",
+        "body1": "neptune",
+        "body2": "pluto",
+        "exact_degree": 60,
+        "orb": 1.68
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u25b3",
+        "aspect_type": "trine",
+        "body1": "neptune",
+        "body2": "mc",
+        "exact_degree": 120,
+        "orb": 5.84
+      },
+      {
+        "applying": false,
+        "aspect_symbol": "\u260d",
+        "aspect_type": "opposition",
+        "body1": "pluto",
+        "body2": "mc",
+        "exact_degree": 180,
+        "orb": 4.16
+      }
+    ],
+    "chart_type": "natal",
+    "datetime_utc": "1990-06-15 14:30",
+    "distributions": {
+      "elements": {
+        "air": 3,
+        "earth": 4,
+        "fire": 1,
+        "water": 3
+      },
+      "hemispheres": {
+        "eastern": 4,
+        "northern": 5,
+        "southern": 6,
+        "western": 7
+      },
+      "modalities": {
+        "cardinal": 5,
+        "fixed": 3,
+        "mutable": 3
+      },
+      "quadrants": {
+        "first": 1,
+        "fourth": 3,
+        "second": 4,
+        "third": 3
+      }
+    },
+    "houses": [
+      {
+        "absolute_degree": 146.14,
+        "classic_ruler": "sun",
+        "classic_ruler_house": 10,
+        "classic_ruler_sign": "gemini",
+        "degree_in_sign": 26.14,
+        "number": 1,
+        "ruler": "sun",
+        "ruler_house": 10,
+        "ruler_sign": "gemini",
+        "sign": "leo"
+      },
+      {
+        "absolute_degree": 168.75,
+        "classic_ruler": "mercury",
+        "classic_ruler_house": 10,
+        "classic_ruler_sign": "gemini",
+        "degree_in_sign": 18.75,
+        "number": 2,
+        "ruler": "mercury",
+        "ruler_house": 10,
+        "ruler_sign": "gemini",
+        "sign": "virgo"
+      },
+      {
+        "absolute_degree": 196.53,
+        "classic_ruler": "venus",
+        "classic_ruler_house": 9,
+        "classic_ruler_sign": "taurus",
+        "degree_in_sign": 16.53,
+        "number": 3,
+        "ruler": "venus",
+        "ruler_house": 9,
+        "ruler_sign": "taurus",
+        "sign": "libra"
+      },
+      {
+        "absolute_degree": 229.55,
+        "classic_ruler": "mars",
+        "classic_ruler_house": 8,
+        "classic_ruler_sign": "aries",
+        "degree_in_sign": 19.55,
+        "number": 4,
+        "ruler": "pluto",
+        "ruler_house": 3,
+        "ruler_sign": "scorpio",
+        "sign": "scorpio"
+      },
+      {
+        "absolute_degree": 264.83,
+        "classic_ruler": "jupiter",
+        "classic_ruler_house": 11,
+        "classic_ruler_sign": "cancer",
+        "degree_in_sign": 24.83,
+        "number": 5,
+        "ruler": "jupiter",
+        "ruler_house": 11,
+        "ruler_sign": "cancer",
+        "sign": "sagittarius"
+      },
+      {
+        "absolute_degree": 297.63,
+        "classic_ruler": "saturn",
+        "classic_ruler_house": 5,
+        "classic_ruler_sign": "capricorn",
+        "degree_in_sign": 27.63,
+        "number": 6,
+        "ruler": "saturn",
+        "ruler_house": 5,
+        "ruler_sign": "capricorn",
+        "sign": "capricorn"
+      },
+      {
+        "absolute_degree": 326.14,
+        "classic_ruler": "saturn",
+        "classic_ruler_house": 5,
+        "classic_ruler_sign": "capricorn",
+        "degree_in_sign": 26.14,
+        "number": 7,
+        "ruler": "uranus",
+        "ruler_house": 5,
+        "ruler_sign": "capricorn",
+        "sign": "aquarius"
+      },
+      {
+        "absolute_degree": 348.75,
+        "classic_ruler": "jupiter",
+        "classic_ruler_house": 11,
+        "classic_ruler_sign": "cancer",
+        "degree_in_sign": 18.75,
+        "number": 8,
+        "ruler": "neptune",
+        "ruler_house": 5,
+        "ruler_sign": "capricorn",
+        "sign": "pisces"
+      },
+      {
+        "absolute_degree": 16.53,
+        "classic_ruler": "mars",
+        "classic_ruler_house": 8,
+        "classic_ruler_sign": "aries",
+        "degree_in_sign": 16.53,
+        "number": 9,
+        "ruler": "mars",
+        "ruler_house": 8,
+        "ruler_sign": "aries",
+        "sign": "aries"
+      },
+      {
+        "absolute_degree": 49.55,
+        "classic_ruler": "venus",
+        "classic_ruler_house": 9,
+        "classic_ruler_sign": "taurus",
+        "degree_in_sign": 19.55,
+        "number": 10,
+        "ruler": "venus",
+        "ruler_house": 9,
+        "ruler_sign": "taurus",
+        "sign": "taurus"
+      },
+      {
+        "absolute_degree": 84.83,
+        "classic_ruler": "mercury",
+        "classic_ruler_house": 10,
+        "classic_ruler_sign": "gemini",
+        "degree_in_sign": 24.83,
+        "number": 11,
+        "ruler": "mercury",
+        "ruler_house": 10,
+        "ruler_sign": "gemini",
+        "sign": "gemini"
+      },
+      {
+        "absolute_degree": 117.63,
+        "classic_ruler": "moon",
+        "classic_ruler_house": 7,
+        "classic_ruler_sign": "pisces",
+        "degree_in_sign": 27.63,
+        "number": 12,
+        "ruler": "moon",
+        "ruler_house": 7,
+        "ruler_sign": "pisces",
+        "sign": "cancer"
+      }
+    ],
+    "location_lat": 40.7128,
+    "location_lon": -74.006,
+    "planets": [
+      {
+        "absolute_degree": 84.23,
+        "degree_in_sign": 24.22,
+        "element": "air",
+        "house": 10,
+        "modality": "mutable",
+        "name": "sun",
+        "position_dms": "24\u00b0 \u264a 13'",
+        "retrograde": false,
+        "sign": "gemini",
+        "speed": 0.9551,
+        "symbol": "\u2609"
+      },
+      {
+        "absolute_degree": 346.75,
+        "degree_in_sign": 16.75,
+        "element": "water",
+        "house": 7,
+        "modality": "mutable",
+        "name": "moon",
+        "position_dms": "16\u00b0 \u2653 45'",
+        "retrograde": false,
+        "sign": "pisces",
+        "speed": 13.3991,
+        "symbol": "\u263d"
+      },
+      {
+        "absolute_degree": 65.87,
+        "degree_in_sign": 5.87,
+        "element": "air",
+        "house": 10,
+        "modality": "mutable",
+        "name": "mercury",
+        "position_dms": "05\u00b0 \u264a 52'",
+        "retrograde": false,
+        "sign": "gemini",
+        "speed": 1.7207,
+        "symbol": "\u263f"
+      },
+      {
+        "absolute_degree": 48.9,
+        "degree_in_sign": 18.9,
+        "element": "earth",
+        "house": 9,
+        "modality": "fixed",
+        "name": "venus",
+        "position_dms": "18\u00b0 \u2649 54'",
+        "retrograde": false,
+        "sign": "taurus",
+        "speed": 1.1761,
+        "symbol": "\u2640"
+      },
+      {
+        "absolute_degree": 11.12,
+        "degree_in_sign": 11.1,
+        "element": "fire",
+        "house": 8,
+        "modality": "cardinal",
+        "name": "mars",
+        "position_dms": "11\u00b0 \u2648 06'",
+        "retrograde": false,
+        "sign": "aries",
+        "speed": 0.7188,
+        "symbol": "\u2642"
+      },
+      {
+        "absolute_degree": 105.91,
+        "degree_in_sign": 15.9,
+        "element": "water",
+        "house": 11,
+        "modality": "cardinal",
+        "name": "jupiter",
+        "position_dms": "15\u00b0 \u264b 54'",
+        "retrograde": false,
+        "sign": "cancer",
+        "speed": 0.2167,
+        "symbol": "\u2643"
+      },
+      {
+        "absolute_degree": 294.03,
+        "degree_in_sign": 24.02,
+        "element": "earth",
+        "house": 5,
+        "modality": "cardinal",
+        "name": "saturn",
+        "position_dms": "24\u00b0 \u2651 01' \u211e",
+        "retrograde": true,
+        "sign": "capricorn",
+        "speed": -0.0587,
+        "symbol": "\u2644"
+      },
+      {
+        "absolute_degree": 278.16,
+        "degree_in_sign": 8.15,
+        "element": "earth",
+        "house": 5,
+        "modality": "cardinal",
+        "name": "uranus",
+        "position_dms": "08\u00b0 \u2651 09' \u211e",
+        "retrograde": true,
+        "sign": "capricorn",
+        "speed": -0.039,
+        "symbol": "\u2645"
+      },
+      {
+        "absolute_degree": 283.71,
+        "degree_in_sign": 13.7,
+        "element": "earth",
+        "house": 5,
+        "modality": "cardinal",
+        "name": "neptune",
+        "position_dms": "13\u00b0 \u2651 42' \u211e",
+        "retrograde": true,
+        "sign": "capricorn",
+        "speed": -0.025,
+        "symbol": "\u2646"
+      },
+      {
+        "absolute_degree": 225.4,
+        "degree_in_sign": 15.38,
+        "element": "water",
+        "house": 3,
+        "modality": "fixed",
+        "name": "pluto",
+        "position_dms": "15\u00b0 \u264f 23' \u211e",
+        "retrograde": true,
+        "sign": "scorpio",
+        "speed": -0.0201,
+        "symbol": "\u2647"
+      },
+      {
+        "absolute_degree": 309.69,
+        "degree_in_sign": 9.68,
+        "element": "air",
+        "house": 6,
+        "modality": "fixed",
+        "name": "north node",
+        "position_dms": "09\u00b0 \u2652 41' \u211e",
+        "retrograde": true,
+        "sign": "aquarius",
+        "speed": -0.053,
+        "symbol": "\u260a"
+      },
+      {
+        "absolute_degree": 129.69,
+        "degree_in_sign": 9.69,
+        "element": "fire",
+        "house": 12,
+        "modality": "fixed",
+        "name": "south node",
+        "position_dms": "9\u00b0LEO",
+        "retrograde": true,
+        "sign": "leo",
+        "speed": -0.053,
+        "symbol": "\u260b"
+      }
+    ],
+    "summary": null
+  },
+  "captured_at": "2025-12-02T03:12:57.246839+00:00"
+}

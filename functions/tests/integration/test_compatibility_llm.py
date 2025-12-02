@@ -77,7 +77,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -102,7 +103,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -119,7 +121,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -140,7 +143,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="friend",
+            relationship_category="friend",
+            relationship_label="friend",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -160,7 +164,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="coworker",
+            relationship_category="coworker",
+            relationship_label="colleague",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -180,7 +185,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -200,7 +206,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -218,7 +225,8 @@ class TestCompatibilityInterpretation:
             user_sun_sign="gemini",
             connection_name="Mike",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -239,7 +247,8 @@ class TestSpecialCharacters:
             user_sun_sign="gemini",
             connection_name="Jean-Pierre",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )
@@ -255,7 +264,8 @@ class TestSpecialCharacters:
             user_sun_sign="gemini",
             connection_name="O'Brien",
             connection_sun_sign="aries",
-            relationship_type="partner",
+            relationship_category="love",
+            relationship_label="partner",
             compatibility_result=compatibility_result,
             api_key=api_key
         )

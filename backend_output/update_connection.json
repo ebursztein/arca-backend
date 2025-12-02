@@ -1,0 +1,86 @@
+{
+  "function_name": "update_connection",
+  "request": {
+    "user_id": "test_user_a",
+    "connection_id": "kmm2pTHHqBNLrTTmnZAsEA",
+    "updates": {
+      "relationship_category": "love",
+      "relationship_label": "partner"
+    }
+  },
+  "response": {
+    "arca_notes": [],
+    "birth_date": "1995-03-22",
+    "birth_lat": null,
+    "birth_lon": null,
+    "birth_time": null,
+    "birth_timezone": null,
+    "connection_id": "kmm2pTHHqBNLrTTmnZAsEA",
+    "created_at": "2025-12-02T03:30:07.617694",
+    "name": "Jane",
+    "photo_path": null,
+    "relationship_category": "love",
+    "relationship_label": "partner",
+    "source_user_id": null,
+    "sun_sign": "aries",
+    "synastry_points": [
+      {
+        "degree": 299.55,
+        "label": "emotional connection point",
+        "planets": [
+          "moon",
+          "moon"
+        ],
+        "type": "moon_moon_midpoint"
+      },
+      {
+        "degree": 42.77,
+        "label": "core identity point",
+        "planets": [
+          "sun",
+          "sun"
+        ],
+        "type": "sun_sun_midpoint"
+      },
+      {
+        "degree": 5.98,
+        "label": "affection point",
+        "planets": [
+          "venus",
+          "venus"
+        ],
+        "type": "venus_venus_midpoint"
+      },
+      {
+        "degree": 23.58,
+        "label": "communication point",
+        "planets": [
+          "mercury",
+          "mercury"
+        ],
+        "type": "mercury_mercury_midpoint"
+      },
+      {
+        "degree": 90.99,
+        "label": "attraction point",
+        "planets": [
+          "venus",
+          "mars"
+        ],
+        "type": "venus_mars_midpoint"
+      },
+      {
+        "degree": 347.11,
+        "label": "passion point",
+        "planets": [
+          "mars",
+          "venus"
+        ],
+        "type": "mars_venus_midpoint"
+      }
+    ],
+    "updated_at": "2025-12-02T03:30:07.633520",
+    "vibes": []
+  },
+  "captured_at": "2025-12-02T03:30:07.637453+00:00"
+}

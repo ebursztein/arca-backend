@@ -255,18 +255,43 @@ def assert_valid_sun_sign(sign: str) -> None:
     assert sign.lower() in valid_signs, f"Invalid sun sign: {sign}"
 
 
-def assert_valid_relationship_type(rel_type: str) -> None:
+def assert_valid_relationship_category(category: str) -> None:
     """
-    Assert a valid relationship type.
+    Assert a valid relationship category.
 
     Args:
-        rel_type: Relationship type to validate
+        category: Relationship category to validate
 
     Raises:
-        AssertionError: If invalid type
+        AssertionError: If invalid category
     """
-    valid_types = {"friend", "partner", "family", "coworker"}
-    assert rel_type.lower() in valid_types, f"Invalid relationship type: {rel_type}"
+    valid_categories = {"love", "friend", "family", "coworker", "other"}
+    assert category.lower() in valid_categories, f"Invalid relationship category: {category}"
+
+
+def assert_valid_relationship_label(label: str) -> None:
+    """
+    Assert a valid relationship label.
+
+    Args:
+        label: Relationship label to validate
+
+    Raises:
+        AssertionError: If invalid label
+    """
+    valid_labels = {
+        # Love
+        "crush", "dating", "situationship", "partner", "boyfriend", "girlfriend", "spouse", "ex",
+        # Friend
+        "friend", "best_friend", "close_friend", "new_friend",
+        # Family
+        "mother", "father", "sister", "brother", "daughter", "son", "grandparent", "extended",
+        # Coworker
+        "boss", "manager", "colleague", "mentor", "mentee", "client", "business_partner",
+        # Other
+        "acquaintance", "neighbor", "ex_friend", "complicated",
+    }
+    assert label.lower() in valid_labels, f"Invalid relationship label: {label}"
 
 
 def assert_valid_iso_date(date_str: str) -> None:
@@ -310,13 +335,13 @@ def assert_valid_iso_datetime(dt_str: str) -> None:
         raise AssertionError(f"Invalid ISO datetime format: {dt_str}") from e
 
 
-def assert_chart_has_planets(chart: dict, count: int = 11) -> None:
+def assert_chart_has_planets(chart: dict, count: int = 12) -> None:
     """
     Assert chart has expected number of planets.
 
     Args:
         chart: NatalChartData dict
-        count: Expected planet count (default 11: Sun-Pluto + North Node)
+        count: Expected planet count (default 12: Sun-Pluto + North Node + South Node)
 
     Raises:
         AssertionError: If planet count mismatch

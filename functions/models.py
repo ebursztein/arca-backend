@@ -194,7 +194,8 @@ class ConnectionMention(BaseModel):
     """Tracks when a connection was featured in daily horoscope relationship_weather."""
     connection_id: str = Field(description="Connection ID")
     connection_name: str = Field(description="Connection's name")
-    relationship_type: str = Field(description="friend/partner/family/coworker")
+    relationship_category: str = Field(description="love/friend/family/coworker/other")
+    relationship_label: str = Field(description="crush/partner/best_friend/boss/etc")
     date: str = Field(description="ISO date when featured")
     context: str = Field(description="What was said about this connection")
 
@@ -530,12 +531,8 @@ class ActionableAdvice(BaseModel):
 # Relationship Weather Models (for Connections feature)
 # =============================================================================
 
-class RelationshipType(str, Enum):
-    """Relationship type for connections."""
-    FRIEND = "friend"
-    PARTNER = "partner"
-    FAMILY = "family"
-    COWORKER = "coworker"
+# Import relationship system
+from relationships import RelationshipCategory, RelationshipLabel
 
 
 class ConnectionVibe(BaseModel):
@@ -546,8 +543,11 @@ class ConnectionVibe(BaseModel):
     """
     connection_id: str = Field(min_length=1, max_length=64, description="Connection ID from user's connections")
     name: str = Field(min_length=1, max_length=MAX_NAME_LENGTH, description="Connection's name")
-    relationship_type: RelationshipType = Field(
-        description="Relationship category"
+    relationship_category: RelationshipCategory = Field(
+        description="Main category (love/friend/family/coworker/other)"
+    )
+    relationship_label: RelationshipLabel = Field(
+        description="Specific label (crush/partner/best_friend/boss/etc)"
     )
     vibe: str = Field(
         min_length=1, max_length=500,
