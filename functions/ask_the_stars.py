@@ -298,7 +298,7 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
             if conn_name_words & question_words:  # Set intersection
                 mentioned_connections.append(conn_data)
 
-        # 3c. Calculate synastry aspects for mentioned connections (use cached if available)
+        # 3c. Calculate synastry aspects for mentioned connections on-the-fly
         if mentioned_connections and user_data.get('natal_chart'):
             from astro import NatalChartData, compute_birth_chart
             from compatibility import calculate_compatibility
@@ -334,8 +334,9 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
                             }
                             for asp in sorted_aspects
                         ]
+                        print(f"[ask_the_stars] Synastry calculated for {conn.get('name')}: {conn['synastry_aspects']}")
                     except Exception as e:
-                        print(f"Failed to calc synastry for {conn.get('name')}: {e}")
+                        print(f"[ask_the_stars] Failed to calc synastry for {conn.get('name')}: {e}")
 
         # 4. Memory
         memory_doc = db.collection('memory').document(user_id).get()

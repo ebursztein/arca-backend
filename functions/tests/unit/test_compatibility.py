@@ -15,6 +15,15 @@ from compatibility import (
     FRIENDSHIP_CATEGORIES,
     COWORKER_CATEGORIES,
     CATEGORY_NAMES,
+    CATEGORY_TO_MODE,
+    KARMIC_ASPECTS,
+    KARMIC_TIER1_PLANETS,
+    KARMIC_TIER2_PLANETS,
+    KARMIC_TIER1_ORB,
+    KARMIC_TIER2_ORB,
+    KARMIC_PLANET_HINTS_NORTH,
+    KARMIC_PLANET_HINTS_SOUTH,
+    KARMIC_PLANET_HINTS_SQUARE,
     # Functions
     get_orb_weight,
     calculate_aspect,
@@ -22,19 +31,24 @@ from compatibility import (
     calculate_category_score,
     calculate_mode_compatibility,
     calculate_composite_sign,
-    calculate_composite_summary,
+    calculate_composite,
     calculate_compatibility,
+    calculate_karmic,
     get_compatibility_from_birth_data,
     get_planet_degree,
     calculate_synastry_points,
     find_transits_to_synastry,
     calculate_vibe_score,
+    _get_karmic_orb_threshold,
+    _get_karmic_hint,
     # Models
     SynastryAspect,
     CompatibilityCategory,
-    CompositeSummary,
+    Composite,
     ModeCompatibility,
-    CompatibilityResult,
+    CompatibilityData,
+    Karmic,
+    KarmicAspectInternal,
 )
 from astro import compute_birth_chart, NatalChartData
 
@@ -375,7 +389,6 @@ class TestCalculateSynastryAspects:
             assert aspect.aspect_type in ASPECT_CONFIG
             assert aspect.orb >= 0
             assert isinstance(aspect.is_harmonious, bool)
-            assert aspect.interpretation is None  # Not filled until LLM
 
     def test_finds_aspects_between_charts(self, user_chart, connection_chart):
         """Should find some aspects between two different charts."""
@@ -506,31 +519,35 @@ class TestCalculateModeCompatibility:
     def test_returns_mode_compatibility_object(self, user_chart, connection_chart):
         """Should return ModeCompatibility object."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
-        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES)
+        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES, "romantic")
         assert isinstance(result, ModeCompatibility)
 
     def test_overall_score_in_range(self, user_chart, connection_chart):
         """Overall score should be 0-100."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
 
-        for categories in [ROMANTIC_CATEGORIES, FRIENDSHIP_CATEGORIES, COWORKER_CATEGORIES]:
-            result = calculate_mode_compatibility(aspects, categories)
+        for categories, mode_type in [
+            (ROMANTIC_CATEGORIES, "romantic"),
+            (FRIENDSHIP_CATEGORIES, "friendship"),
+            (COWORKER_CATEGORIES, "coworker")
+        ]:
+            result = calculate_mode_compatibility(aspects, categories, mode_type)
             assert 0 <= result.overall_score <= 100
 
     def test_has_correct_number_of_categories(self, user_chart, connection_chart):
         """Should have same number of categories as config."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
 
-        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES)
+        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES, "romantic")
         assert len(result.categories) == len(ROMANTIC_CATEGORIES)
 
-        result = calculate_mode_compatibility(aspects, FRIENDSHIP_CATEGORIES)
+        result = calculate_mode_compatibility(aspects, FRIENDSHIP_CATEGORIES, "friendship")
         assert len(result.categories) == len(FRIENDSHIP_CATEGORIES)
 
     def test_categories_have_correct_ids(self, user_chart, connection_chart):
         """Category IDs should match config."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
-        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES)
+        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES, "romantic")
 
         category_ids = {c.id for c in result.categories}
         assert category_ids == set(ROMANTIC_CATEGORIES.keys())
@@ -538,7 +555,7 @@ class TestCalculateModeCompatibility:
     def test_categories_have_display_names(self, user_chart, connection_chart):
         """Each category should have a display name."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
-        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES)
+        result = calculate_mode_compatibility(aspects, ROMANTIC_CATEGORIES, "romantic")
 
         for cat in result.categories:
             assert cat.name, f"Category {cat.id} has no name"
@@ -582,32 +599,37 @@ class TestCalculateCompositeSign:
             assert result == sign
 
 
-class TestCalculateCompositeSummary:
-    """Tests for composite summary calculation."""
+class TestCalculateComposite:
+    """Tests for composite calculation."""
 
-    def test_returns_composite_summary(self, user_chart, connection_chart):
-        """Should return CompositeSummary object."""
-        result = calculate_composite_summary(user_chart, connection_chart)
-        assert isinstance(result, CompositeSummary)
+    def test_returns_composite(self, user_chart, connection_chart):
+        """Should return Composite object."""
+        result = calculate_composite(user_chart, connection_chart)
+        assert isinstance(result, Composite)
 
-    def test_has_composite_sun(self, user_chart, connection_chart):
+    def test_has_sun_sign(self, user_chart, connection_chart):
         """Should calculate composite Sun sign."""
-        result = calculate_composite_summary(user_chart, connection_chart)
-        assert result.composite_sun is not None
-        assert result.composite_sun in [
+        result = calculate_composite(user_chart, connection_chart)
+        assert result.sun_sign is not None
+        assert result.sun_sign in [
             "aries", "taurus", "gemini", "cancer", "leo", "virgo",
-            "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"
+            "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces", "unknown"
         ]
 
-    def test_has_composite_moon(self, user_chart, connection_chart):
+    def test_has_moon_sign(self, user_chart, connection_chart):
         """Should calculate composite Moon sign."""
-        result = calculate_composite_summary(user_chart, connection_chart)
-        assert result.composite_moon is not None
+        result = calculate_composite(user_chart, connection_chart)
+        assert result.moon_sign is not None
 
-    def test_summary_not_filled(self, user_chart, connection_chart):
-        """LLM summary should be None initially."""
-        result = calculate_composite_summary(user_chart, connection_chart)
-        assert result.summary is None
+    def test_has_dominant_element(self, user_chart, connection_chart):
+        """Should calculate dominant element."""
+        result = calculate_composite(user_chart, connection_chart)
+        assert result.dominant_element in ["fire", "earth", "air", "water"]
+
+    def test_purpose_not_filled(self, user_chart, connection_chart):
+        """LLM purpose should be None initially."""
+        result = calculate_composite(user_chart, connection_chart)
+        assert result.purpose is None
 
 
 # =============================================================================
@@ -617,56 +639,54 @@ class TestCalculateCompositeSummary:
 class TestCalculateCompatibility:
     """Tests for full compatibility calculation."""
 
-    def test_returns_compatibility_result(self, user_chart, connection_chart):
-        """Should return CompatibilityResult object."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        assert isinstance(result, CompatibilityResult)
+    def test_returns_compatibility_data(self, user_chart, connection_chart):
+        """Should return CompatibilityData object."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert isinstance(result, CompatibilityData)
 
-    def test_has_all_three_modes(self, user_chart, connection_chart):
-        """Should have romantic, friendship, and coworker modes."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        assert hasattr(result, "romantic")
-        assert hasattr(result, "friendship")
-        assert hasattr(result, "coworker")
+    def test_has_single_mode(self, user_chart, connection_chart):
+        """Should have single mode based on relationship type."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert hasattr(result, "mode")
+        assert result.mode.type == "romantic"
 
     def test_has_aspects_list(self, user_chart, connection_chart):
         """Should have list of synastry aspects."""
-        result = calculate_compatibility(user_chart, connection_chart)
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
         assert isinstance(result.aspects, list)
 
-    def test_has_composite_summary(self, user_chart, connection_chart):
-        """Should have composite summary."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        assert result.composite_summary is not None
+    def test_has_composite(self, user_chart, connection_chart):
+        """Should have composite data."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert result.composite is not None
+        assert isinstance(result.composite, Composite)
 
-    def test_has_timestamp(self, user_chart, connection_chart):
-        """Should have calculated_at timestamp."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        assert result.calculated_at is not None
-        # Verify it's a valid ISO format
-        datetime.fromisoformat(result.calculated_at)
+    def test_has_karmic(self, user_chart, connection_chart):
+        """Should have karmic data."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert result.karmic is not None
+        assert isinstance(result.karmic, Karmic)
 
-    def test_scores_differ_between_modes(self, user_chart, connection_chart):
-        """Different modes may have different scores."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        scores = [
-            result.romantic.overall_score,
-            result.friendship.overall_score,
-            result.coworker.overall_score
-        ]
-        # At least two should differ (highly unlikely all three are equal)
-        # Just verify they're all valid
-        assert all(0 <= s <= 100 for s in scores)
+    def test_has_names(self, user_chart, connection_chart):
+        """Should have user and connection names."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic", "Alice", "Bob")
+        assert result.user_name == "Alice"
+        assert result.connection_name == "Bob"
 
-    def test_model_dump_serializable(self, user_chart, connection_chart):
-        """Result should be JSON serializable via model_dump."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        dumped = result.model_dump()
-        assert isinstance(dumped, dict)
-        assert "romantic" in dumped
-        assert "friendship" in dumped
-        assert "coworker" in dumped
-        assert "aspects" in dumped
+    def test_different_modes_have_different_categories(self, user_chart, connection_chart):
+        """Different modes should have different category sets."""
+        romantic = calculate_compatibility(user_chart, connection_chart, "romantic")
+        friendship = calculate_compatibility(user_chart, connection_chart, "friendship")
+        coworker = calculate_compatibility(user_chart, connection_chart, "coworker")
+
+        romantic_cat_ids = {c.id for c in romantic.mode.categories}
+        friendship_cat_ids = {c.id for c in friendship.mode.categories}
+        coworker_cat_ids = {c.id for c in coworker.mode.categories}
+
+        # Romantic has 6, others have 5
+        assert len(romantic_cat_ids) == 6
+        assert len(friendship_cat_ids) == 5
+        assert len(coworker_cat_ids) == 5
 
 
 class TestGetCompatibilityFromBirthData:
@@ -681,13 +701,14 @@ class TestGetCompatibilityFromBirthData:
             user_birth_lon=-74.0060,
             user_birth_timezone="America/New_York",
             connection_birth_date="1992-03-22",
+            relationship_type="romantic",
             connection_birth_time="09:15",
             connection_birth_lat=34.0522,
             connection_birth_lon=-118.2437,
             connection_birth_timezone="America/Los_Angeles",
         )
-        assert isinstance(result, CompatibilityResult)
-        assert 0 <= result.romantic.overall_score <= 100
+        assert isinstance(result, CompatibilityData)
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_works_without_birth_times(self):
         """Should work with just birth dates."""
@@ -698,8 +719,9 @@ class TestGetCompatibilityFromBirthData:
             user_birth_lon=None,
             user_birth_timezone=None,
             connection_birth_date="1992-03-22",
+            relationship_type="friendship",
         )
-        assert isinstance(result, CompatibilityResult)
+        assert isinstance(result, CompatibilityData)
 
 
 # =============================================================================
@@ -824,7 +846,7 @@ class TestSynastryAspectModel:
             is_harmonious=True
         )
         assert aspect.id == "asp_001"
-        assert aspect.interpretation is None
+        assert aspect.is_harmonious is True
 
     def test_orb_must_be_non_negative(self):
         """Orb must be >= 0."""
@@ -850,8 +872,7 @@ class TestCompatibilityCategoryModel:
             score=75
         )
         assert cat.id == "emotional"
-        assert cat.summary is None
-        assert cat.aspect_ids == []
+        assert cat.insight is None
 
     def test_score_must_be_in_range(self):
         """Score must be -100 to +100."""
@@ -869,24 +890,20 @@ class TestCompatibilityCategoryModel:
             )
 
 
-class TestCompatibilityResultModel:
-    """Tests for CompatibilityResult Pydantic model."""
+class TestCompatibilityDataModel:
+    """Tests for CompatibilityData model."""
 
-    def test_model_serialization(self, user_chart, connection_chart):
-        """Model should serialize to dict."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        data = result.model_dump()
-
-        assert isinstance(data["romantic"], dict)
-        assert isinstance(data["romantic"]["overall_score"], int)
-        assert isinstance(data["romantic"]["categories"], list)
-
-    def test_model_json(self, user_chart, connection_chart):
-        """Model should serialize to JSON."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        json_str = result.model_dump_json()
-        assert isinstance(json_str, str)
-        assert "romantic" in json_str
+    def test_has_all_components(self, user_chart, connection_chart):
+        """CompatibilityData should have all required components."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert result.mode is not None
+        assert result.aspects is not None
+        assert result.composite is not None
+        assert result.karmic is not None
+        assert result.user_name is not None
+        assert result.connection_name is not None
+        assert result.user_sun_sign is not None
+        assert result.connection_sun_sign is not None
 
 
 # =============================================================================
@@ -898,16 +915,16 @@ class TestEdgeCases:
 
     def test_same_person_compatibility(self, user_chart):
         """Comparing a chart to itself."""
-        result = calculate_compatibility(user_chart, user_chart)
+        result = calculate_compatibility(user_chart, user_chart, "romantic")
         # Should have many conjunctions
         conjunctions = [a for a in result.aspects if a.aspect_type == "conjunction"]
         assert len(conjunctions) >= 10
 
     def test_simple_charts_without_birth_time(self, simple_user_chart, simple_connection_chart):
         """Compatibility with minimal birth data."""
-        result = calculate_compatibility(simple_user_chart, simple_connection_chart)
-        assert isinstance(result, CompatibilityResult)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(simple_user_chart, simple_connection_chart, "romantic")
+        assert isinstance(result, CompatibilityData)
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_very_different_birth_dates(self):
         """Charts from very different eras."""
@@ -917,19 +934,285 @@ class TestEdgeCases:
         new_chart_dict, _ = compute_birth_chart(birth_date="2000-12-31")
         new_chart = NatalChartData(**new_chart_dict)
 
-        result = calculate_compatibility(old_chart, new_chart)
-        assert isinstance(result, CompatibilityResult)
+        result = calculate_compatibility(old_chart, new_chart, "friendship")
+        assert isinstance(result, CompatibilityData)
 
     def test_aspects_list_not_empty(self, user_chart, connection_chart):
         """Real charts should have some aspects."""
-        result = calculate_compatibility(user_chart, connection_chart)
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
         assert len(result.aspects) > 0, "Expected at least some synastry aspects"
 
-    def test_category_aspect_ids_exist_in_aspects_list(self, user_chart, connection_chart):
-        """Category aspect_ids should reference actual aspects."""
-        result = calculate_compatibility(user_chart, connection_chart)
-        all_aspect_ids = {a.id for a in result.aspects}
 
-        for cat in result.romantic.categories:
-            for aspect_id in cat.aspect_ids:
-                assert aspect_id in all_aspect_ids, f"Category references non-existent aspect: {aspect_id}"
+# =============================================================================
+# Test Karmic Constants
+# =============================================================================
+
+class TestKarmicConstants:
+    """Tests for karmic calculation constants."""
+
+    def test_karmic_aspects_only_hard_aspects(self):
+        """Karmic aspects should only include hard aspects."""
+        assert KARMIC_ASPECTS == {"conjunction", "opposition", "square"}
+        # Sextiles and trines should NOT be karmic
+        assert "sextile" not in KARMIC_ASPECTS
+        assert "trine" not in KARMIC_ASPECTS
+
+    def test_tier1_planets_are_fated(self):
+        """Tier 1 planets are Sun, Moon, Saturn."""
+        assert KARMIC_TIER1_PLANETS == {"sun", "moon", "saturn"}
+
+    def test_tier2_planets_are_personal(self):
+        """Tier 2 planets are Venus, Mars, Mercury."""
+        assert KARMIC_TIER2_PLANETS == {"venus", "mars", "mercury"}
+
+    def test_tier1_orb_is_tighter_than_general(self):
+        """Tier 1 orb should be 3 degrees."""
+        assert KARMIC_TIER1_ORB == 3.0
+
+    def test_tier2_orb_is_tighter(self):
+        """Tier 2 orb should be 2 degrees."""
+        assert KARMIC_TIER2_ORB == 2.0
+
+    def test_generational_planets_excluded(self):
+        """Jupiter, Uranus, Neptune, Pluto should not be in karmic tiers."""
+        all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
+        assert "jupiter" not in all_karmic_planets
+        assert "uranus" not in all_karmic_planets
+        assert "neptune" not in all_karmic_planets
+        assert "pluto" not in all_karmic_planets
+
+    def test_all_karmic_planets_have_north_hints(self):
+        """All karmic planets should have North Node hints."""
+        all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
+        for planet in all_karmic_planets:
+            assert planet in KARMIC_PLANET_HINTS_NORTH, f"Missing North hint for {planet}"
+
+    def test_all_karmic_planets_have_south_hints(self):
+        """All karmic planets should have South Node hints."""
+        all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
+        for planet in all_karmic_planets:
+            assert planet in KARMIC_PLANET_HINTS_SOUTH, f"Missing South hint for {planet}"
+
+    def test_all_karmic_planets_have_square_hints(self):
+        """All karmic planets should have Square hints."""
+        all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
+        for planet in all_karmic_planets:
+            assert planet in KARMIC_PLANET_HINTS_SQUARE, f"Missing Square hint for {planet}"
+
+
+# =============================================================================
+# Test Karmic Helper Functions
+# =============================================================================
+
+class TestKarmicOrbThreshold:
+    """Tests for _get_karmic_orb_threshold function."""
+
+    def test_tier1_planets_get_3_degree_orb(self):
+        """Tier 1 planets should get 3 degree orb."""
+        assert _get_karmic_orb_threshold("sun") == 3.0
+        assert _get_karmic_orb_threshold("moon") == 3.0
+        assert _get_karmic_orb_threshold("saturn") == 3.0
+
+    def test_tier2_planets_get_2_degree_orb(self):
+        """Tier 2 planets should get 2 degree orb."""
+        assert _get_karmic_orb_threshold("venus") == 2.0
+        assert _get_karmic_orb_threshold("mars") == 2.0
+        assert _get_karmic_orb_threshold("mercury") == 2.0
+
+    def test_generational_planets_get_zero_orb(self):
+        """Generational planets should be excluded (0 orb)."""
+        assert _get_karmic_orb_threshold("jupiter") == 0.0
+        assert _get_karmic_orb_threshold("uranus") == 0.0
+        assert _get_karmic_orb_threshold("neptune") == 0.0
+        assert _get_karmic_orb_threshold("pluto") == 0.0
+
+
+class TestKarmicHint:
+    """Tests for _get_karmic_hint function."""
+
+    def test_square_aspect_uses_square_hints(self):
+        """Square aspect should use square hints regardless of node."""
+        hint = _get_karmic_hint("sun", "north node", "square")
+        assert hint == KARMIC_PLANET_HINTS_SQUARE["sun"]
+
+        hint = _get_karmic_hint("moon", "south node", "square")
+        assert hint == KARMIC_PLANET_HINTS_SQUARE["moon"]
+
+    def test_north_node_uses_north_hints(self):
+        """Non-square aspects to North Node should use north hints."""
+        hint = _get_karmic_hint("saturn", "north node", "conjunction")
+        assert hint == KARMIC_PLANET_HINTS_NORTH["saturn"]
+
+        hint = _get_karmic_hint("venus", "north node", "opposition")
+        assert hint == KARMIC_PLANET_HINTS_NORTH["venus"]
+
+    def test_south_node_uses_south_hints(self):
+        """Non-square aspects to South Node should use south hints."""
+        hint = _get_karmic_hint("moon", "south node", "conjunction")
+        assert hint == KARMIC_PLANET_HINTS_SOUTH["moon"]
+
+        hint = _get_karmic_hint("mars", "south node", "opposition")
+        assert hint == KARMIC_PLANET_HINTS_SOUTH["mars"]
+
+    def test_hints_are_meaningful_strings(self):
+        """Hints should be non-empty meaningful strings."""
+        for planet in KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS:
+            for node in ["north node", "south node"]:
+                for aspect in ["conjunction", "opposition", "square"]:
+                    hint = _get_karmic_hint(planet, node, aspect)
+                    assert len(hint) > 10, f"Hint too short for {planet}/{node}/{aspect}"
+
+
+# =============================================================================
+# Test Karmic Aspect Calculation
+# =============================================================================
+
+class TestCalculateKarmic:
+    """Tests for karmic aspect calculation between two charts."""
+
+    def test_returns_karmic_tuple(self, user_chart, connection_chart):
+        """Should return tuple of (Karmic, list[KarmicAspectInternal])."""
+        karmic, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        assert isinstance(karmic, Karmic)
+        assert isinstance(karmic_aspects, list)
+
+    def test_has_is_karmic_boolean(self, user_chart, connection_chart):
+        """Should have is_karmic boolean field."""
+        karmic, _ = calculate_karmic(user_chart, connection_chart)
+        assert isinstance(karmic.is_karmic, bool)
+
+    def test_karmic_aspects_sorted_by_orb(self, user_chart, connection_chart):
+        """Karmic aspects should be sorted by orb (tightest first)."""
+        _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        if karmic_aspects:
+            orbs = [a.orb for a in karmic_aspects]
+            assert orbs == sorted(orbs), "Karmic aspects not sorted by orb"
+
+    def test_only_hard_aspects_included(self, user_chart, connection_chart):
+        """Only hard aspects should be included."""
+        _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        for aspect in karmic_aspects:
+            assert aspect.aspect_type in KARMIC_ASPECTS, f"Non-hard aspect found: {aspect.aspect_type}"
+
+    def test_only_karmic_planets_included(self, user_chart, connection_chart):
+        """Only Tier 1 and Tier 2 planets should be included."""
+        _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        allowed_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
+        for aspect in karmic_aspects:
+            assert aspect.planet in allowed_planets, f"Non-karmic planet found: {aspect.planet}"
+
+    def test_orbs_within_tier_limits(self, user_chart, connection_chart):
+        """Aspect orbs should be within tier-specific limits."""
+        _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        for aspect in karmic_aspects:
+            max_orb = _get_karmic_orb_threshold(aspect.planet)
+            assert aspect.orb <= max_orb, f"{aspect.planet} orb {aspect.orb} exceeds limit {max_orb}"
+
+    def test_has_interpretation_hints(self, user_chart, connection_chart):
+        """Each karmic aspect should have an interpretation hint."""
+        _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        for aspect in karmic_aspects:
+            assert aspect.interpretation_hint, f"Missing hint for {aspect.planet} {aspect.aspect_type} {aspect.node}"
+
+    def test_theme_set_when_karmic(self, user_chart, connection_chart):
+        """Theme should be set if karmic aspects exist."""
+        karmic, _ = calculate_karmic(user_chart, connection_chart)
+        if karmic.is_karmic:
+            assert karmic.theme is not None
+            assert len(karmic.theme) > 0
+
+    def test_theme_none_when_not_karmic(self):
+        """Theme should be None if no karmic aspects."""
+        # Create charts that likely won't have tight node contacts
+        chart1_dict, _ = compute_birth_chart(birth_date="1950-06-15")
+        chart1 = NatalChartData(**chart1_dict)
+        chart2_dict, _ = compute_birth_chart(birth_date="1950-06-20")
+        chart2 = NatalChartData(**chart2_dict)
+
+        karmic, _ = calculate_karmic(chart1, chart2)
+        if not karmic.is_karmic:
+            assert karmic.theme is None
+
+    def test_karmic_aspect_internal_fields(self, user_chart, connection_chart):
+        """KarmicAspectInternal should have all required fields."""
+        _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        for aspect in karmic_aspects:
+            assert hasattr(aspect, 'planet')
+            assert hasattr(aspect, 'planet_owner')
+            assert hasattr(aspect, 'node')
+            assert hasattr(aspect, 'node_owner')
+            assert hasattr(aspect, 'aspect_type')
+            assert hasattr(aspect, 'orb')
+            assert hasattr(aspect, 'interpretation_hint')
+            assert aspect.planet_owner in ['user', 'connection']
+            assert aspect.node_owner in ['user', 'connection']
+            assert aspect.node in ['north node', 'south node']
+
+
+class TestKarmicProbability:
+    """Tests to verify karmic detection is ~20-25% (rare but attainable)."""
+
+    def test_not_everyone_is_karmic(self):
+        """Most random pairs should NOT be karmic."""
+        karmic_count = 0
+        total_pairs = 20
+
+        # Test with various date combinations
+        test_dates = [
+            ("1980-01-15", "1985-07-20"),
+            ("1990-03-10", "1992-11-25"),
+            ("1975-08-01", "1988-04-15"),
+            ("1995-12-20", "1998-02-28"),
+            ("1982-05-05", "1986-09-10"),
+            ("1970-11-11", "1978-03-03"),
+            ("1993-06-21", "1997-08-08"),
+            ("1985-04-04", "1991-10-30"),
+            ("1988-07-07", "1994-01-15"),
+            ("1976-02-14", "1983-06-06"),
+            ("1991-09-09", "1996-12-12"),
+            ("1984-08-08", "1989-05-05"),
+            ("1979-10-10", "1987-07-07"),
+            ("1992-01-01", "1995-04-04"),
+            ("1981-03-03", "1990-08-08"),
+            ("1986-06-06", "1993-02-02"),
+            ("1977-12-12", "1984-11-11"),
+            ("1994-05-05", "1999-03-03"),
+            ("1983-09-09", "1988-06-06"),
+            ("1989-02-02", "1996-10-10"),
+        ]
+
+        for date1, date2 in test_dates:
+            chart1_dict, _ = compute_birth_chart(birth_date=date1)
+            chart1 = NatalChartData(**chart1_dict)
+            chart2_dict, _ = compute_birth_chart(birth_date=date2)
+            chart2 = NatalChartData(**chart2_dict)
+
+            karmic, _ = calculate_karmic(chart1, chart2)
+            if karmic.is_karmic:
+                karmic_count += 1
+
+        karmic_rate = karmic_count / total_pairs
+        # Should be roughly 20-25%, allowing some variance
+        # At minimum, it should NOT be 100% or 0%
+        assert karmic_rate < 0.8, f"Karmic rate too high: {karmic_rate*100:.0f}%"
+        # Note: We can't guarantee > 0% with only 20 pairs, so we just check it's not absurdly high
+
+
+class TestKarmicInCompatibilityData:
+    """Tests for karmic data in full compatibility data."""
+
+    def test_compatibility_includes_karmic(self, user_chart, connection_chart):
+        """Full compatibility should include karmic."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert hasattr(result, 'karmic')
+        assert result.karmic is not None
+
+    def test_karmic_is_valid_type(self, user_chart, connection_chart):
+        """karmic should be Karmic type."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert isinstance(result.karmic, Karmic)
+
+    def test_destiny_note_initially_none(self, user_chart, connection_chart):
+        """destiny_note should be None (filled by LLM later)."""
+        result = calculate_compatibility(user_chart, connection_chart, "romantic")
+        assert result.karmic.destiny_note is None

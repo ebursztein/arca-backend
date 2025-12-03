@@ -156,6 +156,21 @@ firebase deploy                   # Deploy everything
 uv run python functions/prototype.py  # Run end-to-end demo
 ```
 
+### Debug LLM Prompts
+Set `DEBUG_LLM=1` to capture LLM prompts and responses to files:
+```bash
+# Capture compatibility prompts (writes to backend_output/prompts/)
+DEBUG_LLM=1 uv run python -c "
+from compatibility import get_compatibility_from_birth_data
+from llm import generate_compatibility_result
+data = get_compatibility_from_birth_data(...)
+result = generate_compatibility_result(data, 'love', 'partner')
+"
+
+# Works for: compatibility, natal_chart_summary (see llm.py for DEBUG_LLM checks)
+```
+Output files: `backend_output/prompts/compatibility_{category}.json`
+
 ### API Documentation
 ```bash
 uv run python functions/generate_api_docs.py  # Regenerate docs/PUBLIC_API_GENERATED.md
@@ -303,3 +318,36 @@ capture_llm_generation(
 - All labels must be 2 words max (iOS constraint)
 - See `docs/CODEBASE_MAP.md` for complete function reference
 - See `docs/PUBLIC_API_GENERATED.md` for iOS API reference (regenerate with `uv run python functions/generate_api_docs.py`)
+
+---
+
+## Work In Progress
+
+### Compatibility Prompt Improvements (Dec 2025)
+
+**Goal:** Improve get_compatibility prompt quality
+
+**Changes made in `llm.py` generate_compatibility_result():**
+1. **Fixed karmic leakage**: When `is_karmic=False`, the KARMIC STATUS section is now completely omitted from the prompt (previously it showed "Is Karmic: False" which could confuse LLM)
+2. **Added explicit rules**: Rule 6 and 9 now explicitly tell LLM whether to include/exclude karmic language based on `is_karmic`
+3. **Added DEBUG_LLM output**: Prompts saved to `backend_output/prompts/compatibility_{category}.json`
+
+**To inspect prompts:**
+```bash
+DEBUG_LLM=1 uv run python -c "
+from compatibility import get_compatibility_from_birth_data
+from llm import generate_compatibility_result
+# Non-karmic test
+data = get_compatibility_from_birth_data(
+    user_birth_date='1985-03-15', user_birth_time='08:00',
+    user_birth_lat=41.8781, user_birth_lon=-87.6298, user_birth_timezone='America/Chicago',
+    connection_birth_date='1987-09-20', connection_birth_time='15:30',
+    connection_birth_lat=39.7392, connection_birth_lon=-104.9903, connection_birth_timezone='America/Denver',
+    relationship_type='friendship', user_name='Alice', connection_name='Bob',
+)
+print(f'is_karmic: {data.karmic.is_karmic}')
+result = generate_compatibility_result(data, 'friend', 'friend')
+"
+```
+
+**Next steps:** Review prompts in `backend_output/prompts/` for further improvement opportunities

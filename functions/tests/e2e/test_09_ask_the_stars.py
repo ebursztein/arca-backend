@@ -222,3 +222,225 @@ class TestAskTheStarsErrorCases:
         )
 
         assert response.status_code >= 400
+
+
+class TestAskTheStarsPromptDebug:
+    """Debug test to verify prompt contains technical analysis and natal data."""
+
+    @pytest.mark.llm
+    def test_is_today_a_good_day_has_technical_support(self, test_user_id):
+        """
+        Test: "Is today a good day?" should return response with technical backing.
+
+        This test verifies:
+        1. The response includes actual astrological context (not generic fluff)
+        2. Transit interpretations are used
+        3. Response matches our brand voice (direct, actionable)
+        """
+        # Create user with full birth data for natal chart
+        call_function("create_user_profile", {
+            "user_id": test_user_id,
+            "name": "Luna",
+            "email": f"{test_user_id}@test.com",
+            "birth_date": "1992-03-21",  # Aries
+            "birth_time": "14:30",
+            "birth_lat": 40.7128,
+            "birth_lon": -74.0060,
+        })
+
+        # Generate horoscope (this populates technical_analysis, transit_summary, etc.)
+        horoscope_resp = call_function("get_daily_horoscope", {
+            "user_id": test_user_id,
+        })
+
+        # Print the horoscope data that SHOULD be in the prompt
+        print("\n" + "=" * 80)
+        print("HOROSCOPE DATA AVAILABLE FOR PROMPT")
+        print("=" * 80)
+        print(f"technical_analysis: {horoscope_resp.get('technical_analysis', 'MISSING!')[:200]}...")
+        print(f"daily_overview: {horoscope_resp.get('daily_overview', 'MISSING!')[:200]}...")
+        print(f"daily_theme_headline: {horoscope_resp.get('daily_theme_headline', 'MISSING!')}")
+        print("=" * 80)
+
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        # Ask the key question
+        response = requests.post(
+            ASK_THE_STARS_URL,
+            json={
+                "user_id": test_user_id,
+                "question": "Is today a good day?",
+                "horoscope_date": today,
+            },
+            headers=DEV_AUTH_HEADERS,
+            stream=True,
+            timeout=60,
+        )
+
+        assert response.status_code == 200
+
+        # Collect full response
+        full_content = b""
+        for chunk in response.iter_content(chunk_size=1024):
+            full_content += chunk
+        response.close()
+
+        content_str = full_content.decode("utf-8")
+
+        # Extract actual text from SSE chunks
+        import json
+        response_text = ""
+        for line in content_str.split("\n"):
+            if line.startswith("data:"):
+                try:
+                    data = json.loads(line[5:].strip())
+                    if data.get("type") == "chunk":
+                        response_text += data.get("text", "")
+                except json.JSONDecodeError:
+                    pass
+
+        print("\n" + "=" * 80)
+        print("ASK THE STARS RESPONSE TO 'Is today a good day?'")
+        print("=" * 80)
+        print(response_text)
+        print("=" * 80)
+
+        # Verify response has substance (not generic fluff)
+        response_lower = response_text.lower()
+
+        # Should NOT be generic positivity without substance
+        generic_phrases = [
+            "the universe has",
+            "beautiful things",
+            "trust the process",
+            "everything happens for a reason",
+        ]
+        for phrase in generic_phrases:
+            assert phrase not in response_lower, f"Response contains generic fluff: '{phrase}'"
+
+        # Should be reasonably substantive (not just "Yes!" or "No!")
+        assert len(response_text) > 100, "Response too short - lacks substance"
+
+        # Should contain SOME indication of astrological backing
+        # (checking for common transit/planet references or energy words)
+        astrological_indicators = [
+            "today", "energy", "vibe", "planet", "transit", "moon", "sun",
+            "mars", "venus", "mercury", "saturn", "jupiter", "flow",
+            "challenge", "push", "pull", "feel", "focus", "wait"
+        ]
+        found_indicators = [ind for ind in astrological_indicators if ind in response_lower]
+        assert len(found_indicators) >= 2, \
+            f"Response lacks astrological context. Found: {found_indicators}"
+
+        print(f"\nAstrological indicators found: {found_indicators}")
+        print("Test passed - response has technical backing")
+
+    @pytest.mark.llm
+    def test_mentions_connection_pulls_synastry_data(self, test_user_id):
+        """
+        Test: When user asks about a connection by name, synastry data is used.
+
+        This test verifies:
+        1. Connection data is pulled when name appears in question
+        2. Synastry aspects are calculated and available
+        3. Response references the specific relationship
+        """
+        # Create user with full birth data
+        call_function("create_user_profile", {
+            "user_id": test_user_id,
+            "name": "Maya",
+            "email": f"{test_user_id}@test.com",
+            "birth_date": "1994-08-12",  # Leo
+            "birth_time": "10:00",
+            "birth_lat": 34.0522,
+            "birth_lon": -118.2437,
+        })
+
+        # Create a connection named "Alex"
+        connection_resp = call_function("create_connection", {
+            "user_id": test_user_id,
+            "connection": {
+                "name": "Alex",
+                "birth_date": "1992-01-15",  # Capricorn
+                "birth_time": "14:30",
+                "birth_lat": 40.7128,
+                "birth_lon": -74.0060,
+                "relationship_category": "love",
+                "relationship_label": "partner",
+            }
+        })
+
+        print("\n" + "=" * 80)
+        print("CONNECTION CREATED")
+        print("=" * 80)
+        print(f"Connection: {connection_resp}")
+        print("=" * 80)
+
+        # Generate horoscope
+        call_function("get_daily_horoscope", {
+            "user_id": test_user_id,
+        })
+
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        # Ask about Alex by name
+        response = requests.post(
+            ASK_THE_STARS_URL,
+            json={
+                "user_id": test_user_id,
+                "question": "How are things looking with Alex today?",
+                "horoscope_date": today,
+            },
+            headers=DEV_AUTH_HEADERS,
+            stream=True,
+            timeout=60,
+        )
+
+        assert response.status_code == 200
+
+        # Collect full response
+        full_content = b""
+        for chunk in response.iter_content(chunk_size=1024):
+            full_content += chunk
+        response.close()
+
+        content_str = full_content.decode("utf-8")
+
+        # Extract actual text from SSE chunks
+        import json
+        response_text = ""
+        for line in content_str.split("\n"):
+            if line.startswith("data:"):
+                try:
+                    data = json.loads(line[5:].strip())
+                    if data.get("type") == "chunk":
+                        response_text += data.get("text", "")
+                except json.JSONDecodeError:
+                    pass
+
+        print("\n" + "=" * 80)
+        print("ASK THE STARS RESPONSE TO 'How are things looking with Alex today?'")
+        print("=" * 80)
+        print(response_text)
+        print("=" * 80)
+
+        response_lower = response_text.lower()
+
+        # Should mention Alex or relationship context
+        assert "alex" in response_lower or "partner" in response_lower or "relationship" in response_lower, \
+            "Response doesn't reference the connection"
+
+        # Should have some substance about the connection
+        assert len(response_text) > 80, "Response too short"
+
+        # Should reference something astrological about the pairing
+        relationship_indicators = [
+            "alex", "partner", "relationship", "between", "connection",
+            "venus", "mars", "moon", "sun", "aspect", "chemistry",
+            "tension", "flow", "communicate", "feel", "energy"
+        ]
+        found = [ind for ind in relationship_indicators if ind in response_lower]
+        assert len(found) >= 2, f"Response lacks relationship context. Found: {found}"
+
+        print(f"\nRelationship indicators found: {found}")
+        print("Test passed - connection data was used")

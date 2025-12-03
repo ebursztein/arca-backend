@@ -635,24 +635,26 @@ def create_connection(
 
     # Calculate and cache synastry points
     user_doc = db.collection("users").document(user_id).get()
-    if user_doc.exists:
-        user_data = user_doc.to_dict()
-        if user_data.get("birth_date") and birth_date:
-            calculate_and_cache_synastry(
-                db=db,
-                user_id=user_id,
-                connection_id=connection_id,
-                user_birth_date=user_data.get("birth_date"),
-                user_birth_time=user_data.get("birth_time"),
-                user_birth_lat=user_data.get("birth_lat"),
-                user_birth_lon=user_data.get("birth_lon"),
-                user_birth_timezone=user_data.get("birth_timezone"),
-                conn_birth_date=birth_date,
-                conn_birth_time=birth_time,
-                conn_birth_lat=birth_lat,
-                conn_birth_lon=birth_lon,
-                conn_birth_timezone=birth_timezone
-            )
+    user_data = user_doc.to_dict() if user_doc.exists else {}
+    if user_data.get("birth_date") and birth_date:
+        synastry_result = calculate_and_cache_synastry(
+            db=db,
+            user_id=user_id,
+            connection_id=connection_id,
+            user_birth_date=user_data.get("birth_date"),
+            user_birth_time=user_data.get("birth_time"),
+            user_birth_lat=user_data.get("birth_lat"),
+            user_birth_lon=user_data.get("birth_lon"),
+            user_birth_timezone=user_data.get("birth_timezone"),
+            conn_birth_date=birth_date,
+            conn_birth_time=birth_time,
+            conn_birth_lat=birth_lat,
+            conn_birth_lon=birth_lon,
+            conn_birth_timezone=birth_timezone
+        )
+        # Update connection object with synastry data
+        if synastry_result:
+            connection.synastry_points = synastry_result.get("synastry_points")
 
     return connection
 

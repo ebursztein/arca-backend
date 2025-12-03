@@ -1,0 +1,599 @@
+{
+  "advice": "Focus on structured communication. When discussing sensitive topics, agree beforehand on how long each of you will speak without interruption, and commit to active listening.",
+  "aspects": [
+    {
+      "aspect_type": "sextile",
+      "id": "asp_048",
+      "is_harmonious": true,
+      "orb": 0.4,
+      "their_planet": "pluto",
+      "user_planet": "neptune"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_011",
+      "is_harmonious": false,
+      "orb": 0.44,
+      "their_planet": "pluto",
+      "user_planet": "mercury"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_051",
+      "is_harmonious": true,
+      "orb": 0.85,
+      "their_planet": "mercury",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_043",
+      "is_harmonious": false,
+      "orb": 0.87,
+      "their_planet": "south node",
+      "user_planet": "uranus"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_030",
+      "is_harmonious": true,
+      "orb": 0.9,
+      "their_planet": "neptune",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_041",
+      "is_harmonious": true,
+      "orb": 1.15,
+      "their_planet": "neptune",
+      "user_planet": "uranus"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_032",
+      "is_harmonious": false,
+      "orb": 1.18,
+      "their_planet": "north node",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_035",
+      "is_harmonious": false,
+      "orb": 1.33,
+      "their_planet": "pluto",
+      "user_planet": "saturn"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_017",
+      "is_harmonious": false,
+      "orb": 1.62,
+      "their_planet": "uranus",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_036",
+      "is_harmonious": true,
+      "orb": 1.72,
+      "their_planet": "north node",
+      "user_planet": "saturn"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_037",
+      "is_harmonious": false,
+      "orb": 1.72,
+      "their_planet": "south node",
+      "user_planet": "saturn"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_015",
+      "is_harmonious": false,
+      "orb": 1.79,
+      "their_planet": "venus",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_042",
+      "is_harmonious": true,
+      "orb": 2.18,
+      "their_planet": "pluto",
+      "user_planet": "uranus"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_014",
+      "is_harmonious": false,
+      "orb": 2.33,
+      "their_planet": "moon",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_059",
+      "is_harmonious": false,
+      "orb": 2.35,
+      "their_planet": "jupiter",
+      "user_planet": "north node"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_063",
+      "is_harmonious": true,
+      "orb": 2.35,
+      "their_planet": "jupiter",
+      "user_planet": "south node"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_054",
+      "is_harmonious": true,
+      "orb": 2.55,
+      "their_planet": "pluto",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_012",
+      "is_harmonious": false,
+      "orb": 2.61,
+      "their_planet": "north node",
+      "user_planet": "mercury"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_013",
+      "is_harmonious": true,
+      "orb": 2.61,
+      "their_planet": "south node",
+      "user_planet": "mercury"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_049",
+      "is_harmonious": false,
+      "orb": 2.65,
+      "their_planet": "south node",
+      "user_planet": "neptune"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_003",
+      "is_harmonious": false,
+      "orb": 2.66,
+      "their_planet": "mars",
+      "user_planet": "sun"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_022",
+      "is_harmonious": true,
+      "orb": 2.66,
+      "their_planet": "sun",
+      "user_planet": "mars"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_010",
+      "is_harmonious": false,
+      "orb": 2.89,
+      "their_planet": "neptune",
+      "user_planet": "mercury"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_047",
+      "is_harmonious": true,
+      "orb": 2.93,
+      "their_planet": "neptune",
+      "user_planet": "neptune"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_052",
+      "is_harmonious": true,
+      "orb": 3.16,
+      "their_planet": "saturn",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_018",
+      "is_harmonious": false,
+      "orb": 3.45,
+      "their_planet": "neptune",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_020",
+      "is_harmonious": false,
+      "orb": 3.73,
+      "their_planet": "north node",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_021",
+      "is_harmonious": true,
+      "orb": 3.73,
+      "their_planet": "south node",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_062",
+      "is_harmonious": false,
+      "orb": 3.74,
+      "their_planet": "mars",
+      "user_planet": "south node"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_044",
+      "is_harmonious": true,
+      "orb": 3.8,
+      "their_planet": "mercury",
+      "user_planet": "neptune"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_008",
+      "is_harmonious": false,
+      "orb": 3.84,
+      "their_planet": "mercury",
+      "user_planet": "mercury"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_024",
+      "is_harmonious": true,
+      "orb": 3.87,
+      "their_planet": "saturn",
+      "user_planet": "mars"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_006",
+      "is_harmonious": true,
+      "orb": 3.91,
+      "their_planet": "jupiter",
+      "user_planet": "moon"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_007",
+      "is_harmonious": false,
+      "orb": 4.13,
+      "their_planet": "saturn",
+      "user_planet": "moon"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_029",
+      "is_harmonious": true,
+      "orb": 4.17,
+      "their_planet": "uranus",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_031",
+      "is_harmonious": true,
+      "orb": 4.23,
+      "their_planet": "pluto",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "quincunx",
+      "id": "asp_028",
+      "is_harmonious": false,
+      "orb": 4.34,
+      "their_planet": "venus",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_050",
+      "is_harmonious": true,
+      "orb": 4.37,
+      "their_planet": "sun",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_057",
+      "is_harmonious": false,
+      "orb": 4.48,
+      "their_planet": "sun",
+      "user_planet": "north node"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_060",
+      "is_harmonious": false,
+      "orb": 4.48,
+      "their_planet": "sun",
+      "user_planet": "south node"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_026",
+      "is_harmonious": true,
+      "orb": 4.88,
+      "their_planet": "moon",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_005",
+      "is_harmonious": false,
+      "orb": 5.3,
+      "their_planet": "mars",
+      "user_planet": "moon"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_001",
+      "is_harmonious": true,
+      "orb": 5.56,
+      "their_planet": "sun",
+      "user_planet": "sun"
+    },
+    {
+      "aspect_type": "trine",
+      "id": "asp_023",
+      "is_harmonious": true,
+      "orb": 5.56,
+      "their_planet": "mars",
+      "user_planet": "mars"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_038",
+      "is_harmonious": true,
+      "orb": 5.58,
+      "their_planet": "mercury",
+      "user_planet": "uranus"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_055",
+      "is_harmonious": false,
+      "orb": 5.6,
+      "their_planet": "north node",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_056",
+      "is_harmonious": false,
+      "orb": 5.6,
+      "their_planet": "south node",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "sextile",
+      "id": "asp_053",
+      "is_harmonious": true,
+      "orb": 5.88,
+      "their_planet": "neptune",
+      "user_planet": "pluto"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_045",
+      "is_harmonious": true,
+      "orb": 6.11,
+      "their_planet": "saturn",
+      "user_planet": "neptune"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_040",
+      "is_harmonious": true,
+      "orb": 6.22,
+      "their_planet": "uranus",
+      "user_planet": "uranus"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_004",
+      "is_harmonious": false,
+      "orb": 6.77,
+      "their_planet": "saturn",
+      "user_planet": "sun"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_019",
+      "is_harmonious": false,
+      "orb": 6.78,
+      "their_planet": "pluto",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_034",
+      "is_harmonious": false,
+      "orb": 7.24,
+      "their_planet": "venus",
+      "user_planet": "saturn"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_027",
+      "is_harmonious": false,
+      "orb": 7.63,
+      "their_planet": "mercury",
+      "user_planet": "jupiter"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_033",
+      "is_harmonious": false,
+      "orb": 7.78,
+      "their_planet": "moon",
+      "user_planet": "saturn"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_039",
+      "is_harmonious": true,
+      "orb": 7.89,
+      "their_planet": "saturn",
+      "user_planet": "uranus"
+    },
+    {
+      "aspect_type": "conjunction",
+      "id": "asp_046",
+      "is_harmonious": true,
+      "orb": 8.0,
+      "their_planet": "uranus",
+      "user_planet": "neptune"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_058",
+      "is_harmonious": false,
+      "orb": 8.0,
+      "their_planet": "mercury",
+      "user_planet": "north node"
+    },
+    {
+      "aspect_type": "square",
+      "id": "asp_061",
+      "is_harmonious": false,
+      "orb": 8.0,
+      "their_planet": "mercury",
+      "user_planet": "south node"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_016",
+      "is_harmonious": false,
+      "orb": 8.08,
+      "their_planet": "mars",
+      "user_planet": "venus"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_009",
+      "is_harmonious": false,
+      "orb": 8.13,
+      "their_planet": "venus",
+      "user_planet": "mercury"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_002",
+      "is_harmonious": false,
+      "orb": 8.95,
+      "their_planet": "venus",
+      "user_planet": "sun"
+    },
+    {
+      "aspect_type": "opposition",
+      "id": "asp_025",
+      "is_harmonious": false,
+      "orb": 9.58,
+      "their_planet": "pluto",
+      "user_planet": "mars"
+    }
+  ],
+  "calculated_at": "2025-12-03T02:39:50.445858",
+  "composite": {
+    "dominant_element": "fire",
+    "moon_sign": "aquarius",
+    "purpose": "Your combined energies are built to push boundaries and forge a unique path. This relationship is a crucible for transformation, designed to help you both evolve into stronger, more self-aware individuals.",
+    "rising_sign": "sagittarius",
+    "sun_sign": "taurus"
+  },
+  "generation_time_ms": 1677,
+  "growth_areas": "The stars highlight significant differences in how you both process emotions and communicate. Navigating these deep divides requires conscious effort to understand each other's distinct needs and to establish clear boundaries.",
+  "headline": "Pisces & Leo: A Fiery, Deep Dive",
+  "karmic": {
+    "destiny_note": "This connection feels fated, Emma, with a strong sense of duty or unfinished business drawing you together. You're bound to build something lasting, learning to create stability and structure through your shared journey.",
+    "is_karmic": true,
+    "theme": "Future growth through saturn"
+  },
+  "mode": {
+    "categories": [
+      {
+        "aspect_ids": [
+          "asp_014"
+        ],
+        "id": "emotional",
+        "insight": null,
+        "name": "Emotional Connection",
+        "score": -100
+      },
+      {
+        "aspect_ids": [
+          "asp_008",
+          "asp_009"
+        ],
+        "id": "communication",
+        "insight": null,
+        "name": "Communication",
+        "score": -100
+      },
+      {
+        "aspect_ids": [
+          "asp_015",
+          "asp_023",
+          "asp_016"
+        ],
+        "id": "attraction",
+        "insight": null,
+        "name": "Attraction",
+        "score": -43
+      },
+      {
+        "aspect_ids": [
+          "asp_015",
+          "asp_028"
+        ],
+        "id": "values",
+        "insight": null,
+        "name": "Shared Values",
+        "score": -100
+      },
+      {
+        "aspect_ids": [
+          "asp_007",
+          "asp_001",
+          "asp_004",
+          "asp_034",
+          "asp_033"
+        ],
+        "id": "longTerm",
+        "insight": null,
+        "name": "Long-term Potential",
+        "score": -64
+      },
+      {
+        "aspect_ids": [
+          "asp_050",
+          "asp_057",
+          "asp_019"
+        ],
+        "id": "growth",
+        "insight": null,
+        "name": "Growth Together",
+        "score": -25
+      }
+    ],
+    "overall_score": 14,
+    "type": "romantic",
+    "vibe_phrase": "Transformative Fire"
+  },
+  "model_used": "gemini-2.5-flash-lite",
+  "strengths": "Your relationship sparks transformation, with Emma's intuitive insights helping James to break through old patterns. You both possess a powerful drive to evolve, creating a dynamic where you can consciously build a future together.",
+  "summary": "Emma, you and James share a connection that's both deeply challenging and incredibly transformative. While the stars show significant friction in everyday emotional and communication realms, the intensity of your bond pushes you both toward profound personal growth."
+}

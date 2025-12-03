@@ -745,8 +745,8 @@ def main():
 
     # compatibility.py
     from compatibility import (
-        SynastryAspect, CompatibilityCategory, CompositeSummary, ModeCompatibility, CompatibilityResult,
-        KarmicSummary, KarmicAspect, CompatibilityInterpretation,
+        SynastryAspect, CompatibilityCategory, Composite, ModeCompatibility, CompatibilityResult,
+        Karmic,
     )
 
     # astrometers
@@ -778,8 +778,8 @@ def main():
         Connection, StoredVibe, ShareLink, ConnectionRequest,
         ShareLinkResponse, PublicProfileResponse, ImportConnectionResponse, ConnectionListResponse,
         # Compatibility
-        SynastryAspect, CompatibilityCategory, CompositeSummary, ModeCompatibility, CompatibilityResult,
-        KarmicSummary, KarmicAspect, CompatibilityInterpretation,
+        SynastryAspect, CompatibilityCategory, Composite, ModeCompatibility, CompatibilityResult,
+        Karmic,
     ]
 
     enum_classes = [

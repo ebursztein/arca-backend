@@ -977,8 +977,8 @@ from connections import (
 )
 from compatibility import (
     calculate_compatibility,
-    get_compatibility_from_birth_data,
-    CompatibilityInterpretation,
+    CompatibilityResult,
+    CATEGORY_TO_MODE,
 )
 
 
@@ -1566,8 +1566,9 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
     """
     Get compatibility analysis between user and a connection.
 
-    Returns all three modes (romantic, friendship, coworker) in single response.
-    Always includes LLM-generated personalized interpretation.
+    Returns compatibility for the connection's relationship_category mode
+    (romantic for love, friendship for friend/family, coworker for coworker).
+    Includes LLM-generated personalized narrative content.
 
     Note: user_id is extracted from Firebase auth token, not passed in request.
 
@@ -1613,7 +1614,7 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
             )
         conn_data = conn_doc.to_dict()
 
-        # Calculate compatibility
+        # Get charts
         from astro import NatalChartData
 
         user_chart = NatalChartData(**user_data.get("natal_chart", {}))
@@ -1628,78 +1629,36 @@ def get_compatibility(req: https_fn.CallableRequest) -> dict:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        # Determine relationship type from connection's category
+        relationship_category = conn_data.get("relationship_category", "friend")
+        relationship_type = CATEGORY_TO_MODE.get(relationship_category, "friendship")
 
-        # Generate LLM interpretation (always)
-        from llm import generate_compatibility_interpretation
-        from astro import get_sun_sign
-
-        # Get user's sun sign and name
-        user_sun_sign = user_data.get("sun_sign", "")
+        # Get names for personalization
         user_name = user_data.get("name", "").split()[0] if user_data.get("name") else "You"
-
-        # Get connection's sun sign (calculate from birth date if not stored)
-        conn_sun_sign = conn_data.get("sun_sign")
-        if not conn_sun_sign and conn_data.get("birth_date"):
-            conn_sun_sign = get_sun_sign(conn_data["birth_date"]).value
         conn_name = conn_data.get("name", "Your connection")
 
-        interpretation = generate_compatibility_interpretation(
+        # Calculate compatibility (returns CompatibilityData)
+        compatibility_data = calculate_compatibility(
+            user_chart=user_chart,
+            connection_chart=conn_chart,
+            relationship_type=relationship_type,
             user_name=user_name,
-            user_sun_sign=user_sun_sign,
             connection_name=conn_name,
-            connection_sun_sign=conn_sun_sign or "Unknown",
-            relationship_category=conn_data.get("relationship_category", "friend"),
-            relationship_label=conn_data.get("relationship_label", "friend"),
-            compatibility_result=result,
-            api_key=GEMINI_API_KEY.value,
-            user_id=user_id,
-            posthog_api_key=POSTHOG_API_KEY.value
         )
 
-        # Merge category summaries into response
-        category_summaries = interpretation.get("category_summaries", {})
-        for mode_key in ["romantic", "friendship", "coworker"]:
-            if mode_key in response:
-                for cat in response[mode_key].get("categories", []):
-                    cat_id = cat.get("id")
-                    if cat_id and cat_id in category_summaries:
-                        cat["summary"] = category_summaries[cat_id]
+        # Generate complete result with LLM content
+        from llm import generate_compatibility_result
 
-        # Merge aspect interpretations into response
-        aspect_interps = {
-            ai.get("aspect_id"): ai.get("interpretation")
-            for ai in interpretation.get("aspect_interpretations", [])
-            if ai.get("aspect_id")
-        }
-        for aspect in response.get("aspects", []):
-            asp_id = aspect.get("id")
-            if asp_id and asp_id in aspect_interps:
-                aspect["interpretation"] = aspect_interps[asp_id]
+        result: CompatibilityResult = generate_compatibility_result(
+            compatibility_data=compatibility_data,
+            relationship_category=relationship_category,
+            relationship_label=conn_data.get("relationship_label", "friend"),
+            api_key=GEMINI_API_KEY.value,
+            user_id=user_id,
+            posthog_api_key=POSTHOG_API_KEY.value,
+        )
 
-        # Add overall interpretation for headline/summary/etc
-        response["interpretation"] = CompatibilityInterpretation(
-            headline=interpretation.get("headline", ""),
-            summary=interpretation.get("summary", ""),
-            relationship_purpose=interpretation.get("relationship_purpose", ""),
-            strengths=interpretation.get("strengths", ""),
-            growth_areas=interpretation.get("growth_areas", ""),
-            advice=interpretation.get("advice", ""),
-            destiny_note=interpretation.get("destiny_note", ""),
-            generation_time_ms=interpretation.get("generation_time_ms", 0),
-            model_used=interpretation.get("model_used", ""),
-        ).model_dump()
-
-        # Also populate karmic_summary.destiny_note if it exists
-        if response.get("karmic_summary") and interpretation.get("destiny_note"):
-            response["karmic_summary"]["destiny_note"] = interpretation["destiny_note"]
-
-        # Also populate composite_summary.relationship_purpose if it exists
-        if response.get("composite_summary") and interpretation.get("relationship_purpose"):
-            response["composite_summary"]["relationship_purpose"] = interpretation["relationship_purpose"]
-
-        return response
+        return result.model_dump()
 
     except https_fn.HttpsError:
         raise

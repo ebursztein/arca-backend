@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-01 22:45:47
+> Auto-generated on 2025-12-02 17:56:05
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -947,92 +947,48 @@ Get compatibility analysis between user and a connection.
 
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
-| `romantic` | ModeCompatibility | Yes | PydanticUndefined | - | - |
-| `friendship` | ModeCompatibility | Yes | PydanticUndefined | - | - |
-| `coworker` | ModeCompatibility | Yes | PydanticUndefined | - | - |
-| `aspects` | SynastryAspect[] | Yes | PydanticUndefined | - | All synastry aspects found |
-| `composite_summary` | CompositeSummary | null | No | null | - | - |
-| `karmic_summary` | KarmicSummary | null | No | null | - | - |
-| `interpretation` | CompatibilityInterpretation | null | No | null | - | LLM-generated interpretation |
-| `calculated_at` | string | Yes | PydanticUndefined | - | ISO timestamp |
-
-#### `CompatibilityInterpretation`
-
-| Field | Type | Required | Default | Constraints | Description |
-|-------|------|----------|---------|-------------|-------------|
-| `headline` | string | Yes | PydanticUndefined | - | 5-8 word headline capturing their dynamic |
-| `summary` | string | Yes | PydanticUndefined | - | 2-3 sentences overall summary |
-| `relationship_purpose` | string | No | '' | - | 1-2 sentences about the relationship's purpose |
-| `strengths` | string | Yes | PydanticUndefined | - | 2-3 sentences about natural connection points |
-| `growth_areas` | string | Yes | PydanticUndefined | - | 1-2 sentences about growth opportunities |
-| `advice` | string | Yes | PydanticUndefined | - | 1 actionable sentence |
-| `destiny_note` | string | No | '' | - | 1-2 sentences about karmic connection (only if karmic) |
+| `headline` | string | Yes | PydanticUndefined | - | 5-8 word viral-worthy summary (e.g., 'Deep Waters, Shared... |
+| `summary` | string | Yes | PydanticUndefined | - | 2-3 sentence elevator pitch of the relationship |
+| `strengths` | string | Yes | PydanticUndefined | - | 2-3 sentences about natural flows (trines/sextiles) |
+| `growth_areas` | string | Yes | PydanticUndefined | - | 1-2 sentences about challenges/opportunities (squares/opp... |
+| `advice` | string | Yes | PydanticUndefined | - | One concrete, actionable step they can take today |
+| `mode` | ModeCompatibility | Yes | PydanticUndefined | - | Scores and insights for the relationship type (romantic/f... |
+| `aspects` | SynastryAspect[] | Yes | PydanticUndefined | - | All synastry aspects for chart rendering |
+| `composite` | Composite | Yes | PydanticUndefined | - | Composite chart data - the 'Us' chart |
+| `karmic` | Karmic | Yes | PydanticUndefined | - | Karmic/destiny analysis based on Node aspects |
+| `calculated_at` | string | Yes | PydanticUndefined | - | ISO timestamp of calculation |
 | `generation_time_ms` | int | No | 0 | - | LLM generation time in milliseconds |
-| `model_used` | string | No | '' | - | Model used for generation |
+| `model_used` | string | No | '' | - | LLM model used for generation |
 
 #### `ModeCompatibility`
 
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
-| `overall_score` | int | Yes | PydanticUndefined | >= 0, <= 100 | Overall score (0-100) |
-| `relationship_verb` | string | null | No | null | - | e.g., 'You spark each other' |
-| `categories` | CompatibilityCategory[] | Yes | PydanticUndefined | - | - |
-| `missing_data_prompts` | string[] | No | PydanticUndefined | - | - |
+| `type` | "romantic" | "friendship" | "coworker" | Yes | PydanticUndefined | - | The relationship type: romantic, friendship, or coworker |
+| `overall_score` | int | Yes | PydanticUndefined | >= 0, <= 100 | Overall compatibility score (0-100) |
+| `vibe_phrase` | string | null | No | null | - | Short energy label. Romantic: 'Slow Burn', 'Electric'. Fr... |
+| `categories` | CompatibilityCategory[] | Yes | PydanticUndefined | - | Category breakdowns with scores and insights |
 
 #### `CompatibilityCategory`
 
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
-| `id` | string | Yes | PydanticUndefined | - | Category ID: emotional, communication, etc. |
-| `name` | string | Yes | PydanticUndefined | - | Display name |
-| `score` | int | Yes | PydanticUndefined | >= -100, <= 100 | Category score (-100 to +100) |
-| `summary` | string | null | No | null | - | LLM-generated summary |
-| `aspect_ids` | string[] | No | PydanticUndefined | - | Contributing aspect IDs |
+| `id` | string | Yes | PydanticUndefined | - | Category ID for iOS state management |
+| `name` | string | Yes | PydanticUndefined | - | Display name (e.g., 'Emotional Connection') |
+| `score` | int | Yes | PydanticUndefined | >= -100, <= 100 | Category score: -100 (challenging) to +100 (flowing) |
+| `insight` | string | null | No | null | - | LLM-generated 1-2 sentence insight for this category |
+| `aspect_ids` | string[] | No | PydanticUndefined | - | Top 3-5 aspect IDs driving this score, ordered by tightes... |
 
 #### `SynastryAspect`
 
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
-| `id` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Unique aspect ID |
-| `user_planet` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Planet from user's chart |
-| `their_planet` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Planet from connection's chart |
-| `aspect_type` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | conjunction, trine, square, etc. |
-| `orb` | float | Yes | PydanticUndefined | >= 0, <= 20 | Orb in degrees |
-| `is_harmonious` | boolean | Yes | PydanticUndefined | - | True if supportive aspect |
-| `interpretation` | string | null | No | null | max_length: 2000 | LLM-generated meaning |
-
-#### `CompositeSummary`
-
-| Field | Type | Required | Default | Constraints | Description |
-|-------|------|----------|---------|-------------|-------------|
-| `composite_sun` | string | null | No | null | - | Composite Sun sign |
-| `composite_moon` | string | null | No | null | - | Composite Moon sign |
-| `composite_ascendant` | string | null | No | null | - | Composite Ascendant sign |
-| `summary` | string | null | No | null | - | LLM-generated composite summary |
-| `relationship_purpose` | string | null | No | null | - | LLM-generated purpose statement |
-| `strengths` | string[] | No | PydanticUndefined | - | - |
-| `challenges` | string[] | No | PydanticUndefined | - | - |
-
-#### `KarmicSummary`
-
-| Field | Type | Required | Default | Constraints | Description |
-|-------|------|----------|---------|-------------|-------------|
-| `is_karmic` | boolean | Yes | PydanticUndefined | - | True if any tight Node aspects exist |
-| `karmic_aspects` | KarmicAspect[] | No | PydanticUndefined | - | - |
-| `primary_theme` | string | null | No | null | - | Main karmic theme if applicable |
-| `destiny_note` | string | null | No | null | - | LLM-generated destiny interpretation |
-
-#### `KarmicAspect`
-
-| Field | Type | Required | Default | Constraints | Description |
-|-------|------|----------|---------|-------------|-------------|
-| `planet` | string | Yes | PydanticUndefined | - | The planet touching the Node |
-| `planet_owner` | string | Yes | PydanticUndefined | - | 'user' or 'connection' - whose planet |
-| `node` | string | Yes | PydanticUndefined | - | 'north node' or 'south node' |
-| `node_owner` | string | Yes | PydanticUndefined | - | 'user' or 'connection' - whose node |
-| `aspect_type` | string | Yes | PydanticUndefined | - | conjunction, opposition, trine, square, sextile |
-| `orb` | float | Yes | PydanticUndefined | >= 0, <= 10 | Orb in degrees |
-| `interpretation_hint` | string | Yes | PydanticUndefined | - | Brief hint for LLM interpretation |
+| `id` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Unique aspect ID (e.g., 'asp_001') |
+| `user_planet` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Planet from user's chart (e.g., 'venus') |
+| `their_planet` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Planet from connection's chart (e.g., 'mars') |
+| `aspect_type` | string | Yes | PydanticUndefined | min_length: 1, max_length: 32 | Aspect type: conjunction, trine, square, sextile, opposit... |
+| `orb` | float | Yes | PydanticUndefined | >= 0, <= 20 | Orb in degrees (tighter = stronger) |
+| `is_harmonious` | boolean | Yes | PydanticUndefined | - | True if supportive (trine/sextile), False if challenging ... |
 
 ### Entities
 
@@ -1266,6 +1222,24 @@ Get compatibility analysis between user and a connection.
 | `reason` | string | Yes | PydanticUndefined | - | - |
 
 ### Other Models
+
+#### `Composite`
+
+| Field | Type | Required | Default | Constraints | Description |
+|-------|------|----------|---------|-------------|-------------|
+| `sun_sign` | string | Yes | PydanticUndefined | - | Composite Sun sign - the relationship's core purpose (e.g... |
+| `moon_sign` | string | Yes | PydanticUndefined | - | Composite Moon sign - the relationship's emotional center... |
+| `rising_sign` | string | null | No | null | - | Composite Rising sign - how others perceive the relations... |
+| `dominant_element` | string | Yes | PydanticUndefined | - | Dominant element (fire/earth/air/water). Use as fallback ... |
+| `purpose` | string | null | No | null | - | LLM-generated 1-2 sentences on why this relationship exists |
+
+#### `Karmic`
+
+| Field | Type | Required | Default | Constraints | Description |
+|-------|------|----------|---------|-------------|-------------|
+| `is_karmic` | boolean | Yes | PydanticUndefined | - | True if tight Node aspects exist (orb < 3 deg for Sun/Moo... |
+| `theme` | string | null | No | null | - | Primary karmic theme if applicable (e.g., 'Past-life conn... |
+| `destiny_note` | string | null | No | null | - | LLM-generated 1-2 sentences about the fated nature of thi... |
 
 #### `MeterGroupData`
 
