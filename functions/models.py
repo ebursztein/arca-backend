@@ -557,8 +557,8 @@ class ConnectionVibe(BaseModel):
         ge=0, le=100,
         description="0-100 score (70-100=positive, 40-70=neutral, 0-40=challenging)"
     )
-    key_transit: str = Field(
-        min_length=1, max_length=500,
+    key_transit: Optional[str] = Field(
+        None, max_length=500,
         description="Most significant transit, e.g., 'Transit Venus trine your emotional connection point'"
     )
 

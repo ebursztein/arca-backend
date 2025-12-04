@@ -310,6 +310,36 @@ def normalize_intensity(dti: float, meter_name: str = None, use_empirical: bool 
     raise ValueError(f"No calibration data found for meter={meter_name}. Re-run calibration scripts!")
 
 
+def normalize_intensity_v2(intensity_v2: float, meter_name: str = None) -> float:
+    """
+    Normalize V2 intensity (Gaussian power sum) to 0-100 using percentiles.
+
+    V2 intensity uses velocity-based Gaussian scoring, which produces values
+    in a much smaller range than V1 DTI (typically 0-200 vs 0-3500).
+
+    Args:
+        intensity_v2: Raw V2 intensity (sum of W_i × Gaussian_Score)
+        meter_name: Name of the meter (for meter-specific calibration)
+
+    Returns:
+        float: Intensity meter value (0-100) representing percentile rank
+    """
+    if intensity_v2 <= 0:
+        return 0.0
+
+    calibration = load_calibration_constants()
+    if calibration and meter_name:
+        if "meters" in calibration and meter_name in calibration["meters"]:
+            meter_cal = calibration["meters"][meter_name]
+            if "intensity_v2_percentiles" in meter_cal and meter_cal["intensity_v2_percentiles"]:
+                percentiles = meter_cal["intensity_v2_percentiles"]
+                return interpolate_percentile(intensity_v2, percentiles)
+
+    # Fallback: linear scaling with estimated p99 of 150
+    # (This should rarely be hit once calibration is run)
+    return min(100.0, (intensity_v2 / 150.0) * 100.0)
+
+
 def normalize_harmony(hqs: float, meter_name: str = None, use_empirical: bool = True) -> float:
     """
     Normalize HQS (Harmonic Quality Score) to 0-100 Harmony Meter.

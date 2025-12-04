@@ -1302,7 +1302,9 @@ Is Karmic: True
 Theme: {karmic.theme}
 {karmic_context}
 """
-    # When NOT karmic, don't include karmic section at all to avoid LLM mentioning it
+
+    # When NOT karmic, don't show node aspects at all to avoid LLM mentioning karmic themes
+    node_aspects_section = ""
 
     # Mode-specific vibe phrase examples
     vibe_examples = {
@@ -1363,9 +1365,21 @@ Theme: {karmic.theme}
     }
 
     # Build enhanced category context with explanations
+    # Scores are 0-100 where 50 is neutral
     categories_with_explanations = []
     for cat in mode.categories:
-        score_label = "strong" if cat.score > 60 else "moderate" if cat.score > 30 else "challenging" if cat.score > -30 else "difficult"
+        # Score interpretation for 0-100 scale (50 = neutral)
+        if cat.score >= 70:
+            score_label = "strong - rare, indicates genuine resonance"
+        elif cat.score >= 55:
+            score_label = "positive - good natural fit"
+        elif cat.score >= 45:
+            score_label = "neutral - typical, neither strong nor weak"
+        elif cat.score >= 30:
+            score_label = "challenging - requires awareness and effort"
+        else:
+            score_label = "difficult - rare, indicates significant friction"
+
         explanation = category_explanations.get(cat.id, "")
         categories_with_explanations.append(
             f"- {cat.id} ({cat.name}): {cat.score} [{score_label}]\n  What it measures: {explanation}"
@@ -1407,10 +1421,14 @@ Relationship: {relationship_category}/{relationship_label}
 ## COMPATIBILITY DATA
 
 SCORE GUIDE (for your reference, never mention scores to user):
-- Above 60: Strong/harmonious - natural ease
-- 30 to 60: Moderate - some compatibility
-- -30 to 30: Challenging - requires effort
-- Below -30: Difficult - significant friction
+Scores are 0-100 where 50 is neutral. Most scores fall in the 35-65 range.
+- 70+: Strong - rare, indicates genuine resonance
+- 55-70: Positive - good natural fit
+- 45-55: Neutral - typical compatibility, neither strong nor weak
+- 30-45: Challenging - requires awareness and effort
+- Below 30: Difficult - rare, indicates significant friction
+
+Extreme scores (above 75 or below 25) are uncommon and indicate either exceptional chemistry or notable friction.
 
 Overall Score: {mode.overall_score}/100
 
@@ -1423,7 +1441,33 @@ Note: Orb = how exact the aspect is. Lower orb (closer to 0) = stronger influenc
 
 COMPOSITE CHART (the relationship's own identity):
 {composite_context}
-{karmic_section}
+{karmic_section}{node_aspects_section}
+---
+
+## ASTROLOGICAL REFERENCE (for your interpretation)
+
+PLANET MEANINGS:
+- Sun: Core identity, ego, life purpose
+- Moon: Emotions, instincts, inner needs
+- Mercury: Communication, thinking style, learning
+- Venus: Love style, values, what you find beautiful
+- Mars: Drive, passion, how you assert yourself
+- Jupiter: Growth, optimism, where you expand
+- Saturn: Commitment, responsibility, long-term structure
+- Uranus: Independence, change, the unexpected
+- Neptune: Dreams, intuition, idealization
+- Pluto: Transformation, power, deep change
+- North Node: Future growth direction, what to develop
+- South Node: Past patterns, comfort zone, what comes naturally
+
+ASPECT MEANINGS:
+- Conjunction (0 deg): Intense fusion - planets blend energies, for better or worse
+- Trine (120 deg): Easy flow - natural harmony, talents, but can be passive
+- Sextile (60 deg): Opportunity - supportive, requires some effort to activate
+- Square (90 deg): Tension - friction that drives growth, challenges to overcome
+- Opposition (180 deg): Polarity - push-pull dynamic, awareness through contrast
+- Quincunx (150 deg): Adjustment - awkward fit requiring constant adaptation
+
 ---
 
 ## INTERPRETATION TIPS FOR THIS MODE
@@ -1431,8 +1475,8 @@ COMPOSITE CHART (the relationship's own identity):
 North Node / South Node aspects:
 {nodal_interpretation_tips.get(mode.type, nodal_interpretation_tips["friendship"])}
 
-Handling difficult scores (below -30):
-For "Difficult" categories, the path forward should be about realistic boundaries and mitigation (e.g., "work independently", "keep interactions structured", "accept this isn't a natural fit") - NOT forcing harmony where it doesn't exist. Toxic positivity like "just try harder!" is worse than honest acknowledgment.
+Handling difficult scores (below 30):
+For "Difficult" or "Challenging" categories, the path forward should be about realistic boundaries and mitigation (e.g., "work independently", "keep interactions structured", "accept this isn't a natural fit") - NOT forcing harmony where it doesn't exist. Toxic positivity like "just try harder!" is worse than honest acknowledgment.
 
 ---
 

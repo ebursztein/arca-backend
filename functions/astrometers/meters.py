@@ -24,8 +24,8 @@ from pydantic import BaseModel, Field
 
 # Core dependencies
 from astro import Planet, AspectType, ZodiacSign, House
-from .core import TransitAspect, AspectContribution, calculate_astrometers, AstrometerScore
-from .normalization import normalize_intensity, normalize_harmony
+from .core import TransitAspect, AspectContribution, calculate_astrometers, AstrometerScore, get_cosmic_dither
+from .normalization import normalize_intensity, normalize_intensity_v2, normalize_harmony
 from .quality import harmonic_boost
 from .hierarchy import Meter, MeterGroupV2, get_group_v2
 from .constants import (
@@ -360,75 +360,99 @@ def get_state_label(meter_name: str, intensity: float, harmony: float) -> str:
 
     labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))
 
-    # Map unified_score to bucket (quartile-based thresholds)
-    if unified_score < -25:
+    # Map unified_score (0-100) to bucket
+    if unified_score < 35:
         return labels[0]  # Challenge bucket
-    elif unified_score < 10:
-        return labels[1]  # Mixed bucket
     elif unified_score < 50:
+        return labels[1]  # Mixed bucket
+    elif unified_score < 70:
         return labels[2]  # Good bucket
     else:
         return labels[3]  # Peak bucket
 
 
 def get_quality_label(unified_score: float) -> QualityLabel:
-    """Determine quality label from unified_score quadrants."""
-    if unified_score < -25:
+    """
+    Determine quality label from unified_score (0-100 scale).
+
+    Thresholds:
+    - < 35: Challenging (strongly negative harmony)
+    - 35-50: Turbulent (mildly negative or low activity)
+    - 50-70: Peaceful (mildly positive)
+    - >= 70: Flowing (strongly positive)
+    """
+    if unified_score < 35:
         return QualityLabel.CHALLENGING
-    elif unified_score < 10:
-        return QualityLabel.TURBULENT
     elif unified_score < 50:
+        return QualityLabel.TURBULENT
+    elif unified_score < 70:
         return QualityLabel.PEACEFUL
     else:
         return QualityLabel.FLOWING
 
 
-def calculate_unified_score(intensity: float, harmony: float) -> tuple[float, QualityLabel]:
+def calculate_unified_score(
+    intensity: float,
+    harmony: float,
+    dither: float = 0.0
+) -> tuple[float, QualityLabel]:
     """
-    Calculate unified score and quality label using polar-style formula with sigmoid stretch.
+    Calculate unified score using intensity stretch + linear combination + post-sigmoid.
 
-    Design: unified_score combines intensity (magnitude) with harmony (direction).
-    - Harmony determines direction: above 50 = positive, below 50 = negative
-    - Intensity amplifies the signal (but harmony is always partially visible)
-    - Sigmoid (tanh) stretches middle values toward extremes for better range use
-    - Empowering asymmetry: positive boosted, negative dampened
+    Design:
+    - Intensity drives the VALUE (how much is happening)
+    - Harmony determines the DIRECTION (positive or negative)
+    - Intensity stretch boosts low-intensity days so they still show variation
+    - Dither ("Cosmic Background") prevents exact-50 clustering
+    - Post-sigmoid stretches distribution away from 50 toward extremes
+
+    Formula:
+    - Step 1 (Intensity stretch): stretched_I = 100 * tanh(I / 60)
+    - Step 2 (Linear): raw = 50 + (stretched_I / 2) * harmony_coef
+    - Step 2.5 (Dither): raw += dither (prevents exact-50 spike)
+    - Step 3 (Post-stretch): unified = 50 + 50 * tanh(deviation / 25)
 
     Args:
         intensity: Intensity meter (0-100) - how much is happening
         harmony: Harmony meter (0-100) - quality of what's happening (50 = neutral)
+        dither: Cosmic background dither (-5 to +5) to prevent 50-spike
 
     Returns:
         Tuple of (unified_score, quality_label):
-        - unified_score: -100 to +100 (positive = harmonious, negative = challenging)
-        - quality_label: QualityLabel enum based on intensity + harmony combination
+        - unified_score: 0-100 (50 = neutral, >50 = positive, <50 = challenging)
+        - quality_label: QualityLabel enum based on score
     """
     import math
-    from astrometers.constants import (
-        UNIFIED_SCORE_BASE_WEIGHT,
-        UNIFIED_SCORE_INTENSITY_WEIGHT,
-        UNIFIED_SCORE_TANH_FACTOR,
-        UNIFIED_SCORE_POSITIVE_BOOST,
-        UNIFIED_SCORE_NEGATIVE_DAMPEN,
-    )
 
-    # Base direction from harmony: -100 to +100
-    base_direction = (harmony - 50) * 2
+    # Convert harmony (0-100) to harmony_coefficient (-1 to +1)
+    harmony_coef = (harmony - 50) / 50
 
-    # Intensity as amplification factor: BASE_WEIGHT to 1.0
-    # Even at intensity=0, we preserve BASE_WEIGHT of the harmony signal
-    magnitude_factor = UNIFIED_SCORE_BASE_WEIGHT + UNIFIED_SCORE_INTENSITY_WEIGHT * (intensity / 100)
+    # Step 1: Stretch intensity with moderate gain
+    # tanh(I/60): Provides lift for low values without over-amplifying
+    # 5->8.3, 20->32, 50->70, 80->87, 100->93
+    stretched_intensity = 100 * math.tanh(intensity / 60)
 
-    # Raw score before stretch
-    raw_score = base_direction * magnitude_factor
+    # Step 2: Linear combination
+    # Stretched intensity drives magnitude, harmony drives direction
+    raw_unified = 50 + (stretched_intensity / 2) * harmony_coef
 
-    # Apply sigmoid stretch using tanh - spreads middle values toward extremes
-    stretched = 100 * math.tanh(raw_score / UNIFIED_SCORE_TANH_FACTOR)
+    # Step 2.5: Apply cosmic background dither with diminishing intensity
+    # Full dither when neutral (raw=50), diminishing as signal gets stronger
+    # This prevents the exact-50 spike without interfering with strong signals
+    proximity_to_neutral = 1.0 - abs(raw_unified - 50) / 50  # 1 at 50, 0 at extremes
+    proximity_to_neutral = max(0.0, proximity_to_neutral)  # Clamp to 0-1
+    scaled_dither = dither * proximity_to_neutral
+    raw_unified += scaled_dither
 
-    # Apply empowering asymmetry: boost positive, dampen negative
-    if stretched >= 0:
-        unified_score = min(100, round(stretched * UNIFIED_SCORE_POSITIVE_BOOST, 1))
-    else:
-        unified_score = max(-100, round(stretched * UNIFIED_SCORE_NEGATIVE_DAMPEN, 1))
+    # Step 3: Post-sigmoid stretch with headroom
+    # Divisor of 25 ensures P95 maps to ~80, leaving 80-100 for exceptional days
+    deviation = raw_unified - 50  # Range: -50 to +50
+    stretch_factor = 25  # Higher = softer curve, more headroom at extremes
+    stretched = 50 * math.tanh(deviation / stretch_factor)
+    unified_score = 50 + stretched
+
+    # Round to 1 decimal place
+    unified_score = round(unified_score, 1)
 
     quality = get_quality_label(unified_score)
     return unified_score, quality
@@ -528,7 +552,8 @@ def calculate_meter(
     apply_harmonic_boost: bool = True,
     benefic_multiplier: float = 2.0,
     malefic_multiplier: float = 0.5,
-    user_id: Optional[str] = None
+    user_id: Optional[str] = None,
+    use_v2_scoring: bool = True
 ) -> MeterReading:
     """
     Calculate a single meter reading.
@@ -546,6 +571,7 @@ def calculate_meter(
         benefic_multiplier: Multiplier for benefic+harmonious aspects (default: 2.0)
         malefic_multiplier: Multiplier for malefic+challenging aspects (default: 0.5)
         user_id: User ID for cosmic background noise (optional)
+        use_v2_scoring: Use decoupled V2 scoring (Gaussian + ballast) (default: True)
 
     Returns:
         Complete MeterReading
@@ -553,30 +579,66 @@ def calculate_meter(
     # Step 1: Filter aspects
     filtered_aspects = filter_aspects(all_aspects, config, natal_chart)
 
-    # Step 2: Calculate raw scores (flat baseline quality factors)
-    if not filtered_aspects:
-        # No activity
-        raw_score = AstrometerScore(dti=0.0, hqs=0.0, aspect_count=0, contributions=[])
-    else:
-        raw_score = calculate_astrometers(filtered_aspects)
+    # Step 2: Calculate raw scores
+    # Generate chart hash for cosmic background (deterministic per-chart noise)
+    # Use natal chart's sun and moon positions as a stable identifier
+    natal_sun_deg = 0.0
+    natal_moon_deg = 0.0
+    planets = natal_chart.get("planets", [])
+    if isinstance(planets, list):
+        for p in planets:
+            if p.get("name") == "sun":
+                natal_sun_deg = p.get("absolute_degree", 0)
+            elif p.get("name") == "moon":
+                natal_moon_deg = p.get("absolute_degree", 0)
+    elif isinstance(planets, dict):
+        natal_sun_deg = planets.get("sun", {}).get("abs_pos", 0)
+        natal_moon_deg = planets.get("moon", {}).get("abs_pos", 0)
+    natal_chart_hash = int((natal_sun_deg * 1000 + natal_moon_deg * 100) % 1000000)
+    date_ordinal = date.toordinal() if hasattr(date, 'toordinal') else date.date().toordinal()
 
-    # Step 2.5: Apply planetary nature adjustments (harmonic boost) - OPTIONAL
-    # Benefic + harmonious: benefic_multiplier enhancement (default 1.1x)
-    # Malefic + challenging: malefic_multiplier softening (default 0.85x)
-    # Applied AFTER raw calculation, BEFORE normalization against flat baseline
-    if apply_harmonic_boost and raw_score.contributions:
-        boosted_hqs = harmonic_boost(
-            raw_score.hqs,
-            raw_score.contributions,
-            benefic_multiplier=benefic_multiplier,
-            malefic_multiplier=malefic_multiplier
+    if not filtered_aspects:
+        # No activity - but still apply cosmic background
+        raw_score = calculate_astrometers(
+            [],
+            meter_name=meter_name,
+            natal_chart_hash=natal_chart_hash,
+            date_ordinal=date_ordinal
         )
     else:
-        boosted_hqs = raw_score.hqs  # No boost applied
+        # Pass meter_name and cosmic background params
+        raw_score = calculate_astrometers(
+            filtered_aspects,
+            meter_name=meter_name,
+            natal_chart_hash=natal_chart_hash,
+            date_ordinal=date_ordinal
+        )
 
-    # Step 3: Normalize to 0-100 (against flat baseline calibration)
-    intensity = normalize_intensity(raw_score.dti, meter_name)
-    harmony = normalize_harmony(boosted_hqs, meter_name)  # Normalize (boosted or flat)
+    if use_v2_scoring:
+        # V2: Decoupled scoring (Gaussian power + ballast)
+        # Intensity: Gaussian power sum, normalized via percentiles
+        # Harmony: coefficient -1 to +1, mapped to 0-100
+        intensity = normalize_intensity_v2(raw_score.intensity, meter_name)
+
+        # Direct mapping: -1 to +1 → 0 to 100
+        harmony = (raw_score.harmony_coefficient + 1) * 50
+        harmony = max(0.0, min(100.0, harmony))  # Clamp to 0-100
+    else:
+        # V1: Legacy coupled scoring (DTI/HQS)
+        # Step 2.5: Apply planetary nature adjustments (harmonic boost) - OPTIONAL
+        if apply_harmonic_boost and raw_score.contributions:
+            boosted_hqs = harmonic_boost(
+                raw_score.hqs,
+                raw_score.contributions,
+                benefic_multiplier=benefic_multiplier,
+                malefic_multiplier=malefic_multiplier
+            )
+        else:
+            boosted_hqs = raw_score.hqs
+
+        # Step 3: Normalize to 0-100 (against flat baseline calibration)
+        intensity = normalize_intensity(raw_score.dti, meter_name)
+        harmony = normalize_harmony(boosted_hqs, meter_name)
 
     # Step 3.5: Apply cosmic background noise (if user_id provided)
     if user_id:
@@ -590,14 +652,19 @@ def calculate_meter(
         intensity = max(0.0, min(100.0, intensity + intensity_noise))
         harmony = max(0.0, min(100.0, harmony + harmony_nudge))
 
-    # Step 4: Apply retrograde modifiers
+    # Step 4: Apply retrograde modifiers (to deviation from neutral only)
+    # Retrograde affects how far harmony deviates from neutral (50),
+    # but preserves neutral as the baseline
     for planet, modifier in config.retrograde_modifiers.items():
         if is_planet_retrograde(transit_chart, planet):
-            harmony = harmony * modifier
+            deviation = harmony - 50.0
+            harmony = 50.0 + deviation * modifier
             harmony = max(0.0, min(100.0, harmony))  # Clamp
 
     # Step 5: Calculate unified score (polar-style with sigmoid stretch)
-    unified_score, _ = calculate_unified_score(intensity, harmony)
+    # Add cosmic background dither to prevent exact-50 clustering
+    dither = get_cosmic_dither(natal_chart_hash, date_ordinal, meter_name)
+    unified_score, _ = calculate_unified_score(intensity, harmony, dither=dither)
 
     # Step 6: Get labels
     state_label = get_state_label(meter_name, intensity, harmony)
@@ -626,8 +693,12 @@ def calculate_meter(
         advice=advice,
         top_aspects=raw_score.contributions[:5],
         raw_scores={
+            # V1 (legacy)
             "dti": raw_score.dti,
-            "hqs": raw_score.hqs
+            "hqs": raw_score.hqs,
+            # V2 (decoupled)
+            "intensity_raw": raw_score.intensity,
+            "harmony_coefficient": raw_score.harmony_coefficient,
         }
     )
 
@@ -652,7 +723,8 @@ def get_meters(
     apply_harmonic_boost: bool = True,
     benefic_multiplier: float = 2.0,
     malefic_multiplier: float = 0.5,
-    user_id: Optional[str] = None
+    user_id: Optional[str] = None,
+    use_v2_scoring: bool = True
 ) -> AllMetersReading:
     """
     Calculate all 17 meters.
@@ -666,6 +738,7 @@ def get_meters(
         benefic_multiplier: Multiplier for benefic+harmonious aspects (default: 2.0)
         malefic_multiplier: Multiplier for malefic+challenging aspects (default: 0.5)
         user_id: User ID for cosmic background noise (optional)
+        use_v2_scoring: Use decoupled V2 scoring (Gaussian + ballast) (default: True)
 
     Returns:
         AllMetersReading with all 17 meters
@@ -690,7 +763,8 @@ def get_meters(
             apply_harmonic_boost=apply_harmonic_boost,
             benefic_multiplier=benefic_multiplier,
             malefic_multiplier=malefic_multiplier,
-            user_id=user_id
+            user_id=user_id,
+            use_v2_scoring=use_v2_scoring
         )
 
     # Calculate trends if requested
@@ -710,7 +784,8 @@ def get_meters(
                 yesterday_aspects,
                 natal_chart,
                 yesterday_transit,
-                yesterday
+                yesterday,
+                use_v2_scoring=use_v2_scoring
             )
 
             # Helper function to calculate single trend

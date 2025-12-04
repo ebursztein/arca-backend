@@ -16,14 +16,15 @@ from compatibility import (
     COWORKER_CATEGORIES,
     CATEGORY_NAMES,
     CATEGORY_TO_MODE,
-    KARMIC_ASPECTS,
+    KARMIC_PRIMARY_ASPECTS,
+    KARMIC_SECONDARY_ASPECTS,
     KARMIC_TIER1_PLANETS,
     KARMIC_TIER2_PLANETS,
     KARMIC_TIER1_ORB,
     KARMIC_TIER2_ORB,
-    KARMIC_PLANET_HINTS_NORTH,
-    KARMIC_PLANET_HINTS_SOUTH,
-    KARMIC_PLANET_HINTS_SQUARE,
+    KARMIC_NORTH_HINTS,
+    KARMIC_SOUTH_HINTS,
+    KARMIC_SQUARE_HINTS,
     # Functions
     get_orb_weight,
     calculate_aspect,
@@ -441,25 +442,25 @@ class TestCalculateCategoryScore:
         assert isinstance(aspect_ids, list)
 
     def test_score_in_valid_range(self, user_chart, connection_chart):
-        """Score should be between -100 and +100."""
+        """Score should be between 0 and 100 (0=challenging, 50=neutral, 100=flowing)."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
 
         for cat_id, planet_pairs in ROMANTIC_CATEGORIES.items():
-            score, _ = calculate_category_score(aspects, planet_pairs)
-            assert -100 <= score <= 100, f"Score out of range for {cat_id}"
+            score, _ = calculate_category_score(aspects, planet_pairs, cat_id, user_chart, connection_chart)
+            assert 0 <= score <= 100, f"Score {score} out of range for {cat_id}"
 
-    def test_no_aspects_returns_zero(self, user_chart, connection_chart):
-        """If no relevant aspects, score should be 0."""
+    def test_no_aspects_returns_neutral(self, user_chart, connection_chart):
+        """If no relevant aspects, score should be 50 (neutral)."""
         aspects = calculate_synastry_aspects(user_chart, connection_chart)
         # Use planet pairs that probably won't have aspects
         fake_pairs = [("chiron", "chiron")]  # Chiron not in our planets
         score, aspect_ids = calculate_category_score(aspects, fake_pairs)
 
-        assert score == 0
+        assert score == 50  # Neutral score with 0-100 scale
         assert aspect_ids == []
 
-    def test_all_harmonious_gives_positive_score(self):
-        """All harmonious aspects should give positive score."""
+    def test_all_harmonious_gives_above_neutral_score(self):
+        """All harmonious aspects should give score above 50 (neutral)."""
         # Create mock aspects - all harmonious
         aspects = [
             SynastryAspect(
@@ -481,10 +482,10 @@ class TestCalculateCategoryScore:
         ]
         planet_pairs = [("moon", "moon"), ("moon", "venus")]
         score, _ = calculate_category_score(aspects, planet_pairs)
-        assert score > 0
+        assert score > 50, f"Expected score > 50 for harmonious aspects, got {score}"
 
-    def test_all_challenging_gives_negative_score(self):
-        """All challenging aspects should give negative score."""
+    def test_all_challenging_gives_below_neutral_score(self):
+        """All challenging aspects should give score below 50 (neutral)."""
         # Create mock aspects - all challenging
         aspects = [
             SynastryAspect(
@@ -506,7 +507,7 @@ class TestCalculateCategoryScore:
         ]
         planet_pairs = [("moon", "moon"), ("moon", "venus")]
         score, _ = calculate_category_score(aspects, planet_pairs)
-        assert score < 0
+        assert score < 50, f"Expected score < 50 for challenging aspects, got {score}"
 
 
 # =============================================================================
@@ -875,7 +876,7 @@ class TestCompatibilityCategoryModel:
         assert cat.insight is None
 
     def test_score_must_be_in_range(self):
-        """Score must be -100 to +100."""
+        """Score must be 0 to 100."""
         with pytest.raises(ValueError):
             CompatibilityCategory(
                 id="test",
@@ -886,7 +887,7 @@ class TestCompatibilityCategoryModel:
             CompatibilityCategory(
                 id="test",
                 name="Test",
-                score=-150
+                score=-10
             )
 
 
@@ -950,54 +951,58 @@ class TestEdgeCases:
 class TestKarmicConstants:
     """Tests for karmic calculation constants."""
 
-    def test_karmic_aspects_only_hard_aspects(self):
-        """Karmic aspects should only include hard aspects."""
-        assert KARMIC_ASPECTS == {"conjunction", "opposition", "square"}
+    def test_karmic_primary_aspects(self):
+        """Primary karmic aspects are conjunction and opposition."""
+        assert KARMIC_PRIMARY_ASPECTS == {"conjunction", "opposition"}
         # Sextiles and trines should NOT be karmic
-        assert "sextile" not in KARMIC_ASPECTS
-        assert "trine" not in KARMIC_ASPECTS
+        assert "sextile" not in KARMIC_PRIMARY_ASPECTS
+        assert "trine" not in KARMIC_PRIMARY_ASPECTS
+
+    def test_karmic_secondary_aspects(self):
+        """Secondary karmic aspects are squares (Saturn/Pluto only)."""
+        assert KARMIC_SECONDARY_ASPECTS == {"square"}
 
     def test_tier1_planets_are_fated(self):
-        """Tier 1 planets are Sun, Moon, Saturn."""
-        assert KARMIC_TIER1_PLANETS == {"sun", "moon", "saturn"}
+        """Tier 1 planets are Sun, Moon, Saturn, Pluto."""
+        assert KARMIC_TIER1_PLANETS == {"sun", "moon", "saturn", "pluto"}
 
     def test_tier2_planets_are_personal(self):
         """Tier 2 planets are Venus, Mars, Mercury."""
         assert KARMIC_TIER2_PLANETS == {"venus", "mars", "mercury"}
 
-    def test_tier1_orb_is_tighter_than_general(self):
-        """Tier 1 orb should be 3 degrees."""
-        assert KARMIC_TIER1_ORB == 3.0
+    def test_tier1_orb(self):
+        """Tier 1 orb should be 1.0 degrees."""
+        assert KARMIC_TIER1_ORB == 1.0
 
-    def test_tier2_orb_is_tighter(self):
-        """Tier 2 orb should be 2 degrees."""
-        assert KARMIC_TIER2_ORB == 2.0
+    def test_tier2_orb(self):
+        """Tier 2 orb should be 0.75 degrees."""
+        assert KARMIC_TIER2_ORB == 0.75
 
     def test_generational_planets_excluded(self):
-        """Jupiter, Uranus, Neptune, Pluto should not be in karmic tiers."""
+        """Jupiter, Uranus, Neptune should not be in karmic tiers (Pluto is included)."""
         all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
         assert "jupiter" not in all_karmic_planets
         assert "uranus" not in all_karmic_planets
         assert "neptune" not in all_karmic_planets
-        assert "pluto" not in all_karmic_planets
+        # Pluto IS now included in Tier 1
+        assert "pluto" in all_karmic_planets
 
     def test_all_karmic_planets_have_north_hints(self):
         """All karmic planets should have North Node hints."""
         all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
         for planet in all_karmic_planets:
-            assert planet in KARMIC_PLANET_HINTS_NORTH, f"Missing North hint for {planet}"
+            assert planet in KARMIC_NORTH_HINTS, f"Missing North hint for {planet}"
 
     def test_all_karmic_planets_have_south_hints(self):
         """All karmic planets should have South Node hints."""
         all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
         for planet in all_karmic_planets:
-            assert planet in KARMIC_PLANET_HINTS_SOUTH, f"Missing South hint for {planet}"
+            assert planet in KARMIC_SOUTH_HINTS, f"Missing South hint for {planet}"
 
-    def test_all_karmic_planets_have_square_hints(self):
-        """All karmic planets should have Square hints."""
-        all_karmic_planets = KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS
-        for planet in all_karmic_planets:
-            assert planet in KARMIC_PLANET_HINTS_SQUARE, f"Missing Square hint for {planet}"
+    def test_square_hints_for_saturn_pluto(self):
+        """Saturn and Pluto should have square hints."""
+        assert "saturn" in KARMIC_SQUARE_HINTS
+        assert "pluto" in KARMIC_SQUARE_HINTS
 
 
 # =============================================================================
@@ -1007,60 +1012,62 @@ class TestKarmicConstants:
 class TestKarmicOrbThreshold:
     """Tests for _get_karmic_orb_threshold function."""
 
-    def test_tier1_planets_get_3_degree_orb(self):
-        """Tier 1 planets should get 3 degree orb."""
-        assert _get_karmic_orb_threshold("sun") == 3.0
-        assert _get_karmic_orb_threshold("moon") == 3.0
-        assert _get_karmic_orb_threshold("saturn") == 3.0
+    def test_tier1_planets_get_1_0_degree_orb(self):
+        """Tier 1 planets (except Pluto) should get 1.0 degree orb."""
+        assert _get_karmic_orb_threshold("sun") == 1.0
+        assert _get_karmic_orb_threshold("moon") == 1.0
+        assert _get_karmic_orb_threshold("saturn") == 1.0
 
-    def test_tier2_planets_get_2_degree_orb(self):
-        """Tier 2 planets should get 2 degree orb."""
-        assert _get_karmic_orb_threshold("venus") == 2.0
-        assert _get_karmic_orb_threshold("mars") == 2.0
-        assert _get_karmic_orb_threshold("mercury") == 2.0
+    def test_pluto_gets_0_75_degree_orb(self):
+        """Pluto should get tighter 0.75 degree orb."""
+        assert _get_karmic_orb_threshold("pluto") == 0.75
+
+    def test_tier2_planets_get_0_75_degree_orb(self):
+        """Tier 2 planets should get 0.75 degree orb."""
+        assert _get_karmic_orb_threshold("venus") == 0.75
+        assert _get_karmic_orb_threshold("mars") == 0.75
+        assert _get_karmic_orb_threshold("mercury") == 0.75
 
     def test_generational_planets_get_zero_orb(self):
-        """Generational planets should be excluded (0 orb)."""
+        """Generational planets (except Pluto) should be excluded (0 orb)."""
         assert _get_karmic_orb_threshold("jupiter") == 0.0
         assert _get_karmic_orb_threshold("uranus") == 0.0
         assert _get_karmic_orb_threshold("neptune") == 0.0
-        assert _get_karmic_orb_threshold("pluto") == 0.0
 
 
 class TestKarmicHint:
     """Tests for _get_karmic_hint function."""
 
     def test_square_aspect_uses_square_hints(self):
-        """Square aspect should use square hints regardless of node."""
-        hint = _get_karmic_hint("sun", "north node", "square")
-        assert hint == KARMIC_PLANET_HINTS_SQUARE["sun"]
+        """Square aspect should use square hints for Saturn/Pluto."""
+        hint = _get_karmic_hint("saturn", "north node", "square")
+        assert hint == KARMIC_SQUARE_HINTS["saturn"]
 
-        hint = _get_karmic_hint("moon", "south node", "square")
-        assert hint == KARMIC_PLANET_HINTS_SQUARE["moon"]
+        hint = _get_karmic_hint("pluto", "south node", "square")
+        assert hint == KARMIC_SQUARE_HINTS["pluto"]
 
     def test_north_node_uses_north_hints(self):
-        """Non-square aspects to North Node should use north hints."""
+        """North Node aspects should use north hints."""
         hint = _get_karmic_hint("saturn", "north node", "conjunction")
-        assert hint == KARMIC_PLANET_HINTS_NORTH["saturn"]
+        assert hint == KARMIC_NORTH_HINTS["saturn"]
 
         hint = _get_karmic_hint("venus", "north node", "opposition")
-        assert hint == KARMIC_PLANET_HINTS_NORTH["venus"]
+        assert hint == KARMIC_NORTH_HINTS["venus"]
 
     def test_south_node_uses_south_hints(self):
-        """Non-square aspects to South Node should use south hints."""
+        """South Node aspects should use south hints."""
         hint = _get_karmic_hint("moon", "south node", "conjunction")
-        assert hint == KARMIC_PLANET_HINTS_SOUTH["moon"]
+        assert hint == KARMIC_SOUTH_HINTS["moon"]
 
         hint = _get_karmic_hint("mars", "south node", "opposition")
-        assert hint == KARMIC_PLANET_HINTS_SOUTH["mars"]
+        assert hint == KARMIC_SOUTH_HINTS["mars"]
 
     def test_hints_are_meaningful_strings(self):
         """Hints should be non-empty meaningful strings."""
         for planet in KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS:
             for node in ["north node", "south node"]:
-                for aspect in ["conjunction", "opposition", "square"]:
-                    hint = _get_karmic_hint(planet, node, aspect)
-                    assert len(hint) > 10, f"Hint too short for {planet}/{node}/{aspect}"
+                hint = _get_karmic_hint(planet, node, "conjunction")
+                assert len(hint) > 10, f"Hint too short for {planet}/{node}/conjunction"
 
 
 # =============================================================================
@@ -1088,11 +1095,12 @@ class TestCalculateKarmic:
             orbs = [a.orb for a in karmic_aspects]
             assert orbs == sorted(orbs), "Karmic aspects not sorted by orb"
 
-    def test_only_hard_aspects_included(self, user_chart, connection_chart):
-        """Only hard aspects should be included."""
+    def test_only_valid_aspects_included(self, user_chart, connection_chart):
+        """Only primary or secondary aspects should be included."""
         _, karmic_aspects = calculate_karmic(user_chart, connection_chart)
+        valid_aspects = KARMIC_PRIMARY_ASPECTS | KARMIC_SECONDARY_ASPECTS
         for aspect in karmic_aspects:
-            assert aspect.aspect_type in KARMIC_ASPECTS, f"Non-hard aspect found: {aspect.aspect_type}"
+            assert aspect.aspect_type in valid_aspects, f"Invalid aspect found: {aspect.aspect_type}"
 
     def test_only_karmic_planets_included(self, user_chart, connection_chart):
         """Only Tier 1 and Tier 2 planets should be included."""
@@ -1216,3 +1224,111 @@ class TestKarmicInCompatibilityData:
         """destiny_note should be None (filled by LLM later)."""
         result = calculate_compatibility(user_chart, connection_chart, "romantic")
         assert result.karmic.destiny_note is None
+
+
+# =============================================================================
+# Test Score Ranges (0-100)
+# =============================================================================
+
+class TestScoreRanges:
+    """Tests to verify all scores are properly in 0-100 range."""
+
+    def test_overall_score_always_0_to_100(self, user_chart, connection_chart):
+        """Overall score must always be between 0 and 100."""
+        for mode, categories in [
+            ("romantic", ROMANTIC_CATEGORIES),
+            ("friendship", FRIENDSHIP_CATEGORIES),
+            ("coworker", COWORKER_CATEGORIES),
+        ]:
+            result = calculate_compatibility(user_chart, connection_chart, mode)
+            assert 0 <= result.mode.overall_score <= 100, \
+                f"Overall score {result.mode.overall_score} out of range for {mode}"
+
+    def test_category_scores_always_0_to_100(self, user_chart, connection_chart):
+        """Every category score must be between 0 and 100."""
+        for mode, categories in [
+            ("romantic", ROMANTIC_CATEGORIES),
+            ("friendship", FRIENDSHIP_CATEGORIES),
+            ("coworker", COWORKER_CATEGORIES),
+        ]:
+            result = calculate_compatibility(user_chart, connection_chart, mode)
+            for cat in result.mode.categories:
+                assert 0 <= cat.score <= 100, \
+                    f"Category {cat.id} score {cat.score} out of range for {mode}"
+
+    def test_scores_across_many_random_charts(self):
+        """Score ranges must hold across many different chart combinations."""
+        # Test with various date combinations to ensure robustness
+        test_dates = [
+            ("1980-01-15", "1985-07-20"),
+            ("1990-03-10", "1992-11-25"),
+            ("1975-08-01", "1988-04-15"),
+            ("1995-12-20", "1998-02-28"),
+            ("1982-05-05", "1986-09-10"),
+            ("1970-11-11", "1978-03-03"),
+            ("1993-06-21", "1997-08-08"),
+            ("1985-04-04", "1991-10-30"),
+        ]
+
+        for date1, date2 in test_dates:
+            result = get_compatibility_from_birth_data(
+                user_birth_date=date1,
+                user_birth_time=None,
+                user_birth_lat=None,
+                user_birth_lon=None,
+                user_birth_timezone=None,
+                connection_birth_date=date2,
+                relationship_type="romantic",
+            )
+
+            assert 0 <= result.mode.overall_score <= 100, \
+                f"Overall score {result.mode.overall_score} out of range for {date1}/{date2}"
+
+            for cat in result.mode.categories:
+                assert 0 <= cat.score <= 100, \
+                    f"Category {cat.id} score {cat.score} out of range for {date1}/{date2}"
+
+    def test_neutral_score_is_around_50(self, simple_user_chart, simple_connection_chart):
+        """Mean score across categories should be around 50 (neutral)."""
+        result = calculate_compatibility(simple_user_chart, simple_connection_chart, "romantic")
+        scores = [cat.score for cat in result.mode.categories]
+        mean_score = sum(scores) / len(scores)
+        # Should be roughly in the 30-70 range (not all extreme)
+        assert 20 <= mean_score <= 80, \
+            f"Mean score {mean_score} too extreme (expected 20-80)"
+
+    def test_no_hard_clamping_at_boundaries(self):
+        """Scores should use sigmoid, not hard clamping at 0/100."""
+        # Run many comparisons and check we don't see clustering at 0 or 100
+        extreme_count = 0
+        total_categories = 0
+
+        test_dates = [
+            ("1980-01-15", "1985-07-20"),
+            ("1990-03-10", "2000-11-25"),
+            ("1960-08-01", "1988-04-15"),
+            ("1995-12-20", "1998-02-28"),
+            ("1970-05-05", "1999-09-10"),
+        ]
+
+        for date1, date2 in test_dates:
+            result = get_compatibility_from_birth_data(
+                user_birth_date=date1,
+                user_birth_time=None,
+                user_birth_lat=None,
+                user_birth_lon=None,
+                user_birth_timezone=None,
+                connection_birth_date=date2,
+                relationship_type="romantic",
+            )
+
+            for cat in result.mode.categories:
+                total_categories += 1
+                # Check if score is at exact boundary (indicating hard clamping)
+                if cat.score == 0 or cat.score == 100:
+                    extreme_count += 1
+
+        # With sigmoid, we shouldn't have many exact 0s or 100s
+        extreme_rate = extreme_count / total_categories
+        assert extreme_rate < 0.1, \
+            f"Too many boundary scores ({extreme_rate*100:.1f}%), suggesting hard clamping"

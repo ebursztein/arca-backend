@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-02 17:56:05
+> Auto-generated on 2025-12-03 22:21:16
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -629,7 +629,7 @@ Get compatibility analysis between user and a connection.
 | `relationship_label` | string (enum: RelationshipLabel) | Yes | PydanticUndefined | - | Specific label (crush/partner/best_friend/boss/etc) |
 | `vibe` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Personalized vibe sentence with their name, e.g., 'Great ... |
 | `vibe_score` | int | Yes | PydanticUndefined | >= 0, <= 100 | 0-100 score (70-100=positive, 40-70=neutral, 0-40=challen... |
-| `key_transit` | string | Yes | PydanticUndefined | min_length: 1, max_length: 500 | Most significant transit, e.g., 'Transit Venus trine your... |
+| `key_transit` | string | null | No | null | max_length: 500 | Most significant transit, e.g., 'Transit Venus trine your... |
 
 ### Astrometers
 
@@ -975,7 +975,7 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `id` | string | Yes | PydanticUndefined | - | Category ID for iOS state management |
 | `name` | string | Yes | PydanticUndefined | - | Display name (e.g., 'Emotional Connection') |
-| `score` | int | Yes | PydanticUndefined | >= -100, <= 100 | Category score: -100 (challenging) to +100 (flowing) |
+| `score` | int | Yes | PydanticUndefined | >= 0, <= 100 | Category score: 0 (challenging) to 100 (flowing), 50 is n... |
 | `insight` | string | null | No | null | - | LLM-generated 1-2 sentence insight for this category |
 | `aspect_ids` | string[] | No | PydanticUndefined | - | Top 3-5 aspect IDs driving this score, ordered by tightes... |
 

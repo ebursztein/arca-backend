@@ -53,21 +53,29 @@ def calculate_scores_for_date(args):
             # Filter aspects for this meter
             filtered = filter_aspects(all_aspects, config, natal_chart)
 
-            # Calculate DTI/HQS
+            # Calculate DTI/HQS and V2 scores
             if filtered:
                 score = calculate_astrometers(filtered)
                 dti = score.dti
                 hqs = score.hqs
+                # V2 decoupled scores
+                intensity_v2 = score.intensity
+                harmony_coef = score.harmony_coefficient
             else:
                 dti = 0.0
                 hqs = 0.0
+                intensity_v2 = 0.0
+                harmony_coef = 0.0
 
             results.append({
                 "chart_id": chart_data["chart_id"],
                 "date": date_str,
                 "meter": meter_name,
                 "dti": dti,
-                "hqs": hqs
+                "hqs": hqs,
+                # V2 fields
+                "intensity_v2": intensity_v2,
+                "harmony_coefficient": harmony_coef,
             })
 
         return results
@@ -202,13 +210,24 @@ def generate_calibration_constants(scores_csv: str, output_json: str):
             for pct in range(1, 100)
         }
 
+        # V2: intensity percentiles (Gaussian power sum)
+        intensity_v2_percentiles = {}
+        if 'intensity_v2' in meter_data.columns:
+            intensity_v2_percentiles = {
+                f"p{pct:02d}": meter_data['intensity_v2'].quantile(pct / 100.0)
+                for pct in range(1, 100)
+            }
+
         meters[meter_name] = {
             "dti_percentiles": dti_percentiles,
-            "hqs_percentiles": hqs_percentiles
+            "hqs_percentiles": hqs_percentiles,
+            "intensity_v2_percentiles": intensity_v2_percentiles,
         }
 
         print(f"{meter_name}:")
         print(f"  DTI p25={dti_percentiles['p25']:.2f}, p75={dti_percentiles['p75']:.2f}, p99={dti_percentiles['p99']:.2f}")
+        if intensity_v2_percentiles:
+            print(f"  V2I p25={intensity_v2_percentiles['p25']:.2f}, p75={intensity_v2_percentiles['p75']:.2f}, p99={intensity_v2_percentiles['p99']:.2f}")
         print(f"  HQS p01={hqs_percentiles['p01']:.2f}, p25={hqs_percentiles['p25']:.2f}, p75={hqs_percentiles['p75']:.2f}, p99={hqs_percentiles['p99']:.2f}")
 
     # Build calibration constants

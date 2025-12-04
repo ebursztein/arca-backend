@@ -16,22 +16,22 @@ from astro import (
     get_sun_sign,
     get_sun_sign_profile,
     compute_birth_chart,
-    summarize_transits_with_natal,
+    format_transit_summary_for_ui,
 )
 from llm import generate_daily_horoscope
 
 console = Console()
 
 
-def visualize_daily_horoscope(daily_horoscope: DailyHoroscope, sun_sign: str, date: str):
+def visualize_daily_horoscope(daily_horoscope: DailyHoroscope, sun_sign: str, date: str) -> None:
     """Visualize the complete structure of a DailyHoroscope object."""
 
     console.print(f"\n[bold cyan]{'=' * 70}[/bold cyan]")
-    console.print(f"[bold cyan]DAILY HOROSCOPE STRUCTURE[/bold cyan]")
+    console.print("[bold cyan]DAILY HOROSCOPE STRUCTURE[/bold cyan]")
     console.print(f"[bold cyan]{'=' * 70}[/bold cyan]\n")
 
     # Display date and sign
-    console.print(f"[bold cyan]{date} • {sun_sign.title()}[/bold cyan]\n")
+    console.print(f"[bold cyan]{date} - {sun_sign.title()}[/bold cyan]\n")
 
     # Daily Theme Headline
     console.print(Panel(
@@ -54,16 +54,17 @@ def visualize_daily_horoscope(daily_horoscope: DailyHoroscope, sun_sign: str, da
         border_style="yellow"
     ))
 
-    # Astrometers Summary
-    astrometers_summary = f"""overall_intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})
-overall_harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})
-overall_unified_quality: {daily_horoscope.astrometers.overall_unified_quality.value.upper()}
-aspect_count: {daily_horoscope.astrometers.aspect_count}
+    # Astrometers Summary (v2 structure)
+    astrometers = daily_horoscope.astrometers
+    astrometers_summary = f"""overall_unified_score: {astrometers.overall_unified_score:.1f} (-100 to +100)
+overall_intensity: {astrometers.overall_intensity.intensity:.1f}/100 ({astrometers.overall_intensity.state_label})
+overall_harmony: {astrometers.overall_harmony.harmony:.1f}/100 ({astrometers.overall_harmony.state_label})
+overall_quality: {astrometers.overall_quality.upper()}
+overall_state: {astrometers.overall_state}
 
-key_aspects (top 3):"""
-
-    for key_aspect in daily_horoscope.astrometers.key_aspects[:3]:
-        astrometers_summary += f"\n  • {key_aspect.description}"
+Top Active Meters: {', '.join(astrometers.top_active_meters[:3])}
+Top Challenging: {', '.join(astrometers.top_challenging_meters[:3])}
+Top Flowing: {', '.join(astrometers.top_flowing_meters[:3])}"""
 
     console.print(Panel(
         astrometers_summary,
@@ -79,103 +80,62 @@ key_aspects (top 3):"""
         border_style="green"
     ))
 
-    # Lunar Cycle Update
-    console.print(Panel(
-        daily_horoscope.lunar_cycle_update,
-        title="[bold white]lunar_cycle_update[/bold white]",
-        border_style="white"
-    ))
-
     # ========================================================================
-    # DETAILED METER DATA
+    # DETAILED METER DATA (v2 hierarchical structure)
     # ========================================================================
     console.print(f"\n[bold yellow]{'=' * 70}[/bold yellow]")
-    console.print(f"[bold yellow]ASTROMETERS DETAILED BREAKDOWN[/bold yellow]")
+    console.print("[bold yellow]ASTROMETERS DETAILED BREAKDOWN (v2)[/bold yellow]")
     console.print(f"[bold yellow]{'=' * 70}[/bold yellow]\n")
 
     # Overall metrics
-    console.print(f"[yellow]Overall Metrics:[/yellow]")
-    console.print(f"  • overall_intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})")
-    console.print(f"  • overall_harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})")
-    console.print(f"  • overall_unified_quality: {daily_horoscope.astrometers.overall_unified_quality.value.upper()}")
-    console.print(f"  • aspect_count: {daily_horoscope.astrometers.aspect_count}\n")
+    console.print("[yellow]Overall Metrics:[/yellow]")
+    console.print(f"  - overall_unified_score: {astrometers.overall_unified_score:.1f} (-100 to +100)")
+    console.print(f"  - overall_intensity: {astrometers.overall_intensity.intensity:.1f}/100 ({astrometers.overall_intensity.state_label})")
+    console.print(f"  - overall_harmony: {astrometers.overall_harmony.harmony:.1f}/100 ({astrometers.overall_harmony.state_label})")
+    console.print(f"  - overall_quality: {astrometers.overall_quality.upper()}")
+    console.print(f"  - overall_state: {astrometers.overall_state}\n")
 
-    # All key aspects
-    console.print(f"[yellow]key_aspects ({len(daily_horoscope.astrometers.key_aspects)} total):[/yellow]")
-    for i, key_aspect in enumerate(daily_horoscope.astrometers.key_aspects, 1):
-        console.print(f"  {i}. {key_aspect.description}")
-        console.print(f"     Affects {key_aspect.meter_count} meters: {', '.join(key_aspect.affected_meters)}")
-        console.print(f"     DTI: {key_aspect.aspect.dti_contribution:.1f} | HQS: {key_aspect.aspect.hqs_contribution:.1f}")
+    # 5 Meter Groups with nested meters
+    console.print("[yellow]5 Meter Groups (17 meters total):[/yellow]\n")
 
-    # All 23 individual meters grouped by domain
-    console.print(f"\n[yellow]All 23 Individual Meters by Domain:[/yellow]\n")
+    for group in astrometers.groups:
+        console.print(f"[cyan]{group.display_name} ({group.group_name}):[/cyan]")
+        console.print(f"  Group unified_score: {group.unified_score:.1f} | intensity: {group.intensity:.1f} | harmony: {group.harmony:.1f}")
+        console.print(f"  Quality: {group.quality.upper()} | State: {group.state_label}")
+        if group.interpretation:
+            console.print(f"  Interpretation: {group.interpretation[:100]}...")
 
-    meters_by_domain = {
-        "Global Meters": [
-            ("overall_intensity", daily_horoscope.astrometers.overall_intensity),
-            ("overall_harmony", daily_horoscope.astrometers.overall_harmony)
-        ],
-        "Emotional Meters": [
-            ("emotional_intensity", daily_horoscope.astrometers.emotional_intensity),
-            ("relationship_harmony", daily_horoscope.astrometers.relationship_harmony),
-            ("emotional_resilience", daily_horoscope.astrometers.emotional_resilience)
-        ],
-        "Cognitive Meters": [
-            ("clarity", daily_horoscope.astrometers.clarity),
-            ("decision_quality", daily_horoscope.astrometers.decision_quality),
-            ("communication_flow", daily_horoscope.astrometers.communication_flow)
-        ],
-        "Physical/Action Meters": [
-            ("physical_energy", daily_horoscope.astrometers.physical_energy),
-            ("conflict_risk", daily_horoscope.astrometers.conflict_risk),
-            ("motivation_drive", daily_horoscope.astrometers.motivation_drive)
-        ],
-        "Life Domain Meters": [
-            ("career_ambition", daily_horoscope.astrometers.ambition_ambition),
-            ("opportunity_window", daily_horoscope.astrometers.opportunity_window),
-            ("challenge_intensity", daily_horoscope.astrometers.challenge_intensity),
-            ("transformation_pressure", daily_horoscope.astrometers.transformation_pressure)
-        ],
-        "Specialized Meters": [
-            ("intuition_spirituality", daily_horoscope.astrometers.intuition_spirituality),
-            ("innovation_breakthrough", daily_horoscope.astrometers.innovation_breakthrough),
-            ("karmic_lessons", daily_horoscope.astrometers.karmic_lessons),
-            ("social_collective", daily_horoscope.astrometers.social_collective)
-        ],
-        "Element Meters": [
-            ("fire_energy", daily_horoscope.astrometers.fire_energy),
-            ("earth_energy", daily_horoscope.astrometers.earth_energy),
-            ("air_energy", daily_horoscope.astrometers.air_energy),
-            ("water_energy", daily_horoscope.astrometers.water_energy)
-        ]
-    }
-
-    for domain, meters in meters_by_domain.items():
-        console.print(f"[cyan]{domain}:[/cyan]")
-        for meter_name, meter_reading in meters:
-            console.print(f"  • {meter_name}: {meter_reading.unified_score:.1f}/100 ({meter_reading.unified_quality.value.upper()})")
-            console.print(f"    intensity: {meter_reading.intensity:.1f} | harmony: {meter_reading.harmony:.1f} | state: {meter_reading.state_label}")
+        # Show individual meters in this group
+        console.print("  Meters:")
+        for meter in group.meters:
+            console.print(f"    - {meter.name}: unified={meter.unified_score:.1f}, intensity={meter.intensity:.1f}, harmony={meter.harmony:.1f}")
+            console.print(f"      {meter.quality.upper()} | {meter.state_label}")
         console.print()
+
+    # Top insights
+    console.print("[yellow]Top Insights:[/yellow]")
+    console.print(f"  Top Active: {', '.join(astrometers.top_active_meters)}")
+    console.print(f"  Top Challenging: {', '.join(astrometers.top_challenging_meters)}")
+    console.print(f"  Top Flowing: {', '.join(astrometers.top_flowing_meters)}")
 
     # Metadata
     console.print(f"\n[bold cyan]{'=' * 70}[/bold cyan]")
-    console.print(f"[bold cyan]METADATA[/bold cyan]")
+    console.print("[bold cyan]METADATA[/bold cyan]")
     console.print(f"[bold cyan]{'=' * 70}[/bold cyan]\n")
 
     console.print(f"[cyan]model_used:[/cyan] {daily_horoscope.model_used}")
     console.print(f"[cyan]generation_time_ms:[/cyan] {daily_horoscope.generation_time_ms}")
-    console.print(f"[cyan]usage:[/cyan]")
-    console.print(f"  • prompt_token_count: {daily_horoscope.usage.get('prompt_token_count', 0)}")
-    console.print(f"  • candidates_token_count: {daily_horoscope.usage.get('candidates_token_count', 0)}")
-    console.print(f"  • thoughts_token_count: {daily_horoscope.usage.get('thoughts_token_count', 0)}")
-    console.print(f"  • cached_content_token_count: {daily_horoscope.usage.get('cached_content_token_count', 0)}")
-    console.print(f"  • total_token_count: {daily_horoscope.usage.get('total_token_count', 0)}")
+    console.print("[cyan]usage:[/cyan]")
+    console.print(f"  - prompt_token_count: {daily_horoscope.usage.get('prompt_token_count', 0)}")
+    console.print(f"  - candidates_token_count: {daily_horoscope.usage.get('candidates_token_count', 0)}")
+    console.print(f"  - thoughts_token_count: {daily_horoscope.usage.get('thoughts_token_count', 0)}")
+    console.print(f"  - cached_content_token_count: {daily_horoscope.usage.get('cached_content_token_count', 0)}")
+    console.print(f"  - total_token_count: {daily_horoscope.usage.get('total_token_count', 0)}")
 
     console.print(f"\n[bold cyan]{'=' * 70}[/bold cyan]\n")
 
-    console.print(daily_horoscope)
 
-def main():
+def main() -> None:
     """Generate a sample daily horoscope and visualize its structure."""
     console.print("\n[bold magenta]Generating sample daily horoscope...[/bold magenta]\n")
 
@@ -191,10 +151,10 @@ def main():
     sun_sign_profile = get_sun_sign_profile(sun_sign)
 
     # Compute birth chart
-    console.print(f"[cyan]Computing birth chart...[/cyan]")
+    console.print("[cyan]Computing birth chart...[/cyan]")
     natal_chart, is_exact = compute_birth_chart(birth_date)
 
-    # Create user profile
+    # Create user profile (v2 with trial fields)
     user_profile = UserProfile(
         user_id="test_user_001",
         name="Jane",
@@ -208,28 +168,31 @@ def main():
         natal_chart=natal_chart,
         exact_chart=is_exact,
         is_premium=False,
-        premium_expiry="",
+        premium_expiry=None,
+        is_trial_active=False,
+        trial_end_date=None,
+        photo_path=None,
         created_at=datetime.now().isoformat(),
         last_active=datetime.now().isoformat()
     )
 
-    # Get transit data
-    console.print(f"[cyan]Computing transits...[/cyan]")
+    # Get transit data using new API
+    console.print("[cyan]Computing transits...[/cyan]")
     transit_chart, _ = compute_birth_chart(today, birth_time="12:00")
-    transit_data = summarize_transits_with_natal(natal_chart, transit_chart)
+    transit_summary = format_transit_summary_for_ui(natal_chart, transit_chart)
 
     # Create empty memory
     memory = create_empty_memory("test_user_001")
 
     # Generate daily horoscope
-    console.print(f"[cyan]Generating daily horoscope...[/cyan]\n")
-    daily_horoscope, _ = generate_daily_horoscope(
+    console.print("[cyan]Generating daily horoscope...[/cyan]\n")
+    daily_horoscope = generate_daily_horoscope(
         date=today,
         user_profile=user_profile,
         sun_sign_profile=sun_sign_profile,
-        transit_data=transit_data,
+        transit_summary=transit_summary,
         memory=memory,
-        entities=[],  # No entities for visualization test
+        featured_connection=None,
         model_name="gemini-2.5-flash-lite"
     )
 

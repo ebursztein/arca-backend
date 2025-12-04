@@ -60,6 +60,269 @@ def get_orb_weight(orb: float) -> float:
     return 0.0
 
 
+# Aspect type weights - how much each aspect type contributes to scoring
+# Conjunction is strongest (binding), sextile/quincunx are weakest
+ASPECT_TYPE_WEIGHTS: dict[str, float] = {
+    "conjunction": 1.2,
+    "trine": 1.0,
+    "opposition": 0.9,
+    "square": 0.8,
+    "sextile": 0.7,
+    "quincunx": 0.6,
+}
+
+
+# =============================================================================
+# Element Compatibility (Phase 1b)
+# =============================================================================
+
+# Element compatibility matrix
+# Fire + Air = harmonious (both active/yang)
+# Earth + Water = harmonious (both receptive/yin)
+# Same element = very harmonious
+# Fire + Water = challenging (steam/conflict)
+# Other combinations = neutral
+ELEMENT_COMPATIBILITY: dict[tuple[str, str], float] = {
+    # Same element - very compatible
+    ("fire", "fire"): 0.3,
+    ("earth", "earth"): 0.3,
+    ("air", "air"): 0.3,
+    ("water", "water"): 0.3,
+    # Complementary pairs - compatible
+    ("fire", "air"): 0.2,
+    ("air", "fire"): 0.2,
+    ("earth", "water"): 0.2,
+    ("water", "earth"): 0.2,
+    # Challenging pairs
+    ("fire", "water"): -0.2,
+    ("water", "fire"): -0.2,
+    ("fire", "earth"): -0.1,
+    ("earth", "fire"): -0.1,
+    # Neutral pairs
+    ("air", "water"): 0.0,
+    ("water", "air"): 0.0,
+    ("air", "earth"): 0.0,
+    ("earth", "air"): 0.0,
+}
+
+# Which categories use element scoring and which planet pairs to check
+# Format: category_id -> list of (user_planet, their_planet) to check elements
+CATEGORY_ELEMENT_PAIRS: dict[str, list[tuple[str, str]]] = {
+    "emotional": [("moon", "moon"), ("sun", "moon"), ("moon", "sun")],
+    "attraction": [("venus", "mars"), ("mars", "venus")],
+    "values": [("sun", "venus"), ("venus", "sun"), ("sun", "sun")],
+}
+
+# Maximum element bonus/penalty contribution
+ELEMENT_MAX_CONTRIBUTION = 0.3
+
+
+def get_element_score(
+    chart1: "NatalChartData",
+    chart2: "NatalChartData",
+    planet_pairs: list[tuple[str, str]]
+) -> float:
+    """
+    Calculate element compatibility score for given planet pairs.
+
+    Returns average element compatibility across all pairs, clamped to [-0.3, +0.3].
+    """
+    if not planet_pairs:
+        return 0.0
+
+    scores = []
+    for p1_name, p2_name in planet_pairs:
+        # Find planets in charts
+        p1 = next((p for p in chart1.planets if p.name.value == p1_name), None)
+        p2 = next((p for p in chart2.planets if p.name.value == p2_name), None)
+
+        if p1 and p2:
+            e1 = p1.element.value
+            e2 = p2.element.value
+            compat = ELEMENT_COMPATIBILITY.get((e1, e2), 0.0)
+            scores.append(compat)
+
+    if not scores:
+        return 0.0
+
+    avg_score = sum(scores) / len(scores)
+    return max(-ELEMENT_MAX_CONTRIBUTION, min(ELEMENT_MAX_CONTRIBUTION, avg_score))
+
+
+# =============================================================================
+# Score Smoothing Configuration (Phase 2)
+# =============================================================================
+# Each category uses different planets for chart-based variation,
+# different sigmoid steepness, and different variation amplitude.
+# This creates natural distribution without hard clamping.
+
+import math
+
+CATEGORY_SMOOTHING_CONFIG: dict[str, dict] = {
+    "attraction": {
+        "planets": ["venus", "mars"],  # Passion planets
+        "steepness": 0.028,  # Moderate compression
+        "max_var": 12,  # More variation - attraction is volatile
+    },
+    "communication": {
+        "planets": ["mercury"],
+        "steepness": 0.030,
+        "max_var": 8,
+    },
+    "emotional": {
+        "planets": ["moon"],
+        "steepness": 0.025,  # Gentler - emotions are nuanced
+        "max_var": 10,
+    },
+    "longTerm": {
+        "planets": ["saturn"],
+        "steepness": 0.022,  # Gentlest - long term is most stable
+        "max_var": 15,  # More variation to smooth bimodal tendency
+    },
+    "growth": {
+        "planets": ["jupiter", "north node"],
+        "steepness": 0.030,
+        "max_var": 8,
+    },
+    "values": {
+        "planets": ["sun", "venus"],
+        "steepness": 0.028,
+        "max_var": 10,
+    },
+    # Friendship categories
+    "fun": {
+        "planets": ["venus", "jupiter"],
+        "steepness": 0.028,
+        "max_var": 10,
+    },
+    "loyalty": {
+        "planets": ["saturn", "moon"],
+        "steepness": 0.025,
+        "max_var": 12,
+    },
+    "sharedInterests": {
+        "planets": ["mercury", "jupiter"],
+        "steepness": 0.028,
+        "max_var": 8,
+    },
+    # Coworker categories
+    "collaboration": {
+        "planets": ["mercury", "mars"],
+        "steepness": 0.028,
+        "max_var": 10,
+    },
+    "reliability": {
+        "planets": ["saturn"],
+        "steepness": 0.025,
+        "max_var": 12,
+    },
+    "ambition": {
+        "planets": ["mars", "jupiter"],
+        "steepness": 0.028,
+        "max_var": 10,
+    },
+    "powerDynamics": {
+        "planets": ["pluto", "saturn"],
+        "steepness": 0.025,
+        "max_var": 12,
+    },
+}
+
+
+def _sigmoid_compress(score: float, steepness: float = 0.025) -> float:
+    """
+    Compress score using sigmoid function.
+    Maps any input to (0, 100) range smoothly.
+    No hard clamping needed.
+
+    The sigmoid naturally avoids true 0 or 100 - extreme inputs
+    asymptotically approach the bounds but never reach them.
+    """
+    # Sigmoid outputs 0-1, then scale to 0-100
+    sigmoid_val = 1 / (1 + math.exp(-steepness * score))
+    return sigmoid_val * 100
+
+
+def _get_planet_degrees_from_chart(chart: "NatalChartData", planet_names: list[str]) -> list[float]:
+    """Extract absolute degrees for specified planets from chart."""
+    degrees = []
+    for planet in chart.planets:
+        name = planet.get("name", "").lower() if isinstance(planet, dict) else planet.name.lower()
+        if name in [pn.lower() for pn in planet_names]:
+            degree = planet.get("absolute_degree", 0) if isinstance(planet, dict) else planet.absolute_degree
+            degrees.append(degree)
+    return degrees if degrees else [0.0]
+
+
+def _chart_variation_for_category(
+    chart1: "NatalChartData",
+    chart2: "NatalChartData",
+    category_id: str,
+) -> float:
+    """
+    Calculate deterministic variation based on category-specific planet positions.
+    Uses fractional degrees to create smooth, consistent variation per pair.
+    """
+    config = CATEGORY_SMOOTHING_CONFIG.get(category_id, {
+        "planets": ["sun"],
+        "max_var": 10,
+    })
+    planet_names = config["planets"]
+    max_var = config["max_var"]
+
+    degrees1 = _get_planet_degrees_from_chart(chart1, planet_names)
+    degrees2 = _get_planet_degrees_from_chart(chart2, planet_names)
+
+    # Use degree within sign (0-30) for smooth distribution
+    frac1 = sum(d % 30 for d in degrees1) / 30
+    frac2 = sum(d % 30 for d in degrees2) / 30
+
+    # Add category-specific seed for uniqueness between categories
+    seed = hash(category_id) % 1000 / 1000
+    combined = (frac1 + frac2 + seed) % 2  # 0-2 range
+
+    # Map to [-max_var, +max_var]
+    return (combined - 1) * max_var
+
+
+def _smooth_category_score(
+    raw_score: float,
+    chart1: Optional["NatalChartData"],
+    chart2: Optional["NatalChartData"],
+    category_id: str,
+) -> int:
+    """
+    Apply category-specific smoothing: variation first, then sigmoid.
+    Order: raw_score + chart_variation -> sigmoid_compress
+
+    Returns score in 0-100 range where:
+    - 0-30: Challenging
+    - 30-50: Below average
+    - 50: Neutral
+    - 50-70: Above average
+    - 70-100: Flowing/harmonious
+    """
+    if chart1 is None or chart2 is None:
+        # Fallback to simple sigmoid if charts not available
+        config = CATEGORY_SMOOTHING_CONFIG.get(category_id, {"steepness": 0.025})
+        return int(round(_sigmoid_compress(raw_score, steepness=config.get("steepness", 0.025))))
+
+    config = CATEGORY_SMOOTHING_CONFIG.get(category_id, {
+        "planets": ["sun"],
+        "steepness": 0.025,
+        "max_var": 10,
+    })
+
+    # Step 1: Add chart-based variation to raw score
+    variation = _chart_variation_for_category(chart1, chart2, category_id)
+    adjusted = raw_score + variation
+
+    # Step 2: Apply sigmoid compression (naturally bounded to 0-100)
+    smoothed = _sigmoid_compress(adjusted, steepness=config.get("steepness", 0.025))
+
+    return int(round(smoothed))
+
+
 # =============================================================================
 # Category Definitions by Relationship Mode
 # =============================================================================
@@ -67,85 +330,191 @@ def get_orb_weight(orb: float) -> float:
 # Each category maps to a list of planet pairs to check
 # Format: (planet1, planet2) where we check aspects between chart1.planet1 and chart2.planet2
 
+# Expanded planet pairs to ensure 5+ signals per category (reduces bimodal extremes)
 ROMANTIC_CATEGORIES = {
     "emotional": [
+        # Core: Moon connections
         ("moon", "moon"), ("moon", "venus"), ("venus", "moon"),
         ("moon", "neptune"), ("neptune", "moon"),
+        # Sun-Moon cross aspects for emotional understanding
+        ("sun", "moon"), ("moon", "sun"),
+        # Venus-Neptune for romantic idealization
+        ("venus", "neptune"), ("neptune", "venus"),
+        # Added Phase 1b: More emotional signals
+        ("moon", "saturn"), ("saturn", "moon"),  # Emotional security
+        ("venus", "venus"),  # Affection style
+        ("sun", "neptune"), ("neptune", "sun"),  # Idealization of identity
     ],
     "communication": [
+        # Core: Mercury connections
         ("mercury", "mercury"), ("mercury", "moon"), ("moon", "mercury"),
         ("mercury", "venus"), ("venus", "mercury"),
+        # Sun-Mercury for understanding each other's core
+        ("sun", "mercury"), ("mercury", "sun"),
+        # Mercury-Jupiter for expanding dialogue
+        ("mercury", "jupiter"), ("jupiter", "mercury"),
+        # Added Phase 1b: More communication signals
+        ("mercury", "mars"), ("mars", "mercury"),  # Direct communication
+        ("mercury", "saturn"), ("saturn", "mercury"),  # Serious dialogue
+        ("mercury", "uranus"), ("uranus", "mercury"),  # Exciting ideas
     ],
     "attraction": [
+        # Core: Venus-Mars chemistry
         ("venus", "mars"), ("mars", "venus"),
         ("mars", "mars"), ("venus", "venus"),
+        # Sun connections for magnetic attraction
+        ("sun", "venus"), ("venus", "sun"),
+        ("sun", "mars"), ("mars", "sun"),
+        # Pluto for intensity
+        ("venus", "pluto"), ("pluto", "venus"),
+        ("mars", "pluto"), ("pluto", "mars"),
     ],
     "values": [
+        # Core: Venus-Jupiter (values and growth)
         ("venus", "venus"), ("jupiter", "jupiter"),
         ("sun", "jupiter"), ("jupiter", "sun"),
         ("venus", "jupiter"), ("jupiter", "venus"),
+        # Sun-Sun for core value alignment
+        ("sun", "sun"),
+        # Moon-Jupiter for emotional values
+        ("moon", "jupiter"), ("jupiter", "moon"),
+        # Added Phase 1b: More value signals
+        ("sun", "venus"), ("venus", "sun"),  # Core aesthetic values
+        ("moon", "venus"), ("venus", "moon"),  # Emotional values
+        ("saturn", "jupiter"), ("jupiter", "saturn"),  # Growth vs stability values
     ],
     "longTerm": [
+        # Core: Saturn connections (commitment and structure)
         ("saturn", "sun"), ("sun", "saturn"),
         ("saturn", "moon"), ("moon", "saturn"),
         ("saturn", "venus"), ("venus", "saturn"),
         ("sun", "sun"),
+        # Saturn-Saturn for shared approach to responsibility
+        ("saturn", "saturn"),
+        # Saturn-Jupiter for balancing growth and stability
+        ("saturn", "jupiter"), ("jupiter", "saturn"),
     ],
     "growth": [
+        # Core: Pluto connections (transformation)
         ("pluto", "sun"), ("sun", "pluto"),
         ("pluto", "moon"), ("moon", "pluto"),
         ("pluto", "venus"), ("venus", "pluto"),
+        # North Node: future growth direction
         ("north node", "sun"), ("sun", "north node"),
         ("north node", "moon"), ("moon", "north node"),
+        ("north node", "venus"), ("venus", "north node"),
+        # South Node: past patterns to release/transform
+        ("south node", "sun"), ("sun", "south node"),
+        ("south node", "moon"), ("moon", "south node"),
+        ("south node", "saturn"), ("saturn", "south node"),
+        # Jupiter-Pluto for transformative growth
+        ("jupiter", "pluto"), ("pluto", "jupiter"),
     ],
 }
 
 FRIENDSHIP_CATEGORIES = {
     "emotional": [
+        # Core: Moon connections
         ("moon", "moon"), ("moon", "venus"), ("venus", "moon"),
         ("sun", "moon"), ("moon", "sun"),
+        # Added: Venus-Venus for affection
+        ("venus", "venus"),
+        # Added: Neptune for intuitive understanding
+        ("moon", "neptune"), ("neptune", "moon"),
     ],
     "communication": [
+        # Core: Mercury connections
         ("mercury", "mercury"), ("mercury", "jupiter"), ("jupiter", "mercury"),
         ("mercury", "sun"), ("sun", "mercury"),
+        # Added: Mercury-Moon for emotional communication
+        ("mercury", "moon"), ("moon", "mercury"),
+        # Added: Mercury-Uranus for exciting ideas
+        ("mercury", "uranus"), ("uranus", "mercury"),
     ],
     "fun": [
+        # Core: Jupiter and Sun (joy and vitality)
         ("jupiter", "jupiter"), ("sun", "sun"),
         ("mars", "jupiter"), ("jupiter", "mars"),
         ("venus", "jupiter"), ("jupiter", "venus"),
+        # Added: Sun-Jupiter for shared enthusiasm
+        ("sun", "jupiter"), ("jupiter", "sun"),
+        # Added: Mars-Mars for active fun
+        ("mars", "mars"),
+        # Added: Uranus for spontaneity
+        ("jupiter", "uranus"), ("uranus", "jupiter"),
     ],
     "loyalty": [
+        # Core: Saturn connections
         ("saturn", "moon"), ("moon", "saturn"),
         ("saturn", "sun"), ("sun", "saturn"),
+        # Added: Saturn-Saturn for mutual reliability
+        ("saturn", "saturn"),
+        # Added: Saturn-Venus for lasting affection
+        ("saturn", "venus"), ("venus", "saturn"),
+        # Added: Moon-Moon for emotional loyalty
+        ("moon", "moon"),
     ],
     "sharedInterests": [
+        # Core: Venus and Mercury connections
         ("venus", "venus"), ("mercury", "venus"), ("venus", "mercury"),
         ("moon", "venus"), ("venus", "moon"),
+        # Added: Mercury-Mercury for intellectual interests
+        ("mercury", "mercury"),
+        # Added: Jupiter-Venus for cultural interests
+        ("jupiter", "venus"), ("venus", "jupiter"),
     ],
 }
 
 COWORKER_CATEGORIES = {
     "communication": [
+        # Core: Mercury connections
         ("mercury", "mercury"), ("mercury", "saturn"), ("saturn", "mercury"),
         ("mercury", "mars"), ("mars", "mercury"),
+        # Added: Sun-Mercury for clear direction
+        ("sun", "mercury"), ("mercury", "sun"),
+        # Added: Mercury-Jupiter for big picture communication
+        ("mercury", "jupiter"), ("jupiter", "mercury"),
     ],
     "collaboration": [
+        # Core: Sun and Mars (leadership and action)
         ("sun", "sun"), ("mars", "mars"),
         ("sun", "mars"), ("mars", "sun"),
+        # Added: Jupiter connections for growth-oriented teamwork
+        ("sun", "jupiter"), ("jupiter", "sun"),
+        ("mars", "jupiter"), ("jupiter", "mars"),
+        # Added: Venus-Mars for complementary skills
+        ("venus", "mars"), ("mars", "venus"),
     ],
     "reliability": [
+        # Core: Saturn connections
         ("saturn", "sun"), ("sun", "saturn"),
         ("saturn", "moon"), ("moon", "saturn"),
         ("saturn", "saturn"),
+        # Added: Saturn-Mercury for consistent communication
+        ("saturn", "mercury"), ("mercury", "saturn"),
+        # Added: Saturn-Mars for disciplined execution
+        ("saturn", "mars"), ("mars", "saturn"),
     ],
     "ambition": [
+        # Core: Mars-Saturn-Jupiter triangle
         ("mars", "saturn"), ("saturn", "mars"),
         ("jupiter", "saturn"), ("saturn", "jupiter"),
         ("mars", "jupiter"), ("jupiter", "mars"),
+        # Added: Sun-Saturn for career focus
+        ("sun", "saturn"), ("saturn", "sun"),
+        # Added: Pluto for transformative ambition
+        ("pluto", "jupiter"), ("jupiter", "pluto"),
     ],
     "powerDynamics": [
+        # Core: Pluto connections
         ("pluto", "sun"), ("sun", "pluto"),
         ("pluto", "mars"), ("mars", "pluto"),
+        # Added: Pluto-Saturn for structural power
+        ("pluto", "saturn"), ("saturn", "pluto"),
+        # Added: Sun-Sun for ego dynamics
+        ("sun", "sun"),
+        # Added: Mars-Mars for competition/cooperation
+        ("mars", "mars"),
     ],
 }
 
@@ -206,7 +575,7 @@ class CompatibilityCategory(BaseModel):
     """
     id: str = Field(description="Category ID for iOS state management")
     name: str = Field(description="Display name (e.g., 'Emotional Connection')")
-    score: int = Field(ge=-100, le=100, description="Category score: -100 (challenging) to +100 (flowing)")
+    score: int = Field(ge=0, le=100, description="Category score: 0 (challenging) to 100 (flowing), 50 is neutral")
     insight: Optional[str] = Field(None, description="LLM-generated 1-2 sentence insight for this category")
     aspect_ids: list[str] = Field(default_factory=list, description="Top 3-5 aspect IDs driving this score, ordered by tightest orb")
 
@@ -386,17 +755,33 @@ def calculate_synastry_aspects(
 
 def calculate_category_score(
     aspects: list[SynastryAspect],
-    planet_pairs: list[tuple[str, str]]
+    planet_pairs: list[tuple[str, str]],
+    category_id: str = "",
+    chart1: Optional["NatalChartData"] = None,
+    chart2: Optional["NatalChartData"] = None,
 ) -> tuple[int, list[str]]:
     """
-    Calculate score for a category based on relevant aspects.
+    Calculate score for a category based on relevant aspects and element compatibility.
+
+    Uses aspect-type weights to give more influence to stronger aspects
+    (conjunction > trine > opposition > square > sextile > quincunx).
+
+    Element compatibility (Phase 1b) adds a small bonus/penalty for categories
+    that have element pairs defined (emotional, attraction, values).
+
+    Score smoothing (Phase 2) applies chart-based variation + sigmoid compression
+    to create natural distributions without hard clamping. Each category uses
+    different planets for variation based on astrological relevance.
 
     Args:
         aspects: All synastry aspects
         planet_pairs: List of (planet1, planet2) tuples for this category
+        category_id: Category identifier for element/smoothing lookup
+        chart1: User's natal chart (for element scoring and smoothing)
+        chart2: Connection's natal chart (for element scoring and smoothing)
 
     Returns:
-        Tuple of (score, list of aspect_ids)
+        Tuple of (smoothed score in range ~[-85, +85], list of aspect_ids)
     """
     total_score = 0.0
     total_weight = 0.0
@@ -408,32 +793,61 @@ def calculate_category_score(
         pair2 = (aspect.their_planet, aspect.user_planet)  # Check reverse too
 
         if pair1 in planet_pairs or pair2 in planet_pairs:
-            # Calculate weighted contribution
-            weight = get_orb_weight(aspect.orb)
+            # Get orb weight (tighter aspects count more)
+            orb_weight = get_orb_weight(aspect.orb)
 
-            # Score based on harmony
-            if aspect.is_harmonious:
-                score = 1.0
-            else:
-                score = -1.0
+            # Get aspect type weight (conjunction strongest, quincunx weakest)
+            aspect_type_weight = ASPECT_TYPE_WEIGHTS.get(aspect.aspect_type, 0.7)
 
-            total_score += score * weight
-            total_weight += weight
+            # Combined weight
+            combined_weight = orb_weight * aspect_type_weight
+
+            # Score based on harmony: +1 for harmonious, -1 for challenging
+            base_harmony = 1.0 if aspect.is_harmonious else -1.0
+
+            # Contribution = harmony direction * combined weight
+            contribution = base_harmony * combined_weight
+
+            total_score += contribution
+            total_weight += combined_weight
             aspect_ids.append(aspect.id)
 
-    # Normalize to -100 to +100
+    # Add element compatibility bonus/penalty (Phase 1b)
+    element_contribution = 0.0
+    if chart1 and chart2 and category_id in CATEGORY_ELEMENT_PAIRS:
+        element_pairs = CATEGORY_ELEMENT_PAIRS[category_id]
+        element_score = get_element_score(chart1, chart2, element_pairs)
+        # Element contributes as a soft signal with fixed weight
+        element_contribution = element_score
+        # Always add element weight to denominator for stability
+        total_weight += ELEMENT_MAX_CONTRIBUTION
+
+    # Normalize and apply smoothing (Phase 2)
+    # Raw scores go into sigmoid which outputs 0-100 (50 = neutral)
     if total_weight > 0:
+        # Add element contribution to the score
+        total_score += element_contribution
         normalized = (total_score / total_weight) * 100
-        return (int(round(normalized)), aspect_ids)
+        # Apply chart-based variation + sigmoid smoothing (outputs 0-100)
+        smoothed = _smooth_category_score(normalized, chart1, chart2, category_id)
+        return (smoothed, aspect_ids)
     else:
-        # No aspects found for this category - neutral
-        return (0, aspect_ids)
+        # No aspects found - use element score alone if available
+        if element_contribution != 0:
+            # Scale element-only score (will be small)
+            element_only = element_contribution / ELEMENT_MAX_CONTRIBUTION * 30
+            smoothed = _smooth_category_score(element_only, chart1, chart2, category_id)
+            return (smoothed, aspect_ids)
+        # No data at all - return neutral (50)
+        return (50, aspect_ids)
 
 
 def calculate_mode_compatibility(
     aspects: list[SynastryAspect],
     categories_config: dict[str, list[tuple[str, str]]],
-    mode_type: RelationshipType
+    mode_type: RelationshipType,
+    chart1: Optional["NatalChartData"] = None,
+    chart2: Optional["NatalChartData"] = None,
 ) -> ModeCompatibility:
     """
     Calculate compatibility for a single mode (romantic/friendship/coworker).
@@ -442,6 +856,8 @@ def calculate_mode_compatibility(
         aspects: All synastry aspects
         categories_config: Category definitions for this mode
         mode_type: The relationship type being calculated
+        chart1: User's natal chart (for element scoring)
+        chart2: Connection's natal chart (for element scoring)
 
     Returns:
         ModeCompatibility with scores per category
@@ -450,7 +866,9 @@ def calculate_mode_compatibility(
     total_score = 0
 
     for cat_id, planet_pairs in categories_config.items():
-        score, aspect_ids = calculate_category_score(aspects, planet_pairs)
+        score, aspect_ids = calculate_category_score(
+            aspects, planet_pairs, cat_id, chart1, chart2
+        )
 
         categories.append(CompatibilityCategory(
             id=cat_id,
@@ -462,14 +880,10 @@ def calculate_mode_compatibility(
 
         total_score += score
 
-    # Calculate overall score (normalize category sum to 0-100)
+    # Calculate overall score as average of category scores (all now 0-100)
     num_categories = len(categories)
-    max_possible = num_categories * 100
-    min_possible = num_categories * -100
-
-    # Map to 0-100 range
-    overall = int(round(((total_score - min_possible) / (max_possible - min_possible)) * 100))
-    overall = max(0, min(100, overall))  # Clamp
+    overall = int(round(total_score / num_categories)) if num_categories > 0 else 50
+    overall = max(0, min(100, overall))  # Safety clamp (should not be needed with sigmoid)
 
     return ModeCompatibility(
         type=mode_type,
@@ -574,74 +988,77 @@ def calculate_composite(
 
 
 # =============================================================================
-# Karmic/Nodal Aspect Detection
+# Karmic/Nodal Aspect Detection (Recalibrated for ~20-25% rate)
 # =============================================================================
 
-# Only hard aspects count for karmic connections (conjunction, opposition, square)
-# Sextiles and trines are too easy/common to feel "fated"
-KARMIC_ASPECTS = {"conjunction", "opposition", "square"}
+# Tiered planet system for karmic detection
+# Tier 1 (Badge-level): These planets create the strongest karmic bonds
+# Tier 2 (Undertone): These add flavor but don't alone trigger the badge
+KARMIC_TIER1_PLANETS = {"sun", "moon", "saturn", "pluto"}  # Badge-level
+KARMIC_TIER2_PLANETS = {"venus", "mars", "mercury"}  # Undertone only
 
-# Tiered orb thresholds by planet importance
-# Tier 1 (Fated): Sun, Moon, Saturn - the heavy hitters
-# Tier 2 (Personal): Venus, Mars, Mercury - personal but less binding
-# Generational planets (Jupiter+) excluded - not personal enough for synastry
-KARMIC_TIER1_PLANETS = {"sun", "moon", "saturn"}  # 3 degree orb
-KARMIC_TIER2_PLANETS = {"venus", "mars", "mercury"}  # 2 degree orb
-KARMIC_TIER1_ORB = 3.0
-KARMIC_TIER2_ORB = 2.0
+# Orb thresholds - very tight orbs with threshold=1 for ~5-7% rate
+KARMIC_TIER1_ORB = 1.0  # Sun, Moon, Saturn
+KARMIC_PLUTO_ORB = 0.75  # Pluto (generational, needs tightest orb)
+KARMIC_TIER2_ORB = 0.75  # Venus, Mars, Mercury
 
-# Interpretation hints distinguished by node and aspect type
-# North Node conjunction/opposition = future growth
-# South Node conjunction/opposition = past life familiarity
-# Square = tension/crisis demanding resolution
+# Primary aspects count toward the karmic badge
+KARMIC_PRIMARY_ASPECTS = {"conjunction", "opposition"}
+# Secondary aspects add flavor but don't count toward badge threshold
+# Only Saturn and Pluto squares count as secondary
+KARMIC_SECONDARY_ASPECTS = {"square"}
+KARMIC_SECONDARY_PLANETS = {"saturn", "pluto"}
 
-KARMIC_PLANET_HINTS_NORTH = {
+# Badge threshold: need at least this many Tier 1 primary aspects
+# Threshold=2 with both nodes gives ~5-10% rate
+KARMIC_BADGE_THRESHOLD = 2
+
+# Interpretation hints for North Node contacts (future growth)
+KARMIC_NORTH_HINTS = {
     "sun": "This relationship pulls you toward your future identity and life purpose",
     "moon": "Destined emotional growth - this connection evolves your inner world",
-    "saturn": "A binding pact to build a solid, long-term structure together",
-    "venus": "Fated to teach you new, higher standards of love and value",
+    "saturn": "A binding pact to build something lasting together",
+    "pluto": "Transformative destiny - this bond will change you both profoundly",
+    "venus": "Fated to teach you new standards of love and value",
     "mars": "This bond activates your ambition - you push each other forward",
-    "mercury": "Destined to expand your mind and teach you new languages of thought",
+    "mercury": "Destined to expand your mind and communication",
 }
 
-KARMIC_PLANET_HINTS_SOUTH = {
-    "sun": "Deep past-life familiarity - you recognized each other instantly",
+# Interpretation hints for South Node contacts (past-life familiarity)
+KARMIC_SOUTH_HINTS = {
+    "sun": "Deep past-life recognition - you knew each other instantly",
     "moon": "Uncanny emotional safety - feels like you've always known each other",
-    "saturn": "Heavy karmic bonds - a sense of duty or 'unfinished business' keeps you together",
-    "venus": "Past-life lovers reuniting - an instant, sweet, familiar affection",
-    "mars": "Old passions rekindled - intense chemistry but prone to familiar conflicts",
+    "saturn": "Heavy karmic bonds - a sense of unfinished business keeps you together",
+    "pluto": "Old souls reuniting - intense familiarity with shadow and depth",
+    "venus": "Past-life lovers - an instant, sweet, familiar affection",
+    "mars": "Old passions rekindled - intense chemistry from day one",
     "mercury": "Telepathic rapport - you pick up a conversation started lifetimes ago",
 }
 
-KARMIC_PLANET_HINTS_SQUARE = {
-    "sun": "A crisis of identity - you challenge each other's ego to force growth",
-    "moon": "Emotional tension that demands you resolve past patterns now",
-    "saturn": "Frustrating blocks or timing issues that test your commitment",
-    "venus": "Clashing values that force a re-evaluation of what you truly want",
-    "mars": "Friction and rivalry that demands you learn to act cooperatively",
-    "mercury": "Misunderstandings that force you to learn radical new ways of listening",
+KARMIC_SQUARE_HINTS = {
+    "saturn": "Karmic tension: frustrating blocks that test your commitment",
+    "pluto": "Karmic intensity: power struggles that demand transformation",
 }
 
 
 def _get_karmic_orb_threshold(planet_name: str) -> float:
     """Get the orb threshold for a planet based on its tier."""
-    if planet_name in KARMIC_TIER1_PLANETS:
+    if planet_name == "pluto":
+        return KARMIC_PLUTO_ORB
+    elif planet_name in KARMIC_TIER1_PLANETS:
         return KARMIC_TIER1_ORB
     elif planet_name in KARMIC_TIER2_PLANETS:
         return KARMIC_TIER2_ORB
-    return 0.0  # Exclude generational planets
+    return 0.0  # Exclude other planets
 
 
 def _get_karmic_hint(planet_name: str, node_name: str, aspect_type: str) -> str:
-    """Get the appropriate interpretation hint based on node and aspect type."""
+    """Get the interpretation hint based on planet, node, and aspect type."""
     if aspect_type == "square":
-        return KARMIC_PLANET_HINTS_SQUARE.get(planet_name, "")
-    elif node_name == "north node":
-        # Conjunction to North Node or Opposition (= conjunct South Node, but framed as North)
-        return KARMIC_PLANET_HINTS_NORTH.get(planet_name, "")
-    else:
-        # South Node contact = past life familiarity
-        return KARMIC_PLANET_HINTS_SOUTH.get(planet_name, "")
+        return KARMIC_SQUARE_HINTS.get(planet_name, "")
+    if node_name == "south node":
+        return KARMIC_SOUTH_HINTS.get(planet_name, "")
+    return KARMIC_NORTH_HINTS.get(planet_name, "")
 
 
 def calculate_karmic(
@@ -651,13 +1068,13 @@ def calculate_karmic(
     """
     Detect karmic/fated aspects between two charts.
 
-    Uses astrologer-recommended criteria:
-    - Only hard aspects (conjunction, opposition, square)
-    - Tiered orbs: Tier 1 (Sun/Moon/Saturn) = 3 deg, Tier 2 (Venus/Mars/Mercury) = 2 deg
-    - Generational planets excluded (not personal enough)
-
-    This gives ~20-25% probability of a karmic match, making it feel
-    "rare but attainable" rather than universal.
+    Recalibrated detection for ~5-10% badge rate:
+    - Both North and South Nodes checked
+    - Both directions: connection's planets -> user's nodes AND user's planets -> connection's nodes
+    - Primary aspects (conjunction, opposition) count toward badge
+    - Secondary aspects (Saturn/Pluto squares) add flavor only
+    - Badge requires 2+ Tier-1 primary aspects (across all nodes/directions)
+    - Tight orbs: 1deg for Tier 1, 0.75deg for Pluto/Tier 2
 
     Args:
         chart1: User's natal chart
@@ -666,88 +1083,115 @@ def calculate_karmic(
     Returns:
         Tuple of (Karmic for API response, list of KarmicAspectInternal for LLM prompting)
     """
-    karmic_aspects: list[KarmicAspectInternal] = []
-    nodes = ["north node", "south node"]
-    # Only personal planets - generational excluded
-    karmic_planets = list(KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS)
+    primary_aspects: list[KarmicAspectInternal] = []
+    secondary_aspects: list[KarmicAspectInternal] = []
+    all_karmic_planets = list(KARMIC_TIER1_PLANETS | KARMIC_TIER2_PLANETS)
 
-    # Check user's planets to connection's nodes
-    for planet_name in karmic_planets:
-        planet_deg = get_planet_degree(chart1, planet_name)
-        if planet_deg is None:
-            continue
+    # Get all node degrees (North and South for both charts)
+    user_north_deg = get_planet_degree(chart1, "north node")
+    user_south_deg = get_planet_degree(chart1, "south node")
+    conn_north_deg = get_planet_degree(chart2, "north node")
+    conn_south_deg = get_planet_degree(chart2, "south node")
 
-        orb_threshold = _get_karmic_orb_threshold(planet_name)
+    # Check if we have any node data
+    has_any_nodes = any([user_north_deg, user_south_deg, conn_north_deg, conn_south_deg])
+    if not has_any_nodes:
+        return Karmic(is_karmic=False, theme=None, destiny_note=None), []
 
-        for node_name in nodes:
-            node_deg = get_planet_degree(chart2, node_name)
-            if node_deg is None:
+    def check_planet_to_node(
+        planet_chart: NatalChartData,
+        node_deg: float,
+        node_name: str,
+        planet_owner: str,
+        node_owner: str
+    ) -> None:
+        """Check all planets from one chart against a node."""
+        for planet_name in all_karmic_planets:
+            planet_deg = get_planet_degree(planet_chart, planet_name)
+            if planet_deg is None:
                 continue
 
+            orb_threshold = _get_karmic_orb_threshold(planet_name)
             aspect_result = calculate_aspect(planet_deg, node_deg, planet_name, node_name)
+
             if aspect_result:
                 aspect_type, orb, _ = aspect_result
-                # Only hard aspects with tight orbs
-                if aspect_type in KARMIC_ASPECTS and orb <= orb_threshold:
-                    karmic_aspects.append(KarmicAspectInternal(
+
+                # Check for primary aspects (conjunction, opposition)
+                if aspect_type in KARMIC_PRIMARY_ASPECTS and orb <= orb_threshold:
+                    primary_aspects.append(KarmicAspectInternal(
                         planet=planet_name,
-                        planet_owner="user",
+                        planet_owner=planet_owner,
                         node=node_name,
-                        node_owner="connection",
+                        node_owner=node_owner,
                         aspect_type=aspect_type,
                         orb=round(orb, 2),
                         interpretation_hint=_get_karmic_hint(planet_name, node_name, aspect_type)
                     ))
 
-    # Check connection's planets to user's nodes
-    for planet_name in karmic_planets:
-        planet_deg = get_planet_degree(chart2, planet_name)
-        if planet_deg is None:
-            continue
-
-        orb_threshold = _get_karmic_orb_threshold(planet_name)
-
-        for node_name in nodes:
-            node_deg = get_planet_degree(chart1, node_name)
-            if node_deg is None:
-                continue
-
-            aspect_result = calculate_aspect(planet_deg, node_deg, planet_name, node_name)
-            if aspect_result:
-                aspect_type, orb, _ = aspect_result
-                # Only hard aspects with tight orbs
-                if aspect_type in KARMIC_ASPECTS and orb <= orb_threshold:
-                    karmic_aspects.append(KarmicAspectInternal(
+                # Check for secondary aspects (Saturn/Pluto squares only)
+                elif (aspect_type in KARMIC_SECONDARY_ASPECTS and
+                      planet_name in KARMIC_SECONDARY_PLANETS and
+                      orb <= orb_threshold):
+                    secondary_aspects.append(KarmicAspectInternal(
                         planet=planet_name,
-                        planet_owner="connection",
+                        planet_owner=planet_owner,
                         node=node_name,
-                        node_owner="user",
+                        node_owner=node_owner,
                         aspect_type=aspect_type,
                         orb=round(orb, 2),
                         interpretation_hint=_get_karmic_hint(planet_name, node_name, aspect_type)
                     ))
+
+    # Check all four combinations (both directions, both nodes)
+    # Connection's planets to User's nodes
+    if user_north_deg is not None:
+        check_planet_to_node(chart2, user_north_deg, "north node", "connection", "user")
+    if user_south_deg is not None:
+        check_planet_to_node(chart2, user_south_deg, "south node", "connection", "user")
+
+    # User's planets to Connection's nodes
+    if conn_north_deg is not None:
+        check_planet_to_node(chart1, conn_north_deg, "north node", "user", "connection")
+    if conn_south_deg is not None:
+        check_planet_to_node(chart1, conn_south_deg, "south node", "user", "connection")
 
     # Sort by orb (tightest first)
-    karmic_aspects.sort(key=lambda a: a.orb)
+    primary_aspects.sort(key=lambda a: a.orb)
+    secondary_aspects.sort(key=lambda a: a.orb)
 
-    # Determine primary theme from tightest aspect
+    # Count Tier 1 primary aspects for badge determination
+    tier1_primary_count = sum(
+        1 for a in primary_aspects
+        if a.planet in KARMIC_TIER1_PLANETS
+    )
+
+    # Determine if this qualifies for the karmic badge
+    # Badge requires 2+ Tier-1 primary aspects
+    has_badge = tier1_primary_count >= KARMIC_BADGE_THRESHOLD
+
+    # Combine all aspects for LLM context
+    all_karmic_aspects = primary_aspects + secondary_aspects
+
+    # Determine theme from tightest aspect
     theme = None
-    if karmic_aspects:
-        tightest = karmic_aspects[0]
+    if all_karmic_aspects:
+        tightest = all_karmic_aspects[0]
         if tightest.aspect_type == "square":
             theme = f"Karmic tension through {tightest.planet}"
-        elif tightest.node == "north node":
-            theme = f"Future growth through {tightest.planet}"
+        elif tightest.node == "south node":
+            theme = f"Past-life bond through {tightest.planet}"
         else:
-            theme = f"Past-life connection through {tightest.planet}"
+            theme = f"Fated growth through {tightest.planet}"
 
+    # is_karmic is True only if we have the badge (2+ Tier-1 primary aspects)
     karmic = Karmic(
-        is_karmic=len(karmic_aspects) > 0,
-        theme=theme,
+        is_karmic=has_badge,
+        theme=theme if has_badge else None,
         destiny_note=None  # Will be filled by LLM only if is_karmic
     )
 
-    return karmic, karmic_aspects
+    return karmic, all_karmic_aspects
 
 
 # =============================================================================
@@ -827,9 +1271,11 @@ def calculate_compatibility(
     # Calculate all synastry aspects (for iOS chart rendering)
     aspects = calculate_synastry_aspects(user_chart, connection_chart)
 
-    # Calculate only the requested mode
+    # Calculate only the requested mode (with element compatibility from Phase 1b)
     categories_config = MODE_CATEGORIES[relationship_type]
-    mode = calculate_mode_compatibility(aspects, categories_config, relationship_type)
+    mode = calculate_mode_compatibility(
+        aspects, categories_config, relationship_type, user_chart, connection_chart
+    )
 
     # Calculate composite (the "Purpose")
     composite = calculate_composite(user_chart, connection_chart)

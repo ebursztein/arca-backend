@@ -220,7 +220,7 @@ def get_station_modifier(days_from_station: int) -> float:
     return STATION_MODIFIER_MAX - (decline_per_day * days_from_station)
 
 # =============================================================================
-# Transit Planet Weights (Section 2.3.B - Transit Power)
+# Transit Planet Weights (Section 2.3.B - Transit Power) - LEGACY
 # =============================================================================
 
 TRANSIT_PLANET_WEIGHTS: Dict[Planet, float] = {
@@ -248,6 +248,142 @@ TRANSIT_PLANET_WEIGHTS: Dict[Planet, float] = {
     # South Node: karmic/destiny point (same as North Node)
     Planet.SOUTH_NODE: 1.5,
 }
+
+# =============================================================================
+# Velocity-Based Tiered System (V2 - "The Symphony")
+# =============================================================================
+# Transit planet defines time scale AND weight scale.
+# Fast planets = loud melody (high daily weight, short window)
+# Slow planets = quiet bass (low daily weight, long window)
+#
+# The key insight: normalize by "total area under curve" so that
+# rare long aspects don't drown out frequent short aspects.
+
+class TransitTier:
+    """Transit tier configuration."""
+    def __init__(self, name: str, window_days: float, weight: float):
+        self.name = name
+        self.window_days = window_days  # How long aspect is "active"
+        self.weight = weight  # Daily contribution weight
+
+
+# =============================================================================
+# Mixing Profiles - Different philosophies for tier weighting
+# =============================================================================
+# Each profile creates a different "feel" for the app:
+#
+# DAILY_PULSE: High engagement, gamification. Score changes dramatically daily.
+#   - Risk: Ignores major life transits, feels superficial during crisis
+#   - Target: ~50% trigger, ~30% event, ~20% context
+#
+# DEEP_CURRENT: Psychological accuracy. Life phases set the stage, days are actors.
+#   - Benefit: High credibility, acknowledges both daily mood and life chapter
+#   - Target: ~30% trigger, ~30% event, ~20% season, ~20% era
+#
+# FORECAST: Event prediction. Emphasizes external happenings over internal mood.
+#   - Target: ~20% trigger, ~50% event, ~30% outer
+
+MIXING_PROFILES: Dict[str, Dict[str, float]] = {
+    'daily_pulse': {
+        'trigger': 10.0,  # Moon dominates
+        'event': 4.0,
+        'season': 1.5,
+        'era': 0.5,
+    },
+    'deep_current': {
+        'trigger': 3.0,   # Compressed spread
+        'event': 3.0,     # Equal to trigger
+        'season': 2.0,    # Boosted
+        'era': 2.0,       # Boosted significantly
+    },
+    'forecast': {
+        'trigger': 2.0,   # Moon just for timing
+        'event': 5.0,     # Inner planets dominate
+        'season': 2.0,
+        'era': 3.0,       # Outer planets matter for big events
+    },
+}
+
+# Active mixing profile (can be changed at runtime or via config)
+ACTIVE_MIXING_PROFILE = 'deep_current'
+
+
+def get_tier_weights(profile: str = None) -> Dict[str, float]:
+    """Get tier weights for a mixing profile."""
+    if profile is None:
+        profile = ACTIVE_MIXING_PROFILE
+    return MIXING_PROFILES.get(profile, MIXING_PROFILES['deep_current'])
+
+
+# Tier definitions - time windows are fixed, weights come from mixing profile
+TRANSIT_TIERS: Dict[str, TransitTier] = {
+    # THE TRIGGER - Moon is the "second hand", provides daily variance
+    # ~12-24 hour window
+    'trigger': TransitTier('trigger', window_days=1.0, weight=get_tier_weights()['trigger']),
+
+    # THE EVENT - Inner planets are the "minute hand", weekly events
+    # ~4 day window
+    'event': TransitTier('event', window_days=4.0, weight=get_tier_weights()['event']),
+
+    # THE SEASON - Social planets are the "hour hand", monthly context
+    # ~45 day window
+    'season': TransitTier('season', window_days=45.0, weight=get_tier_weights()['season']),
+
+    # THE ERA - Outer planets are the "calendar", tectonic shifts
+    # ~100 day window
+    'era': TransitTier('era', window_days=100.0, weight=get_tier_weights()['era']),
+}
+
+
+def set_mixing_profile(profile: str) -> None:
+    """
+    Change the active mixing profile and update tier weights.
+
+    Args:
+        profile: One of 'daily_pulse', 'deep_current', 'forecast'
+    """
+    global ACTIVE_MIXING_PROFILE, TRANSIT_TIERS
+
+    if profile not in MIXING_PROFILES:
+        raise ValueError(f"Unknown profile: {profile}. Choose from {list(MIXING_PROFILES.keys())}")
+
+    ACTIVE_MIXING_PROFILE = profile
+    weights = MIXING_PROFILES[profile]
+
+    # Update tier weights
+    TRANSIT_TIERS['trigger'] = TransitTier('trigger', window_days=1.0, weight=weights['trigger'])
+    TRANSIT_TIERS['event'] = TransitTier('event', window_days=4.0, weight=weights['event'])
+    TRANSIT_TIERS['season'] = TransitTier('season', window_days=45.0, weight=weights['season'])
+    TRANSIT_TIERS['era'] = TransitTier('era', window_days=100.0, weight=weights['era'])
+
+# Map planets to their tiers
+PLANET_TO_TIER: Dict[Planet, str] = {
+    # Trigger tier - the melody
+    Planet.MOON: 'trigger',
+
+    # Event tier - weekly rhythm
+    Planet.SUN: 'event',
+    Planet.MERCURY: 'event',
+    Planet.VENUS: 'event',
+    Planet.MARS: 'event',
+
+    # Season tier - monthly context
+    Planet.JUPITER: 'season',
+    Planet.SATURN: 'season',
+
+    # Era tier - the bass
+    Planet.URANUS: 'era',
+    Planet.NEPTUNE: 'era',
+    Planet.PLUTO: 'era',
+    Planet.NORTH_NODE: 'era',
+    Planet.SOUTH_NODE: 'era',
+}
+
+
+def get_transit_tier(planet: Planet) -> TransitTier:
+    """Get the tier configuration for a transit planet."""
+    tier_name = PLANET_TO_TIER.get(planet, 'event')
+    return TRANSIT_TIERS[tier_name]
 
 # =============================================================================
 # Quality Factors (Section 2.3.C - Quality Factor)

@@ -9,10 +9,11 @@ import pytest
 import os
 
 from compatibility import (
-    calculate_compatibility,
+    get_compatibility_from_birth_data,
+    CompatibilityData,
     CompatibilityResult,
 )
-from astro import compute_birth_chart, NatalChartData
+from llm import generate_compatibility_result
 
 
 @pytest.fixture
@@ -25,249 +26,220 @@ def api_key():
 
 
 @pytest.fixture
-def user_chart():
-    """User's natal chart."""
-    chart_dict, _ = compute_birth_chart(
-        birth_date="1990-06-15",
-        birth_time="14:30",
-        birth_timezone="America/New_York",
-        birth_lat=40.7128,
-        birth_lon=-74.0060
+def compatibility_data() -> CompatibilityData:
+    """Pre-calculated compatibility data for romantic relationship."""
+    return get_compatibility_from_birth_data(
+        user_birth_date="1990-06-15",
+        user_birth_time="14:30",
+        user_birth_lat=40.7128,
+        user_birth_lon=-74.0060,
+        user_birth_timezone="America/New_York",
+        connection_birth_date="1992-03-22",
+        connection_birth_time="09:15",
+        connection_birth_lat=34.0522,
+        connection_birth_lon=-118.2437,
+        connection_birth_timezone="America/Los_Angeles",
+        relationship_type="romantic",
+        user_name="Sarah",
+        connection_name="Mike",
     )
-    return NatalChartData(**chart_dict)
-
-
-@pytest.fixture
-def connection_chart():
-    """Connection's natal chart."""
-    chart_dict, _ = compute_birth_chart(
-        birth_date="1992-03-22",
-        birth_time="09:15",
-        birth_timezone="America/Los_Angeles",
-        birth_lat=34.0522,
-        birth_lon=-118.2437
-    )
-    return NatalChartData(**chart_dict)
-
-
-@pytest.fixture
-def compatibility_result(user_chart, connection_chart):
-    """Pre-calculated compatibility result."""
-    return calculate_compatibility(user_chart, connection_chart)
 
 
 class TestLLMFunctionImport:
     """Tests that LLM functions can be imported."""
 
-    def test_import_generate_compatibility_interpretation(self):
+    def test_import_generate_compatibility_result(self):
         """Should be able to import the function."""
-        from llm import generate_compatibility_interpretation
-        assert callable(generate_compatibility_interpretation)
+        from llm import generate_compatibility_result
+        assert callable(generate_compatibility_result)
 
 
 class TestCompatibilityInterpretation:
     """Tests for real LLM compatibility interpretation."""
 
-    def test_generates_valid_interpretation(self, api_key, compatibility_result):
-        """Real LLM should generate valid interpretation structure."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
-            user_name="Sarah",
-            user_sun_sign="gemini",
-            connection_name="Mike",
-            connection_sun_sign="aries",
+    def test_generates_valid_result(self, api_key, compatibility_data):
+        """Real LLM should generate valid CompatibilityResult."""
+        result = generate_compatibility_result(
+            compatibility_data=compatibility_data,
             relationship_category="love",
             relationship_label="partner",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
+
+        # Should return a CompatibilityResult
+        assert isinstance(result, CompatibilityResult)
 
         # Check required fields are present
-        assert "headline" in result
-        assert "summary" in result
-        assert "strengths" in result
-        assert "growth_areas" in result
-        assert "advice" in result
-        assert "category_summaries" in result
-        assert "aspect_interpretations" in result
-        assert "model_used" in result
-        assert "generation_time_ms" in result
+        assert result.headline is not None
+        assert result.summary is not None
+        assert result.strengths is not None
+        assert result.growth_areas is not None
+        assert result.advice is not None
+        assert result.mode is not None
 
-    def test_headline_is_meaningful(self, api_key, compatibility_result):
+    def test_headline_is_meaningful(self, api_key, compatibility_data):
         """Headline should be a meaningful string."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
-            user_name="Sarah",
-            user_sun_sign="gemini",
-            connection_name="Mike",
-            connection_sun_sign="aries",
+        result = generate_compatibility_result(
+            compatibility_data=compatibility_data,
             relationship_category="love",
             relationship_label="partner",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
 
-        assert isinstance(result["headline"], str)
-        assert len(result["headline"]) > 5  # More than just a few chars
+        assert isinstance(result.headline, str)
+        assert len(result.headline) > 5  # More than just a few chars
 
-    def test_romantic_has_category_summaries(self, api_key, compatibility_result):
-        """Romantic type should have romantic category summaries."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
-            user_name="Sarah",
-            user_sun_sign="gemini",
-            connection_name="Mike",
-            connection_sun_sign="aries",
+    def test_romantic_has_category_insights(self, api_key, compatibility_data):
+        """Romantic type should have category insights."""
+        result = generate_compatibility_result(
+            compatibility_data=compatibility_data,
             relationship_category="love",
             relationship_label="partner",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
 
-        category_summaries = result["category_summaries"]
-        assert isinstance(category_summaries, dict)
-        # Should have romantic categories
-        romantic_categories = ["emotional", "communication", "attraction", "values", "longTerm", "growth"]
-        for cat in romantic_categories:
-            assert cat in category_summaries, f"Missing category: {cat}"
+        # Should have categories in mode
+        assert len(result.mode.categories) > 0
+        # Each category should have an insight
+        for cat in result.mode.categories:
+            assert cat.insight is not None
 
-    def test_friend_has_friendship_categories(self, api_key, compatibility_result):
-        """Friend type should have friendship category summaries."""
-        from llm import generate_compatibility_interpretation
+    def test_includes_aspects(self, api_key, compatibility_data):
+        """Should include aspects."""
+        result = generate_compatibility_result(
+            compatibility_data=compatibility_data,
+            relationship_category="love",
+            relationship_label="partner",
+            api_key=api_key
+        )
 
-        result = generate_compatibility_interpretation(
+        assert result.aspects is not None
+        assert isinstance(result.aspects, list)
+
+
+class TestFriendshipCompatibility:
+    """Tests for friendship compatibility."""
+
+    @pytest.fixture
+    def friendship_data(self) -> CompatibilityData:
+        """Compatibility data for friendship."""
+        return get_compatibility_from_birth_data(
+            user_birth_date="1990-06-15",
+            user_birth_time="14:30",
+            user_birth_lat=40.7128,
+            user_birth_lon=-74.0060,
+            user_birth_timezone="America/New_York",
+            connection_birth_date="1992-03-22",
+            connection_birth_time="09:15",
+            connection_birth_lat=34.0522,
+            connection_birth_lon=-118.2437,
+            connection_birth_timezone="America/Los_Angeles",
+            relationship_type="friendship",
             user_name="Sarah",
-            user_sun_sign="gemini",
             connection_name="Mike",
-            connection_sun_sign="aries",
+        )
+
+    def test_friend_generates_valid_result(self, api_key, friendship_data):
+        """Friend type should generate valid result."""
+        result = generate_compatibility_result(
+            compatibility_data=friendship_data,
             relationship_category="friend",
             relationship_label="friend",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
 
-        category_summaries = result["category_summaries"]
-        # Should have friendship categories
-        friendship_categories = ["emotional", "communication", "fun", "loyalty", "sharedInterests"]
-        for cat in friendship_categories:
-            assert cat in category_summaries, f"Missing category: {cat}"
+        assert isinstance(result, CompatibilityResult)
+        assert result.headline is not None
 
-    def test_coworker_has_work_categories(self, api_key, compatibility_result):
-        """Coworker type should have work category summaries."""
-        from llm import generate_compatibility_interpretation
 
-        result = generate_compatibility_interpretation(
+class TestCoworkerCompatibility:
+    """Tests for coworker compatibility."""
+
+    @pytest.fixture
+    def coworker_data(self) -> CompatibilityData:
+        """Compatibility data for coworker relationship."""
+        return get_compatibility_from_birth_data(
+            user_birth_date="1990-06-15",
+            user_birth_time="14:30",
+            user_birth_lat=40.7128,
+            user_birth_lon=-74.0060,
+            user_birth_timezone="America/New_York",
+            connection_birth_date="1992-03-22",
+            connection_birth_time="09:15",
+            connection_birth_lat=34.0522,
+            connection_birth_lon=-118.2437,
+            connection_birth_timezone="America/Los_Angeles",
+            relationship_type="coworker",
             user_name="Sarah",
-            user_sun_sign="gemini",
             connection_name="Mike",
-            connection_sun_sign="aries",
+        )
+
+    def test_coworker_generates_valid_result(self, api_key, coworker_data):
+        """Coworker type should generate valid result."""
+        result = generate_compatibility_result(
+            compatibility_data=coworker_data,
             relationship_category="coworker",
             relationship_label="colleague",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
 
-        category_summaries = result["category_summaries"]
-        # Should have coworker categories
-        coworker_categories = ["communication", "collaboration", "reliability", "ambition", "powerDynamics"]
-        for cat in coworker_categories:
-            assert cat in category_summaries, f"Missing category: {cat}"
-
-    def test_includes_aspect_interpretations(self, api_key, compatibility_result):
-        """Should include aspect interpretations."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
-            user_name="Sarah",
-            user_sun_sign="gemini",
-            connection_name="Mike",
-            connection_sun_sign="aries",
-            relationship_category="love",
-            relationship_label="partner",
-            compatibility_result=compatibility_result,
-            api_key=api_key
-        )
-
-        aspect_interpretations = result["aspect_interpretations"]
-        assert isinstance(aspect_interpretations, list)
-        # Should have interpretations if there are aspects
-        if len(compatibility_result.aspects) > 0:
-            assert len(aspect_interpretations) > 0
-
-    def test_generation_time_tracked(self, api_key, compatibility_result):
-        """Generation time should be tracked in ms."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
-            user_name="Sarah",
-            user_sun_sign="gemini",
-            connection_name="Mike",
-            connection_sun_sign="aries",
-            relationship_category="love",
-            relationship_label="partner",
-            compatibility_result=compatibility_result,
-            api_key=api_key
-        )
-
-        assert "generation_time_ms" in result
-        assert isinstance(result["generation_time_ms"], int)
-        assert result["generation_time_ms"] > 0
-
-    def test_model_name_returned(self, api_key, compatibility_result):
-        """Model name should be returned."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
-            user_name="Sarah",
-            user_sun_sign="gemini",
-            connection_name="Mike",
-            connection_sun_sign="aries",
-            relationship_category="love",
-            relationship_label="partner",
-            compatibility_result=compatibility_result,
-            api_key=api_key
-        )
-
-        assert "model_used" in result
-        assert "gemini" in result["model_used"]
+        assert isinstance(result, CompatibilityResult)
+        assert result.headline is not None
 
 
 class TestSpecialCharacters:
     """Tests for special characters in names."""
 
-    def test_handles_hyphenated_names(self, api_key, compatibility_result):
+    def test_handles_hyphenated_names(self, api_key):
         """Should handle hyphenated names."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
+        data = get_compatibility_from_birth_data(
+            user_birth_date="1990-06-15",
+            user_birth_time="14:30",
+            user_birth_lat=40.7128,
+            user_birth_lon=-74.0060,
+            user_birth_timezone="America/New_York",
+            connection_birth_date="1992-03-22",
+            connection_birth_time="09:15",
+            connection_birth_lat=34.0522,
+            connection_birth_lon=-118.2437,
+            connection_birth_timezone="America/Los_Angeles",
+            relationship_type="romantic",
             user_name="Marie-Claire",
-            user_sun_sign="gemini",
             connection_name="Jean-Pierre",
-            connection_sun_sign="aries",
+        )
+
+        result = generate_compatibility_result(
+            compatibility_data=data,
             relationship_category="love",
             relationship_label="partner",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
 
-        assert "headline" in result
+        assert result.headline is not None
 
-    def test_handles_apostrophe_names(self, api_key, compatibility_result):
+    def test_handles_apostrophe_names(self, api_key):
         """Should handle names with apostrophes."""
-        from llm import generate_compatibility_interpretation
-
-        result = generate_compatibility_interpretation(
+        data = get_compatibility_from_birth_data(
+            user_birth_date="1990-06-15",
+            user_birth_time="14:30",
+            user_birth_lat=40.7128,
+            user_birth_lon=-74.0060,
+            user_birth_timezone="America/New_York",
+            connection_birth_date="1992-03-22",
+            connection_birth_time="09:15",
+            connection_birth_lat=34.0522,
+            connection_birth_lon=-118.2437,
+            connection_birth_timezone="America/Los_Angeles",
+            relationship_type="romantic",
             user_name="Sarah",
-            user_sun_sign="gemini",
             connection_name="O'Brien",
-            connection_sun_sign="aries",
+        )
+
+        result = generate_compatibility_result(
+            compatibility_data=data,
             relationship_category="love",
             relationship_label="partner",
-            compatibility_result=compatibility_result,
             api_key=api_key
         )
 
-        assert "headline" in result
+        assert result.headline is not None

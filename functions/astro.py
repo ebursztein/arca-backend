@@ -350,7 +350,7 @@ class NatalChartData(BaseModel):
     houses: list[HouseCusp] = Field(min_length=12, max_length=12)
     aspects: list[AspectData]
     distributions: ChartDistributions
-    summary: Optional[str] = Field(None, description="LLM-generated chart interpretation (3-4 sentences)")
+    summary: Optional[str] = Field(default=None, description="LLM-generated chart interpretation (3-4 sentences)")
 
     class Config:
         json_schema_extra = {
@@ -672,7 +672,7 @@ def get_astro_chart(
             symbol=planet.symbol,
             position_dms=planet.signed_dms,
             sign=planet.sign.name,
-            degree_in_sign=round(planet.signed_deg + planet.minute / 60, 2),
+            degree_in_sign=min(round(planet.signed_deg + planet.minute / 60, 2), 29.99),
             absolute_degree=min(round(planet.degree % 360, 2), 359.99),
             house=data.house_of(planet),
             speed=round(planet.speed, 4),
@@ -693,7 +693,7 @@ def get_astro_chart(
                 symbol=north_node.symbol if hasattr(north_node, 'symbol') else "☊",
                 position_dms=north_node.signed_dms,
                 sign=north_node.sign.name,
-                degree_in_sign=round(north_node.signed_deg + north_node.minute / 60, 2),
+                degree_in_sign=min(round(north_node.signed_deg + north_node.minute / 60, 2), 29.99),
                 absolute_degree=min(round(north_node.degree % 360, 2), 359.99),
                 house=data.house_of(north_node),
                 speed=round(north_node.speed, 4),
@@ -738,7 +738,7 @@ def get_astro_chart(
                 symbol="☋",
                 position_dms=f"{int(south_node_degree_in_sign)}°{south_node_sign.value[:3].upper()}",
                 sign=south_node_sign,
-                degree_in_sign=round(south_node_degree_in_sign, 2),
+                degree_in_sign=min(round(south_node_degree_in_sign, 2), 29.99),
                 absolute_degree=min(round(south_node_degree, 2), 359.99),
                 house=((data.house_of(north_node) + 5) % 12) + 1,  # Opposite house
                 speed=round(north_node.speed, 4),
@@ -753,7 +753,7 @@ def get_astro_chart(
         HouseCusp(
             number=house.value,
             sign=house.sign.name,
-            degree_in_sign=round(house.degree % 30, 2),
+            degree_in_sign=min(round(house.degree % 30, 2), 29.99),
             absolute_degree=min(round(house.degree % 360, 2), 359.99),
             ruler=house.ruler,
             ruler_sign=house.ruler_sign,
@@ -786,25 +786,25 @@ def get_astro_chart(
     angles = ChartAngles(
         ascendant=AnglePosition(
             sign=data.asc.sign.name,
-            degree_in_sign=round(data.asc.signed_deg + data.asc.minute / 60, 2),
+            degree_in_sign=min(round(data.asc.signed_deg + data.asc.minute / 60, 2), 29.99),
             absolute_degree=min(round(data.asc.degree % 360, 2), 359.99),
             position_dms=data.asc.signed_dms
         ),
         imum_coeli=AnglePosition(
             sign=data.ic.sign.name,
-            degree_in_sign=round(data.ic.signed_deg + data.ic.minute / 60, 2),
+            degree_in_sign=min(round(data.ic.signed_deg + data.ic.minute / 60, 2), 29.99),
             absolute_degree=min(round(data.ic.degree % 360, 2), 359.99),
             position_dms=data.ic.signed_dms
         ),
         descendant=AnglePosition(
             sign=data.dsc.sign.name,
-            degree_in_sign=round(data.dsc.signed_deg + data.dsc.minute / 60, 2),
+            degree_in_sign=min(round(data.dsc.signed_deg + data.dsc.minute / 60, 2), 29.99),
             absolute_degree=min(round(data.dsc.degree % 360, 2), 359.99),
             position_dms=data.dsc.signed_dms
         ),
         midheaven=AnglePosition(
             sign=data.mc.sign.name,
-            degree_in_sign=round(data.mc.signed_deg + data.mc.minute / 60, 2),
+            degree_in_sign=min(round(data.mc.signed_deg + data.mc.minute / 60, 2), 29.99),
             absolute_degree=min(round(data.mc.degree % 360, 2), 359.99),
             position_dms=data.mc.signed_dms
         )

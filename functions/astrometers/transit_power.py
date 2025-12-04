@@ -20,6 +20,7 @@ From spec Section 2.3.B (Transit Power) and Section 4.1-4.2 (Aspect Detection)
 
 import sys
 import os
+import math
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import Optional, Tuple
@@ -386,3 +387,369 @@ def get_aspect_direction_status(
     tomorrow_deviation = abs(angle_tomorrow - exact_angle)
 
     return get_direction_modifier(today_deviation, tomorrow_deviation)
+
+
+# =============================================================================
+# Part 3: Velocity-Based Tiered Scoring ("The Symphony")
+# =============================================================================
+# This is the V2 scoring system that uses time-normalized orbs and
+# frequency-based weighting to create dynamic daily meter variation.
+#
+# Key principles:
+# 1. Transit planet defines time scale (fast = short window, slow = long window)
+# 2. Transit planet defines weight scale (fast = high weight, slow = low weight)
+# 3. Squared closeness ("The Spike") makes exact aspects pop
+# 4. Total area under curve is normalized so Moon doesn't get drowned out
+
+# Safety clamps for dynamic orb limits
+DYNAMIC_ORB_MIN = 0.5  # Floor: don't let slow planets have vanishing orbs
+DYNAMIC_ORB_MAX = 8.0  # Cap: don't let fast planets have huge orbs
+
+# Aspect type modifiers (simpler than ASPECT_BASE_INTENSITY)
+ASPECT_MODIFIERS = {
+    AspectType.CONJUNCTION: 1.0,
+    AspectType.OPPOSITION: 1.0,
+    AspectType.SQUARE: 1.0,
+    AspectType.TRINE: 0.8,
+    AspectType.SEXTILE: 0.5,
+}
+
+
+def calculate_velocity_score(
+    transit_planet: Planet,
+    deviation_deg: float,
+    transit_speed: float,
+    aspect_type: AspectType,
+) -> Tuple[float, dict]:
+    """
+    Calculate aspect score using velocity-based tiered system.
+
+    Scores based on TIME (velocity) rather than SPACE (degrees).
+    The transit planet defines both the time window and the weight.
+
+    Formula:
+        dynamic_limit = (window_days * speed) / 2  (half window each side)
+        dynamic_limit = clamp(dynamic_limit, 0.5, 8.0)  (safety bounds)
+        closeness = 1 - (deviation / dynamic_limit)
+        intensity = closeness^2  (The Spike - sharper peak)
+        score = intensity * tier_weight * aspect_modifier
+
+    Args:
+        transit_planet: The transiting planet (defines tier)
+        deviation_deg: Degrees from exact aspect (orb)
+        transit_speed: Transit planet speed in degrees/day
+        aspect_type: Type of aspect (for modifier)
+
+    Returns:
+        Tuple[float, dict]: (score, breakdown)
+            score: The velocity-adjusted aspect score
+            breakdown: Components for debugging/visualization
+
+    Example:
+        >>> # Moon at 2 degrees from exact, moving 13 deg/day
+        >>> # dynamic_limit = (1.0 * 13) / 2 = 6.5 deg
+        >>> # closeness = 1 - (2 / 6.5) = 0.69
+        >>> # intensity = 0.69^2 = 0.48
+        >>> # score = 0.48 * 10.0 * 1.0 = 4.8
+
+        >>> # Pluto at 2 degrees from exact, moving 0.02 deg/day
+        >>> # dynamic_limit = (100 * 0.02) / 2 = 1.0 deg (clamped from calc)
+        >>> # closeness = 1 - (2 / 1.0) = -1.0 -> out of window
+        >>> # score = 0.0
+    """
+    from .constants import get_transit_tier
+
+    tier = get_transit_tier(transit_planet)
+
+    # Safety floor for stationary/retrograde planets
+    # 0.05 deg/day ensures stationary planets still register intensity
+    # (0.001 was too small - made stationary planets have zero intensity)
+    speed = max(abs(transit_speed), 0.05)
+
+    # Calculate dynamic orb limit based on time window
+    # Formula: Orb = (Days * Speed) / 2
+    # Divide by 2 because window is total (applying + separating)
+    dynamic_limit = (tier.window_days * speed) / 2.0
+
+    # Safety clamps to prevent extreme values
+    # - Moon at 13 deg/day, 1 day window: 6.5 deg (reasonable)
+    # - Pluto at 0.02 deg/day, 100 day window: 1.0 deg (reasonable)
+    # - But stationary planet could get ~0, so floor at 0.5
+    # - And very fast Mercury could get >10, so cap at 8
+    dynamic_limit = max(DYNAMIC_ORB_MIN, min(dynamic_limit, DYNAMIC_ORB_MAX))
+
+    # Calculate days from exact for reporting
+    days_from_exact = deviation_deg / speed
+
+    # Outside the dynamic limit = no contribution
+    if deviation_deg > dynamic_limit:
+        return 0.0, {
+            'tier': tier.name,
+            'dynamic_limit': dynamic_limit,
+            'days_from_exact': days_from_exact,
+            'closeness': 0.0,
+            'intensity': 0.0,
+            'tier_weight': tier.weight,
+            'aspect_modifier': ASPECT_MODIFIERS.get(aspect_type, 0.5),
+            'score': 0.0,
+            'in_window': False,
+        }
+
+    # Normalized closeness (0 at limit edge, 1 at exact)
+    closeness = 1.0 - (deviation_deg / dynamic_limit)
+
+    # The Spike: squared for sharper peak at exactitude
+    intensity = closeness ** 2
+
+    # Get aspect modifier
+    aspect_modifier = ASPECT_MODIFIERS.get(aspect_type, 0.5)
+
+    # Final score: intensity * tier weight * aspect modifier
+    score = intensity * tier.weight * aspect_modifier
+
+    breakdown = {
+        'tier': tier.name,
+        'dynamic_limit': dynamic_limit,
+        'days_from_exact': days_from_exact,
+        'closeness': closeness,
+        'intensity': intensity,
+        'tier_weight': tier.weight,
+        'aspect_modifier': aspect_modifier,
+        'score': score,
+        'in_window': True,
+    }
+
+    return score, breakdown
+
+
+def calculate_velocity_score_simple(
+    transit_planet: Planet,
+    deviation_deg: float,
+    transit_speed: float,
+) -> float:
+    """
+    Simplified velocity score without aspect type weighting.
+
+    Useful for quick calculations where aspect type is handled separately.
+
+    Returns:
+        float: Score from 0 to tier_weight (at exact)
+    """
+    from .constants import get_transit_tier
+
+    tier = get_transit_tier(transit_planet)
+    speed = max(abs(transit_speed), 0.001)
+
+    dynamic_limit = (tier.window_days * speed) / 2.0
+    dynamic_limit = max(DYNAMIC_ORB_MIN, min(dynamic_limit, DYNAMIC_ORB_MAX))
+
+    if deviation_deg > dynamic_limit:
+        return 0.0
+
+    closeness = 1.0 - (deviation_deg / dynamic_limit)
+    intensity = closeness ** 2
+
+    return intensity * tier.weight
+
+
+def get_tier_contribution_breakdown(
+    aspects: list,
+) -> dict:
+    """
+    Break down total score by tier for visualization.
+
+    Args:
+        aspects: List of dicts with 'transit_planet', 'score', 'tier'
+
+    Returns:
+        dict: {'trigger': X, 'event': Y, 'season': Z, 'era': W, 'total': T}
+    """
+    from .constants import TRANSIT_TIERS
+
+    breakdown = {tier: 0.0 for tier in TRANSIT_TIERS.keys()}
+    breakdown['total'] = 0.0
+
+    for asp in aspects:
+        tier = asp.get('tier', 'event')
+        score = asp.get('score', 0.0)
+        breakdown[tier] += score
+        breakdown['total'] += score
+
+    return breakdown
+
+
+# =============================================================================
+# Part 4: Gaussian Mixture Scoring
+# =============================================================================
+# This approach replaces hard orb cutoffs with smooth Gaussian curves.
+#
+# Key benefits:
+# 1. No hard edges - influence fades asymptotically to zero
+# 2. Constructive interference - overlapping aspects sum naturally
+# 3. Mathematically elegant - well-understood statistical properties
+#
+# Formula: f(t) = A * exp(-(t - mu)^2 / (2 * sigma^2))
+# Where:
+#   t - mu = time to exact (in days)
+#   A = tier weight
+#   sigma = time_window / 3 (so 99% within window)
+
+# Minimum contribution threshold (skip negligible influences)
+GAUSSIAN_MIN_CONTRIBUTION = 0.01
+
+# Sigma divisor: higher = narrower curve = more variation
+# 3.0 = 99% within window (standard), 9.0 = optimal for 35-50% variation
+# Tested values: 3.0=18%, 5.0=27%, 7.0=33%, 9.0=39%, 12.0=48%
+GAUSSIAN_SIGMA_DIVISOR = 9.0
+
+
+def calculate_gaussian_score(
+    transit_planet: Planet,
+    deviation_deg: float,
+    transit_speed: float,
+    aspect_type: AspectType,
+) -> Tuple[float, dict]:
+    """
+    Calculate aspect score using Gaussian (bell curve) decay.
+
+    Instead of a hard cutoff at the orb limit, the influence fades
+    smoothly following a Gaussian distribution. This creates:
+    - No hard edges (asymptotic fade to zero)
+    - Natural constructive interference when aspects overlap
+    - Sharper peaks at exactitude than squared closeness
+
+    Formula:
+        sigma = window_days / 3  (99% within window)
+        deviation_days = deviation_deg / speed
+        intensity = exp(-(deviation_days^2) / (2 * sigma^2))
+        score = intensity * tier_weight * aspect_modifier
+
+    At 1 sigma (1/3 of window): intensity = 60.7%
+    At 2 sigma (2/3 of window): intensity = 13.5%
+    At 3 sigma (full window):   intensity = 1.1%
+
+    Args:
+        transit_planet: The transiting planet (defines tier)
+        deviation_deg: Degrees from exact aspect (orb)
+        transit_speed: Transit planet speed in degrees/day
+        aspect_type: Type of aspect (for modifier)
+
+    Returns:
+        Tuple[float, dict]: (score, breakdown)
+            score: The Gaussian-weighted aspect score
+            breakdown: Components for debugging/visualization
+
+    Example:
+        >>> # Moon at 2 degrees from exact, moving 13 deg/day
+        >>> # deviation_days = 2 / 13 = 0.154 days
+        >>> # sigma = 1.0 / 3 = 0.333 days
+        >>> # intensity = exp(-(0.154^2) / (2 * 0.333^2)) = 0.90
+        >>> # score = 0.90 * 10.0 * 1.0 = 9.0
+    """
+    from .constants import get_transit_tier
+
+    tier = get_transit_tier(transit_planet)
+
+    # Safety floor for stationary/retrograde planets
+    # 0.05 deg/day ensures stationary planets still register intensity
+    # (0.001 was too small - made stationary planets have zero intensity)
+    speed = max(abs(transit_speed), 0.05)
+
+    # Convert deviation from degrees to days
+    deviation_days = deviation_deg / speed
+
+    # Calculate sigma: window_days / divisor controls the width
+    # Higher divisor = narrower curve = more day-to-day variation
+    sigma = tier.window_days / GAUSSIAN_SIGMA_DIVISOR
+
+    # Gaussian intensity: exp(-(t^2) / (2 * sigma^2))
+    intensity = math.exp(-(deviation_days ** 2) / (2 * sigma ** 2))
+
+    # Skip negligible contributions (> 3 sigma out)
+    if intensity < GAUSSIAN_MIN_CONTRIBUTION:
+        return 0.0, {
+            'tier': tier.name,
+            'sigma': sigma,
+            'deviation_days': deviation_days,
+            'intensity': intensity,
+            'tier_weight': tier.weight,
+            'aspect_modifier': ASPECT_MODIFIERS.get(aspect_type, 0.5),
+            'score': 0.0,
+            'in_window': False,
+        }
+
+    # Get aspect modifier
+    aspect_modifier = ASPECT_MODIFIERS.get(aspect_type, 0.5)
+
+    # Final score: intensity * tier weight * aspect modifier
+    score = intensity * tier.weight * aspect_modifier
+
+    breakdown = {
+        'tier': tier.name,
+        'sigma': sigma,
+        'deviation_days': deviation_days,
+        'intensity': intensity,
+        'tier_weight': tier.weight,
+        'aspect_modifier': aspect_modifier,
+        'score': score,
+        'in_window': True,
+    }
+
+    return score, breakdown
+
+
+def calculate_gaussian_score_simple(
+    transit_planet: Planet,
+    deviation_deg: float,
+    transit_speed: float,
+) -> float:
+    """
+    Simplified Gaussian score without aspect type weighting.
+
+    Returns:
+        float: Score from 0 to tier_weight (at exact)
+    """
+    from .constants import get_transit_tier
+
+    tier = get_transit_tier(transit_planet)
+    speed = max(abs(transit_speed), 0.001)
+
+    deviation_days = deviation_deg / speed
+    sigma = tier.window_days / GAUSSIAN_SIGMA_DIVISOR
+
+    intensity = math.exp(-(deviation_days ** 2) / (2 * sigma ** 2))
+
+    if intensity < GAUSSIAN_MIN_CONTRIBUTION:
+        return 0.0
+
+    return intensity * tier.weight
+
+
+def compare_scoring_methods(
+    transit_planet: Planet,
+    deviation_deg: float,
+    transit_speed: float,
+    aspect_type: AspectType,
+) -> dict:
+    """
+    Compare velocity (squared closeness) vs Gaussian scoring for same input.
+
+    Useful for understanding the difference between the two approaches.
+
+    Returns:
+        dict with 'velocity' and 'gaussian' scores and their breakdowns
+    """
+    vel_score, vel_breakdown = calculate_velocity_score(
+        transit_planet, deviation_deg, transit_speed, aspect_type
+    )
+
+    gauss_score, gauss_breakdown = calculate_gaussian_score(
+        transit_planet, deviation_deg, transit_speed, aspect_type
+    )
+
+    return {
+        'velocity': {'score': vel_score, 'breakdown': vel_breakdown},
+        'gaussian': {'score': gauss_score, 'breakdown': gauss_breakdown},
+        'difference': gauss_score - vel_score,
+        'ratio': gauss_score / vel_score if vel_score > 0 else float('inf'),
+    }

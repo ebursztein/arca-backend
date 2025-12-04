@@ -12,7 +12,6 @@ from google.genai import types
 
 from llm import (
     generate_daily_horoscope,
-    generate_compatibility_interpretation,
     generate_natal_chart_summary,
     select_featured_relationship,
     select_featured_connection
@@ -26,13 +25,6 @@ from models import (
     RelationshipMention,
     ConnectionMention,
     ActionableAdvice,
-)
-from compatibility import (
-    CompatibilityResult,
-    ModeCompatibility,
-    CompatibilityCategory,
-    SynastryAspect,
-    CompositeSummary
 )
 from astro import (
     compute_birth_chart,
@@ -350,82 +342,6 @@ def test_select_featured_connection_logic(sample_memory):
     )
     selected = select_featured_connection(connections, sample_memory, date)
     assert selected["connection_id"] == "c2"
-
-
-# =============================================================================
-# Tests for generate_compatibility_interpretation
-# =============================================================================
-
-def test_generate_compatibility_interpretation_success(mock_genai_client):
-    """Test compatibility interpretation generation."""
-    # Mock data
-    comp_result = CompatibilityResult(
-        calculated_at=datetime.now().isoformat(),
-        romantic=ModeCompatibility(
-            overall_score=85,
-            categories=[
-                CompatibilityCategory(id="emotional", name="Emotional", score=90),
-                CompatibilityCategory(id="communication", name="Comm", score=80)
-            ]
-        ),
-        friendship=ModeCompatibility(overall_score=80, categories=[]),
-        coworker=ModeCompatibility(overall_score=70, categories=[]),
-        aspects=[
-            SynastryAspect(id="asp1", user_planet="sun", their_planet="moon", aspect_type="conjunction", orb=1.0, is_harmonious=True)
-        ],
-        composite_summary=CompositeSummary(composite_sun="leo", composite_moon="aries")
-    )
-    
-    # Mock response
-    mock_resp_data = {
-        "headline": "Soulmates",
-        "summary": "Great match.",
-        "strengths": "Deep connection.",
-        "growth_areas": "None.",
-        "advice": "Enjoy it.",
-        "category_summaries": {
-            "emotional": "Very deep.",
-            "communication": "Clear."
-        },
-        "aspect_interpretations": [
-            {"aspect_id": "asp1", "interpretation": "Classic soulmate aspect."}
-        ]
-    }
-    
-    mock_response = MagicMock()
-    # Simulate parsed object
-    mock_parsed = MagicMock()
-    mock_parsed.model_dump.return_value = mock_resp_data
-    mock_response.parsed = mock_parsed
-    
-    mock_genai_client.models.generate_content.return_value = mock_response
-    
-    with patch("os.environ.get") as mock_env:
-        mock_env.side_effect = lambda k, default=None: "dummy_key" if "API_KEY" in k else default
-
-        result = generate_compatibility_interpretation(
-            user_name="User",
-            user_sun_sign="Gemini",
-            connection_name="Partner",
-            connection_sun_sign="Libra",
-            relationship_category="love",
-            relationship_label="partner",
-            compatibility_result=comp_result,
-            api_key="test_key",
-            posthog_api_key="test_ph_key"
-        )
-    
-    assert result["headline"] == "Soulmates"
-    assert result["category_summaries"]["emotional"] == "Very deep."
-    
-    # Verify prompt content
-    call_args = mock_genai_client.models.generate_content.call_args
-    prompt = call_args.kwargs["contents"]
-    assert "User" in prompt
-    assert "Partner" in prompt
-    assert "Gemini" in prompt
-    assert "Libra" in prompt
-    assert "85/100" in prompt # Score
 
 
 # =============================================================================

@@ -14,7 +14,7 @@ from datetime import datetime
 from compatibility import (
     calculate_compatibility,
     calculate_synastry_aspects,
-    CompatibilityResult,
+    CompatibilityData,
 )
 from astro import compute_birth_chart, NatalChartData
 
@@ -195,33 +195,19 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
 
-        # Verify all modes present
-        assert "romantic" in response
-        assert "friendship" in response
-        assert "coworker" in response
-
-        # Verify each mode has required fields
-        for mode in ["romantic", "friendship", "coworker"]:
-            assert "overall_score" in response[mode]
-            assert 0 <= response[mode]["overall_score"] <= 100
-            assert "categories" in response[mode]
-            assert isinstance(response[mode]["categories"], list)
+        # Verify mode has required fields
+        assert 0 <= result.mode.overall_score <= 100
+        assert isinstance(result.mode.categories, list)
 
         # Verify aspects
-        assert "aspects" in response
-        assert isinstance(response["aspects"], list)
+        assert isinstance(result.aspects, list)
 
-        # Verify composite_summary
-        assert "composite_summary" in response
-        assert "composite_sun" in response["composite_summary"]
-        assert "composite_moon" in response["composite_summary"]
-
-        # Verify timestamp
-        assert "calculated_at" in response
-        datetime.fromisoformat(response["calculated_at"])
+        # Verify composite
+        assert result.composite is not None
+        assert result.composite.sun_sign is not None
+        assert result.composite.moon_sign is not None
 
     def test_romantic_has_six_categories(self, user_natal_chart, connection_birth_data):
         """Romantic mode should have 6 categories."""
@@ -236,13 +222,12 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
 
-        assert len(response["romantic"]["categories"]) == 6
+        assert len(result.mode.categories) == 6
 
         expected_ids = {"emotional", "communication", "attraction", "values", "longTerm", "growth"}
-        actual_ids = {c["id"] for c in response["romantic"]["categories"]}
+        actual_ids = {c.id for c in result.mode.categories}
         assert actual_ids == expected_ids
 
     def test_friendship_has_five_categories(self, user_natal_chart, connection_birth_data):
@@ -258,13 +243,12 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "friendship")
 
-        assert len(response["friendship"]["categories"]) == 5
+        assert len(result.mode.categories) == 5
 
         expected_ids = {"emotional", "communication", "fun", "loyalty", "sharedInterests"}
-        actual_ids = {c["id"] for c in response["friendship"]["categories"]}
+        actual_ids = {c.id for c in result.mode.categories}
         assert actual_ids == expected_ids
 
     def test_coworker_has_five_categories(self, user_natal_chart, connection_birth_data):
@@ -280,13 +264,12 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "coworker")
 
-        assert len(response["coworker"]["categories"]) == 5
+        assert len(result.mode.categories) == 5
 
         expected_ids = {"communication", "collaboration", "reliability", "ambition", "powerDynamics"}
-        actual_ids = {c["id"] for c in response["coworker"]["categories"]}
+        actual_ids = {c.id for c in result.mode.categories}
         assert actual_ids == expected_ids
 
     def test_category_fields(self, user_natal_chart, connection_birth_data):
@@ -302,15 +285,14 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
 
-        for cat in response["romantic"]["categories"]:
-            assert "id" in cat
-            assert "name" in cat
-            assert "score" in cat
-            assert "aspect_ids" in cat
-            assert -100 <= cat["score"] <= 100
+        for cat in result.mode.categories:
+            assert cat.id is not None
+            assert cat.name is not None
+            assert cat.score is not None
+            assert cat.aspect_ids is not None
+            assert -100 <= cat.score <= 100
 
     def test_aspect_fields(self, user_natal_chart, connection_birth_data):
         """Each aspect should have required fields."""
@@ -325,22 +307,19 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
 
         valid_types = {"conjunction", "sextile", "square", "trine", "quincunx", "opposition"}
 
-        for aspect in response["aspects"][:10]:  # Check first 10
-            assert "id" in aspect
-            assert aspect["id"].startswith("asp_")
-            assert "user_planet" in aspect
-            assert "their_planet" in aspect
-            assert "aspect_type" in aspect
-            assert aspect["aspect_type"] in valid_types
-            assert "orb" in aspect
-            assert aspect["orb"] >= 0
-            assert "is_harmonious" in aspect
-            assert isinstance(aspect["is_harmonious"], bool)
+        for aspect in result.aspects[:10]:  # Check first 10
+            assert aspect.id is not None
+            assert aspect.id.startswith("asp_")
+            assert aspect.user_planet is not None
+            assert aspect.their_planet is not None
+            assert aspect.aspect_type is not None
+            assert aspect.aspect_type in valid_types
+            assert aspect.orb >= 0
+            assert isinstance(aspect.is_harmonious, bool)
 
     def test_compatibility_is_json_serializable(self, user_natal_chart, connection_birth_data):
         """Response should be JSON serializable."""
@@ -355,8 +334,14 @@ class TestCompatibilityLogic:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+
+        # Convert to dict for serialization test
+        response = {
+            "mode": result.mode.model_dump(),
+            "aspects": [a.model_dump() for a in result.aspects],
+            "composite": result.composite.model_dump(),
+        }
 
         # Should not raise
         json_str = json.dumps(response)
@@ -364,7 +349,7 @@ class TestCompatibilityLogic:
 
         # Should be parseable back
         parsed = json.loads(json_str)
-        assert parsed["romantic"]["overall_score"] == response["romantic"]["overall_score"]
+        assert parsed["mode"]["overall_score"] == result.mode.overall_score
 
 
 # =============================================================================
@@ -387,8 +372,8 @@ class TestInterpretationMerging:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+        response = result.mode.model_dump()
 
         # Mock interpretation with category summaries
         interpretation = {
@@ -401,16 +386,14 @@ class TestInterpretationMerging:
 
         # Apply merge logic (from main.py)
         category_summaries = interpretation.get("category_summaries", {})
-        for mode_key in ["romantic", "friendship", "coworker"]:
-            if mode_key in response:
-                for cat in response[mode_key].get("categories", []):
-                    cat_id = cat.get("id")
-                    if cat_id and cat_id in category_summaries:
-                        cat["summary"] = category_summaries[cat_id]
+        for cat in response.get("categories", []):
+            cat_id = cat.get("id")
+            if cat_id and cat_id in category_summaries:
+                cat["summary"] = category_summaries[cat_id]
 
         # Verify merging
         emotional_cat = next(
-            (c for c in response["romantic"]["categories"] if c["id"] == "emotional"),
+            (c for c in response["categories"] if c["id"] == "emotional"),
             None
         )
         assert emotional_cat is not None
@@ -418,7 +401,7 @@ class TestInterpretationMerging:
 
         # Categories not in interpretation should remain None
         growth_cat = next(
-            (c for c in response["romantic"]["categories"] if c["id"] == "growth"),
+            (c for c in response["categories"] if c["id"] == "growth"),
             None
         )
         assert growth_cat is not None
@@ -437,11 +420,11 @@ class TestInterpretationMerging:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+        aspects_response = [a.model_dump() for a in result.aspects]
 
         # Get first aspect ID for testing
-        first_aspect_id = response["aspects"][0]["id"] if response["aspects"] else "asp_001"
+        first_aspect_id = aspects_response[0]["id"] if aspects_response else "asp_001"
 
         # Mock interpretation with aspect interpretations
         interpretation = {
@@ -456,13 +439,13 @@ class TestInterpretationMerging:
             for ai in interpretation.get("aspect_interpretations", [])
             if ai.get("aspect_id")
         }
-        for aspect in response.get("aspects", []):
+        for aspect in aspects_response:
             asp_id = aspect.get("id")
             if asp_id and asp_id in aspect_interps:
                 aspect["interpretation"] = aspect_interps[asp_id]
 
         # Verify merging
-        first_aspect = response["aspects"][0] if response["aspects"] else None
+        first_aspect = aspects_response[0] if aspects_response else None
         if first_aspect and first_aspect["id"] == first_aspect_id:
             assert first_aspect["interpretation"] == "This aspect creates magic"
 
@@ -479,8 +462,8 @@ class TestInterpretationMerging:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+        response = result.mode.model_dump()
 
         # Empty interpretation
         interpretation = {
@@ -490,26 +473,24 @@ class TestInterpretationMerging:
 
         # Apply merge logic - should not raise
         category_summaries = interpretation.get("category_summaries", {})
-        for mode_key in ["romantic", "friendship", "coworker"]:
-            if mode_key in response:
-                for cat in response[mode_key].get("categories", []):
-                    cat_id = cat.get("id")
-                    if cat_id and cat_id in category_summaries:
-                        cat["summary"] = category_summaries[cat_id]
+        for cat in response.get("categories", []):
+            cat_id = cat.get("id")
+            if cat_id and cat_id in category_summaries:
+                cat["summary"] = category_summaries[cat_id]
 
         aspect_interps = {
             ai.get("aspect_id"): ai.get("interpretation")
             for ai in interpretation.get("aspect_interpretations", [])
             if ai.get("aspect_id")
         }
-        for aspect in response.get("aspects", []):
+        aspects_response = [a.model_dump() for a in result.aspects]
+        for aspect in aspects_response:
             asp_id = aspect.get("id")
             if asp_id and asp_id in aspect_interps:
                 aspect["interpretation"] = aspect_interps[asp_id]
 
         # Response should still be valid
-        assert "romantic" in response
-        assert len(response["romantic"]["categories"]) == 6
+        assert len(response["categories"]) == 6
 
 
 # =============================================================================
@@ -532,8 +513,8 @@ class TestBirthDataScenarios:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_connection_without_birth_time(self, user_natal_chart, connection_birth_data_no_time):
         """Connection without birth time should still work."""
@@ -548,8 +529,8 @@ class TestBirthDataScenarios:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_very_old_birth_date(self, user_natal_chart):
         """Should handle old birth dates."""
@@ -558,8 +539,8 @@ class TestBirthDataScenarios:
         old_chart_dict, _ = compute_birth_chart(birth_date="1920-05-15")
         old_chart = NatalChartData(**old_chart_dict)
 
-        result = calculate_compatibility(user_chart, old_chart)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(user_chart, old_chart, "romantic")
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_recent_birth_date(self, user_natal_chart):
         """Should handle recent birth dates."""
@@ -568,8 +549,8 @@ class TestBirthDataScenarios:
         recent_chart_dict, _ = compute_birth_chart(birth_date="2005-12-25")
         recent_chart = NatalChartData(**recent_chart_dict)
 
-        result = calculate_compatibility(user_chart, recent_chart)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(user_chart, recent_chart, "romantic")
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_same_birth_date(self, user_natal_chart):
         """Should handle two people with same birth date."""
@@ -585,8 +566,8 @@ class TestBirthDataScenarios:
         )
         same_day_chart = NatalChartData(**same_day_dict)
 
-        result = calculate_compatibility(user_chart, same_day_chart)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(user_chart, same_day_chart, "romantic")
+        assert 0 <= result.mode.overall_score <= 100
 
     def test_opposite_hemisphere_birth_locations(self, user_natal_chart):
         """Should handle birth locations in opposite hemispheres."""
@@ -602,8 +583,8 @@ class TestBirthDataScenarios:
         )
         sydney_chart = NatalChartData(**sydney_dict)
 
-        result = calculate_compatibility(user_chart, sydney_chart)
-        assert 0 <= result.romantic.overall_score <= 100
+        result = calculate_compatibility(user_chart, sydney_chart, "romantic")
+        assert 0 <= result.mode.overall_score <= 100
 
 
 # =============================================================================
@@ -647,8 +628,12 @@ class TestResponseSize:
         )
         conn_chart = NatalChartData(**conn_chart_dict)
 
-        result = calculate_compatibility(user_chart, conn_chart)
-        response = result.model_dump()
+        result = calculate_compatibility(user_chart, conn_chart, "romantic")
+        response = {
+            "mode": result.mode.model_dump(),
+            "aspects": [a.model_dump() for a in result.aspects],
+            "composite": result.composite.model_dump(),
+        }
 
         json_str = json.dumps(response)
 
