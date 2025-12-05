@@ -436,7 +436,7 @@ def parse_sse_events(docstring: str) -> list[dict]:
 # Markdown Generation
 # =============================================================================
 
-def generate_markdown(functions: list[dict], models: dict, enums: dict) -> str:
+def generate_markdown(functions: list[dict], models: dict, enums: dict, astrometer_labels: dict) -> str:
     """Generate complete API documentation markdown."""
     lines = [
         "# Arca Backend API Reference",
@@ -451,6 +451,7 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict) -> str:
         "- [Callable Functions](#callable-functions)",
         "- [Model Definitions](#model-definitions)",
         "- [Enum Definitions](#enum-definitions)",
+        "- [Astrometer State Labels](#astrometer-state-labels)",
         "",
         "---",
         "",
@@ -574,6 +575,10 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict) -> str:
 
     for enum_name, enum_values in sorted(enums.items()):
         lines.extend(generate_enum_docs(enum_name, enum_values))
+
+    # Astrometer state labels
+    if astrometer_labels:
+        lines.extend(generate_astrometer_labels_docs(astrometer_labels))
 
     return "\n".join(lines)
 
@@ -703,6 +708,82 @@ def generate_enum_docs(enum_name: str, values: list[dict]) -> list[str]:
 
 
 # =============================================================================
+# Astrometer Labels Extraction
+# =============================================================================
+
+def extract_astrometer_labels() -> dict:
+    """Extract bucket labels from group JSON files."""
+    import json
+    from pathlib import Path
+
+    labels_dir = Path(__file__).parent / "astrometers" / "labels" / "groups"
+    groups = ["overall", "mind", "heart", "body", "instincts", "growth"]
+
+    result = {}
+    for group_name in groups:
+        json_file = labels_dir / f"{group_name}.json"
+        if json_file.exists():
+            with open(json_file, "r") as f:
+                data = json.load(f)
+            bucket_labels = data.get("bucket_labels", {})
+            if isinstance(bucket_labels, dict):
+                result[group_name] = {
+                    "display_name": data.get("metadata", {}).get("display_name", group_name.title()),
+                    "buckets": {
+                        "0-25": bucket_labels.get("0-25", {}).get("label", ""),
+                        "25-50": bucket_labels.get("25-50", {}).get("label", ""),
+                        "50-75": bucket_labels.get("50-75", {}).get("label", ""),
+                        "75-100": bucket_labels.get("75-100", {}).get("label", ""),
+                    }
+                }
+    return result
+
+
+def generate_astrometer_labels_docs(labels: dict) -> list[str]:
+    """Generate markdown documentation for astrometer bucket labels."""
+    lines = [
+        "---",
+        "",
+        "## Astrometer State Labels",
+        "",
+        "Each meter group has 4 state labels based on the unified score quartile.",
+        "",
+        "**Quartile Thresholds:**",
+        "- `score < 25` -> bucket 0 (challenging)",
+        "- `score >= 25 && < 50` -> bucket 1 (turbulent)",
+        "- `score >= 50 && < 75` -> bucket 2 (peaceful)",
+        "- `score >= 75` -> bucket 3 (flowing)",
+        "",
+        "### Labels by Group",
+        "",
+        "| Group | 0-25 | 25-50 | 50-75 | 75-100 |",
+        "|-------|------|-------|-------|--------|",
+    ]
+
+    for group_name, group_data in labels.items():
+        buckets = group_data["buckets"]
+        lines.append(
+            f"| **{group_data['display_name']}** | {buckets['0-25']} | {buckets['25-50']} | {buckets['50-75']} | {buckets['75-100']} |"
+        )
+
+    lines.append("")
+    lines.append("### iOS Implementation")
+    lines.append("")
+    lines.append("```swift")
+    lines.append("// Map unified_score to bucket index")
+    lines.append("func bucketIndex(score: Double) -> Int {")
+    lines.append("    if score < 25 { return 0 }")
+    lines.append("    else if score < 50 { return 1 }")
+    lines.append("    else if score < 75 { return 2 }")
+    lines.append("    else { return 3 }")
+    lines.append("}")
+    lines.append("```")
+    lines.append("")
+
+    return lines
+
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -813,9 +894,14 @@ def main():
     functions = parse_main_py()
     print(f"    Found {len(functions)} callable functions")
 
+    # Extract astrometer labels
+    print("  Extracting astrometer labels...")
+    astrometer_labels = extract_astrometer_labels()
+    print(f"    Found {len(astrometer_labels)} meter groups")
+
     # Generate markdown
     print("  Generating markdown...")
-    markdown = generate_markdown(functions, models, enums)
+    markdown = generate_markdown(functions, models, enums, astrometer_labels)
 
     # Write output
     print(f"  Writing to {OUTPUT_FILE}...")

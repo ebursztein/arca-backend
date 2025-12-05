@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "loyalty",
+  "_mode": "friendship",
+  "metadata": {
+    "category_id": "loyalty",
+    "display_name": "Loyalty & Support",
+    "description": "How much you can count on each other when it matters",
+    "sentence_template": "For loyalty, this friend is ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Saturn", "Pluto", "Sun"],
+    "what_it_measures": "Saturn shows reliability and long-term commitment. Pluto adds depth and loyalty under pressure. Sun shows core respect.",
+    "planet_meanings": {
+      "Saturn": "reliability, commitment, and showing up consistently",
+      "Pluto": "depth of loyalty and standing by each other through hard times",
+      "Sun": "core respect and honoring who each other is"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Flimsy",
+      "guidance": "May disappear when things get real; warn about leaning too hard."
+    },
+    "low": {
+      "label": "Patchy",
+      "guidance": "Support comes in waves; watch actions, not just words."
+    },
+    "mid": {
+      "label": "Decent",
+      "guidance": "Can show up, but not as primary lifeline."
+    },
+    "high": {
+      "label": "Steady",
+      "guidance": "Usually there when it matters; invite mutual showing up."
+    },
+    "very_high": {
+      "label": "Ride-or-Die",
+      "guidance": "Very strong loyalty; core person in their corner."
+    }
+  }
+}

@@ -268,59 +268,62 @@ class TestUnifiedScore:
     """Test unified score calculation (polar-style with sigmoid stretch)."""
 
     def test_flowing_high_unified_score(self):
-        """Test flowing quality for unified_score >= 50."""
+        """Test flowing quality for unified_score >= 75."""
         score, quality = calculate_unified_score(60, 80)
-        assert score >= 50
+        assert score >= 75
         assert quality == QualityLabel.FLOWING
 
     def test_peaceful_moderate_unified_score(self):
-        """Test peaceful quality for unified_score 10-50."""
-        score, quality = calculate_unified_score(30, 65)
-        assert 10 <= score < 50
+        """Test peaceful quality for unified_score 50-75."""
+        score, quality = calculate_unified_score(50, 65)
+        assert 50 <= score < 75
         assert quality == QualityLabel.PEACEFUL
 
     def test_turbulent_low_positive_unified_score(self):
-        """Test turbulent quality for unified_score -25 to 10."""
-        score, quality = calculate_unified_score(60, 50)
-        assert -25 <= score < 10
+        """Test turbulent quality for unified_score 25-50."""
+        # Need harmony below 50 to get turbulent
+        score, quality = calculate_unified_score(60, 40)
+        assert 25 <= score < 50
         assert quality == QualityLabel.TURBULENT
 
     def test_challenging_negative_unified_score(self):
-        """Test challenging quality for unified_score < -25."""
+        """Test challenging quality for unified_score < 25."""
         score, quality = calculate_unified_score(60, 20)
-        assert score < -25
+        assert score < 25
         assert quality == QualityLabel.CHALLENGING
 
     def test_unified_score_range(self):
-        """Test that unified score is in valid range (-100 to +100)."""
-        # High harmony = positive score
+        """Test that unified score is in valid range (0 to 100)."""
+        # High harmony = high score
         score_high, _ = calculate_unified_score(60, 80)
-        assert 0 < score_high <= 100, "High harmony should give positive score"
+        assert 50 < score_high <= 100, "High harmony should give high score"
 
-        # Low harmony = negative score
+        # Low harmony = low score
         score_low, _ = calculate_unified_score(60, 20)
-        assert -100 <= score_low < 0, "Low harmony should give negative score"
+        assert 0 <= score_low < 50, "Low harmony should give low score"
 
-        # Neutral harmony = near zero
+        # Neutral harmony = around 50
         score_neutral, _ = calculate_unified_score(60, 50)
-        assert -10 <= score_neutral <= 10, "Neutral harmony should give near-zero score"
+        assert 40 <= score_neutral <= 60, "Neutral harmony should give near-50 score"
 
     def test_unified_score_zero_intensity(self):
         """Test that zero intensity still shows harmony direction (base weight)."""
         score, quality = calculate_unified_score(0, 80)
         # Even at 0 intensity, base weight preserves some harmony signal
-        assert score >= 0, "Positive harmony should give positive score even at 0 intensity"
+        assert score >= 50, "Positive harmony should give above-neutral score even at 0 intensity"
         # Quality is based on unified_score now, not intensity
-        assert quality in [QualityLabel.PEACEFUL, QualityLabel.FLOWING, QualityLabel.TURBULENT]
+        assert quality in [QualityLabel.PEACEFUL, QualityLabel.FLOWING]
 
-    def test_unified_score_empowering_asymmetry(self):
-        """Test that positive scores are boosted and negative dampened."""
-        # Same distance from neutral (50)
-        score_positive, _ = calculate_unified_score(60, 80)  # +30 from neutral
-        score_negative, _ = calculate_unified_score(60, 20)  # -30 from neutral
+    def test_unified_score_symmetry(self):
+        """Test that scores are symmetric around 50 (neutral)."""
+        # Same distance from neutral harmony (50)
+        score_positive, _ = calculate_unified_score(60, 80)  # +30 from neutral harmony
+        score_negative, _ = calculate_unified_score(60, 20)  # -30 from neutral harmony
 
-        # Positive should be larger in magnitude due to empowering boost
-        assert abs(score_positive) > abs(score_negative), "Positive should be boosted more than negative"
+        # Both should be roughly equidistant from 50
+        positive_distance = score_positive - 50
+        negative_distance = 50 - score_negative
+        assert abs(positive_distance - negative_distance) < 5, "Scores should be roughly symmetric"
 
 
 # ============================================================================

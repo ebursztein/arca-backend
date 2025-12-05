@@ -1,11 +1,29 @@
 {
   "_schema_version": "2.0",
   "_group": "heart",
-  "_last_updated": "2025-01-08",
+  "_last_updated": "2025-12-05",
   "metadata": {
     "group_id": "heart",
     "display_name": "Heart",
     "description": "Connections, resilience, and vulnerability"
+  },
+  "bucket_labels": {
+    "0-25": {
+      "label": "Heavy",
+      "guidance": "Validate emotional weight or sadness; focus on comfort, gentleness, and lowering expectations of themselves and others."
+    },
+    "25-50": {
+      "label": "Tender",
+      "guidance": "Name their sensitivity; suggest soft boundaries, honest feelings shared in safe spaces, and not forcing tough talks."
+    },
+    "50-75": {
+      "label": "Grounded",
+      "guidance": "Describe steady, calm emotions; good for honest check-ins, stable connection, and showing up dependably."
+    },
+    "75-100": {
+      "label": "Radiant",
+      "guidance": "Highlight warmth and openness; invite them to share affection, appreciation, and love with people they trust."
+    }
   },
   "description": {
     "overview": "Heart represents your emotional core, emotional security, and sensitivity to feelings around you.",
@@ -14,35 +32,35 @@
       "love",
       "stability",
       "empathy",
-      "heart",
-      "feelings"
+      "emotional",
+      "relationships"
     ]
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Your heart needs protection right now - that's wisdom, not weakness. It'll open again when it's safe",
-      "mixed": "Emotional energy is quiet today - subtle feelings are still feelings. Let them surface gently",
-      "harmonious": "Your heart is peacefully calm - enjoy the stillness and let it restore you"
+      "challenging": "Your heart needs rest - honor it now and you'll have more to give tomorrow",
+      "mixed": "Emotional energy is low but not empty - conserve for what matters most",
+      "harmonious": "Your heart is in deep recovery - let it rebuild. You're restoring, not stuck"
     },
     "mild": {
-      "challenging": "Heart is tentative today - don't force openness. Small moments of connection are enough",
-      "mixed": "Feelings are gentle and mixed - both are valid. You don't have to resolve them today",
-      "harmonious": "Your heart is softly open - connection flows naturally without effort"
+      "challenging": "Emotions are tender today - be patient with yourself. Small connections count",
+      "mixed": "Gentle emotional energy - light touch in relationships will serve you well",
+      "harmonious": "Your heart has easy warmth - let it flow naturally to those around you"
     },
     "moderate": {
-      "challenging": "Emotional walls are up for a reason - work through them gently. You'll know when you're ready",
-      "mixed": "Multiple emotional currents pulling you - sit with the complexity. Clarity comes from feeling, not thinking",
-      "harmonious": "Heart energy is flowing - lean into connection. The people you reach out to will respond"
+      "challenging": "Emotional resistance is real - work with it, not against it. Choose your battles",
+      "mixed": "Emotional energy requires effort but it's there - warm up slow, you'll find your rhythm",
+      "harmonious": "Strong steady heart energy - this is your window for meaningful connection"
     },
     "high": {
-      "challenging": "Emotional intensity is strong - this is hard but you're not fragile. Feel it, then let it move through",
-      "mixed": "Big feelings in all directions - you can hold complexity. Honor what's hard and what's beautiful",
-      "harmonious": "Deep love and connection are available - let yourself receive it fully"
+      "challenging": "Emotional demands are intense - pace yourself strategically. You have the capacity, just not for everything",
+      "mixed": "Feelings are big but scattered - channel into one relationship priority",
+      "harmonious": "Peak emotional availability - your heart is ready for deep connection"
     },
     "extreme": {
-      "challenging": "Emotional overload is real - protect yourself or let it process, but know this wave will pass",
-      "mixed": "Overwhelming feelings, beautiful and difficult at once - you're built to feel deeply. That's your gift",
-      "harmonious": "Heart completely open - this is rare. Use it for the conversations and connections that matter most"
+      "challenging": "Emotional intensity is real - boundaries aren't walls, they're wisdom. Protect your energy",
+      "mixed": "Maximum heart output available but unsustainable - love hard, then recover hard",
+      "harmonious": "Exceptional emotional openness - rare day. Let yourself be fully present with people who matter"
     }
   }
 }

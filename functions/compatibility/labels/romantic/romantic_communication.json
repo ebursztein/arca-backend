@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "communication",
+  "_mode": "romantic",
+  "metadata": {
+    "category_id": "communication",
+    "display_name": "Communication",
+    "description": "How well you understand each other's words, tone, and meaning",
+    "sentence_template": "When you two talk, it feels ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mercury", "Mars", "Jupiter"],
+    "what_it_measures": "Mercury aspects show mental compatibility and communication style. Mars adds assertiveness. Jupiter expands understanding.",
+    "planet_meanings": {
+      "Mercury": "how you think and express ideas",
+      "Mars": "how you assert yourself and handle conflict",
+      "Jupiter": "openness and generosity in conversation"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Combustible",
+      "guidance": "Words easily explode; stress slowing down, not texting in anger."
+    },
+    "low": {
+      "label": "Crooked",
+      "guidance": "Messages bend on the way through; suggest asking more questions and repeating back."
+    },
+    "mid": {
+      "label": "Hit-or-Miss",
+      "guidance": "Sometimes sync, sometimes don't; effort matters more than fate."
+    },
+    "high": {
+      "label": "Clear",
+      "guidance": "Usually get each other; encourage honest talks."
+    },
+    "very_high": {
+      "label": "Telepathic",
+      "guidance": "Almost mind-reading; highlight deep talks and shared humor."
+    }
+  }
+}

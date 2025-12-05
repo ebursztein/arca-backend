@@ -1,11 +1,29 @@
 {
   "_schema_version": "2.0",
   "_group": "growth",
-  "_last_updated": "2025-01-08",
+  "_last_updated": "2025-12-05",
   "metadata": {
     "group_id": "growth",
     "display_name": "Growth",
     "description": "Momentum, ambition, evolution, and circle"
+  },
+  "bucket_labels": {
+    "0-25": {
+      "label": "Stuck",
+      "guidance": "Name the sense of being blocked; focus on acceptance and tiny next steps rather than forcing big change."
+    },
+    "25-50": {
+      "label": "Uphill",
+      "guidance": "Describe slow, effortful progress; encourage patience, discipline, and giving themselves credit for showing up."
+    },
+    "50-75": {
+      "label": "Moving",
+      "guidance": "Affirm that progress is happening; suggest continuing consistent action and noticing the small wins."
+    },
+    "75-100": {
+      "label": "Taking Off",
+      "guidance": "Frame this as a momentum phase; encourage bolder steps and saying yes to aligned opportunities when they appear."
+    }
   },
   "description": {
     "overview": "Growth represents your external expansion - opportunities, career momentum, personal evolution, and social connections.",
@@ -14,35 +32,35 @@
       "opportunities",
       "career",
       "evolution",
-      "community",
+      "social",
       "expansion"
     ]
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Doors feel closed right now - use this time to build your foundation. When they open, you'll be ready",
-      "mixed": "External momentum is low - quiet preparation is still progress. You're loading the spring",
-      "harmonious": "Peaceful stability - rest now. The next growth phase is coming and you'll want the reserves"
+      "challenging": "Growth is paused - use this time to prepare for when momentum returns",
+      "mixed": "Subtle expansion happening beneath the surface - trust the process even if you can't see results",
+      "harmonious": "Quiet growth - small seeds are taking root. Let them"
     },
     "mild": {
-      "challenging": "Progress is slow - frustrating but not stuck. Small steps compound. Keep moving",
-      "mixed": "Gentle shifts in multiple directions - some doors opening, some closing. Both are making room",
-      "harmonious": "Easy progress flowing - opportunities are finding you. Stay open and follow up"
+      "challenging": "Progress is slow but real - celebrate the inches when miles aren't available",
+      "mixed": "Gentle forward motion - you're building something even if it doesn't feel dramatic",
+      "harmonious": "Easy growth available - take the small opportunities. They compound"
     },
     "moderate": {
-      "challenging": "Growth requires real effort right now - obstacles are there but so is your ability to push through them",
-      "mixed": "Progress and setbacks happening together - that's normal growth. Focus on what's working",
-      "harmonious": "Natural expansion across the board - career, opportunities, connections all flowing. Lean in"
+      "challenging": "Growth requires effort today - push through resistance, it's building your capacity",
+      "mixed": "Some doors open, some closed - focus on what's working rather than forcing what isn't",
+      "harmonious": "Solid momentum - keep doing what you're doing. It's working"
     },
     "high": {
-      "challenging": "Intense pressure to evolve - it's a lot, but pressure creates diamonds. You're becoming something new",
-      "mixed": "Rapid change everywhere, exciting and overwhelming - you can handle the chaos. Pick your priorities",
-      "harmonious": "Strong momentum across all growth areas - doors are opening fast. Walk through them"
+      "challenging": "Big growth available but demanding - the opportunity is real, so is the price. Decide if it's worth it",
+      "mixed": "Rapid expansion with some chaos - ride the wave, course-correct as needed",
+      "harmonious": "Strong momentum - exceptional day for career moves, opportunities, and bold steps"
     },
     "extreme": {
-      "challenging": "Major transformation happening - this is hard but you're not breaking, you're being forged",
-      "mixed": "Total upheaval - expansion and chaos at once. Stay grounded in who you are while everything shifts",
-      "harmonious": "Peak expansion - exceptional opportunities and recognition. This is your moment. Claim it"
+      "challenging": "Maximum pressure to grow - this is the hard stuff that builds your next level. You're being forged",
+      "mixed": "Everything is moving at once - stay centered and let the pieces fall where they need to",
+      "harmonious": "Rare acceleration - all the lights are green. Go. This is your window"
     }
   }
 }

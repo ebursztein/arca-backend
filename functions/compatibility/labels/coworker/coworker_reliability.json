@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "reliability",
+  "_mode": "coworker",
+  "metadata": {
+    "category_id": "reliability",
+    "display_name": "Reliability",
+    "description": "How much you can count on them to deliver and follow through",
+    "sentence_template": "For reliability, they are ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Saturn", "Mars", "Sun"],
+    "what_it_measures": "Saturn shows discipline and follow-through. Mars shows energy to complete tasks. Sun shows integrity and commitment.",
+    "planet_meanings": {
+      "Saturn": "discipline, structure, and follow-through",
+      "Mars": "energy and drive to get things done",
+      "Sun": "integrity and commitment to their word"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Unsteady",
+      "guidance": "Likely can't rely on them; suggest backups."
+    },
+    "low": {
+      "label": "Spotty",
+      "guidance": "Sometimes solid, sometimes not; clear deadlines help."
+    },
+    "mid": {
+      "label": "Adequate",
+      "guidance": "Usually fine for normal work."
+    },
+    "high": {
+      "label": "Trustworthy",
+      "guidance": "Can mostly count on them; good for important tasks."
+    },
+    "very_high": {
+      "label": "Rock-Solid",
+      "guidance": "Very dependable; safe for critical pieces."
+    }
+  }
+}

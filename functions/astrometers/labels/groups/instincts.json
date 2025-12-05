@@ -1,11 +1,29 @@
 {
   "_schema_version": "2.0",
   "_group": "instincts",
-  "_last_updated": "2025-01-08",
+  "_last_updated": "2025-12-05",
   "metadata": {
     "group_id": "instincts",
     "display_name": "Instincts",
     "description": "Vision, flow, intuition, and creativity"
+  },
+  "bucket_labels": {
+    "0-25": {
+      "label": "Off",
+      "guidance": "Say their gut may feel unreliable or quiet; advise leaning more on facts, pauses, and second opinions instead of snap calls."
+    },
+    "25-50": {
+      "label": "Noisy",
+      "guidance": "Acknowledge mixed or conflicting signals; suggest slowing down, observing more, and not forcing a big read on situations."
+    },
+    "50-75": {
+      "label": "Tuned In",
+      "guidance": "Affirm that their intuition is fairly trustworthy; encourage listening to body cues and subtle nudges."
+    },
+    "75-100": {
+      "label": "Razor Sharp",
+      "guidance": "Emphasize very accurate instincts; invite them to trust their gut on choices, people, and timing."
+    }
   },
   "description": {
     "overview": "Instincts represents your sense of meaning, spiritual connection, inner knowing, and creative flow.",
@@ -15,34 +33,34 @@
       "spirituality",
       "intuition",
       "creativity",
-      "purpose"
+      "inner knowing"
     ]
   },
   "advice_templates": {
     "quiet": {
-      "challenging": "Meaning feels distant right now - that's part of the journey. The answers are forming even when you can't see them",
-      "mixed": "Intuition is quiet today - subtle signals are still signals. Trust the slow knowing",
-      "harmonious": "Peaceful inner alignment - the stillness itself holds meaning. Rest in it"
+      "challenging": "Your instincts need rest - don't force clarity. Trust that knowing will return",
+      "mixed": "Intuitive energy is subtle today - sit with uncertainty rather than forcing answers",
+      "harmonious": "Your instincts are quietly clear - small nudges are enough. Follow them"
     },
     "mild": {
-      "challenging": "Direction is unclear - be gentle with yourself. Searching is its own form of progress",
-      "mixed": "Gentle exploration happening - you're both seeking and finding. Neither is wrong",
-      "harmonious": "Soft connection to purpose - alignment comes without forcing. Follow the pull"
+      "challenging": "Inner signals are faint but there - give them space rather than pushing for big revelations",
+      "mixed": "Gentle intuitive energy - trust the slow unfoldment of understanding",
+      "harmonious": "Your instincts are flowing easily - subtle guidance is available if you listen"
     },
     "moderate": {
-      "challenging": "Creative and spiritual blocks are real - but they break. Keep showing up and they'll crack",
-      "mixed": "Active inner process - seeking and discovering at once. Trust that both are moving you forward",
-      "harmonious": "Strong alignment with intuition and creativity - trust what you're sensing. It's reliable today"
+      "challenging": "Your gut is working but clouded - verify important instincts with logic or trusted people",
+      "mixed": "Intuition is present but mixed - some signals are clear, others not. Discern carefully",
+      "harmonious": "Strong intuitive clarity - trust your read on situations and people today"
     },
     "high": {
-      "challenging": "Deep questions are surfacing - this is uncomfortable but it's growth. The answers are coming",
-      "mixed": "Intense inner transformation - breakdown and breakthrough happen together. You're not falling apart, you're reorganizing",
-      "harmonious": "Profound connection to purpose and creativity - rare clarity. Act on what you know"
+      "challenging": "Instincts are loud but possibly distorted - slow down before acting on strong hunches",
+      "mixed": "Powerful intuition, some static - the strongest signals are probably right",
+      "harmonious": "Peak intuitive accuracy - your gut is giving you real information. Act on it"
     },
     "extreme": {
-      "challenging": "This feels like a dark night - and dark nights end. You're being rebuilt for something bigger",
-      "mixed": "Massive inner upheaval - chaos and revelation at once. You're strong enough to hold both",
-      "harmonious": "Complete alignment - purpose, intuition, creativity all flowing. This is your moment. Trust it fully"
+      "challenging": "Intuitive overload - too many signals to process. Simplify and focus on what's clearest",
+      "mixed": "Maximum intuitive input, hard to sort - the recurring themes are your truth",
+      "harmonious": "Exceptional clarity - rare day when your instincts are fully online. Trust them completely"
     }
   }
 }

@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "growth",
+  "_mode": "romantic",
+  "metadata": {
+    "category_id": "growth",
+    "display_name": "Growth Together",
+    "description": "How much you help each other evolve and become better versions of yourselves",
+    "sentence_template": "For personal growth, this relationship is ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Pluto", "North Node", "Chiron"],
+    "what_it_measures": "Pluto aspects show transformation potential. North Node shows growth direction. Chiron shows healing opportunities.",
+    "planet_meanings": {
+      "Pluto": "transformation, depth, and fundamental change",
+      "North Node": "growth direction and life lessons",
+      "Chiron": "healing wounds and becoming whole"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Draining",
+      "guidance": "May learn but at high emotional cost; ask if price feels worth it."
+    },
+    "low": {
+      "label": "Rough Mirror",
+      "guidance": "Teach through friction; talk about patterns reflected back."
+    },
+    "mid": {
+      "label": "Neutral",
+      "guidance": "Doesn't block or supercharge growth; more about comfort."
+    },
+    "high": {
+      "label": "Expanding",
+      "guidance": "Help each other stretch gently out of comfort zones."
+    },
+    "very_high": {
+      "label": "Transforming",
+      "guidance": "Deep catalyst; can change who you are, for real."
+    }
+  }
+}

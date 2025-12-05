@@ -24,12 +24,12 @@ def create_mock_meter(
     harmony: float
 ) -> MeterReading:
     """Create a mock MeterReading for testing."""
-    # Quality based on unified_score quadrants
-    if unified_score < -25:
+    # Quality based on unified_score quartiles (0-100 scale)
+    if unified_score < 25:
         unified_quality = QualityLabel.CHALLENGING
-    elif unified_score < 10:
-        unified_quality = QualityLabel.TURBULENT
     elif unified_score < 50:
+        unified_quality = QualityLabel.TURBULENT
+    elif unified_score < 75:
         unified_quality = QualityLabel.PEACEFUL
     else:
         unified_quality = QualityLabel.FLOWING
@@ -68,42 +68,200 @@ def test_load_group_labels():
 
 
 def test_get_group_state_label():
-    """Test getting state label for different intensity/harmony combinations."""
-    # High harmony, high intensity
-    label = get_group_state_label("mind", 75, 80)
-    assert isinstance(label, str)
-    assert len(label) > 0
+    """Test getting state label for different unified_score values (0-100 scale)."""
+    from ..meter_groups import get_group_bucket_labels
 
-    # Low harmony, high intensity
-    label = get_group_state_label("mind", 75, 30)
-    assert isinstance(label, str)
-    assert len(label) > 0
+    # Get labels from JSON so test stays in sync
+    mind_labels = get_group_bucket_labels("mind")
 
-    # Low harmony, low intensity
-    label = get_group_state_label("mind", 20, 30)
+    # High unified_score (>= 75) -> bucket 3
+    label = get_group_state_label("mind", 80)
     assert isinstance(label, str)
-    assert len(label) > 0
+    assert label == mind_labels[3]
+
+    # Medium-high unified_score (50-75) -> bucket 2
+    label = get_group_state_label("mind", 60)
+    assert isinstance(label, str)
+    assert label == mind_labels[2]
+
+    # Medium-low unified_score (25-50) -> bucket 1
+    label = get_group_state_label("mind", 42)
+    assert isinstance(label, str)
+    assert label == mind_labels[1]
+
+    # Low unified_score (< 25) -> bucket 0
+    label = get_group_state_label("mind", 20)
+    assert isinstance(label, str)
+    assert label == mind_labels[0]
+
+
+def test_state_label_quartile_boundaries():
+    """
+    Test exact quartile boundary behavior for state labels.
+
+    iOS uses these exact cutoffs:
+        score < 25  -> labels[0] (Challenging)
+        score >= 25 && score < 50  -> labels[1] (Turbulent)
+        score >= 50 && score < 75  -> labels[2] (Peaceful)
+        score >= 75 -> labels[3] (Flowing)
+
+    Backend must match exactly. Labels are loaded from JSON.
+    """
+    from ..meter_groups import get_group_bucket_labels
+
+    # Test all groups have correct boundary behavior
+    groups = ["mind", "heart", "body", "instincts", "growth", "overall"]
+
+    for group_name in groups:
+        labels = get_group_bucket_labels(group_name)
+        assert len(labels) == 4, f"{group_name} should have 4 bucket labels"
+
+        # Bucket 0: < 25
+        assert get_group_state_label(group_name, 0) == labels[0], f"{group_name} at 0"
+        assert get_group_state_label(group_name, 10) == labels[0], f"{group_name} at 10"
+        assert get_group_state_label(group_name, 24) == labels[0], f"{group_name} at 24"
+        assert get_group_state_label(group_name, 24.99) == labels[0], f"{group_name} at 24.99"
+
+        # Bucket 1: >= 25 && < 50
+        assert get_group_state_label(group_name, 25) == labels[1], f"{group_name} at 25"
+        assert get_group_state_label(group_name, 25.01) == labels[1], f"{group_name} at 25.01"
+        assert get_group_state_label(group_name, 37) == labels[1], f"{group_name} at 37"
+        assert get_group_state_label(group_name, 49) == labels[1], f"{group_name} at 49"
+        assert get_group_state_label(group_name, 49.99) == labels[1], f"{group_name} at 49.99"
+
+        # Bucket 2: >= 50 && < 75
+        assert get_group_state_label(group_name, 50) == labels[2], f"{group_name} at 50"
+        assert get_group_state_label(group_name, 50.01) == labels[2], f"{group_name} at 50.01"
+        assert get_group_state_label(group_name, 62) == labels[2], f"{group_name} at 62"
+        assert get_group_state_label(group_name, 74) == labels[2], f"{group_name} at 74"
+        assert get_group_state_label(group_name, 74.99) == labels[2], f"{group_name} at 74.99"
+
+        # Bucket 3: >= 75
+        assert get_group_state_label(group_name, 75) == labels[3], f"{group_name} at 75"
+        assert get_group_state_label(group_name, 75.01) == labels[3], f"{group_name} at 75.01"
+        assert get_group_state_label(group_name, 87) == labels[3], f"{group_name} at 87"
+        assert get_group_state_label(group_name, 100) == labels[3], f"{group_name} at 100"
+
+
+def test_state_label_quartile_boundaries_individual_meters():
+    """
+    Test quartile boundaries for individual meter state labels.
+
+    Individual meters use the same 25/50/75 quartile cutoffs,
+    inheriting bucket labels from their parent group.
+    Labels are loaded from JSON to stay in sync.
+    """
+    from ..meters import get_state_label, calculate_unified_score
+    from ..meter_groups import get_group_bucket_labels
+
+    # Test meters from each group
+    test_cases = [
+        ("clarity", "mind"),
+        ("connections", "heart"),
+        ("energy", "body"),
+        ("intuition", "instincts"),
+        ("momentum", "growth"),
+    ]
+
+    for meter_name, group_name in test_cases:
+        labels = get_group_bucket_labels(group_name)
+
+        # We need intensity/harmony values that produce specific unified_scores
+        # unified_score is calculated from intensity and harmony
+        # For simplicity, test with values that produce scores in each bucket
+        # Using intensity=harmony simplifies the calculation
+
+        # Test bucket boundaries by checking the actual unified_score
+        # Bucket 0: unified_score < 25
+        score_0, _ = calculate_unified_score(10, 10)
+        if score_0 < 25:
+            assert get_state_label(meter_name, 10, 10) == labels[0], \
+                f"{meter_name} bucket 0: score={score_0}"
+
+        # Bucket 1: unified_score 25-50
+        score_1, _ = calculate_unified_score(30, 30)
+        if 25 <= score_1 < 50:
+            assert get_state_label(meter_name, 30, 30) == labels[1], \
+                f"{meter_name} bucket 1: score={score_1}"
+
+        # Bucket 2: unified_score 50-75
+        score_2, _ = calculate_unified_score(60, 60)
+        if 50 <= score_2 < 75:
+            assert get_state_label(meter_name, 60, 60) == labels[2], \
+                f"{meter_name} bucket 2: score={score_2}"
+
+        # Bucket 3: unified_score >= 75
+        score_3, _ = calculate_unified_score(90, 90)
+        if score_3 >= 75:
+            assert get_state_label(meter_name, 90, 90) == labels[3], \
+                f"{meter_name} bucket 3: score={score_3}"
+
+
+def test_quality_label_quartile_boundaries():
+    """
+    Test QualityLabel enum uses same 25/50/75 quartile cutoffs.
+    """
+    from ..meters import get_quality_label, QualityLabel
+
+    # < 25 -> CHALLENGING
+    assert get_quality_label(0) == QualityLabel.CHALLENGING
+    assert get_quality_label(24.99) == QualityLabel.CHALLENGING
+
+    # 25-50 -> TURBULENT
+    assert get_quality_label(25) == QualityLabel.TURBULENT
+    assert get_quality_label(49.99) == QualityLabel.TURBULENT
+
+    # 50-75 -> PEACEFUL
+    assert get_quality_label(50) == QualityLabel.PEACEFUL
+    assert get_quality_label(74.99) == QualityLabel.PEACEFUL
+
+    # >= 75 -> FLOWING
+    assert get_quality_label(75) == QualityLabel.FLOWING
+    assert get_quality_label(100) == QualityLabel.FLOWING
+
+
+def test_quadrant_word_bank_quartile_boundaries():
+    """
+    Test word bank quadrant selection uses same 25/50/75 quartile cutoffs.
+    """
+    from ..meters import get_quadrant_from_unified_score
+
+    # < 25 -> challenging quadrant
+    assert get_quadrant_from_unified_score(0) == "low_intensity_low_harmony"
+    assert get_quadrant_from_unified_score(24.99) == "low_intensity_low_harmony"
+
+    # 25-50 -> turbulent quadrant
+    assert get_quadrant_from_unified_score(25) == "moderate"
+    assert get_quadrant_from_unified_score(49.99) == "moderate"
+
+    # 50-75 -> peaceful quadrant
+    assert get_quadrant_from_unified_score(50) == "low_intensity_high_harmony"
+    assert get_quadrant_from_unified_score(74.99) == "low_intensity_high_harmony"
+
+    # >= 75 -> flowing quadrant
+    assert get_quadrant_from_unified_score(75) == "high_intensity_high_harmony"
+    assert get_quadrant_from_unified_score(100) == "high_intensity_high_harmony"
 
 
 def test_determine_quality_label():
-    """Test quality label determination based on unified_score quadrants."""
-    # Flowing: high harmony (unified_score >= 50)
-    quality, label = determine_quality_label(85, 70)
+    """Test quality label determination based on unified_score quartiles (0-100 scale)."""
+    # Flowing (>= 75): high harmony, high intensity
+    quality, label = determine_quality_label(90, 80)
     assert quality == "flowing"
     assert label == "Flowing"
 
-    # Peaceful: good harmony (unified_score 10-50)
-    quality, label = determine_quality_label(65, 50)
+    # Peaceful (50-75): above average
+    quality, label = determine_quality_label(65, 60)
     assert quality == "peaceful"
     assert label == "Peaceful"
 
-    # Turbulent: mixed (unified_score -25 to 10)
-    quality, label = determine_quality_label(50, 50)
+    # Turbulent (25-50): below average
+    quality, label = determine_quality_label(35, 40)
     assert quality == "turbulent"
     assert label == "Turbulent"
 
-    # Challenging: low harmony (unified_score < -25)
-    quality, label = determine_quality_label(20, 70)
+    # Challenging (< 25): bottom quartile - needs high intensity + very low harmony
+    quality, label = determine_quality_label(10, 80)
     assert quality == "challenging"
     assert label == "Challenging"
 

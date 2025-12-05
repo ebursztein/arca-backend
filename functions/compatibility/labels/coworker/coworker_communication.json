@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "communication",
+  "_mode": "coworker",
+  "metadata": {
+    "category_id": "communication",
+    "display_name": "Communication",
+    "description": "How well you exchange ideas and information in a work context",
+    "sentence_template": "Professionally, communication is ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mercury", "Saturn", "Jupiter"],
+    "what_it_measures": "Mercury shows information exchange style. Saturn adds structure and professionalism. Jupiter brings openness to ideas.",
+    "planet_meanings": {
+      "Mercury": "how you exchange information and ideas",
+      "Saturn": "structure, formality, and professional boundaries",
+      "Jupiter": "openness to new ideas and big-picture thinking"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Blocked",
+      "guidance": "Professional communication strained; use email and documentation."
+    },
+    "low": {
+      "label": "Formal",
+      "guidance": "Keep it professional and structured; small talk may fall flat."
+    },
+    "mid": {
+      "label": "Professional",
+      "guidance": "Standard work communication; neither great nor problematic."
+    },
+    "high": {
+      "label": "Productive",
+      "guidance": "Ideas flow well in meetings; good brainstorming partner."
+    },
+    "very_high": {
+      "label": "In Sync",
+      "guidance": "Excellent professional rapport; anticipate each other's thinking."
+    }
+  }
+}

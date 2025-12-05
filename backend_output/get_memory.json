@@ -1,0 +1,39 @@
+{
+  "function_name": "get_memory",
+  "request": {
+    "user_id": "test_user_a"
+  },
+  "response": {
+    "categories": {
+      "body": {
+        "count": 0,
+        "last_mentioned": null
+      },
+      "growth": {
+        "count": 0,
+        "last_mentioned": null
+      },
+      "heart": {
+        "count": 0,
+        "last_mentioned": null
+      },
+      "instincts": {
+        "count": 0,
+        "last_mentioned": null
+      },
+      "mind": {
+        "count": 0,
+        "last_mentioned": null
+      }
+    },
+    "connection_mentions": [],
+    "entity_summary": {},
+    "last_conversation_date": null,
+    "question_categories": {},
+    "relationship_mentions": [],
+    "total_conversations": 0,
+    "updated_at": "2025-12-05T03:12:42.664688",
+    "user_id": "test_user_a"
+  },
+  "captured_at": "2025-12-05T03:12:42.671416+00:00"
+}

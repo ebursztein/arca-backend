@@ -11,19 +11,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 71.55144869649969,
-      "intensity": 79.71443776195389,
+      "harmony": 49.823661131093615,
+      "intensity": 35.363791783125635,
       "interpretation": "Measures ambition",
       "meter_name": "ambition",
       "raw_scores": {
         "dti": 2480.2992,
-        "hqs": 149.2159500000001
+        "harmony_coefficient": -0.0035267773781276707,
+        "hqs": 149.2159500000001,
+        "intensity_raw": 67.79837032341156
       },
-      "state_label": "Unstoppable",
+      "state_label": "Uphill",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 426.93750000000006,
+          "gaussian_power": 56.44473486000503,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.SUN conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -31,6 +34,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 0.41,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 0.41,
           "tomorrow_deviation": null,
@@ -41,6 +45,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 9.360000000000008,
+          "gaussian_power": 0.0,
           "hqs_contribution": -9.360000000000008,
           "label": "Transit Planet.NEPTUNE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -48,6 +53,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.84,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.84,
           "tomorrow_deviation": null,
@@ -58,6 +64,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 55.57500000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.JUPITER conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -65,6 +72,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.05,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 7.05,
           "tomorrow_deviation": null,
@@ -75,6 +83,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.NORTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -82,6 +91,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -92,6 +102,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.SOUTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -99,6 +110,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -109,26 +121,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "slow",
-          "delta": -3.4647680935606786,
-          "direction": "worsening",
-          "previous": 75.01621679006037
+          "change_rate": "stable",
+          "delta": 0.2997365900904896,
+          "direction": "improving",
+          "previous": 49.523924541003126
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": -1.5039624946415984,
-          "direction": "decreasing",
-          "previous": 81.21840025659549
+          "change_rate": "moderate",
+          "delta": 7.144974644928862,
+          "direction": "increasing",
+          "previous": 28.218817138196773
         },
         "unified_score": {
-          "change_rate": "moderate",
-          "delta": -8.599999999999994,
-          "direction": "decreasing",
-          "previous": 84.1
+          "change_rate": "rapid",
+          "delta": 23.0,
+          "direction": "increasing",
+          "previous": 35.4
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 75.5
+      "unified_quality": "peaceful",
+      "unified_score": 58.4
     },
     "aspect_count": 85,
     "circle": {
@@ -137,19 +149,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 100.0,
-      "intensity": 43.569199523886674,
+      "harmony": 49.151946383422754,
+      "intensity": 1.6590165225883544,
       "interpretation": "Measures circle",
       "meter_name": "circle",
       "raw_scores": {
         "dti": 971.178,
-        "hqs": 611.0526500000001
+        "harmony_coefficient": -0.01696107233154497,
+        "hqs": 611.0526500000001,
+        "intensity_raw": 2.2241006531437284
       },
-      "state_label": "Unstoppable",
+      "state_label": "Moving",
       "top_aspects": [
         {
           "aspect_type": "trine",
           "dti_contribution": 293.26050000000004,
+          "gaussian_power": 0.0,
           "hqs_contribution": 293.26050000000004,
           "label": "Transit Planet.PLUTO trine Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -157,6 +172,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 2.43,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 2.43,
           "tomorrow_deviation": null,
@@ -167,6 +183,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 92.13749999999999,
+          "gaussian_power": 0.0,
           "hqs_contribution": -27.641249999999996,
           "label": "Transit Planet.URANUS conjunction Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -174,6 +191,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 6.95,
+          "polarity": -0.3,
           "quality_factor": -0.3,
           "today_deviation": 6.95,
           "tomorrow_deviation": null,
@@ -184,6 +202,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 147.42000000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 147.42000000000002,
           "label": "Transit Planet.NEPTUNE sextile Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -191,6 +210,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 3.8,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 3.8,
           "tomorrow_deviation": null,
@@ -201,6 +221,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 96.31439999999999,
+          "gaussian_power": 0.0,
           "hqs_contribution": 96.31439999999999,
           "label": "Transit Planet.SATURN sextile Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -208,6 +229,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 4.57,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 4.57,
           "tomorrow_deviation": null,
@@ -218,6 +240,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 51.01199999999999,
+          "gaussian_power": 0.0,
           "hqs_contribution": -51.01199999999999,
           "label": "Transit Planet.MARS square Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -225,6 +248,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 6.91,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.91,
           "tomorrow_deviation": null,
@@ -236,25 +260,25 @@
       "trend": {
         "harmony": {
           "change_rate": "stable",
-          "delta": 0.0,
-          "direction": "stable",
-          "previous": 100.0
+          "delta": 0.5436990763749918,
+          "direction": "improving",
+          "previous": 48.60824730704776
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 2.5573494576877636,
-          "direction": "increasing",
-          "previous": 41.01185006619891
+          "change_rate": "stable",
+          "delta": -0.1628588936939075,
+          "direction": "decreasing",
+          "previous": 1.821875416282262
         },
         "unified_score": {
-          "change_rate": "stable",
-          "delta": 0.9000000000000057,
-          "direction": "increasing",
-          "previous": 99.1
+          "change_rate": "rapid",
+          "delta": -24.5,
+          "direction": "decreasing",
+          "previous": 64.2
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 100.0
+      "unified_quality": "turbulent",
+      "unified_score": 39.7
     },
     "clarity": {
       "advice": [
@@ -262,19 +286,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "mind",
-      "harmony": 58.438176197258784,
-      "intensity": 96.25054707951558,
+      "harmony": 46.66854651101524,
+      "intensity": 40.203127904751206,
       "interpretation": "Measures clarity",
       "meter_name": "clarity",
       "raw_scores": {
         "dti": 2217.6420000000003,
-        "hqs": -177.33884999999992
+        "harmony_coefficient": -0.06662906977969504,
+        "hqs": -177.33884999999992,
+        "intensity_raw": 63.29245730793736
       },
-      "state_label": "Clear",
+      "state_label": "Distracted",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 426.93750000000006,
+          "gaussian_power": 56.44473486000503,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.SUN conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -282,6 +309,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 0.41,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 0.41,
           "tomorrow_deviation": null,
@@ -292,6 +320,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 9.360000000000008,
+          "gaussian_power": 0.0,
           "hqs_contribution": -9.360000000000008,
           "label": "Transit Planet.NEPTUNE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -299,6 +328,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.84,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.84,
           "tomorrow_deviation": null,
@@ -309,6 +339,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 55.57500000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.JUPITER conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -316,6 +347,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.05,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 7.05,
           "tomorrow_deviation": null,
@@ -326,6 +358,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.NORTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -333,6 +366,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -343,6 +377,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.SOUTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -350,6 +385,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -361,25 +397,25 @@
       "trend": {
         "harmony": {
           "change_rate": "slow",
-          "delta": -4.973009511459267,
-          "direction": "worsening",
-          "previous": 63.41118570871805
+          "delta": 2.141083938059957,
+          "direction": "improving",
+          "previous": 44.52746257295529
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 2.0225664790223874,
+          "change_rate": "moderate",
+          "delta": 9.407303740735973,
           "direction": "increasing",
-          "previous": 94.2279806004932
+          "previous": 30.795824164015233
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": -18.699999999999996,
-          "direction": "decreasing",
-          "previous": 56.8
+          "delta": 27.1,
+          "direction": "increasing",
+          "previous": 32.0
         }
       },
       "unified_quality": "peaceful",
-      "unified_score": 38.1
+      "unified_score": 59.1
     },
     "communication": {
       "advice": [
@@ -387,19 +423,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "mind",
-      "harmony": 92.4485219806474,
-      "intensity": 54.428448585036215,
+      "harmony": 30.45578918811046,
+      "intensity": 4.635801837291422,
       "interpretation": "Measures communication",
       "meter_name": "communication",
       "raw_scores": {
         "dti": 1147.33515,
-        "hqs": 447.5542500000001
+        "harmony_coefficient": -0.39088421623779074,
+        "hqs": 447.5542500000001,
+        "intensity_raw": 5.891665163341695
       },
-      "state_label": "Sharp",
+      "state_label": "Distracted",
       "top_aspects": [
         {
           "aspect_type": "trine",
           "dti_contribution": 293.26050000000004,
+          "gaussian_power": 0.0,
           "hqs_contribution": 293.26050000000004,
           "label": "Transit Planet.PLUTO trine Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -407,6 +446,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 2.43,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 2.43,
           "tomorrow_deviation": null,
@@ -417,6 +457,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 92.13749999999999,
+          "gaussian_power": 0.0,
           "hqs_contribution": -27.641249999999996,
           "label": "Transit Planet.URANUS conjunction Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -424,6 +465,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 6.95,
+          "polarity": -0.3,
           "quality_factor": -0.3,
           "today_deviation": 6.95,
           "tomorrow_deviation": null,
@@ -434,6 +476,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 147.42000000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 147.42000000000002,
           "label": "Transit Planet.NEPTUNE sextile Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -441,6 +484,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 3.8,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 3.8,
           "tomorrow_deviation": null,
@@ -451,6 +495,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 147.71249999999998,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.NORTH_NODE conjunction Natal Planet.MOON",
           "max_orb": 8.0,
@@ -458,6 +503,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -468,6 +514,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 132.94124999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": -132.94124999999997,
           "label": "Transit Planet.SOUTH_NODE opposition Natal Planet.MOON",
           "max_orb": 8.0,
@@ -475,6 +522,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -485,26 +533,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "stable",
-          "delta": 1.2023620714057728,
-          "direction": "improving",
-          "previous": 91.24615990924163
+          "change_rate": "rapid",
+          "delta": -17.428321981610036,
+          "direction": "worsening",
+          "previous": 47.8841111697205
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": 1.7022871052172945,
+          "change_rate": "slow",
+          "delta": 2.713997326789718,
           "direction": "increasing",
-          "previous": 52.72616147981892
+          "previous": 1.9218045105017036
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": 2.200000000000003,
-          "direction": "increasing",
-          "previous": 96.2
+          "change_rate": "rapid",
+          "delta": -12.299999999999997,
+          "direction": "decreasing",
+          "previous": 46.5
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 98.4
+      "unified_quality": "turbulent",
+      "unified_score": 34.2
     },
     "connections": {
       "advice": [
@@ -512,19 +560,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "heart",
-      "harmony": 63.99272594009795,
-      "intensity": 18.504193313758964,
+      "harmony": 49.26163448604247,
+      "intensity": 1.4521813196666735,
       "interpretation": "Measures connections",
       "meter_name": "connections",
       "raw_scores": {
         "dti": 574.31205,
-        "hqs": 88.23945000000005
+        "harmony_coefficient": -0.014767310279150682,
+        "hqs": 88.23945000000005,
+        "intensity_raw": 2.2241006531437284
       },
       "state_label": "Grounded",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 147.71249999999998,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.NORTH_NODE conjunction Natal Planet.MOON",
           "max_orb": 8.0,
@@ -532,6 +583,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -542,6 +594,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 132.94124999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": -132.94124999999997,
           "label": "Transit Planet.SOUTH_NODE opposition Natal Planet.MOON",
           "max_orb": 8.0,
@@ -549,6 +602,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -559,6 +613,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 4.290000000000013,
+          "gaussian_power": 0.0,
           "hqs_contribution": -4.290000000000013,
           "label": "Transit Planet.SUN square Natal Planet.MOON",
           "max_orb": 8.0,
@@ -566,6 +621,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 7.89,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.89,
           "tomorrow_deviation": null,
@@ -576,6 +632,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 109.39500000000001,
+          "gaussian_power": 0.0,
           "hqs_contribution": 109.39500000000001,
           "label": "Transit Planet.MERCURY trine Natal Planet.MOON",
           "max_orb": 8.0,
@@ -583,6 +640,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 4.26,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 4.26,
           "tomorrow_deviation": null,
@@ -593,6 +651,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 13.650000000000004,
+          "gaussian_power": 0.0,
           "hqs_contribution": 13.650000000000004,
           "label": "Transit Planet.VENUS sextile Natal Planet.MOON",
           "max_orb": 8.0,
@@ -600,6 +659,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 7.3,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.3,
           "tomorrow_deviation": null,
@@ -610,26 +670,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "slow",
-          "delta": 5.3669167649389,
+          "change_rate": "stable",
+          "delta": 0.47693566461465764,
           "direction": "improving",
-          "previous": 58.62580917515905
+          "previous": 48.78469882142781
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 3.5213381256627425,
-          "direction": "increasing",
-          "previous": 14.982855188096222
+          "change_rate": "stable",
+          "delta": -0.1425547244067773,
+          "direction": "decreasing",
+          "previous": 1.5947360440734508
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 11.600000000000001,
+          "delta": 27.900000000000006,
           "direction": "increasing",
-          "previous": 16.7
+          "previous": 35.8
         }
       },
       "unified_quality": "peaceful",
-      "unified_score": 28.3
+      "unified_score": 63.7
     },
     "creativity": {
       "advice": [
@@ -637,19 +697,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "instincts",
-      "harmony": 100.0,
-      "intensity": 48.04692626121544,
+      "harmony": 47.515471000582295,
+      "intensity": 12.1931908429435,
       "interpretation": "Measures creativity",
       "meter_name": "creativity",
       "raw_scores": {
         "dti": 792.94605,
-        "hqs": 456.02895000000007
+        "harmony_coefficient": -0.04969057998835416,
+        "hqs": 456.02895000000007,
+        "intensity_raw": 12.51617475029844
       },
-      "state_label": "Aligned",
+      "state_label": "Noisy",
       "top_aspects": [
         {
           "aspect_type": "square",
           "dti_contribution": 22.347,
+          "gaussian_power": 0.0,
           "hqs_contribution": -22.347,
           "label": "Transit Planet.NEPTUNE square Natal Planet.URANUS",
           "max_orb": 8.0,
@@ -657,6 +720,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 6.09,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.09,
           "tomorrow_deviation": null,
@@ -667,6 +731,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 90.96750000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 90.96750000000002,
           "label": "Transit Planet.URANUS trine Natal Planet.SATURN",
           "max_orb": 8.0,
@@ -674,6 +739,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 4.89,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 4.89,
           "tomorrow_deviation": null,
@@ -684,6 +750,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 11.793600000000001,
+          "gaussian_power": 0.0,
           "hqs_contribution": -11.793600000000001,
           "label": "Transit Planet.JUPITER opposition Natal Planet.URANUS",
           "max_orb": 8.0,
@@ -691,6 +758,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 6.88,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.88,
           "tomorrow_deviation": null,
@@ -701,6 +769,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 59.4945,
+          "gaussian_power": 5.496341005419501,
           "hqs_contribution": -59.4945,
           "label": "Transit Planet.MERCURY opposition Natal Planet.NEPTUNE",
           "max_orb": 8.0,
@@ -708,6 +777,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 1.22,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.22,
           "tomorrow_deviation": null,
@@ -718,6 +788,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 195.97500000000002,
+          "gaussian_power": 2.772869547984131,
           "hqs_contribution": 195.97500000000002,
           "label": "Transit Planet.SOUTH_NODE trine Natal Planet.SATURN",
           "max_orb": 8.0,
@@ -725,6 +796,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 1.3,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 1.3,
           "tomorrow_deviation": null,
@@ -735,26 +807,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "stable",
-          "delta": 0.0,
-          "direction": "stable",
-          "previous": 100.0
+          "change_rate": "rapid",
+          "delta": -37.541173975234145,
+          "direction": "worsening",
+          "previous": 85.05664497581644
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": -0.15532814163976383,
+          "change_rate": "moderate",
+          "delta": -7.613161349280874,
           "direction": "decreasing",
-          "previous": 48.2022544028552
+          "previous": 19.806352192224374
         },
         "unified_score": {
-          "change_rate": "stable",
-          "delta": 0.0,
-          "direction": "stable",
-          "previous": 100.0
+          "change_rate": "rapid",
+          "delta": -27.599999999999994,
+          "direction": "decreasing",
+          "previous": 68.3
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 100.0
+      "unified_quality": "turbulent",
+      "unified_score": 40.7
     },
     "date": "Sun, 15 Jun 2025 00:00:00 GMT",
     "drive": {
@@ -763,19 +835,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "body",
-      "harmony": 49.97360163216954,
-      "intensity": 66.17194839570365,
+      "harmony": 44.62707288317325,
+      "intensity": 43.27786694450001,
       "interpretation": "Measures drive",
       "meter_name": "drive",
       "raw_scores": {
         "dti": 2336.2995,
-        "hqs": -408.49574999999993
+        "harmony_coefficient": -0.1074585423365351,
+        "hqs": -408.49574999999993,
+        "intensity_raw": 89.1753275831284
       },
-      "state_label": "Low Power Mode",
+      "state_label": "Running Low",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 426.93750000000006,
+          "gaussian_power": 56.44473486000503,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.SUN conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -783,6 +858,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 0.41,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 0.41,
           "tomorrow_deviation": null,
@@ -793,6 +869,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 9.360000000000008,
+          "gaussian_power": 0.0,
           "hqs_contribution": -9.360000000000008,
           "label": "Transit Planet.NEPTUNE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -800,6 +877,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.84,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.84,
           "tomorrow_deviation": null,
@@ -810,6 +888,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 55.57500000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.JUPITER conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -817,6 +896,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.05,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 7.05,
           "tomorrow_deviation": null,
@@ -827,6 +907,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.NORTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -834,6 +915,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -844,6 +926,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.SOUTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -851,6 +934,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -861,26 +945,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "slow",
-          "delta": 2.2081280666266565,
+          "change_rate": "rapid",
+          "delta": 21.978287052605847,
           "direction": "improving",
-          "previous": 47.765473565542884
+          "previous": 22.6487858305674
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": 0.06381863065364257,
-          "direction": "increasing",
-          "previous": 66.10812976505001
+          "change_rate": "rapid",
+          "delta": -10.598816589884372,
+          "direction": "decreasing",
+          "previous": 53.876683534384384
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": 4.7,
+          "change_rate": "rapid",
+          "delta": 20.900000000000002,
           "direction": "increasing",
-          "previous": -4.8
+          "previous": 14.8
         }
       },
       "unified_quality": "turbulent",
-      "unified_score": -0.1
+      "unified_score": 35.7
     },
     "energy": {
       "advice": [
@@ -888,19 +972,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "body",
-      "harmony": 47.96004879434849,
-      "intensity": 84.54484240825857,
+      "harmony": 46.5717917796281,
+      "intensity": 47.879224445962535,
       "interpretation": "Measures energy",
       "meter_name": "energy",
       "raw_scores": {
         "dti": 1986.2842500000002,
-        "hqs": -396.0157499999999
+        "harmony_coefficient": -0.06856416440743808,
+        "hqs": -396.0157499999999,
+        "intensity_raw": 73.58453140509206
       },
-      "state_label": "Low Power Mode",
+      "state_label": "Running Low",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 426.93750000000006,
+          "gaussian_power": 56.44473486000503,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.SUN conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -908,6 +995,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 0.41,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 0.41,
           "tomorrow_deviation": null,
@@ -918,6 +1006,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 9.360000000000008,
+          "gaussian_power": 0.0,
           "hqs_contribution": -9.360000000000008,
           "label": "Transit Planet.NEPTUNE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -925,6 +1014,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.84,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.84,
           "tomorrow_deviation": null,
@@ -935,6 +1025,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 55.57500000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.JUPITER conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -942,6 +1033,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.05,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 7.05,
           "tomorrow_deviation": null,
@@ -952,6 +1044,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.NORTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -959,6 +1052,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -969,6 +1063,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.SOUTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -976,6 +1071,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -986,26 +1082,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "stable",
-          "delta": -1.3389472964851663,
+          "change_rate": "rapid",
+          "delta": -11.434015678618671,
           "direction": "worsening",
-          "previous": 49.298996090833654
+          "previous": 58.00580745824677
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": -0.8441018837908132,
-          "direction": "decreasing",
-          "previous": 85.38894429204939
+          "change_rate": "slow",
+          "delta": 4.693658690233555,
+          "direction": "increasing",
+          "previous": 43.18556575572898
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": -3.3,
+          "change_rate": "rapid",
+          "delta": -15.699999999999996,
           "direction": "decreasing",
-          "previous": -1.8
+          "previous": 67.1
         }
       },
-      "unified_quality": "turbulent",
-      "unified_score": -5.1
+      "unified_quality": "peaceful",
+      "unified_score": 51.4
     },
     "evolution": {
       "advice": [
@@ -1013,19 +1109,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 84.19644184673267,
-      "intensity": 44.22991096356784,
+      "harmony": 42.45893600397218,
+      "intensity": 30.144155478391234,
       "interpretation": "Measures evolution",
       "meter_name": "evolution",
       "raw_scores": {
         "dti": 1024.80105,
-        "hqs": 263.6445500000001
+        "harmony_coefficient": -0.15082127992055647,
+        "hqs": 263.6445500000001,
+        "intensity_raw": 38.399045025489485
       },
-      "state_label": "Unstoppable",
+      "state_label": "Uphill",
       "top_aspects": [
         {
           "aspect_type": "square",
           "dti_contribution": 206.856,
+          "gaussian_power": 16.130848457188883,
           "hqs_contribution": -206.856,
           "label": "Transit Planet.MERCURY square Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1033,6 +1132,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 1.37,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.37,
           "tomorrow_deviation": null,
@@ -1043,6 +1143,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 7.488000000000007,
+          "gaussian_power": 0.0,
           "hqs_contribution": 7.488000000000007,
           "label": "Transit Planet.PLUTO sextile Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1050,6 +1151,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 7.68,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.68,
           "tomorrow_deviation": null,
@@ -1060,6 +1162,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 22.347,
+          "gaussian_power": 0.0,
           "hqs_contribution": -22.347,
           "label": "Transit Planet.NEPTUNE square Natal Planet.URANUS",
           "max_orb": 8.0,
@@ -1067,6 +1170,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 6.09,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.09,
           "tomorrow_deviation": null,
@@ -1077,6 +1181,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 90.96750000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 90.96750000000002,
           "label": "Transit Planet.URANUS trine Natal Planet.SATURN",
           "max_orb": 8.0,
@@ -1084,6 +1189,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 4.89,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 4.89,
           "tomorrow_deviation": null,
@@ -1094,6 +1200,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 11.793600000000001,
+          "gaussian_power": 0.0,
           "hqs_contribution": -11.793600000000001,
           "label": "Transit Planet.JUPITER opposition Natal Planet.URANUS",
           "max_orb": 8.0,
@@ -1101,6 +1208,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 6.88,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.88,
           "tomorrow_deviation": null,
@@ -1111,26 +1219,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "moderate",
-          "delta": 8.58840676195797,
+          "change_rate": "rapid",
+          "delta": 16.74534868517923,
           "direction": "improving",
-          "previous": 75.6080350847747
+          "previous": 25.713587318792946
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": -0.3138441948473485,
+          "change_rate": "rapid",
+          "delta": -34.905348483765685,
           "direction": "decreasing",
-          "previous": 44.54375515841519
+          "previous": 65.04950396215692
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 15.200000000000003,
+          "delta": 38.7,
           "direction": "increasing",
-          "previous": 66.7
+          "previous": 17.9
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 81.9
+      "unified_quality": "peaceful",
+      "unified_score": 56.6
     },
     "flow": {
       "advice": [
@@ -1138,19 +1246,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "instincts",
-      "harmony": 63.24717616331325,
-      "intensity": 12.89394246122573,
+      "harmony": 21.20198838855097,
+      "intensity": 9.1938107803097,
       "interpretation": "Measures flow",
       "meter_name": "flow",
       "raw_scores": {
         "dti": 194.571,
-        "hqs": 1.1569999999999965
+        "harmony_coefficient": -0.5759602322289806,
+        "hqs": 1.1569999999999965,
+        "intensity_raw": 7.72044165856323
       },
-      "state_label": "Tuned In",
+      "state_label": "Noisy",
       "top_aspects": [
         {
           "aspect_type": "opposition",
           "dti_contribution": 59.4945,
+          "gaussian_power": 5.496341005419501,
           "hqs_contribution": -59.4945,
           "label": "Transit Planet.MERCURY opposition Natal Planet.NEPTUNE",
           "max_orb": 8.0,
@@ -1158,6 +1269,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 1.22,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.22,
           "tomorrow_deviation": null,
@@ -1168,6 +1280,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 74.425,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.MERCURY conjunction Natal Planet.JUPITER",
           "max_orb": 8.0,
@@ -1175,6 +1288,7 @@
           "natal_planet_house": 11,
           "natal_planet_sign": "cancer",
           "orb_deviation": 3.42,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 3.42,
           "tomorrow_deviation": null,
@@ -1185,6 +1299,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 21.879000000000005,
+          "gaussian_power": 0.0,
           "hqs_contribution": 21.879000000000005,
           "label": "Transit Planet.VENUS trine Natal Planet.NEPTUNE",
           "max_orb": 8.0,
@@ -1192,6 +1307,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 4.26,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 4.26,
           "tomorrow_deviation": null,
@@ -1202,6 +1318,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 10.010000000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 10.010000000000002,
           "label": "Transit Planet.VENUS sextile Natal Planet.JUPITER",
           "max_orb": 8.0,
@@ -1209,6 +1326,7 @@
           "natal_planet_house": 11,
           "natal_planet_sign": "cancer",
           "orb_deviation": 6.46,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 6.46,
           "tomorrow_deviation": null,
@@ -1219,6 +1337,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 17.257499999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": 17.257499999999997,
           "label": "Transit Planet.NORTH_NODE trine Natal Planet.JUPITER",
           "max_orb": 8.0,
@@ -1226,6 +1345,7 @@
           "natal_planet_house": 11,
           "natal_planet_sign": "cancer",
           "orb_deviation": 6.82,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 6.82,
           "tomorrow_deviation": null,
@@ -1236,26 +1356,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "stable",
-          "delta": 1.0702041455352642,
-          "direction": "improving",
-          "previous": 62.176972017777985
+          "change_rate": "rapid",
+          "delta": -25.843673186659213,
+          "direction": "worsening",
+          "previous": 47.04566157521018
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 4.221480045752635,
+          "change_rate": "moderate",
+          "delta": 6.285265577329113,
           "direction": "increasing",
-          "previous": 8.672462415473095
+          "previous": 2.9085452029805867
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": 3.6000000000000014,
-          "direction": "increasing",
-          "previous": 20.9
+          "change_rate": "rapid",
+          "delta": -18.799999999999997,
+          "direction": "decreasing",
+          "previous": 54.8
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 24.5
+      "unified_quality": "turbulent",
+      "unified_score": 36.0
     },
     "focus": {
       "advice": [
@@ -1263,19 +1383,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "mind",
-      "harmony": 83.90762240362496,
-      "intensity": 54.35341294326299,
+      "harmony": 32.6382585395807,
+      "intensity": 31.071360212044596,
       "interpretation": "Measures focus",
       "meter_name": "focus",
       "raw_scores": {
         "dti": 1041.963375,
-        "hqs": 303.4756875000001
+        "harmony_coefficient": -0.34723482920838605,
+        "hqs": 303.4756875000001,
+        "intensity_raw": 36.27227664305244
       },
-      "state_label": "Sharp",
+      "state_label": "Distracted",
       "top_aspects": [
         {
           "aspect_type": "square",
           "dti_contribution": 206.856,
+          "gaussian_power": 16.130848457188883,
           "hqs_contribution": -206.856,
           "label": "Transit Planet.MERCURY square Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1283,6 +1406,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 1.37,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.37,
           "tomorrow_deviation": null,
@@ -1293,6 +1417,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 293.26050000000004,
+          "gaussian_power": 0.0,
           "hqs_contribution": 293.26050000000004,
           "label": "Transit Planet.PLUTO trine Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -1300,6 +1425,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 2.43,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 2.43,
           "tomorrow_deviation": null,
@@ -1310,6 +1436,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 92.13749999999999,
+          "gaussian_power": 0.0,
           "hqs_contribution": -27.641249999999996,
           "label": "Transit Planet.URANUS conjunction Natal Planet.MERCURY",
           "max_orb": 8.0,
@@ -1317,6 +1444,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 6.95,
+          "polarity": -0.3,
           "quality_factor": -0.3,
           "today_deviation": 6.95,
           "tomorrow_deviation": null,
@@ -1327,6 +1455,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 34.92,
+          "gaussian_power": 7.8619494050088035,
           "hqs_contribution": -34.92,
           "label": "Transit Planet.VENUS square Natal Planet.NORTH_NODE",
           "max_orb": 8.0,
@@ -1334,6 +1463,7 @@
           "natal_planet_house": 6,
           "natal_planet_sign": "aquarius",
           "orb_deviation": 0.24,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 0.24,
           "tomorrow_deviation": null,
@@ -1344,6 +1474,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 7.488000000000007,
+          "gaussian_power": 0.0,
           "hqs_contribution": 7.488000000000007,
           "label": "Transit Planet.PLUTO sextile Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1351,6 +1482,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 7.68,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.68,
           "tomorrow_deviation": null,
@@ -1361,26 +1493,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "slow",
-          "delta": 3.679014720878655,
+          "change_rate": "rapid",
+          "delta": 27.398959325001606,
           "direction": "improving",
-          "previous": 80.2286076827463
+          "previous": 5.23929921457909
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": -0.10319998775842265,
+          "change_rate": "rapid",
+          "delta": -24.756207128926114,
           "direction": "decreasing",
-          "previous": 54.45661293102141
+          "previous": 55.82756734097071
         },
         "unified_score": {
-          "change_rate": "moderate",
-          "delta": 6.099999999999994,
+          "change_rate": "rapid",
+          "delta": 29.5,
           "direction": "increasing",
-          "previous": 81.2
+          "previous": 5.6
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 87.3
+      "unified_quality": "turbulent",
+      "unified_score": 35.1
     },
     "intuition": {
       "advice": [
@@ -1388,19 +1520,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "instincts",
-      "harmony": 58.3663322557869,
-      "intensity": 32.070595672428404,
+      "harmony": 36.40386807506854,
+      "intensity": 33.37791359519314,
       "interpretation": "Measures intuition",
       "meter_name": "intuition",
       "raw_scores": {
         "dti": 648.94635,
-        "hqs": -101.68274999999997
+        "harmony_coefficient": -0.27192263849862924,
+        "hqs": -101.68274999999997,
+        "intensity_raw": 33.89313201001527
       },
-      "state_label": "Tuned In",
+      "state_label": "Noisy",
       "top_aspects": [
         {
           "aspect_type": "square",
           "dti_contribution": 206.856,
+          "gaussian_power": 16.130848457188883,
           "hqs_contribution": -206.856,
           "label": "Transit Planet.MERCURY square Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1408,6 +1543,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 1.37,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.37,
           "tomorrow_deviation": null,
@@ -1418,6 +1554,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 7.488000000000007,
+          "gaussian_power": 0.0,
           "hqs_contribution": 7.488000000000007,
           "label": "Transit Planet.PLUTO sextile Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1425,6 +1562,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 7.68,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.68,
           "tomorrow_deviation": null,
@@ -1435,6 +1573,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 22.347,
+          "gaussian_power": 0.0,
           "hqs_contribution": -22.347,
           "label": "Transit Planet.NEPTUNE square Natal Planet.URANUS",
           "max_orb": 8.0,
@@ -1442,6 +1581,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 6.09,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.09,
           "tomorrow_deviation": null,
@@ -1452,6 +1592,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 11.793600000000001,
+          "gaussian_power": 0.0,
           "hqs_contribution": -11.793600000000001,
           "label": "Transit Planet.JUPITER opposition Natal Planet.URANUS",
           "max_orb": 8.0,
@@ -1459,6 +1600,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 6.88,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.88,
           "tomorrow_deviation": null,
@@ -1469,6 +1611,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 59.4945,
+          "gaussian_power": 5.496341005419501,
           "hqs_contribution": -59.4945,
           "label": "Transit Planet.MERCURY opposition Natal Planet.NEPTUNE",
           "max_orb": 8.0,
@@ -1476,6 +1619,7 @@
           "natal_planet_house": 5,
           "natal_planet_sign": "capricorn",
           "orb_deviation": 1.22,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.22,
           "tomorrow_deviation": null,
@@ -1486,31 +1630,32 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "moderate",
-          "delta": 8.872936215150098,
+          "change_rate": "rapid",
+          "delta": 15.59657935447575,
           "direction": "improving",
-          "previous": 49.4933960406368
+          "previous": 20.807288720592787
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 2.7793763220553096,
-          "direction": "increasing",
-          "previous": 29.291219350373094
+          "change_rate": "rapid",
+          "delta": -42.693118990249594,
+          "direction": "decreasing",
+          "previous": 76.07103258544274
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 21.5,
+          "delta": 34.4,
           "direction": "increasing",
-          "previous": -0.7
+          "previous": 12.9
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 20.8
+      "unified_quality": "turbulent",
+      "unified_score": 47.3
     },
     "key_aspects": [
       {
         "aspect_type": "conjunction",
         "dti_contribution": 426.93750000000006,
+        "gaussian_power": 56.44473486000503,
         "hqs_contribution": 0.0,
         "label": "Transit Planet.SUN conjunction Natal Planet.SUN",
         "max_orb": 8.0,
@@ -1518,6 +1663,7 @@
         "natal_planet_house": 10,
         "natal_planet_sign": "gemini",
         "orb_deviation": 0.41,
+        "polarity": 0.0,
         "quality_factor": 0.0,
         "today_deviation": 0.41,
         "tomorrow_deviation": null,
@@ -1528,6 +1674,7 @@
       {
         "aspect_type": "square",
         "dti_contribution": 380.25,
+        "gaussian_power": 2.311810897394302,
         "hqs_contribution": -380.25,
         "label": "Transit Planet.NORTH_NODE square Natal Planet.SUN",
         "max_orb": 8.0,
@@ -1535,6 +1682,7 @@
         "natal_planet_house": 10,
         "natal_planet_sign": "gemini",
         "orb_deviation": 1.5,
+        "polarity": -1.0,
         "quality_factor": -1.0,
         "today_deviation": 1.5,
         "tomorrow_deviation": null,
@@ -1545,6 +1693,7 @@
       {
         "aspect_type": "square",
         "dti_contribution": 380.25,
+        "gaussian_power": 2.311810897394302,
         "hqs_contribution": -380.25,
         "label": "Transit Planet.SOUTH_NODE square Natal Planet.SUN",
         "max_orb": 8.0,
@@ -1552,6 +1701,7 @@
         "natal_planet_house": 10,
         "natal_planet_sign": "gemini",
         "orb_deviation": 1.5,
+        "polarity": -1.0,
         "quality_factor": -1.0,
         "today_deviation": 1.5,
         "tomorrow_deviation": null,
@@ -1562,6 +1712,7 @@
       {
         "aspect_type": "conjunction",
         "dti_contribution": 147.71249999999998,
+        "gaussian_power": 0.0,
         "hqs_contribution": 0.0,
         "label": "Transit Planet.NORTH_NODE conjunction Natal Planet.MOON",
         "max_orb": 8.0,
@@ -1569,6 +1720,7 @@
         "natal_planet_house": 7,
         "natal_planet_sign": "pisces",
         "orb_deviation": 5.98,
+        "polarity": 0.0,
         "quality_factor": 0.0,
         "today_deviation": 5.98,
         "tomorrow_deviation": null,
@@ -1579,6 +1731,7 @@
       {
         "aspect_type": "conjunction",
         "dti_contribution": 55.57500000000002,
+        "gaussian_power": 0.0,
         "hqs_contribution": 0.0,
         "label": "Transit Planet.JUPITER conjunction Natal Planet.SUN",
         "max_orb": 8.0,
@@ -1586,6 +1739,7 @@
         "natal_planet_house": 10,
         "natal_planet_sign": "gemini",
         "orb_deviation": 7.05,
+        "polarity": 0.0,
         "quality_factor": 0.0,
         "today_deviation": 7.05,
         "tomorrow_deviation": null,
@@ -1596,6 +1750,7 @@
       {
         "aspect_type": "square",
         "dti_contribution": 9.360000000000008,
+        "gaussian_power": 0.0,
         "hqs_contribution": -9.360000000000008,
         "label": "Transit Planet.NEPTUNE square Natal Planet.SUN",
         "max_orb": 8.0,
@@ -1603,6 +1758,7 @@
         "natal_planet_house": 10,
         "natal_planet_sign": "gemini",
         "orb_deviation": 7.84,
+        "polarity": -1.0,
         "quality_factor": -1.0,
         "today_deviation": 7.84,
         "tomorrow_deviation": null,
@@ -1613,6 +1769,7 @@
       {
         "aspect_type": "square",
         "dti_contribution": 206.856,
+        "gaussian_power": 16.130848457188883,
         "hqs_contribution": -206.856,
         "label": "Transit Planet.MERCURY square Natal Planet.MARS",
         "max_orb": 8.0,
@@ -1620,6 +1777,7 @@
         "natal_planet_house": 8,
         "natal_planet_sign": "aries",
         "orb_deviation": 1.37,
+        "polarity": -1.0,
         "quality_factor": -1.0,
         "today_deviation": 1.37,
         "tomorrow_deviation": null,
@@ -1630,6 +1788,7 @@
       {
         "aspect_type": "opposition",
         "dti_contribution": 132.94124999999997,
+        "gaussian_power": 0.0,
         "hqs_contribution": -132.94124999999997,
         "label": "Transit Planet.SOUTH_NODE opposition Natal Planet.MOON",
         "max_orb": 8.0,
@@ -1637,6 +1796,7 @@
         "natal_planet_house": 7,
         "natal_planet_sign": "pisces",
         "orb_deviation": 5.98,
+        "polarity": -1.0,
         "quality_factor": -1.0,
         "today_deviation": 5.98,
         "tomorrow_deviation": null,
@@ -1647,6 +1807,7 @@
       {
         "aspect_type": "sextile",
         "dti_contribution": 7.488000000000007,
+        "gaussian_power": 0.0,
         "hqs_contribution": 7.488000000000007,
         "label": "Transit Planet.PLUTO sextile Natal Planet.MARS",
         "max_orb": 8.0,
@@ -1654,6 +1815,7 @@
         "natal_planet_house": 8,
         "natal_planet_sign": "aries",
         "orb_deviation": 7.68,
+        "polarity": 1.0,
         "quality_factor": 1.0,
         "today_deviation": 7.68,
         "tomorrow_deviation": null,
@@ -1664,6 +1826,7 @@
       {
         "aspect_type": "trine",
         "dti_contribution": 293.26050000000004,
+        "gaussian_power": 0.0,
         "hqs_contribution": 293.26050000000004,
         "label": "Transit Planet.PLUTO trine Natal Planet.MERCURY",
         "max_orb": 8.0,
@@ -1671,6 +1834,7 @@
         "natal_planet_house": 10,
         "natal_planet_sign": "gemini",
         "orb_deviation": 2.43,
+        "polarity": 1.0,
         "quality_factor": 1.0,
         "today_deviation": 2.43,
         "tomorrow_deviation": null,
@@ -1685,19 +1849,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 69.0123950264552,
-      "intensity": 10.403063509442427,
+      "harmony": 49.210582459054784,
+      "intensity": 1.758551837829507,
       "interpretation": "Measures momentum",
       "meter_name": "momentum",
       "raw_scores": {
         "dti": 279.5208,
-        "hqs": 141.1982
+        "harmony_coefficient": -0.015788350818904263,
+        "hqs": 141.1982,
+        "intensity_raw": 2.2241006531437284
       },
-      "state_label": "Climbing",
+      "state_label": "Moving",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 74.425,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.MERCURY conjunction Natal Planet.JUPITER",
           "max_orb": 8.0,
@@ -1705,6 +1872,7 @@
           "natal_planet_house": 11,
           "natal_planet_sign": "cancer",
           "orb_deviation": 3.42,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 3.42,
           "tomorrow_deviation": null,
@@ -1715,6 +1883,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 31.9488,
+          "gaussian_power": 0.0,
           "hqs_contribution": -31.9488,
           "label": "Transit Planet.MOON square Natal Planet.VENUS",
           "max_orb": 8.0,
@@ -1722,6 +1891,7 @@
           "natal_planet_house": 9,
           "natal_planet_sign": "taurus",
           "orb_deviation": 5.44,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 5.44,
           "tomorrow_deviation": null,
@@ -1732,6 +1902,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 12.401999999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": 12.401999999999997,
           "label": "Transit Planet.MERCURY sextile Natal Planet.VENUS",
           "max_orb": 8.0,
@@ -1739,6 +1910,7 @@
           "natal_planet_house": 9,
           "natal_planet_sign": "taurus",
           "orb_deviation": 6.41,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 6.41,
           "tomorrow_deviation": null,
@@ -1749,6 +1921,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 10.010000000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 10.010000000000002,
           "label": "Transit Planet.VENUS sextile Natal Planet.JUPITER",
           "max_orb": 8.0,
@@ -1756,6 +1929,7 @@
           "natal_planet_house": 11,
           "natal_planet_sign": "cancer",
           "orb_deviation": 6.46,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 6.46,
           "tomorrow_deviation": null,
@@ -1766,6 +1940,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 73.18350000000001,
+          "gaussian_power": 0.0,
           "hqs_contribution": 73.18350000000001,
           "label": "Transit Planet.SOUTH_NODE trine Natal Planet.VENUS",
           "max_orb": 8.0,
@@ -1773,6 +1948,7 @@
           "natal_planet_house": 9,
           "natal_planet_sign": "taurus",
           "orb_deviation": 3.83,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 3.83,
           "tomorrow_deviation": null,
@@ -1784,25 +1960,25 @@
       "trend": {
         "harmony": {
           "change_rate": "stable",
-          "delta": -0.19947447197239399,
-          "direction": "worsening",
-          "previous": 69.21186949842759
+          "delta": 0.508138068856475,
+          "direction": "improving",
+          "previous": 48.70244439019831
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 4.188727256403319,
-          "direction": "increasing",
-          "previous": 6.214336253039108
+          "change_rate": "stable",
+          "delta": -0.17262987011453879,
+          "direction": "decreasing",
+          "previous": 1.9311817079440459
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": 2.1000000000000014,
+          "change_rate": "stable",
+          "delta": 1.0,
           "direction": "increasing",
-          "previous": 31.0
+          "previous": 51.7
         }
       },
       "unified_quality": "peaceful",
-      "unified_score": 33.1
+      "unified_score": 52.7
     },
     "overall_harmony": {
       "advice": [
@@ -1811,19 +1987,19 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 68.7807637205519,
-      "intensity": 60.461335049882116,
-      "interpretation": "Across all life areas, harmony is at 69/100",
+      "harmony": 41.87791423524687,
+      "intensity": 33.27300262466445,
+      "interpretation": "Across all life areas, harmony is at 42/100",
       "meter_name": "overall_harmony",
       "raw_scores": {
-        "harmony": 68.7807637205519,
-        "intensity": 60.461335049882116
+        "harmony": 41.87791423524687,
+        "intensity": 33.27300262466445
       },
-      "state_label": "Flowing",
+      "state_label": "Turbulent",
       "top_aspects": [],
       "trend": null,
-      "unified_quality": "flowing",
-      "unified_score": 59.5
+      "unified_quality": "turbulent",
+      "unified_score": 41.9
     },
     "overall_intensity": {
       "advice": [
@@ -1832,40 +2008,43 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 68.7807637205519,
-      "intensity": 60.461335049882116,
-      "interpretation": "Across all life areas, intensity is at 60/100",
+      "harmony": 41.87791423524687,
+      "intensity": 33.27300262466445,
+      "interpretation": "Across all life areas, intensity is at 33/100",
       "meter_name": "overall_intensity",
       "raw_scores": {
-        "harmony": 68.7807637205519,
-        "intensity": 60.461335049882116
+        "harmony": 41.87791423524687,
+        "intensity": 33.27300262466445
       },
-      "state_label": "Flowing",
+      "state_label": "Turbulent",
       "top_aspects": [],
       "trend": null,
-      "unified_quality": "flowing",
-      "unified_score": 59.5
+      "unified_quality": "turbulent",
+      "unified_score": 41.9
     },
-    "overall_unified_quality": "flowing",
+    "overall_unified_quality": "turbulent",
     "resilience": {
       "advice": [
         "Stay aware of this energy"
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "heart",
-      "harmony": 58.82297422651517,
-      "intensity": 20.827087805920527,
+      "harmony": 48.30821922971348,
+      "intensity": 1.7703981044114012,
       "interpretation": "Measures resilience",
       "meter_name": "resilience",
       "raw_scores": {
         "dti": 407.98875,
-        "hqs": -14.186249999999967
+        "harmony_coefficient": -0.0338356154057304,
+        "hqs": -14.186249999999967,
+        "intensity_raw": 2.2241006531437284
       },
-      "state_label": "Grounded",
+      "state_label": "Tender",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 147.71249999999998,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.NORTH_NODE conjunction Natal Planet.MOON",
           "max_orb": 8.0,
@@ -1873,6 +2052,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -1883,6 +2063,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 132.94124999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": -132.94124999999997,
           "label": "Transit Planet.SOUTH_NODE opposition Natal Planet.MOON",
           "max_orb": 8.0,
@@ -1890,6 +2071,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -1900,6 +2082,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 4.290000000000013,
+          "gaussian_power": 0.0,
           "hqs_contribution": -4.290000000000013,
           "label": "Transit Planet.SUN square Natal Planet.MOON",
           "max_orb": 8.0,
@@ -1907,6 +2090,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 7.89,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.89,
           "tomorrow_deviation": null,
@@ -1917,6 +2101,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 109.39500000000001,
+          "gaussian_power": 0.0,
           "hqs_contribution": 109.39500000000001,
           "label": "Transit Planet.MERCURY trine Natal Planet.MOON",
           "max_orb": 8.0,
@@ -1924,6 +2109,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 4.26,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 4.26,
           "tomorrow_deviation": null,
@@ -1934,6 +2120,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 13.650000000000004,
+          "gaussian_power": 0.0,
           "hqs_contribution": 13.650000000000004,
           "label": "Transit Planet.VENUS sextile Natal Planet.MOON",
           "max_orb": 8.0,
@@ -1941,6 +2128,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 7.3,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.3,
           "tomorrow_deviation": null,
@@ -1951,26 +2139,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "moderate",
-          "delta": 7.499324877923435,
+          "change_rate": "stable",
+          "delta": 1.0234576574642489,
           "direction": "improving",
-          "previous": 51.323649348591736
+          "previous": 47.28476157224923
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 2.0344209677390985,
-          "direction": "increasing",
-          "previous": 18.79266683818143
+          "change_rate": "stable",
+          "delta": -0.17379276984679715,
+          "direction": "decreasing",
+          "previous": 1.9441908742581984
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 16.0,
+          "delta": 12.299999999999997,
           "direction": "increasing",
-          "previous": 2.7
+          "previous": 52.5
         }
       },
       "unified_quality": "peaceful",
-      "unified_score": 18.7
+      "unified_score": 64.8
     },
     "strength": {
       "advice": [
@@ -1978,19 +2166,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "body",
-      "harmony": 75.29139849765619,
-      "intensity": 43.63754470374718,
+      "harmony": 40.35193525020074,
+      "intensity": 26.32408944727172,
       "interpretation": "Measures strength",
       "meter_name": "strength",
       "raw_scores": {
         "dti": 1187.275425,
-        "hqs": 248.4154875000001
+        "harmony_coefficient": -0.19296129499598522,
+        "hqs": 248.4154875000001,
+        "intensity_raw": 40.77818965852666
       },
-      "state_label": "Surging",
+      "state_label": "Running Low",
       "top_aspects": [
         {
           "aspect_type": "square",
           "dti_contribution": 206.856,
+          "gaussian_power": 16.130848457188883,
           "hqs_contribution": -206.856,
           "label": "Transit Planet.MERCURY square Natal Planet.MARS",
           "max_orb": 8.0,
@@ -1998,6 +2189,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 1.37,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.37,
           "tomorrow_deviation": null,
@@ -2008,6 +2200,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 34.92,
+          "gaussian_power": 7.8619494050088035,
           "hqs_contribution": -34.92,
           "label": "Transit Planet.VENUS square Natal Planet.NORTH_NODE",
           "max_orb": 8.0,
@@ -2015,6 +2208,7 @@
           "natal_planet_house": 6,
           "natal_planet_sign": "aquarius",
           "orb_deviation": 0.24,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 0.24,
           "tomorrow_deviation": null,
@@ -2025,6 +2219,7 @@
         {
           "aspect_type": "sextile",
           "dti_contribution": 7.488000000000007,
+          "gaussian_power": 0.0,
           "hqs_contribution": 7.488000000000007,
           "label": "Transit Planet.PLUTO sextile Natal Planet.MARS",
           "max_orb": 8.0,
@@ -2032,6 +2227,7 @@
           "natal_planet_house": 8,
           "natal_planet_sign": "aries",
           "orb_deviation": 7.68,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.68,
           "tomorrow_deviation": null,
@@ -2042,6 +2238,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 12.796875,
+          "gaussian_power": 0.0,
           "hqs_contribution": -3.8390625,
           "label": "Transit Planet.PLUTO conjunction Natal Planet.NORTH_NODE",
           "max_orb": 8.0,
@@ -2049,6 +2246,7 @@
           "natal_planet_house": 6,
           "natal_planet_sign": "aquarius",
           "orb_deviation": 6.25,
+          "polarity": -0.3,
           "quality_factor": -0.3,
           "today_deviation": 6.25,
           "tomorrow_deviation": null,
@@ -2059,6 +2257,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 147.71249999999998,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.NORTH_NODE conjunction Natal Planet.MOON",
           "max_orb": 8.0,
@@ -2066,6 +2265,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -2077,25 +2277,25 @@
       "trend": {
         "harmony": {
           "change_rate": "rapid",
-          "delta": 12.792000090966923,
+          "delta": 25.645511062898684,
           "direction": "improving",
-          "previous": 62.49939840668927
+          "previous": 14.706424187302053
         },
         "intensity": {
-          "change_rate": "stable",
-          "delta": 0.9959074833169907,
-          "direction": "increasing",
-          "previous": 42.64163722043019
+          "change_rate": "rapid",
+          "delta": -19.37405048935621,
+          "direction": "decreasing",
+          "previous": 45.69813993662793
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 30.6,
+          "delta": 19.400000000000002,
           "direction": "increasing",
-          "previous": 34.9
+          "previous": 15.3
         }
       },
-      "unified_quality": "flowing",
-      "unified_score": 65.5
+      "unified_quality": "turbulent",
+      "unified_score": 34.7
     },
     "vision": {
       "advice": [
@@ -2103,19 +2303,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "instincts",
-      "harmony": 60.02044973563151,
-      "intensity": 69.36002710644438,
+      "harmony": 47.0063102270162,
+      "intensity": 32.18806839842551,
       "interpretation": "Measures vision",
       "meter_name": "vision",
       "raw_scores": {
         "dti": 2330.8395,
-        "hqs": -138.56634999999994
+        "harmony_coefficient": -0.05987379545967596,
+        "hqs": -138.56634999999994,
+        "intensity_raw": 63.29245730793736
       },
-      "state_label": "Tuned In",
+      "state_label": "Noisy",
       "top_aspects": [
         {
           "aspect_type": "conjunction",
           "dti_contribution": 426.93750000000006,
+          "gaussian_power": 56.44473486000503,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.SUN conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -2123,6 +2326,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 0.41,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 0.41,
           "tomorrow_deviation": null,
@@ -2133,6 +2337,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 9.360000000000008,
+          "gaussian_power": 0.0,
           "hqs_contribution": -9.360000000000008,
           "label": "Transit Planet.NEPTUNE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -2140,6 +2345,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.84,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 7.84,
           "tomorrow_deviation": null,
@@ -2150,6 +2356,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 55.57500000000002,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.JUPITER conjunction Natal Planet.SUN",
           "max_orb": 8.0,
@@ -2157,6 +2364,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 7.05,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 7.05,
           "tomorrow_deviation": null,
@@ -2167,6 +2375,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.NORTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -2174,6 +2383,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -2184,6 +2394,7 @@
         {
           "aspect_type": "square",
           "dti_contribution": 380.25,
+          "gaussian_power": 2.311810897394302,
           "hqs_contribution": -380.25,
           "label": "Transit Planet.SOUTH_NODE square Natal Planet.SUN",
           "max_orb": 8.0,
@@ -2191,6 +2402,7 @@
           "natal_planet_house": 10,
           "natal_planet_sign": "gemini",
           "orb_deviation": 1.5,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 1.5,
           "tomorrow_deviation": null,
@@ -2201,26 +2413,26 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "slow",
-          "delta": -3.3871208361607756,
-          "direction": "worsening",
-          "previous": 63.407570571792284
+          "change_rate": "stable",
+          "delta": 1.797748528453667,
+          "direction": "improving",
+          "previous": 45.208561698562534
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 2.786909220806848,
+          "change_rate": "moderate",
+          "delta": 7.531825308940412,
           "direction": "increasing",
-          "previous": 66.57311788563753
+          "previous": 24.656243089485095
         },
         "unified_score": {
-          "change_rate": "moderate",
-          "delta": -10.100000000000001,
-          "direction": "decreasing",
-          "previous": 46.7
+          "change_rate": "rapid",
+          "delta": 14.5,
+          "direction": "increasing",
+          "previous": 34.6
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 36.6
+      "unified_quality": "turbulent",
+      "unified_score": 49.1
     },
     "vulnerability": {
       "advice": [
@@ -2228,19 +2440,22 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "heart",
-      "harmony": 54.398561995748004,
-      "intensity": 27.154783638951514,
+      "harmony": 17.069341569954155,
+      "intensity": 12.992658032936443,
       "interpretation": "Measures vulnerability",
       "meter_name": "vulnerability",
       "raw_scores": {
         "dti": 552.3139874999999,
-        "hqs": -111.41898749999997
+        "harmony_coefficient": -0.6586131686009169,
+        "hqs": -111.41898749999997,
+        "intensity_raw": 15.885747373280896
       },
-      "state_label": "Grounded",
+      "state_label": "Tender",
       "top_aspects": [
         {
           "aspect_type": "square",
           "dti_contribution": 34.92,
+          "gaussian_power": 7.8619494050088035,
           "hqs_contribution": -34.92,
           "label": "Transit Planet.VENUS square Natal Planet.SOUTH_NODE",
           "max_orb": 8.0,
@@ -2248,6 +2463,7 @@
           "natal_planet_house": 12,
           "natal_planet_sign": "leo",
           "orb_deviation": 0.24,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 0.24,
           "tomorrow_deviation": null,
@@ -2258,6 +2474,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 11.5171875,
+          "gaussian_power": 0.0,
           "hqs_contribution": -11.5171875,
           "label": "Transit Planet.PLUTO opposition Natal Planet.SOUTH_NODE",
           "max_orb": 8.0,
@@ -2265,6 +2482,7 @@
           "natal_planet_house": 12,
           "natal_planet_sign": "leo",
           "orb_deviation": 6.25,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 6.25,
           "tomorrow_deviation": null,
@@ -2275,6 +2493,7 @@
         {
           "aspect_type": "trine",
           "dti_contribution": 1.6672499999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": 1.6672499999999997,
           "label": "Transit Planet.NEPTUNE trine Natal Planet.SOUTH_NODE",
           "max_orb": 8.0,
@@ -2282,6 +2501,7 @@
           "natal_planet_house": 12,
           "natal_planet_sign": "leo",
           "orb_deviation": 7.62,
+          "polarity": 1.0,
           "quality_factor": 1.0,
           "today_deviation": 7.62,
           "tomorrow_deviation": null,
@@ -2292,6 +2512,7 @@
         {
           "aspect_type": "conjunction",
           "dti_contribution": 147.71249999999998,
+          "gaussian_power": 0.0,
           "hqs_contribution": 0.0,
           "label": "Transit Planet.NORTH_NODE conjunction Natal Planet.MOON",
           "max_orb": 8.0,
@@ -2299,6 +2520,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": 0.0,
           "quality_factor": 0.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -2309,6 +2531,7 @@
         {
           "aspect_type": "opposition",
           "dti_contribution": 132.94124999999997,
+          "gaussian_power": 0.0,
           "hqs_contribution": -132.94124999999997,
           "label": "Transit Planet.SOUTH_NODE opposition Natal Planet.MOON",
           "max_orb": 8.0,
@@ -2316,6 +2539,7 @@
           "natal_planet_house": 7,
           "natal_planet_sign": "pisces",
           "orb_deviation": 5.98,
+          "polarity": -1.0,
           "quality_factor": -1.0,
           "today_deviation": 5.98,
           "tomorrow_deviation": null,
@@ -2326,27 +2550,27 @@
       ],
       "trend": {
         "harmony": {
-          "change_rate": "moderate",
-          "delta": 6.046089549964137,
-          "direction": "improving",
-          "previous": 48.35247244578387
+          "change_rate": "rapid",
+          "delta": -29.919272717317078,
+          "direction": "worsening",
+          "previous": 46.98861428727123
         },
         "intensity": {
-          "change_rate": "slow",
-          "delta": 4.955203991189972,
+          "change_rate": "rapid",
+          "delta": 10.833280036210466,
           "direction": "increasing",
-          "previous": 22.199579647761542
+          "previous": 2.159377996725978
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 12.4,
-          "direction": "increasing",
-          "previous": -2.1
+          "delta": -17.6,
+          "direction": "decreasing",
+          "previous": 61.5
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 10.3
+      "unified_quality": "turbulent",
+      "unified_score": 43.9
     }
   },
-  "captured_at": "2025-12-02T03:31:22.966818+00:00"
+  "captured_at": "2025-12-05T17:45:52.542354+00:00"
 }

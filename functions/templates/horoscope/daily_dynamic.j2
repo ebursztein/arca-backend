@@ -1,36 +1,82 @@
-TODAY'S ENERGY ({{ date }})
+TODAY'S READING ({{ date }})
 
-[GROUPS]
-{% for group in all_groups %}
-{{ group.name|upper }}: {{ group.unified_score|round(0) }} {% if group.trend %}({{ group.trend }}){% endif %} | {{ group.words[0] }}, {{ group.words[1] }}
-{% endfor %}
+================================================================================
+HEADLINE GUIDANCE (for daily_theme_headline)
+================================================================================
+For the headline, emphasize the following meters:
+{% for m in headline_guidance.meters %}
+{{ m.group|upper }}: {{ m.score }}/100
+  Driver: {{ m.meter_name }} ({{ m.driver_score }}/100)
+  What {{ m.meter_name }} is: {{ m.driver_meaning }}
+  Planets tracked: {{ m.driver_planets }}
+  Why: {{ m.top_aspect or 'multiple transits' }}
+{% if m.trend %}  Trend: {{ m.trend }}
+{% endif %}{% endfor %}
+{% if headline_guidance.conjunction %}Combine using "{{ headline_guidance.conjunction }}" - one area is up, one is down.{% endif %}
 
-[FEATURED - emphasize in headline/overview]
-{% for meter in featured_meters %}
-• {{ meter.meter_name|replace('_', ' ')|title }} ({{ meter.unified_score|round(0) }}){% if meter.top_aspects %} - {{ meter.top_aspects[0].transit_planet.value|title }} {{ meter.top_aspects[0].aspect_type.value }} natal {{ meter.top_aspects[0].natal_planet.value|title }}{% endif %}
+================================================================================
+OVERVIEW GUIDANCE (for daily_overview)
+================================================================================
+Overall: {{ overall_unified_score|round(0)|int }}/100
+{{ overall_guidance }}
 
+Highlights to cover:
+{% for item in overview_guidance.formatted_highlights %}
+{{ item }}
 {% endfor %}
 {% if has_relationships %}
-[RELATIONSHIPS - for relationship_weather field]
+================================================================================
+RELATIONSHIPS (for relationship_weather)
+================================================================================
 {% if featured_connection %}
-SPOTLIGHT: {{ featured_connection.name }} [{{ featured_connection.relationship_category }}: {{ featured_connection.relationship_label }}]
-{% if featured_connection.sun_sign %}Sun sign: {{ featured_connection.sun_sign }}{% endif %}
-{% if featured_connection.arca_notes %}
-Recent context: {% for note in featured_connection.arca_notes[-3:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}
+SPOTLIGHT: {{ featured_connection.name }}
+- Relationship: {{ featured_connection.relationship_category }}/{{ featured_connection.relationship_label }}
+{% if featured_connection.sun_sign %}- Sun sign: {{ featured_connection.sun_sign }}{% endif %}
+{% if featured_connection.arca_notes %}- Recent notes: {% for note in featured_connection.arca_notes[-3:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}{% endif %}
+{% endif %}
 {% endif %}
 
-Write a personalized sentence about the dynamic with {{ featured_connection.name }} today, appropriate for a {{ featured_connection.relationship_label }} relationship.
-{% endif %}
-{% endif %}
-[MOON]
+================================================================================
+MOON (for energy_rhythm, lunar context)
+================================================================================
 {{ moon_summary }}
+{% if is_void_of_course %}
 
-[NEXT 7 DAYS]
+**VOID-OF-COURSE OVERRIDE (for actionable_advice)**
+The moon is void-of-course. This OVERRIDES normal actionable_advice guidance:
+- actionable_advice.do: {{ void_guidance.do }}
+- actionable_advice.dont: {{ void_guidance.dont }}
+- Note: {{ void_guidance.note }}
+{% endif %}
+
+================================================================================
+NEXT 7 DAYS (for look_ahead_preview)
+================================================================================
 {% if upcoming_transits -%}
 {% for day_group in upcoming_transits -%}
-{{ day_group.header }} {% for transit in day_group.transits[:2] %}{{ transit.description }}{% if transit.status.value == 'exact' %} (EXACT){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
-
+{{ day_group.header }}
+{% for transit in day_group.transits[:2] %}- {{ transit.description }}{% if transit.status.value == 'exact' %} (EXACT){% endif %}
+{% endfor %}
 {% endfor -%}
 {% else -%}
 Quiet week ahead.
 {% endif -%}
+
+================================================================================
+REFERENCE: ALL METER GROUPS
+================================================================================
+{% for group in all_groups %}
+{{ group.name|upper }}: {{ group.unified_score|round(0)|int }}/100
+  Driver: {{ group.driver }} ({{ group.driver_score }}/100)
+  What {{ group.driver }} is: {{ group.driver_meaning }}
+  Planets tracked: {{ group.driver_planets }}
+  Why: {{ group.driver_aspect or 'multiple transits' }}
+{% if group.trend %}  Trend: {{ group.trend }}
+{% endif %}{% endfor %}
+
+================================================================================
+REFERENCE: KEY TRANSITS
+================================================================================
+{% for transit in key_transits %}
+- {{ transit }}
+{% endfor %}

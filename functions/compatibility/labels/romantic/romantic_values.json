@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "values",
+  "_mode": "romantic",
+  "metadata": {
+    "category_id": "values",
+    "display_name": "Shared Values",
+    "description": "How aligned you are on what matters most in life",
+    "sentence_template": "When it comes to values, you two are ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Saturn", "Jupiter", "Sun"],
+    "what_it_measures": "Saturn aspects show commitment style and life structure. Jupiter shows beliefs and growth direction. Sun shows core identity alignment.",
+    "planet_meanings": {
+      "Saturn": "commitment, responsibility, and life structure",
+      "Jupiter": "beliefs, growth direction, and what you expand toward",
+      "Sun": "core identity and life purpose"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Cross-Wired",
+      "guidance": "Core beliefs collide; serious long-term risk."
+    },
+    "low": {
+      "label": "Split",
+      "guidance": "Match on some things, clash on others; talk about non-negotiables."
+    },
+    "mid": {
+      "label": "Side-by-Side",
+      "guidance": "Not identical but not opposites; how you live it out matters."
+    },
+    "high": {
+      "label": "Aligned",
+      "guidance": "Want similar things; emphasize stability this brings."
+    },
+    "very_high": {
+      "label": "Same Page",
+      "guidance": "Strong value sync; 'building the same kind of life.'"
+    }
+  }
+}

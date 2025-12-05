@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "communication",
+  "_mode": "friendship",
+  "metadata": {
+    "category_id": "communication",
+    "display_name": "Communication",
+    "description": "How easily conversation flows and how well you understand each other",
+    "sentence_template": "Talking with them feels ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mercury", "Jupiter", "Uranus"],
+    "what_it_measures": "Mercury aspects show mental wavelength. Jupiter adds openness and humor. Uranus brings unique perspectives.",
+    "planet_meanings": {
+      "Mercury": "thinking style and how you express ideas",
+      "Jupiter": "openness, humor, and expansive conversation",
+      "Uranus": "unique perspectives and mental sparks"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Static",
+      "guidance": "Messages often get lost; keep conversations simple."
+    },
+    "low": {
+      "label": "Choppy",
+      "guidance": "Takes effort; check in to make sure you're on same page."
+    },
+    "mid": {
+      "label": "Workable",
+      "guidance": "Can communicate fine with some patience."
+    },
+    "high": {
+      "label": "Easy",
+      "guidance": "Conversations flow naturally; you understand each other's style."
+    },
+    "very_high": {
+      "label": "Effortless",
+      "guidance": "Talk for hours without trying; great banter and real talk."
+    }
+  }
+}

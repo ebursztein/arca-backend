@@ -1,11 +1,29 @@
 {
   "_schema_version": "2.0",
   "_group": "body",
-  "_last_updated": "2025-01-08",
+  "_last_updated": "2025-12-05",
   "metadata": {
     "group_id": "body",
     "display_name": "Body",
     "description": "Energy, drive, and strength"
+  },
+  "bucket_labels": {
+    "0-25": {
+      "label": "Drained",
+      "guidance": "Treat energy as very low; recommend rest, recovery, and canceling non-essential plans where possible."
+    },
+    "25-50": {
+      "label": "Running Low",
+      "guidance": "Acknowledge tiredness but some capacity; advise pacing themselves, lighter tasks, and not overbooking."
+    },
+    "50-75": {
+      "label": "Steady",
+      "guidance": "Describe workable, dependable energy; fine for regular responsibilities and gentle movement."
+    },
+    "75-100": {
+      "label": "Fired Up",
+      "guidance": "Emphasize high physical charge; invite them to move, act, or use their body to channel and release that energy."
+    }
   },
   "description": {
     "overview": "Body represents your physical vitality, motivation to act, and overall health and wellbeing.",

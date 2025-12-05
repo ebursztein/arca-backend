@@ -157,6 +157,15 @@ uv run python functions/prototype.py  # Run end-to-end demo
 ```
 
 ### Debug LLM Prompts
+
+**Daily Horoscope Prompts:**
+`DEBUG_PROMPT=1` is set in `.env`. Run any e2e test that calls `get_daily_horoscope`:
+```bash
+uv run pytest functions/tests/e2e/test_03_daily_horoscope.py::TestGetDailyHoroscope::test_has_date -v -s
+```
+Prompt is written to: `functions/debug_prompt.txt`
+
+**Compatibility Prompts:**
 Set `DEBUG_LLM=1` to capture LLM prompts and responses to files:
 ```bash
 # Capture compatibility prompts (writes to backend_output/prompts/)

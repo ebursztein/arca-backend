@@ -1,11 +1,29 @@
 {
   "_schema_version": "2.0",
   "_group": "mind",
-  "_last_updated": "2025-01-08",
+  "_last_updated": "2025-12-05",
   "metadata": {
     "group_id": "mind",
     "display_name": "Mind",
     "description": "Clarity, focus, and communication"
+  },
+  "bucket_labels": {
+    "0-25": {
+      "label": "Offline",
+      "guidance": "Acknowledge that they may feel like they just can't think or access their usual brainpower; advise postponing big decisions, sticking to simple tasks, and giving themselves extra mental rest."
+    },
+    "25-50": {
+      "label": "Distracted",
+      "guidance": "Name that their thoughts keep jumping around; suggest reducing multitasking, cutting distractions, and writing things down so nothing important slips."
+    },
+    "50-75": {
+      "label": "On Point",
+      "guidance": "Highlight that their thinking is reliable and focused; good moment for planning, problem-solving, and clear conversations."
+    },
+    "75-100": {
+      "label": "Crystal Clear",
+      "guidance": "Emphasize very strong clarity and insight; encourage tackling complex decisions or deep work they've been putting off."
+    }
   },
   "description": {
     "overview": "Mind represents your cognitive sharpness, ability to concentrate, and ease of expressing yourself.",

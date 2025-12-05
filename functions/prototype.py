@@ -391,9 +391,8 @@ def main():
         border_style="yellow"
     ))
 
-    # Astrometers Summary (new iOS-optimized structure)
-    astrometers_summary = f"""Overall Intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})
-Overall Harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})
+    # Astrometers Summary (iOS-optimized structure)
+    astrometers_summary = f"""Overall Score: {daily_horoscope.astrometers.overall_unified_score:.1f}/100 ({daily_horoscope.astrometers.overall_state})
 Overall Quality: {daily_horoscope.astrometers.overall_quality.upper()}
 
 Top Active Meters: {', '.join(daily_horoscope.astrometers.top_active_meters[:3])}
@@ -452,8 +451,8 @@ Groups Summary:"""
 
     # Overall metrics
     console.print(f"[yellow]Overall Metrics:[/yellow]")
-    console.print(f"  • Intensity: {daily_horoscope.astrometers.overall_intensity.intensity:.1f}/100 ({daily_horoscope.astrometers.overall_intensity.state_label})")
-    console.print(f"  • Harmony: {daily_horoscope.astrometers.overall_harmony.harmony:.1f}/100 ({daily_horoscope.astrometers.overall_harmony.state_label})")
+    console.print(f"  • Unified Score: {daily_horoscope.astrometers.overall_unified_score:.1f}/100")
+    console.print(f"  • State: {daily_horoscope.astrometers.overall_state}")
     console.print(f"  • Quality: {daily_horoscope.astrometers.overall_quality.upper()}\n")
 
     # Top meters
@@ -467,12 +466,11 @@ Groups Summary:"""
 
     for group in daily_horoscope.astrometers.groups:
         console.print(f"[cyan]{group.display_name} Group ({group.quality.upper()}):[/cyan]")
-        console.print(f"  Group Unified: {group.unified_score:.1f}/100 | Intensity: {group.intensity:.1f} | Harmony: {group.harmony:.1f}")
+        console.print(f"  Group Unified: {group.unified_score:.1f}/100 | State: {group.state_label}")
         console.print(f"  LLM Interpretation: {group.interpretation[:100]}...")
         console.print(f"\n  Member Meters:")
         for meter in group.meters:
-            console.print(f"    • {meter.display_name}: {meter.unified_score:.1f}/100 ({meter.unified_quality.upper()})")
-            console.print(f"      Intensity: {meter.intensity:.1f} | Harmony: {meter.harmony:.1f} | State: {meter.state_label}")
+            console.print(f"    • {meter.display_name}: {meter.unified_score:.1f}/100 ({meter.unified_quality.upper()}) | State: {meter.state_label}")
             console.print(f"      LLM: {meter.interpretation[:80]}...")
             console.print(f"      Top Aspects: {len(meter.top_aspects)} aspects tracked")
         console.print()
@@ -499,9 +497,7 @@ Groups Summary:"""
 
         # Format the group display
         scores_text = (
-            f"Unified: {group.unified_score:.1f} | "
-            f"Harmony: {group.harmony:.1f} | "
-            f"Intensity: {group.intensity:.1f}\n"
+            f"Score: {group.unified_score:.1f}/100\n"
             f"State: {group.state_label} ({group.quality.upper()})\n\n"
             f"{group.interpretation}\n\n"
             f"Member Meters: {', '.join([m.display_name for m in group.meters])}"

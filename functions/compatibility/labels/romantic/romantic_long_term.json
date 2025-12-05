@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "long_term",
+  "_mode": "romantic",
+  "metadata": {
+    "category_id": "long_term",
+    "display_name": "Long-Term Potential",
+    "description": "How likely this connection is to last and deepen over time",
+    "sentence_template": "For the long haul, this looks ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Saturn", "Juno", "North Node"],
+    "what_it_measures": "Saturn aspects show staying power and commitment. Juno shows partnership style. North Node shows destiny alignment.",
+    "planet_meanings": {
+      "Saturn": "staying power, commitment, and building together",
+      "Juno": "partnership needs and what you seek in a mate",
+      "North Node": "destiny direction and karmic growth"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Short-Chapter",
+      "guidance": "Likely meaningful phase, not forever; can still matter without lasting."
+    },
+    "low": {
+      "label": "Fragile",
+      "guidance": "Could last but only with major work; name risk clearly."
+    },
+    "mid": {
+      "label": "Unwritten",
+      "guidance": "Future very open; depends on choices both make."
+    },
+    "high": {
+      "label": "Steady Path",
+      "guidance": "Good foundations for going the distance if nurtured."
+    },
+    "very_high": {
+      "label": "Endgame",
+      "guidance": "Strong long-term signature; genuine lasting potential."
+    }
+  }
+}

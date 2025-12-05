@@ -49,7 +49,7 @@ from models import (
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
 from compatibility import CompatibilityData
-from astrometers.meter_groups import build_all_meter_groups, get_group_state_label
+from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance
 from astrometers.summary import meter_groups_summary
 from astrometers.core import AspectContribution
 from moon import get_moon_transit_detail, format_moon_summary_for_llm
@@ -436,18 +436,18 @@ def build_astrometers_for_ios(
         avg_intensity = sum(m.intensity for m in meters_for_ios) / len(meters_for_ios)
         avg_harmony = sum(m.harmony for m in meters_for_ios) / len(meters_for_ios)
 
-        # Determine group quality from unified_score quadrants
-        if avg_unified < -25:
+        # Determine group quality from unified_score quartiles (0-100 scale)
+        if avg_unified < 25:
             quality = "challenging"
-        elif avg_unified < 10:
-            quality = "turbulent"
         elif avg_unified < 50:
+            quality = "turbulent"
+        elif avg_unified < 75:
             quality = "peaceful"
         else:
             quality = "flowing"
 
-        # State label computed by backend - iOS uses unified_score to map to bucket labels
-        state_label = get_group_state_label(group_name, avg_intensity, avg_harmony)
+        # State label computed by backend from unified_score
+        state_label = get_group_state_label(group_name, avg_unified)
 
         # Extract group trend (calculate from member meter trends)
         group_trend_delta = None
@@ -483,19 +483,21 @@ def build_astrometers_for_ios(
         )
         groups.append(group_for_ios)
 
-    # Calculate top meters
-    sorted_by_intensity = sorted(all_meters_list, key=lambda m: m.intensity, reverse=True)
-    sorted_by_harmony_low = sorted(all_meters_list, key=lambda m: m.harmony)
+    # Calculate top meters based on unified_score
+    # Most active = furthest from neutral (50) in either direction
+    sorted_by_activity = sorted(all_meters_list, key=lambda m: abs(m.unified_score - 50), reverse=True)
+    # Most challenging = lowest unified_score (below neutral)
+    sorted_by_challenging = sorted(all_meters_list, key=lambda m: m.unified_score)
+    # Most flowing = highest unified_score
     sorted_by_unified_high = sorted(all_meters_list, key=lambda m: m.unified_score, reverse=True)
 
-    top_active_meters = [m.meter_name for m in sorted_by_intensity[:5]]
-    top_challenging_meters = [m.meter_name for m in sorted_by_harmony_low[:5] if m.harmony < 50]
-    top_flowing_meters = [m.meter_name for m in sorted_by_unified_high[:5] if m.unified_score > 70]
+    top_active_meters = [m.meter_name for m in sorted_by_activity[:5]]
+    top_challenging_meters = [m.meter_name for m in sorted_by_challenging[:5] if m.unified_score < 50]
+    top_flowing_meters = [m.meter_name for m in sorted_by_unified_high[:5] if m.unified_score >= 70]
 
-    # Overall state computed by backend - iOS uses unified_score to map to bucket labels
-    overall_intensity = all_meters_reading.overall_intensity.intensity
-    overall_harmony = all_meters_reading.overall_harmony.harmony
-    overall_state = get_group_state_label("overall", overall_intensity, overall_harmony)
+    # Overall state computed by backend from unified_score
+    overall_unified_score = all_meters_reading.overall_intensity.unified_score
+    overall_state = get_group_state_label("overall", overall_unified_score)
 
     return AstrometersForIOS(
         date=all_meters_reading.date.isoformat(),
@@ -860,14 +862,13 @@ def generate_daily_horoscope(
     )
     groups_summary = meter_groups_summary(meter_groups)
 
-    # Select featured meters for programmatic curation (1-2 groups, 1-2 meters each = 2-3 total)
+    # Select featured meters for programmatic curation
+    # Logic: 2 meters if contrast (one flowing, one pushing), 1 if same direction
     from astrometers.meters import select_featured_meters
     featured = select_featured_meters(
         all_meters=astrometers,
         user_id=user_profile.user_id,
         date=date,
-        num_groups=2,
-        num_meters_per_group=1
     )
 
     # Get comprehensive moon transit detail
@@ -877,6 +878,17 @@ def generate_daily_horoscope(
         current_datetime=f"{date}T12:00:00"
     )
     moon_summary_for_llm = format_moon_summary_for_llm(moon_detail)
+
+    # Check for void-of-course moon and prepare programmatic guidance
+    from moon import VoidOfCourseStatus
+    is_void_of_course = moon_detail.void_of_course == VoidOfCourseStatus.ACTIVE
+    void_guidance = None
+    if is_void_of_course:
+        void_guidance = {
+            'do': "Focus on: rest, reflection, editing, completing existing work (not starting new things)",
+            'dont': "Avoid: launching new initiatives, starting fresh projects, making big decisions",
+            'note': "The moon is void-of-course - new starts tend to fizzle. Not failure, just timing."
+        }
 
     # Prepare helper data
     chart_emphasis = describe_chart_emphasis(user_profile.natal_chart['distributions'])
@@ -917,49 +929,124 @@ def generate_daily_horoscope(
     static_template = jinja_env.get_template("horoscope/daily_static.j2")
     static_prompt = static_template.render()  # Static template has no variables now
 
-    # Build all_groups with unified_score, trend direction, and word inspirations
-    from astrometers.meters import select_state_words
+    # Build all_groups with unified_score, driver details, and trend
+    from astrometers.meters import _load_meter_overviews, _load_meter_planets
+    meter_descriptions = _load_meter_overviews()
+    meter_planets = _load_meter_planets()
+
+    # Helper functions for aspect formatting
+    def _ordinal(n: int) -> str:
+        if 11 <= n % 100 <= 13:
+            return f"{n}th"
+        return f"{n}{['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]}"
+
+    def _get_phase(asp) -> str:
+        if asp.today_deviation is not None and asp.tomorrow_deviation is not None:
+            if abs(asp.today_deviation) < 0.5:
+                return "exact"
+            elif asp.tomorrow_deviation < asp.today_deviation:
+                return "applying"
+            else:
+                return "separating"
+        return ""
+
     all_groups = []
     for group_name, group_data in meter_groups.items():
-        words = select_state_words(
-            group_name=group_name,
-            intensity=group_data['scores']['intensity'],
-            harmony=group_data['scores']['harmony'],
-            user_id=user_profile.user_id,
-            date=date,
-            count=2
-        )
-        # Get trend direction as arrow symbol
-        trend = None
-        if group_data.get('trend') and group_data['trend'].get('unified_score'):
-            trend_dir = group_data['trend']['unified_score'].get('direction')
-            if trend_dir == 'increasing':
-                trend = 'rising'
-            elif trend_dir == 'decreasing':
-                trend = 'falling'
-            # stable = no trend shown
+        unified_score = group_data['scores']['unified_score']
+
+        # Get driver meter details
+        driver_name = group_data['scores'].get('driver')
+        driver_meter = getattr(astrometers, driver_name, None) if driver_name else None
+        driver_score = round(driver_meter.unified_score) if driver_meter else None
+        driver_meaning = meter_descriptions.get(driver_name, "") if driver_name else ""
+        driver_planets = meter_planets.get(driver_name, "") if driver_name else ""
+
+        # Get driver's own top aspect (not the group's) with full context
+        driver_aspect = None
+        if driver_meter and driver_meter.top_aspects:
+            asp = driver_meter.top_aspects[0]
+            house = _ordinal(asp.natal_planet_house)
+            sign = asp.natal_planet_sign.value.title()
+            phase = _get_phase(asp)
+            quality = "harmonious" if asp.polarity > 0 else "challenging" if asp.polarity < 0 else "neutral"
+
+            driver_aspect = (
+                f"{asp.transit_planet.value.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()} "
+                f"in {house} house ({sign})"
+            )
+            if phase:
+                driver_aspect += f" - {phase}, {quality}"
+
+        # Get trend info from driver meter
+        trend_str = None
+        if driver_meter and driver_meter.trend:
+            t = driver_meter.trend.unified_score
+            trend_str = f"{t.direction} ({t.change_rate}, {t.delta:+.0f} from yesterday)"
 
         all_groups.append({
             'name': group_name,
-            'unified_score': group_data['scores']['unified_score'],
-            'trend': trend,
-            'words': words
+            'unified_score': unified_score,
+            'driver': driver_name,
+            'driver_score': driver_score,
+            'driver_meaning': driver_meaning,
+            'driver_planets': driver_planets,
+            'driver_aspect': driver_aspect,
+            'trend': trend_str,
         })
 
-    # Flatten featured meters into a single list
-    featured_meters = []
-    for group_name, meters in featured['featured_meters'].items():
-        for meter in meters:
-            featured_meters.append(meter)
+    # Get featured meters with direction labels (flowing/pushing)
+    featured_list = featured['featured_list']
+
+    # Get headline guidance from the 16-case matrix
+    headline_guidance = featured.get('headline_guidance', {})
+
+    # Get overview guidance (expands on headline with additional highlights)
+    from astrometers.meters import generate_overview_guidance
+    overview_guidance = generate_overview_guidance(
+        all_meters=astrometers,
+        featured_list=featured_list,
+        headline_guidance=headline_guidance,
+    )
+
+    # Calculate overall unified score for the day
+    overall_unified_score = astrometers.overall_intensity.unified_score
+    overall_state = get_group_state_label("overall", overall_unified_score)
+    overall_guidance = get_group_bucket_guidance("overall", overall_unified_score)
+
+    # Get key transits driving today's energy (top 3 most impactful)
+    key_transits = []
+    for asp in astrometers.key_aspects[:3]:
+        house = _ordinal(asp.natal_planet_house)
+        sign = asp.natal_planet_sign.value.title()
+        phase = _get_phase(asp)
+        quality = "harmonious" if asp.polarity > 0 else "challenging" if asp.polarity < 0 else "neutral"
+
+        transit_str = (
+            f"{asp.transit_planet.value.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()} "
+            f"in {house} house ({sign})"
+        )
+        if phase:
+            transit_str += f" - {phase}, {quality}"
+
+        key_transits.append(transit_str)
 
     # Render dynamic template with featured connection (replacing entities)
     dynamic_template = jinja_env.get_template("horoscope/daily_dynamic.j2")
     dynamic_prompt = dynamic_template.render(
         date=date,
-        all_groups=all_groups,  # All 5 groups with scores + words
-        featured_meters=featured_meters,  # 2-3 featured meters for emphasis
+        overall_unified_score=overall_unified_score,  # 0-100 scale, 50=neutral
+        overall_state=overall_state,  # "Overwhelmed", "Turbulent", "Balanced", "Flowing"
+        overall_guidance=overall_guidance,  # LLM guidance for this state
+        key_transits=key_transits,  # Top 3 transits driving today's energy
+        all_groups=all_groups,  # All 5 groups with scores + state + guidance + top_aspect
+        featured_list=featured_list,  # 1-2 featured meters with direction labels
+        headline_guidance=headline_guidance,  # 16-case matrix guidance for headline
+        overview_guidance=overview_guidance,  # Overview expansion guidance
         upcoming_transits=upcoming_transits_formatted,
         moon_summary=moon_summary_for_llm,
+        # Void-of-course guidance (programmatic, overrides actionable_advice direction)
+        is_void_of_course=is_void_of_course,
+        void_guidance=void_guidance,
         # Connection data for relationship weather section
         has_relationships=featured_connection is not None,
         featured_connection=featured_connection

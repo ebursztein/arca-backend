@@ -1,0 +1,38 @@
+{
+  "_schema_version": "1.0",
+  "_category": "overall",
+  "metadata": {
+    "category_id": "overall",
+    "display_name": "Overall Compatibility",
+    "description": "The big-picture view of how well you two fit together"
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "bucket_labels": {
+    "very_low": {
+      "label": "Volatile",
+      "guidance": "Treat as intense and draining; name volatility, focus on boundaries and self-protection."
+    },
+    "low": {
+      "label": "Rocky",
+      "guidance": "Acknowledge real connection mixed with frequent bumps; talk about patience."
+    },
+    "mid": {
+      "label": "Mixed",
+      "guidance": "Could tilt closer or looser depending on how they both show up."
+    },
+    "high": {
+      "label": "Solid",
+      "guidance": "Generally healthy, dependable bond; encourage investing time while naming weak spots."
+    },
+    "very_high": {
+      "label": "Seamless",
+      "guidance": "Natural fit where things click; invite them to enjoy it with healthy boundaries."
+    }
+  }
+}

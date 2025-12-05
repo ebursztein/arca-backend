@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "power_dynamics",
+  "_mode": "coworker",
+  "metadata": {
+    "category_id": "power_dynamics",
+    "display_name": "Power Dynamics",
+    "description": "How balanced the authority and influence feels between you",
+    "sentence_template": "The power balance is ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Pluto", "Sun", "Saturn"],
+    "what_it_measures": "Pluto shows power dynamics and control. Sun shows ego and authority. Saturn shows hierarchy and boundaries.",
+    "planet_meanings": {
+      "Pluto": "power, control, and who holds influence",
+      "Sun": "ego, authority, and need for recognition",
+      "Saturn": "hierarchy, boundaries, and respect for position"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Lopsided",
+      "guidance": "One tends to dominate; stress boundaries and clarity."
+    },
+    "low": {
+      "label": "Tilted",
+      "guidance": "Power leans one way; notice when shrinking or over-functioning."
+    },
+    "mid": {
+      "label": "Shifting",
+      "guidance": "Balance changes by context; invite awareness."
+    },
+    "high": {
+      "label": "Balanced",
+      "guidance": "Power generally mutual; good for collaboration."
+    },
+    "very_high": {
+      "label": "Empowering",
+      "guidance": "Uplift each other's authority; great for co-leading."
+    }
+  }
+}

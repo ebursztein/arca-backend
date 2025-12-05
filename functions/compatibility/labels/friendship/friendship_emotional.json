@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "emotional",
+  "_mode": "friendship",
+  "metadata": {
+    "category_id": "emotional",
+    "display_name": "Emotional",
+    "description": "How deeply you can share feelings and be vulnerable with each other",
+    "sentence_template": "Emotionally, this friendship is ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Moon", "Venus", "Neptune"],
+    "what_it_measures": "Moon aspects show emotional understanding. Venus shows care and affection style. Neptune adds intuitive connection.",
+    "planet_meanings": {
+      "Moon": "emotional needs and how you process feelings",
+      "Venus": "how you show care and appreciation",
+      "Neptune": "intuitive understanding and empathy"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Surface Only",
+      "guidance": "Hard to go deep; may stay casual."
+    },
+    "low": {
+      "label": "Arms Length",
+      "guidance": "Some emotional distance; may not be your 'vent friend.'"
+    },
+    "mid": {
+      "label": "Growing",
+      "guidance": "Getting closer over time; trust builds with consistency."
+    },
+    "high": {
+      "label": "Open",
+      "guidance": "Can share real feelings; safe to be vulnerable."
+    },
+    "very_high": {
+      "label": "Soul Friends",
+      "guidance": "Deep emotional understanding; they truly get you."
+    }
+  }
+}

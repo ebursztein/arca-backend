@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "fun",
+  "_mode": "friendship",
+  "metadata": {
+    "category_id": "fun",
+    "display_name": "Fun & Adventure",
+    "description": "How much joy and excitement you bring to each other's lives",
+    "sentence_template": "For fun, you two are ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Jupiter", "Mars", "Uranus"],
+    "what_it_measures": "Jupiter brings joy and adventure. Mars adds energy and initiative. Uranus brings spontaneity and surprise.",
+    "planet_meanings": {
+      "Jupiter": "joy, adventure, and expanding horizons",
+      "Mars": "energy, initiative, and drive to do things",
+      "Uranus": "spontaneity, surprises, and breaking routine"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Dry",
+      "guidance": "Hanging out may feel flat; might not be your 'fun friend.'"
+    },
+    "low": {
+      "label": "Sporadic",
+      "guidance": "Fun happens but not reliably; low-pressure plans."
+    },
+    "mid": {
+      "label": "Chill",
+      "guidance": "Can have good time in the right mood."
+    },
+    "high": {
+      "label": "Lively",
+      "guidance": "Bring out each other's playfulness; good for regular hangouts."
+    },
+    "very_high": {
+      "label": "Wild Card",
+      "guidance": "Big adventure energy; shared stories, spontaneous plans."
+    }
+  }
+}

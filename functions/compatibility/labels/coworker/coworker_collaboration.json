@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "collaboration",
+  "_mode": "coworker",
+  "metadata": {
+    "category_id": "collaboration",
+    "display_name": "Collaboration",
+    "description": "How well you work together on shared projects and tasks",
+    "sentence_template": "Working together feels ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mars", "Venus", "Mercury"],
+    "what_it_measures": "Mars shows action style and initiative. Venus shows cooperation and harmony. Mercury shows coordination.",
+    "planet_meanings": {
+      "Mars": "action style, initiative, and how you tackle tasks",
+      "Venus": "cooperation, compromise, and working in harmony",
+      "Mercury": "coordination, planning, and staying aligned"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Clash",
+      "guidance": "Teamwork very hard; clear roles and minimal shared projects."
+    },
+    "low": {
+      "label": "Clunky",
+      "guidance": "Can collaborate but feels awkward; extra structure needed."
+    },
+    "mid": {
+      "label": "Functional",
+      "guidance": "Collaboration fine with some planning."
+    },
+    "high": {
+      "label": "Smooth",
+      "guidance": "Team up well; good for shared tasks."
+    },
+    "very_high": {
+      "label": "Dream Team",
+      "guidance": "Very strong synergy; big project potential."
+    }
+  }
+}

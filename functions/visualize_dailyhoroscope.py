@@ -108,8 +108,8 @@ Top Flowing: {', '.join(astrometers.top_flowing_meters[:3])}"""
         # Show individual meters in this group
         console.print("  Meters:")
         for meter in group.meters:
-            console.print(f"    - {meter.name}: unified={meter.unified_score:.1f}, intensity={meter.intensity:.1f}, harmony={meter.harmony:.1f}")
-            console.print(f"      {meter.quality.upper()} | {meter.state_label}")
+            console.print(f"    - {meter.meter_name}: unified={meter.unified_score:.1f}, intensity={meter.intensity:.1f}, harmony={meter.harmony:.1f}")
+            console.print(f"      {meter.state_label}")
         console.print()
 
     # Top insights
@@ -149,6 +149,8 @@ def main() -> None:
 
     # Load sun sign profile
     sun_sign_profile = get_sun_sign_profile(sun_sign)
+    if sun_sign_profile is None:
+        raise ValueError(f"Could not load sun sign profile for {sun_sign.value}")
 
     # Compute birth chart
     console.print("[cyan]Computing birth chart...[/cyan]")

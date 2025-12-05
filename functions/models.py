@@ -72,11 +72,11 @@ class ActionType(str, Enum):
 
 
 class QualityType(str, Enum):
-    """Valid quality types based on unified_score quadrants."""
-    CHALLENGING = "challenging"  # unified_score < -25
-    TURBULENT = "turbulent"      # unified_score -25 to 10
-    PEACEFUL = "peaceful"        # unified_score 10 to 50
-    FLOWING = "flowing"          # unified_score >= 50
+    """Valid quality types based on unified_score quartiles (0-100 scale)."""
+    CHALLENGING = "challenging"  # unified_score < 25
+    TURBULENT = "turbulent"      # unified_score 25-50
+    PEACEFUL = "peaceful"        # unified_score 50-75
+    FLOWING = "flowing"          # unified_score >= 75
 
 
 class DirectionType(str, Enum):
@@ -110,13 +110,13 @@ class UserProfile(BaseModel):
     email: str = Field(pattern=EMAIL_PATTERN, description="User's email from auth provider")
 
     # Subscription
-    is_premium: bool = Field(False, description="True if user has premium subscription")
-    premium_expiry: Optional[str] = Field(None,
+    is_premium: bool = Field(default=False, description="True if user has premium subscription")
+    premium_expiry: Optional[str] = Field(default=None,
         description="ISO date of premium subscription expiry (None if non-premium)")
 
     # Trial
-    is_trial_active: bool = Field(False, description="Whether user is currently in trial")
-    trial_end_date: Optional[str] = Field(None,
+    is_trial_active: bool = Field(default=False, description="Whether user is currently in trial")
+    trial_end_date: Optional[str] = Field(default=None,
         description="ISO date when trial ends (YYYY-MM-DD)")
 
     # Birth information
@@ -133,7 +133,7 @@ class UserProfile(BaseModel):
 
     # Photo
     photo_path: Optional[str] = Field(
-        None,
+        default=None,
         max_length=500,
         description="Firebase Storage path for user photo"
     )
@@ -1042,7 +1042,7 @@ class MeterForIOS(BaseModel):
     Built from MeterReading but excludes internal fields like raw_scores.
     Includes all data needed for user to understand:
     - What this meter is (overview, detailed, foundation)
-    - What's happening today (scores, state_label, interpretation)
+    - What's happening today (unified_score, state_label, interpretation)
     - Why it's happening (top_aspects with full context)
     - How it's changing (trend)
     """
@@ -1051,14 +1051,14 @@ class MeterForIOS(BaseModel):
     display_name: str = Field(description="User-facing name (e.g., 'Clarity')")
     group: str = Field(description="Group ID: mind, heart, body, instincts, growth")
 
-    # Scores (unified_score: -100 to +100, others: 0-100, normalized via calibration)
-    unified_score: float = Field(ge=-100, le=100, description="Primary display value (-100 to +100, polar-style from intensity + harmony)")
-    intensity: float = Field(ge=0, le=100, description="Activity level - how much is happening")
-    harmony: float = Field(ge=0, le=100, description="Quality - supportive (high) vs challenging (low)")
+    # Scores (unified_score is primary: 0-100 scale, 50=neutral)
+    unified_score: float = Field(ge=0, le=100, description="Primary display value (0-100, 50=neutral)")
+    intensity: float = Field(ge=0, le=100, description="Activity level (internal use)")
+    harmony: float = Field(ge=0, le=100, description="Quality indicator (internal use)")
 
-    # Labels (two different purposes!)
-    unified_quality: str = Field(description="Quality from unified_score quadrant: challenging, turbulent, peaceful, flowing")
-    state_label: str = Field(description="Rich contextual state from JSON: 'Peak Performance', 'Pushing Through', 'Sluggish', etc.")
+    # Labels
+    unified_quality: str = Field(description="Quality: challenging (<25), turbulent (25-50), peaceful (50-75), flowing (>=75)")
+    state_label: str = Field(description="Rich contextual state: 'Sharp', 'Clear', 'Hazy', 'Overloaded', etc.")
 
     # LLM-generated interpretation (1-2 sentences, 80-150 chars)
     interpretation: str = Field(description="Personalized daily interpretation referencing today's transits")
@@ -1084,20 +1084,20 @@ class MeterGroupForIOS(BaseModel):
     Simplified meter group for iOS - aggregated data with nested meters.
 
     Groups combine 3-4 related meters into life area categories.
-    Scores are arithmetic means of member meters.
+    Scores are arithmetic means of member meter unified_scores.
     """
     # Identity
     group_name: str = Field(description="Group ID: mind, heart, body, instincts, growth")
     display_name: str = Field(description="User-facing name: Mind, Heart, Body, Instincts, Growth")
 
-    # Aggregated scores (arithmetic mean of member meters)
-    unified_score: float = Field(ge=-100, le=100, description="Average unified score of member meters (-100 to +100)")
-    intensity: float = Field(ge=0, le=100, description="Average intensity of member meters")
-    harmony: float = Field(ge=0, le=100, description="Average harmony of member meters")
+    # Aggregated scores (unified_score is primary: 0-100 scale, 50=neutral)
+    unified_score: float = Field(ge=0, le=100, description="Average unified score of member meters (0-100, 50=neutral)")
+    intensity: float = Field(ge=0, le=100, description="Average intensity (internal use)")
+    harmony: float = Field(ge=0, le=100, description="Average harmony (internal use)")
 
     # State
-    state_label: str = Field(description="Aggregated state label from group JSON (contextual to group)")
-    quality: str = Field(description="Quality from unified_score quadrant: challenging, turbulent, peaceful, flowing")
+    state_label: str = Field(description="State label from unified_score: 'Sharp', 'Clear', 'Hazy', etc.")
+    quality: str = Field(description="Quality: challenging (<25), turbulent (25-50), peaceful (50-75), flowing (>=75)")
 
     # LLM interpretation (2-3 sentences, 150-300 chars)
     interpretation: str = Field(description="Group-level interpretation from existing LLM flow")

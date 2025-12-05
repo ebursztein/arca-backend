@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "ambition",
+  "_mode": "coworker",
+  "metadata": {
+    "category_id": "ambition",
+    "display_name": "Ambition Alignment",
+    "description": "How aligned your career drives and professional goals are",
+    "sentence_template": "For ambition, you two are ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mars", "Saturn", "Jupiter"],
+    "what_it_measures": "Mars shows drive and competitive energy. Saturn shows long-term career building. Jupiter shows growth aspirations.",
+    "planet_meanings": {
+      "Mars": "drive, ambition, and competitive energy",
+      "Saturn": "long-term career building and professional discipline",
+      "Jupiter": "growth aspirations and where you aim high"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Misaligned",
+      "guidance": "Want very different things; priorities may clash."
+    },
+    "low": {
+      "label": "Uneven",
+      "guidance": "One pushes harder; calibrate expectations."
+    },
+    "mid": {
+      "label": "Parallel",
+      "guidance": "Not identical but not in conflict; can coexist."
+    },
+    "high": {
+      "label": "Driven Together",
+      "guidance": "Motivate each other; good for shared goals."
+    },
+    "very_high": {
+      "label": "Power Pair",
+      "guidance": "Big shared drive; potential for major moves."
+    }
+  }
+}

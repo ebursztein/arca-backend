@@ -43,11 +43,11 @@ from .constants import (
 # =============================================================================
 
 class QualityLabel(str, Enum):
-    """Unified quality labels based on unified_score quadrants."""
-    CHALLENGING = "challenging"  # unified_score < -25
-    TURBULENT = "turbulent"      # unified_score -25 to 10
-    PEACEFUL = "peaceful"        # unified_score 10 to 50
-    FLOWING = "flowing"          # unified_score >= 50
+    """Unified quality labels based on unified_score quartiles (0-100 scale)."""
+    CHALLENGING = "challenging"  # unified_score < 25
+    TURBULENT = "turbulent"      # unified_score 25-50
+    PEACEFUL = "peaceful"        # unified_score 50-75
+    FLOWING = "flowing"          # unified_score >= 75
 
 
 class TrendData(BaseModel):
@@ -331,11 +331,19 @@ def get_state_label(meter_name: str, intensity: float, harmony: float) -> str:
 
     Maps unified_score to one of 4 bucket labels based on the meter's group.
     Individual meters inherit bucket labels from their parent group.
+    Labels are loaded from JSON to stay in sync with iOS.
+
+    Symmetric quartile thresholds (matches iOS):
+        score < 25  -> bucket_labels[0]
+        score >= 25 && < 50  -> bucket_labels[1]
+        score >= 50 && < 75  -> bucket_labels[2]
+        score >= 75 -> bucket_labels[3]
 
     Returns:
         Bucket label string (e.g., "Clear", "Grounded", "Surging")
     """
     from .hierarchy import METER_TO_GROUP_V2, Meter
+    from .meter_groups import get_group_bucket_labels
 
     # Calculate unified_score
     unified_score, _ = calculate_unified_score(intensity, harmony)
@@ -348,44 +356,35 @@ def get_state_label(meter_name: str, intensity: float, harmony: float) -> str:
     except ValueError:
         group_name = "overall"
 
-    # Group-specific bucket labels
-    BUCKET_LABELS = {
-        "mind": ("Overloaded", "Hazy", "Clear", "Sharp"),
-        "heart": ("Heavy", "Tender", "Grounded", "Magnetic"),
-        "body": ("Depleted", "Low Power Mode", "Powering Through", "Surging"),
-        "instincts": ("Disconnected", "Noisy", "Tuned In", "Aligned"),
-        "growth": ("Uphill", "Pacing", "Climbing", "Unstoppable"),
-        "overall": ("Challenging", "Turbulent", "Peaceful", "Flowing"),
-    }
+    # Load bucket labels from JSON
+    labels = get_group_bucket_labels(group_name)
 
-    labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))
-
-    # Map unified_score (0-100) to bucket
-    if unified_score < 35:
-        return labels[0]  # Challenge bucket
+    # Map unified_score (0-100) to bucket using symmetric quartiles
+    if unified_score < 25:
+        return labels[0]
     elif unified_score < 50:
-        return labels[1]  # Mixed bucket
-    elif unified_score < 70:
-        return labels[2]  # Good bucket
+        return labels[1]
+    elif unified_score < 75:
+        return labels[2]
     else:
-        return labels[3]  # Peak bucket
+        return labels[3]
 
 
 def get_quality_label(unified_score: float) -> QualityLabel:
     """
     Determine quality label from unified_score (0-100 scale).
 
-    Thresholds:
-    - < 35: Challenging (strongly negative harmony)
-    - 35-50: Turbulent (mildly negative or low activity)
-    - 50-70: Peaceful (mildly positive)
-    - >= 70: Flowing (strongly positive)
+    Thresholds (symmetric quartiles):
+    - < 25: Challenging
+    - 25-50: Turbulent
+    - 50-75: Peaceful
+    - >= 75: Flowing
     """
-    if unified_score < 35:
+    if unified_score < 25:
         return QualityLabel.CHALLENGING
     elif unified_score < 50:
         return QualityLabel.TURBULENT
-    elif unified_score < 70:
+    elif unified_score < 75:
         return QualityLabel.PEACEFUL
     else:
         return QualityLabel.FLOWING
@@ -1028,58 +1027,44 @@ def load_word_banks() -> dict:
     return _WORD_BANKS_CACHE
 
 
-def get_quadrant(intensity: float, harmony: float) -> str:
+def get_quadrant_from_unified_score(unified_score: float) -> str:
     """
-    Determine which quadrant based on intensity and harmony.
+    Map unified_score to word bank quadrant for backward compatibility.
 
-    Uses empirical thresholds from 102k data points (P33/P67).
+    Unified score (0-100) maps to quadrant names using symmetric quartiles:
+    - >= 75: "high_intensity_high_harmony" (flowing, peak energy)
+    - 50-75: "low_intensity_high_harmony" (peaceful, gentle positive)
+    - 25-50: "moderate" (turbulent, in flux)
+    - < 25: "low_intensity_low_harmony" (challenging, stuck/blocked)
 
     Returns:
-        One of: "high_intensity_high_harmony", "high_intensity_low_harmony",
-                "low_intensity_high_harmony", "low_intensity_low_harmony", "moderate"
+        Quadrant name for word bank lookup
     """
-    word_banks = load_word_banks()
-    thresholds = word_banks["thresholds"]
-
-    int_low = thresholds["intensity"]["low"]   # 19
-    int_high = thresholds["intensity"]["high"]  # 38
-    harm_low = thresholds["harmony"]["low"]     # 52
-    harm_high = thresholds["harmony"]["high"]   # 65
-
-    is_int_high = intensity > int_high
-    is_int_low = intensity < int_low
-    is_harm_high = harmony > harm_high
-    is_harm_low = harmony < harm_low
-
-    if is_int_high and is_harm_high:
+    if unified_score >= 75:
         return "high_intensity_high_harmony"
-    elif is_int_high and is_harm_low:
-        return "high_intensity_low_harmony"
-    elif is_int_low and is_harm_high:
+    elif unified_score >= 50:
         return "low_intensity_high_harmony"
-    elif is_int_low and is_harm_low:
-        return "low_intensity_low_harmony"
-    else:
+    elif unified_score >= 25:
         return "moderate"
+    else:
+        return "low_intensity_low_harmony"
 
 
 def select_state_words(
     group_name: str,
-    intensity: float,
-    harmony: float,
+    unified_score: float,
     user_id: str,
     date: str,
     count: int = 2
 ) -> list[str]:
     """
-    Select N words from the word bank for a group based on its quadrant.
+    Select N words from the word bank for a group based on unified_score.
 
     Uses reproducible randomness tied to user+date+group for consistency.
 
     Args:
-        group_name: Group name (mind, emotions, body, spirit, growth, overall)
-        intensity: Group intensity score
-        harmony: Group harmony score
+        group_name: Group name (mind, heart, body, instincts, growth, overall)
+        unified_score: Group unified score (0-100, 50=neutral)
         user_id: User ID for reproducible selection
         date: Date string for reproducible selection
         count: Number of words to select (default 2)
@@ -1091,7 +1076,7 @@ def select_state_words(
     import random
 
     word_banks = load_word_banks()
-    quadrant = get_quadrant(intensity, harmony)
+    quadrant = get_quadrant_from_unified_score(unified_score)
     words = word_banks["quadrants"][quadrant].get(group_name, [])
 
     if not words:
@@ -1111,115 +1096,616 @@ def select_featured_meters(
     all_meters: AllMetersReading,
     user_id: str,
     date: str,
-    num_groups: int = 2,
-    num_meters_per_group: int = 2
 ) -> dict:
     """
-    Select featured groups and meters for today's horoscope using weighted random.
+    Select featured meters for today's horoscope using weighted random.
 
-    Higher absolute unified_score = more likely to be selected.
-    This provides programmatic curation - we decide what's important, not the LLM.
+    Logic:
+    - Weight = distance from neutral (50). Extremes are more interesting.
+    - If top 2 have CONTRAST (one >50, one <50): show both
+    - If top 2 are SAME DIRECTION: show only the most extreme one
+
+    Each meter is labeled:
+    - "flowing": score >= 50 (lean into it)
+    - "pushing": score < 50 (push through it)
 
     Args:
         all_meters: Complete meter readings
         user_id: User ID for reproducible selection
         date: Date string for reproducible selection
-        num_groups: Number of groups to feature (default 2)
-        num_meters_per_group: Number of meters per group (default 2)
 
     Returns:
         Dict with:
-        - featured_groups: List of group names
         - featured_meters: Dict mapping group_name -> list of meter readings
+        - featured_list: Flat list of featured meters with direction labels
+        - featured_groups: List of unique group names for featured meters
         - group_words: Dict mapping group_name -> list of state word inspirations
+        - group_scores: Dict with scores for featured groups
     """
     import hashlib
     import random
-    from .hierarchy import MeterGroupV2, get_meters_in_group_v2
+    from .hierarchy import Meter, MeterGroupV2, get_meters_in_group_v2
+    from .meter_groups import calculate_group_scores_top_2
 
     # Create reproducible RNG
     seed_string = f"{user_id}:{date}:featured_selection"
     seed_hash = int(hashlib.sha256(seed_string.encode()).hexdigest()[:8], 16)
     rng = random.Random(seed_hash)
 
-    # Calculate group scores
+    # Collect all 17 individual meters with their weights
+    all_individual_meters = []
+    for meter in Meter:
+        if meter.value in ["overall_intensity", "overall_harmony"]:
+            continue
+        if "_super_group" in meter.value:
+            continue
+        meter_reading = getattr(all_meters, meter.value, None)
+        if meter_reading:
+            all_individual_meters.append(meter_reading)
+
+    if not all_individual_meters:
+        return {
+            "featured_meters": {},
+            "featured_list": [],
+            "featured_groups": [],
+            "group_words": {},
+            "group_scores": {}
+        }
+
+    # Calculate weights: distance from neutral (50)
+    meter_weights = [abs(m.unified_score - 50) + 0.1 for m in all_individual_meters]
+
+    # Weighted random selection of top 2 candidates
+    available_meters = list(all_individual_meters)
+    available_weights = list(meter_weights)
+    candidates = []
+
+    for _ in range(min(2, len(available_meters))):
+        if not available_meters:
+            break
+        selected = rng.choices(available_meters, weights=available_weights, k=1)[0]
+        candidates.append(selected)
+        idx = available_meters.index(selected)
+        available_meters.pop(idx)
+        available_weights.pop(idx)
+
+    # Determine if we have contrast or same direction
+    if len(candidates) == 2:
+        first_positive = candidates[0].unified_score >= 50
+        second_positive = candidates[1].unified_score >= 50
+        has_contrast = first_positive != second_positive
+
+        if has_contrast:
+            # Show both - interesting contrast
+            selected_meters = candidates
+        else:
+            # Same direction - show only the most extreme
+            if abs(candidates[0].unified_score - 50) >= abs(candidates[1].unified_score - 50):
+                selected_meters = [candidates[0]]
+            else:
+                selected_meters = [candidates[1]]
+    else:
+        selected_meters = candidates
+
+    # Build featured_list with direction labels
+    featured_list = []
+    for meter in selected_meters:
+        direction = "flowing" if meter.unified_score >= 50 else "pushing"
+        featured_list.append({
+            "meter": meter,
+            "direction": direction,
+        })
+
+    # Build featured_meters dict keyed by group
+    featured_meters_by_group: dict = {}
+    featured_groups = []
+
+    for meter in selected_meters:
+        group_name = meter.group.value
+        if group_name not in featured_meters_by_group:
+            featured_meters_by_group[group_name] = []
+            featured_groups.append(group_name)
+        featured_meters_by_group[group_name].append(meter)
+
+    # Calculate group scores for featured groups using Top 2 Weighted
     group_scores = {}
-    group_meters = {}
-
-    for group in MeterGroupV2:
-        meter_enums = get_meters_in_group_v2(group)
+    for group_name in featured_groups:
+        group_enum = MeterGroupV2(group_name)
+        meter_enums = get_meters_in_group_v2(group_enum)
         meters_in_group = []
-
         for meter_enum in meter_enums:
             meter_reading = getattr(all_meters, meter_enum.value, None)
             if meter_reading:
                 meters_in_group.append(meter_reading)
 
         if meters_in_group:
-            avg_intensity = sum(m.intensity for m in meters_in_group) / len(meters_in_group)
-            avg_harmony = sum(m.harmony for m in meters_in_group) / len(meters_in_group)
-            unified, _ = calculate_unified_score(avg_intensity, avg_harmony)
-
-            group_scores[group.value] = {
-                "unified_score": unified,
-                "intensity": avg_intensity,
-                "harmony": avg_harmony,
-                "weight": max(10, abs(unified))  # Use absolute score as weight, min 10
+            scores = calculate_group_scores_top_2(meters_in_group)
+            group_scores[group_name] = {
+                "unified_score": scores["unified_score"],
+                "intensity": scores["intensity"],
+                "harmony": scores["harmony"],
             }
-            group_meters[group.value] = meters_in_group
 
-    # Weighted random selection of groups
-    groups = list(group_scores.keys())
-    weights = [group_scores[g]["weight"] for g in groups]
-    featured_groups = []
-
-    for _ in range(min(num_groups, len(groups))):
-        if not groups:
-            break
-        selected = rng.choices(groups, weights=weights, k=1)[0]
-        featured_groups.append(selected)
-        # Remove selected to avoid duplicates
-        idx = groups.index(selected)
-        groups.pop(idx)
-        weights.pop(idx)
-
-    # For each featured group, select meters with weighted random
-    featured_meters = {}
+    # Get state words for featured groups
     group_words = {}
-
     for group_name in featured_groups:
-        meters = group_meters[group_name]
-        meter_weights = [max(10, abs(m.unified_score)) for m in meters]
+        if group_name in group_scores:
+            group_words[group_name] = select_state_words(
+                group_name=group_name,
+                unified_score=group_scores[group_name]["unified_score"],
+                user_id=user_id,
+                date=date,
+                count=2
+            )
 
-        selected_meters = []
-        available_meters = list(meters)
-        available_weights = list(meter_weights)
-
-        for _ in range(min(num_meters_per_group, len(available_meters))):
-            if not available_meters:
-                break
-            selected = rng.choices(available_meters, weights=available_weights, k=1)[0]
-            selected_meters.append(selected)
-            idx = available_meters.index(selected)
-            available_meters.pop(idx)
-            available_weights.pop(idx)
-
-        featured_meters[group_name] = selected_meters
-
-        # Get state words for this group
-        group_data = group_scores[group_name]
-        group_words[group_name] = select_state_words(
-            group_name=group_name,
-            intensity=group_data["intensity"],
-            harmony=group_data["harmony"],
-            user_id=user_id,
-            date=date,
-            count=2
-        )
+    # Generate headline guidance based on the 16-case matrix
+    headline_guidance = generate_headline_guidance(featured_list)
 
     return {
         "featured_groups": featured_groups,
-        "featured_meters": featured_meters,
+        "featured_meters": featured_meters_by_group,
+        "featured_list": featured_list,  # New: flat list with direction labels
         "group_words": group_words,
-        "group_scores": {g: group_scores[g] for g in featured_groups}
+        "group_scores": group_scores,
+        "headline_guidance": headline_guidance,  # Programmatic guidance for LLM
     }
+
+
+# =============================================================================
+# HEADLINE GUIDANCE - 16 CASE MATRIX
+# =============================================================================
+
+def get_score_band(score: float) -> str:
+    """
+    Map unified_score to one of 4 bands.
+
+    Bands:
+    - high: 75-100
+    - mid_high: 55-75
+    - mid_low: 35-55
+    - low: 0-35
+    """
+    if score >= 75:
+        return "high"
+    elif score >= 55:
+        return "mid_high"
+    elif score >= 35:
+        return "mid_low"
+    else:
+        return "low"
+
+
+# 16-case matrix: (band1, band2) -> (pattern, conjunction, tone)
+HEADLINE_MATRIX = {
+    # High + X
+    ("high", "high"): ("both_thriving", "and", "expansive, celebratory"),
+    ("high", "mid_high"): ("strong_and_solid", "and", "confident, stable"),
+    ("high", "mid_low"): ("contrast_up", "but", "balanced pivot"),
+    ("high", "low"): ("stark_contrast_up", "but", "strong pivot, acknowledge the struggle"),
+    # Mid-High + X
+    ("mid_high", "high"): ("solid_and_strong", "and", "confident"),
+    ("mid_high", "mid_high"): ("both_solid", "and", "steady, grounded"),
+    ("mid_high", "mid_low"): ("slight_contrast", "but", "gentle pivot"),
+    ("mid_high", "low"): ("contrast_down", "but", "acknowledge then redirect"),
+    # Mid-Low + X
+    ("mid_low", "high"): ("contrast_up", "but", "find the bright spot"),
+    ("mid_low", "mid_high"): ("slight_contrast", "but", "gentle pivot"),
+    ("mid_low", "mid_low"): ("both_struggling", "and", "compassionate, normalize the strain"),
+    ("mid_low", "low"): ("both_low", "and", "honest, rest-focused"),
+    # Low + X
+    ("low", "high"): ("stark_contrast_up", "but", "anchor to positive"),
+    ("low", "mid_high"): ("contrast_down", "but", "acknowledge then redirect"),
+    ("low", "mid_low"): ("both_low", "and", "honest, rest-focused"),
+    ("low", "low"): ("both_depleted", "and", "survival-mode validation"),
+}
+
+
+def generate_headline_guidance(featured_list: list[dict]) -> dict:
+    """
+    Generate programmatic headline guidance based on the 16-case matrix.
+
+    This provides the LLM with:
+    - The correct conjunction ("and" vs "but")
+    - The pattern name for the combination
+    - The tone/angle to take
+    - Concrete instruction text
+
+    Args:
+        featured_list: List of dicts with 'meter' and 'direction' keys
+
+    Returns:
+        Dict with pattern, conjunction, tone, and instruction text
+    """
+    if not featured_list:
+        return {
+            "pattern": "neutral",
+            "conjunction": None,
+            "tone": "balanced, flexible",
+            "meter_count": 0,
+            "meters": [],
+            "instruction": "Neutral day - no standout meters. Focus on balance and flexibility.",
+        }
+
+    # Load meter descriptions and planets
+    meter_descriptions = _load_meter_overviews()
+    meter_planets = _load_meter_planets()
+
+    # Build meter info with all context
+    meters_info = []
+    for item in featured_list:
+        meter = item["meter"]
+        score = meter.unified_score
+        band = get_score_band(score)
+        # Get the GROUP label (not the meter label)
+        group_label = _get_group_label(meter.group.value, score)
+        # Get top aspect driving this meter
+        top_aspect = None
+        if meter.top_aspects:
+            asp = meter.top_aspects[0]
+            top_aspect = f"{asp.transit_planet.value.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()}"
+        # Get trend info
+        trend_str = None
+        if meter.trend:
+            t = meter.trend.unified_score
+            trend_str = f"{t.direction} ({t.change_rate}, {t.delta:+.0f} from yesterday)"
+        meters_info.append({
+            "group": meter.group.value,
+            "group_label": group_label,
+            "meter_name": meter.meter_name,
+            "meter_label": meter.state_label,
+            "score": round(score),  # Group score (integer for cleaner prompts)
+            "driver_score": round(meter.unified_score),  # Driver meter score
+            "driver_meaning": meter_descriptions.get(meter.meter_name, ""),
+            "driver_planets": meter_planets.get(meter.meter_name, ""),
+            "band": band,
+            "top_aspect": top_aspect,
+            "trend": trend_str,
+        })
+
+    if len(featured_list) == 1:
+        # Single meter case
+        m = meters_info[0]
+        band = m["band"]
+
+        if band == "high":
+            tone = "confident, lean into it"
+            instruction = f"Lead with {m['group'].upper()} ({m['group_label']}). Emphasize {m['meter_name']} as the driver."
+        elif band == "mid_high":
+            tone = "steady, reliable"
+            instruction = f"Acknowledge solid {m['group'].upper()} ({m['group_label']}). Emphasize {m['meter_name']} as the driver."
+        elif band == "mid_low":
+            tone = "honest but not dire"
+            instruction = f"Name that {m['group'].upper()} is challenged ({m['group_label']}). Emphasize {m['meter_name']} as the main issue."
+        else:  # low
+            tone = "compassionate, rest-focused"
+            instruction = f"Validate that {m['group'].upper()} is depleted ({m['group_label']}). Emphasize {m['meter_name']} as the main issue."
+
+        return {
+            "pattern": f"single_{band}",
+            "conjunction": None,
+            "tone": tone,
+            "meter_count": 1,
+            "meters": meters_info,
+            "instruction": instruction,
+        }
+
+    # Two meters - use the 16-case matrix
+    m1, m2 = meters_info[0], meters_info[1]
+    band1, band2 = m1["band"], m2["band"]
+
+    pattern, conjunction, tone = HEADLINE_MATRIX.get(
+        (band1, band2),
+        ("mixed", "and", "balanced")  # fallback
+    )
+
+    # Generate specific instruction based on pattern
+    instruction = _build_headline_instruction(pattern, conjunction, tone, m1, m2)
+
+    return {
+        "pattern": pattern,
+        "conjunction": conjunction,
+        "tone": tone,
+        "meter_count": 2,
+        "meters": meters_info,
+        "instruction": instruction,
+    }
+
+
+def _build_headline_instruction(
+    pattern: str,
+    conjunction: str,
+    tone: str,
+    m1: dict,
+    m2: dict
+) -> str:
+    """Build concrete instruction text for the LLM based on pattern."""
+
+    g1, gl1, mn1 = m1["group"].upper(), m1["group_label"], m1["meter_name"]
+    g2, gl2, mn2 = m2["group"].upper(), m2["group_label"], m2["meter_name"]
+
+    # Pattern-specific instructions
+    instructions = {
+        "both_thriving": (
+            f"Celebrate {g1} ({gl1}) AND {g2} ({gl2}). "
+            f"Use 'and'. Expansive tone. Drivers: {mn1} and {mn2}."
+        ),
+        "strong_and_solid": (
+            f"Lead with {g1} ({gl1}) AND {g2} ({gl2}) supports it. "
+            f"Use 'and'. Drivers: {mn1} and {mn2}."
+        ),
+        "solid_and_strong": (
+            f"{g1} ({gl1}) is solid AND {g2} ({gl2}) is even stronger. "
+            f"Use 'and'. Drivers: {mn1} and {mn2}."
+        ),
+        "both_solid": (
+            f"Both {g1} ({gl1}) and {g2} ({gl2}) are reliable. "
+            f"Use 'and'. Steady tone. Drivers: {mn1} and {mn2}."
+        ),
+        "contrast_up": (
+            f"{g1} ({gl1}) is struggling BUT {g2} ({gl2}) is strong. "
+            f"Use 'but' to pivot. Drivers: {mn1} and {mn2}."
+        ),
+        "stark_contrast_up": (
+            f"Be honest: {g1} ({gl1}) is hard. BUT {g2} ({gl2}) is strong - anchor there. "
+            f"Use 'but'. Drivers: {mn1} and {mn2}."
+        ),
+        "slight_contrast": (
+            f"{g1} ({gl1}) and {g2} ({gl2}) are mismatched. "
+            f"Use 'but' for gentle pivot. Drivers: {mn1} and {mn2}."
+        ),
+        "contrast_down": (
+            f"Lead with {g1} ({gl1}) BUT {g2} ({gl2}) needs care. "
+            f"Use 'but'. Drivers: {mn1} and {mn2}."
+        ),
+        "both_struggling": (
+            f"Both {g1} ({gl1}) AND {g2} ({gl2}) are challenged. "
+            f"Use 'and' - no fake contrast. Compassionate. Drivers: {mn1} and {mn2}."
+        ),
+        "both_low": (
+            f"{g1} ({gl1}) AND {g2} ({gl2}) are both depleted. "
+            f"Use 'and'. Rest-focused. Drivers: {mn1} and {mn2}."
+        ),
+        "both_depleted": (
+            f"{g1} ({gl1}) AND {g2} ({gl2}) are both at the bottom. "
+            f"Use 'and'. Survival mode is okay. Drivers: {mn1} and {mn2}."
+        ),
+    }
+
+    return instructions.get(pattern, (
+        f"Combine {g1} ({gl1}) {conjunction.upper()} {g2} ({gl2}). "
+        f"Tone: {tone}. Drivers: {mn1} and {mn2}."
+    ))
+
+
+def generate_overview_guidance(
+    all_meters: "AllMetersReading",
+    featured_list: list[dict],
+    headline_guidance: dict,
+) -> dict:
+    """
+    Generate guidance for daily_overview that expands on the headline.
+
+    Selects the most active groups to highlight, ensuring the headline group
+    is included plus additional interesting groups.
+
+    Args:
+        all_meters: Complete meter readings
+        featured_list: The meters featured in the headline
+        headline_guidance: The headline guidance dict
+
+    Returns:
+        Dict with overview highlights including group, key meter, transit, and meaning
+    """
+    from .meter_groups import calculate_group_scores_top_2
+
+    # Load meter descriptions and planets from JSON
+    meter_descriptions = _load_meter_overviews()
+    meter_planets = _load_meter_planets()
+
+    # Get featured group names from headline
+    headline_groups = set()
+    for item in featured_list:
+        headline_groups.add(item["meter"].group.value)
+
+    # Build detailed info for all groups
+    all_group_info = []
+    group_names = ["mind", "heart", "body", "instincts", "growth"]
+
+    for group_name in group_names:
+        group_meters = []
+        for meter_name in _get_meters_in_group(group_name):
+            meter = getattr(all_meters, meter_name, None)
+            if meter:
+                group_meters.append(meter)
+
+        if group_meters:
+            # Use the same Top-2 weighted calculation as all_groups for consistency
+            scores = calculate_group_scores_top_2(group_meters)
+            group_score = scores["unified_score"]
+            driver_name = scores["driver"]
+
+            # Get the driver meter object
+            driver = next((m for m in group_meters if m.meter_name == driver_name), group_meters[0])
+
+            # Get the top aspect for this meter
+            top_aspect = None
+            if driver.top_aspects:
+                asp = driver.top_aspects[0]
+                top_aspect = f"{asp.transit_planet.value.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()}"
+
+            # Get the group guidance (how to push through)
+            group_guidance = _get_group_guidance(group_name, group_score)
+
+            # Get trend info
+            trend_str = None
+            if driver.trend:
+                t = driver.trend.unified_score
+                trend_str = f"{t.direction} ({t.change_rate}, {t.delta:+.0f} from yesterday)"
+
+            all_group_info.append({
+                "group": group_name,
+                "group_score": round(group_score),  # Integer for cleaner prompts
+                "group_band": get_score_band(group_score),
+                "group_label": _get_group_label(group_name, group_score),
+                "group_guidance": group_guidance,
+                "driver_meter": driver.meter_name,
+                "driver_score": round(driver.unified_score),  # Integer for cleaner prompts
+                "driver_label": driver.state_label,
+                "driver_aspect": top_aspect,
+                "driver_meaning": meter_descriptions.get(driver.meter_name, ""),
+                "driver_planets": meter_planets.get(driver.meter_name, ""),
+                "driver_trend": trend_str,
+                "in_headline": group_name in headline_groups,
+                "distance_from_neutral": abs(group_score - 50),
+            })
+
+    # Sort by distance from neutral (most extreme first)
+    all_group_info.sort(key=lambda g: g["distance_from_neutral"], reverse=True)
+
+    # Select highlights for overview:
+    # 1. ALWAYS include headline groups (so LLM has context for what it's writing)
+    # 2. Add most extreme non-headline groups (up to 1-2 more)
+    overview_highlights = []
+
+    # First: add ALL headline groups (critical for LLM context)
+    for group in all_group_info:
+        if group["in_headline"]:
+            overview_highlights.append(group)
+
+    # Then: add most extreme non-headline groups (up to ~3 total)
+    for group in all_group_info:
+        if len(overview_highlights) >= 3:
+            break
+        if not group["in_headline"]:
+            # Only include if interesting (outside 40-60 range)
+            if group["group_score"] < 40 or group["group_score"] > 60:
+                overview_highlights.append(group)
+
+    # Format for template - no labels, just scores and guidance
+    formatted_highlights = []
+    for h in overview_highlights:
+        lines = [
+            f"{h['group'].upper()}: {h['group_score']}/100",
+            f"  Driver: {h['driver_meter']} ({h['driver_score']}/100)",
+            f"  What {h['driver_meter']} is: {h['driver_meaning']}",
+            f"  Planets tracked: {h['driver_planets']}",
+            f"  Why: {h['driver_aspect'] or 'multiple transits'}",
+        ]
+        if h.get('driver_trend'):
+            lines.append(f"  Trend: {h['driver_trend']}")
+        lines.append(f"  How to write about it: {h['group_guidance']}")
+        formatted_highlights.append("\n".join(lines))
+
+    return {
+        "highlights": overview_highlights,
+        "formatted_highlights": formatted_highlights,
+        "highlight_count": len(overview_highlights),
+    }
+
+
+def _get_meters_in_group(group_name: str) -> list[str]:
+    """Return meter names in a group."""
+    mapping = {
+        "mind": ["clarity", "focus", "communication"],
+        "heart": ["resilience", "connections", "vulnerability"],
+        "body": ["energy", "drive", "strength"],
+        "instincts": ["vision", "flow", "intuition", "creativity"],
+        "growth": ["momentum", "ambition", "evolution", "circle"],
+    }
+    return mapping.get(group_name, [])
+
+
+def _load_meter_overviews() -> dict[str, str]:
+    """Load the overview description for each meter from JSON labels."""
+    descriptions = {}
+    labels_dir = os.path.join(os.path.dirname(__file__), "labels")
+
+    meter_names = [
+        "clarity", "focus", "communication",
+        "resilience", "connections", "vulnerability",
+        "energy", "drive", "strength",
+        "vision", "flow", "intuition", "creativity",
+        "momentum", "ambition", "evolution", "circle",
+    ]
+
+    for meter_name in meter_names:
+        label_file = os.path.join(labels_dir, f"{meter_name}.json")
+        try:
+            with open(label_file, "r") as f:
+                data = json.load(f)
+                # Get the overview from description
+                descriptions[meter_name] = data.get("description", {}).get("overview", "")
+        except Exception:
+            descriptions[meter_name] = ""
+
+    return descriptions
+
+
+def _load_meter_planets() -> dict[str, str]:
+    """Load the natal planets tracked for each meter from JSON labels."""
+    planets = {}
+    labels_dir = os.path.join(os.path.dirname(__file__), "labels")
+
+    meter_names = [
+        "clarity", "focus", "communication",
+        "resilience", "connections", "vulnerability",
+        "energy", "drive", "strength",
+        "vision", "flow", "intuition", "creativity",
+        "momentum", "ambition", "evolution", "circle",
+    ]
+
+    for meter_name in meter_names:
+        label_file = os.path.join(labels_dir, f"{meter_name}.json")
+        try:
+            with open(label_file, "r") as f:
+                data = json.load(f)
+                # Get natal_planets_tracked from astrological_foundation
+                natal_planets = data.get("astrological_foundation", {}).get("natal_planets_tracked", [])
+                if natal_planets:
+                    planets[meter_name] = ", ".join([p.capitalize() for p in natal_planets])
+                else:
+                    planets[meter_name] = "all planets"
+        except Exception:
+            planets[meter_name] = ""
+
+    return planets
+
+
+def _get_score_bucket(score: float) -> str:
+    """Get the bucket key for a score (0-25, 25-50, 50-75, 75-100)."""
+    if score < 25:
+        return "0-25"
+    elif score < 50:
+        return "25-50"
+    elif score < 75:
+        return "50-75"
+    else:
+        return "75-100"
+
+
+def _get_group_label(group_name: str, score: float) -> str:
+    """Get the state label for a group at a given score."""
+    labels_dir = os.path.join(os.path.dirname(__file__), "labels", "groups")
+    label_file = os.path.join(labels_dir, f"{group_name}.json")
+
+    try:
+        with open(label_file, "r") as f:
+            data = json.load(f)
+            bucket = _get_score_bucket(score)
+            return data.get("bucket_labels", {}).get(bucket, {}).get("label", "")
+    except Exception:
+        return ""
+
+
+def _get_group_guidance(group_name: str, score: float) -> str:
+    """Get the guidance for a group at a given score (how to push through)."""
+    labels_dir = os.path.join(os.path.dirname(__file__), "labels", "groups")
+    label_file = os.path.join(labels_dir, f"{group_name}.json")
+
+    try:
+        with open(label_file, "r") as f:
+            data = json.load(f)
+            bucket = _get_score_bucket(score)
+            return data.get("bucket_labels", {}).get(bucket, {}).get("guidance", "")
+    except Exception:
+        return ""

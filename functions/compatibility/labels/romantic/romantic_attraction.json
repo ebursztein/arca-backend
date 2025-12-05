@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "attraction",
+  "_mode": "romantic",
+  "metadata": {
+    "category_id": "attraction",
+    "display_name": "Attraction",
+    "description": "The physical and magnetic pull between you two",
+    "sentence_template": "The chemistry here is ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mars", "Venus", "Pluto"],
+    "what_it_measures": "Mars-Venus aspects show physical attraction. Pluto adds intensity and magnetism. Mars-Mars shows passion dynamics.",
+    "planet_meanings": {
+      "Mars": "desire, passion, and physical drive",
+      "Venus": "attraction style and what draws you in",
+      "Pluto": "intensity, obsession, and transformative pull"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Flat",
+      "guidance": "Chemistry weak or one-sided; may feel more like friendship."
+    },
+    "low": {
+      "label": "Faint",
+      "guidance": "Light pull but not intense; talk about slow burn or values over heat."
+    },
+    "mid": {
+      "label": "Warm",
+      "guidance": "Attraction there but not all-consuming; can grow with trust."
+    },
+    "high": {
+      "label": "Magnetic",
+      "guidance": "Clear mutual pull; encourage owning it while staying grounded."
+    },
+    "very_high": {
+      "label": "Blazing",
+      "guidance": "Very strong spark; balance passion with emotional safety."
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "shared_interests",
+  "_mode": "friendship",
+  "metadata": {
+    "category_id": "shared_interests",
+    "display_name": "Shared Interests",
+    "description": "How much overlap you have in hobbies, passions, and what you geek out about",
+    "sentence_template": "For shared interests, you two are ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Mercury", "Venus", "Jupiter"],
+    "what_it_measures": "Mercury shows intellectual interests. Venus shows aesthetic and social preferences. Jupiter shows what excites and expands you.",
+    "planet_meanings": {
+      "Mercury": "intellectual interests and curiosities",
+      "Venus": "aesthetic tastes and social preferences",
+      "Jupiter": "what excites you and where you seek growth"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Separate Worlds",
+      "guidance": "Live in different universes; more occasional than daily."
+    },
+    "low": {
+      "label": "Parallel",
+      "guidance": "Some overlap, mostly different lanes; curiosity about hobbies."
+    },
+    "mid": {
+      "label": "Crossroads",
+      "guidance": "Enough shared ground to build on."
+    },
+    "high": {
+      "label": "In Sync",
+      "guidance": "Plenty in common; good for frequent plans."
+    },
+    "very_high": {
+      "label": "Same Obsession",
+      "guidance": "Deep overlap; great for geeking out together."
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-03 22:21:16
+> Auto-generated on 2025-12-05 15:28:41
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -10,6 +10,7 @@
 - [Callable Functions](#callable-functions)
 - [Model Definitions](#model-definitions)
 - [Enum Definitions](#enum-definitions)
+- [Astrometer State Labels](#astrometer-state-labels)
 
 ---
 
@@ -654,11 +655,11 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `group_name` | string | Yes | PydanticUndefined | - | Group ID: mind, heart, body, instincts, growth |
 | `display_name` | string | Yes | PydanticUndefined | - | User-facing name: Mind, Heart, Body, Instincts, Growth |
-| `unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | Average unified score of member meters (-100 to +100) |
-| `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average intensity of member meters |
-| `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average harmony of member meters |
-| `state_label` | string | Yes | PydanticUndefined | - | Aggregated state label from group JSON (contextual to group) |
-| `quality` | string | Yes | PydanticUndefined | - | Quality from unified_score quadrant: challenging, turbule... |
+| `unified_score` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average unified score of member meters (0-100, 50=neutral) |
+| `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average intensity (internal use) |
+| `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Average harmony (internal use) |
+| `state_label` | string | Yes | PydanticUndefined | - | State label from unified_score: 'Sharp', 'Clear', 'Hazy',... |
+| `quality` | string | Yes | PydanticUndefined | - | Quality: challenging (<25), turbulent (25-50), peaceful (... |
 | `interpretation` | string | Yes | PydanticUndefined | - | Group-level interpretation from existing LLM flow |
 | `meters` | MeterForIOS[] | Yes | PydanticUndefined | - | Individual meters in this group (3-4 meters) |
 | `trend_delta` | float | null | No | null | - | Change in group unified_score from yesterday |
@@ -674,11 +675,11 @@ Get compatibility analysis between user and a connection.
 | `meter_name` | string | Yes | PydanticUndefined | - | Internal meter ID (e.g., 'clarity') |
 | `display_name` | string | Yes | PydanticUndefined | - | User-facing name (e.g., 'Clarity') |
 | `group` | string | Yes | PydanticUndefined | - | Group ID: mind, heart, body, instincts, growth |
-| `unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | Primary display value (-100 to +100, polar-style from int... |
-| `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Activity level - how much is happening |
-| `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Quality - supportive (high) vs challenging (low) |
-| `unified_quality` | string | Yes | PydanticUndefined | - | Quality from unified_score quadrant: challenging, turbule... |
-| `state_label` | string | Yes | PydanticUndefined | - | Rich contextual state from JSON: 'Peak Performance', 'Pus... |
+| `unified_score` | float | Yes | PydanticUndefined | >= 0, <= 100 | Primary display value (0-100, 50=neutral) |
+| `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Activity level (internal use) |
+| `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Quality indicator (internal use) |
+| `unified_quality` | string | Yes | PydanticUndefined | - | Quality: challenging (<25), turbulent (25-50), peaceful (... |
+| `state_label` | string | Yes | PydanticUndefined | - | Rich contextual state: 'Sharp', 'Clear', 'Hazy', 'Overloa... |
 | `interpretation` | string | Yes | PydanticUndefined | - | Personalized daily interpretation referencing today's tra... |
 | `trend_delta` | float | null | No | null | - | Change in unified_score from yesterday |
 | `trend_direction` | string | null | No | null | - | improving, worsening, stable, increasing, decreasing |
@@ -1534,3 +1535,38 @@ Get compatibility analysis between user and a connection.
 | `CAPRICORN` | `"capricorn"` |
 | `AQUARIUS` | `"aquarius"` |
 | `PISCES` | `"pisces"` |
+
+---
+
+## Astrometer State Labels
+
+Each meter group has 4 state labels based on the unified score quartile.
+
+**Quartile Thresholds:**
+- `score < 25` -> bucket 0 (challenging)
+- `score >= 25 && < 50` -> bucket 1 (turbulent)
+- `score >= 50 && < 75` -> bucket 2 (peaceful)
+- `score >= 75` -> bucket 3 (flowing)
+
+### Labels by Group
+
+| Group | 0-25 | 25-50 | 50-75 | 75-100 |
+|-------|------|-------|-------|--------|
+| **Overall** | Overwhelmed | Turbulent | Peaceful | Flowing |
+| **Mind** | Offline | Distracted | On Point | Crystal Clear |
+| **Heart** | Heavy | Tender | Grounded | Radiant |
+| **Body** | Drained | Running Low | Steady | Fired Up |
+| **Instincts** | Off | Noisy | Tuned In | Razor Sharp |
+| **Growth** | Stuck | Uphill | Moving | Taking Off |
+
+### iOS Implementation
+
+```swift
+// Map unified_score to bucket index
+func bucketIndex(score: Double) -> Int {
+    if score < 25 { return 0 }
+    else if score < 50 { return 1 }
+    else if score < 75 { return 2 }
+    else { return 3 }
+}
+```

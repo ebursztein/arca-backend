@@ -276,28 +276,27 @@ def daily_meters_summary(
 
 def meter_groups_summary(meter_groups: dict) -> str:
     """
-    Generate compact markdown summary table for meter groups.
+    Generate compact summary table for meter groups (unified_score only).
 
-    Creates a single table showing all 5 groups with aggregated scores and state labels.
-    This is injected into the LLM prompt to provide group-level context alongside
-    individual meter data.
+    Creates a single table showing all 5 groups with unified_score and state labels.
+    This is injected into the LLM prompt to provide group-level context.
 
     Args:
         meter_groups: Dict mapping group_name -> MeterGroupData (from build_all_meter_groups)
 
     Returns:
-        str: Formatted markdown table ready for LLM prompt
+        str: Formatted table ready for LLM prompt
 
     Example meter_groups structure:
         {
             "mind": {
                 "group_name": "mind",
                 "display_name": "Mind",
-                "scores": {"unified_score": 75.3, "harmony": 78.0, "intensity": 72.7},
-                "state": {"label": "Supportive", "quality": "supportive"},
-                "interpretation": "",  # Empty, will be filled by LLM
-                "trend": {"unified_score": {...}, ...} or None,
-                "meter_ids": ["clarity", "decision_quality", "communication_flow"]
+                "scores": {"unified_score": 75.3},
+                "state": {"label": "Clear", "quality": "peaceful"},
+                "interpretation": "",
+                "trend": {"unified_score": {...}} or None,
+                "meter_ids": ["clarity", "focus", "communication"]
             },
             ...
         }
@@ -306,99 +305,41 @@ def meter_groups_summary(meter_groups: dict) -> str:
         return ""
 
     output = "\n"
-    output += "═" * 110 + "\n"
-    output += "METER GROUPS (5 Life Areas - Aggregated Scores)".center(110) + "\n"
-    output += "═" * 110 + "\n"
+    output += "=" * 60 + "\n"
+    output += "METER GROUPS (5 Life Areas)".center(60) + "\n"
+    output += "=" * 60 + "\n"
 
-    # Build table header
-    top_line = "┌" + "─" * 15 + "┬" + "─" * 20 + "┬"
-    top_line += "─" * 23 + "┬" + "─" * 23 + "┬" + "─" * 23 + "┐\n"
-
-    merged_header = "│" + " Group ".center(15) + "│" + " State ".center(20) + "│"
-    merged_header += " ──── OVERALL ──── ".center(23) + "│"
-    merged_header += " ──── INTENSITY ──── ".center(23) + "│"
-    merged_header += " ──── HARMONY ──── ".center(23) + "│\n"
-
-    # Sub-header row
-    sub_line = "├" + "─" * 15 + "┼" + "─" * 20 + "┼"
-    sub_line += "─" * 7 + "┬" + "─" * 15 + "┼"
-    sub_line += "─" * 7 + "┬" + "─" * 15 + "┼"
-    sub_line += "─" * 7 + "┬" + "─" * 15 + "┤\n"
-
-    sub_header = "│" + " " * 15 + "│" + " " * 20 + "│"
-    sub_header += " Val ".center(7) + "│" + " Trend ".center(15) + "│"
-    sub_header += " Val ".center(7) + "│" + " Trend ".center(15) + "│"
-    sub_header += " Val ".center(7) + "│" + " Trend ".center(15) + "│\n"
-
-    output += top_line + merged_header + sub_line + sub_header
-
-    # Data separator
-    data_line = "├" + "─" * 15 + "┼" + "─" * 20 + "┼"
-    data_line += "─" * 7 + "┼" + "─" * 15 + "┼"
-    data_line += "─" * 7 + "┼" + "─" * 15 + "┼"
-    data_line += "─" * 7 + "┼" + "─" * 15 + "┤\n"
-
-    output += data_line
+    # Simple table header
+    output += f"{'Group':<15} {'State':<20} {'Score':>7} {'Trend':>15}\n"
+    output += "-" * 60 + "\n"
 
     # Sort groups in a consistent order
-    group_order = ["mind", "heart", "body", "instincts", "evolution"]
+    group_order = ["mind", "heart", "body", "instincts", "growth"]
 
-    for i, group_name in enumerate(group_order):
+    for group_name in group_order:
         if group_name not in meter_groups:
             continue
 
         group = meter_groups[group_name]
 
-        # Extract scores
-        scores = group["scores"]
-        unified = scores["unified_score"]
-        intensity = scores["intensity"]
-        harmony = scores["harmony"]
+        # Extract unified_score
+        unified = group["scores"]["unified_score"]
 
         # Extract state
         state_label = group["state"]["label"]
 
-        # Extract trends if available
+        # Extract unified trend if available
         trend = group.get("trend")
-        if trend:
+        if trend and trend.get("unified_score"):
             unified_trend = trend["unified_score"]
-            intensity_trend = trend["intensity"]
-            harmony_trend = trend["harmony"]
-
-            unified_delta = unified_trend["delta"]
-            intensity_delta = intensity_trend["delta"]
-            harmony_delta = harmony_trend["delta"]
-
-            unified_pace = unified_trend["change_rate"]
-            intensity_pace = intensity_trend["change_rate"]
-            harmony_pace = harmony_trend["change_rate"]
-
-            unified_trend_str = f"{unified_delta:+.1f} {unified_pace}"
-            intensity_trend_str = f"{intensity_delta:+.1f} {intensity_pace}"
-            harmony_trend_str = f"{harmony_delta:+.1f} {harmony_pace}"
+            delta = unified_trend["delta"]
+            pace = unified_trend["change_rate"]
+            trend_str = f"{delta:+.1f} {pace}"
         else:
-            unified_trend_str = "—"
-            intensity_trend_str = "—"
-            harmony_trend_str = "—"
+            trend_str = "-"
 
-        # Build row
-        row_str = "│"
-        row_str += f" {group['display_name']:<14}│"          # Group name
-        row_str += f" {state_label:<19}│"                    # State label
-        row_str += f"{unified:7.1f}│"                        # Overall value
-        row_str += f" {unified_trend_str:<14}│"              # Overall trend
-        row_str += f"{intensity:7.1f}│"                      # Intensity value
-        row_str += f" {intensity_trend_str:<14}│"            # Intensity trend
-        row_str += f"{harmony:7.1f}│"                        # Harmony value
-        row_str += f" {harmony_trend_str:<14}│\n"            # Harmony trend
-        output += row_str
+        output += f"{group['display_name']:<15} {state_label:<20} {unified:7.1f} {trend_str:>15}\n"
 
-    # Bottom border
-    bottom_line = "└" + "─" * 15 + "┴" + "─" * 20 + "┴"
-    bottom_line += "─" * 7 + "┴" + "─" * 15 + "┴"
-    bottom_line += "─" * 7 + "┴" + "─" * 15 + "┴"
-    bottom_line += "─" * 7 + "┴" + "─" * 15 + "┘\n"
-    output += bottom_line
-    output += "\n"
+    output += "=" * 60 + "\n"
 
     return output

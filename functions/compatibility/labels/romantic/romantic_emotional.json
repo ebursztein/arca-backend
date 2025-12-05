@@ -1,0 +1,49 @@
+{
+  "_schema_version": "1.0",
+  "_category": "emotional",
+  "_mode": "romantic",
+  "metadata": {
+    "category_id": "emotional",
+    "display_name": "Emotional Connection",
+    "description": "How deeply you connect emotionally - whether you truly 'get' each other's feelings",
+    "sentence_template": "Emotionally, this bond feels ___."
+  },
+  "bands": [
+    { "id": "very_low", "min": 0, "max": 20 },
+    { "id": "low", "min": 20, "max": 40 },
+    { "id": "mid", "min": 40, "max": 60 },
+    { "id": "high", "min": 60, "max": 80 },
+    { "id": "very_high", "min": 80, "max": 100 }
+  ],
+  "astrological_basis": {
+    "primary_planets": ["Moon", "Venus", "Neptune"],
+    "what_it_measures": "Moon-Moon aspects show emotional rhythm. Moon-Venus shows care style alignment. Neptune adds depth or illusion.",
+    "planet_meanings": {
+      "Moon": "emotional needs and instincts",
+      "Venus": "love style and what you value",
+      "Neptune": "dreams, idealization, and intuition"
+    }
+  },
+  "bucket_labels": {
+    "very_low": {
+      "label": "Shut Off",
+      "guidance": "They struggle to reach each other emotionally; validate the loneliness and warn against expecting deep support here."
+    },
+    "low": {
+      "label": "Mismatched",
+      "guidance": "Feel things on different wavelengths; talk about understanding each other's style, may stay uneven."
+    },
+    "mid": {
+      "label": "Surface-Deep",
+      "guidance": "Some depth but not automatic; emotional closeness grows if both make effort."
+    },
+    "high": {
+      "label": "Warm",
+      "guidance": "Generally 'get' each other's feelings; encourage honest sharing."
+    },
+    "very_high": {
+      "label": "Soul-Level",
+      "guidance": "Strong emotional resonance; describe feeling deeply seen, handle intensity with care."
+    }
+  }
+}

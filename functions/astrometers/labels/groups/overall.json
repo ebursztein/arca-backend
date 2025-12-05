@@ -1,11 +1,29 @@
 {
   "_schema_version": "2.0",
   "_group": "overall",
-  "_last_updated": "2025-01-08",
+  "_last_updated": "2025-12-05",
   "metadata": {
     "group_id": "overall",
     "display_name": "Overall",
     "description": "Aggregated state across all 17 meters"
+  },
+  "bucket_labels": {
+    "0-25": {
+      "label": "Overwhelmed",
+      "guidance": "Treat today as crisis-level or very intense; validate that everything may feel like 'too much' and keep advice ultra-small and focused on getting through, not optimizing."
+    },
+    "25-50": {
+      "label": "Turbulent",
+      "guidance": "Name the instability and swings; coach grounding, flexibility, and not overreacting to sudden emotional/energy spikes."
+    },
+    "50-75": {
+      "label": "Peaceful",
+      "guidance": "Frame the day as workable and fairly even; good for handling normal life and taking modest, steady steps forward."
+    },
+    "75-100": {
+      "label": "Flowing",
+      "guidance": "Encourage them to lean into the momentum, take aligned actions, and make the most of the good stretch."
+    }
   },
   "description": {
     "overview": "Overall represents the combined energy and quality of all life areas today.",

@@ -45,45 +45,92 @@ def load_group_labels(group_name: str) -> Dict:
     return labels
 
 
-def get_group_state_label(group_name: str, intensity: float, harmony: float) -> str:
+def get_group_bucket_labels(group_name: str) -> tuple:
+    """
+    Get bucket labels for a group from JSON.
+
+    Returns:
+        Tuple of 4 labels: (0-25 label, 25-50 label, 50-75 label, 75-100 label)
+    """
+    try:
+        labels = load_group_labels(group_name)
+        bucket_labels = labels.get("bucket_labels")
+        if bucket_labels:
+            # New dict format: {"0-25": {"label": "...", "guidance": "..."}, ...}
+            if isinstance(bucket_labels, dict):
+                return (
+                    bucket_labels.get("0-25", {}).get("label", "Low"),
+                    bucket_labels.get("25-50", {}).get("label", "Mixed"),
+                    bucket_labels.get("50-75", {}).get("label", "Good"),
+                    bucket_labels.get("75-100", {}).get("label", "Peak"),
+                )
+            # Legacy list format: ["label0", "label1", "label2", "label3"]
+            elif isinstance(bucket_labels, list) and len(bucket_labels) == 4:
+                return tuple(bucket_labels)
+    except (KeyError, FileNotFoundError):
+        pass
+    # Fallback
+    return ("Low", "Mixed", "Good", "Peak")
+
+
+def get_group_bucket_guidance(group_name: str, unified_score: float) -> str:
+    """
+    Get LLM guidance for a group based on unified_score.
+
+    Args:
+        group_name: Name of the meter group
+        unified_score: Unified score on 0-100 scale
+
+    Returns:
+        Guidance string for LLM on how to write about this state
+    """
+    try:
+        labels = load_group_labels(group_name)
+        bucket_labels = labels.get("bucket_labels", {})
+        if isinstance(bucket_labels, dict):
+            if unified_score < 25:
+                return bucket_labels.get("0-25", {}).get("guidance", "")
+            elif unified_score < 50:
+                return bucket_labels.get("25-50", {}).get("guidance", "")
+            elif unified_score < 75:
+                return bucket_labels.get("50-75", {}).get("guidance", "")
+            else:
+                return bucket_labels.get("75-100", {}).get("guidance", "")
+    except (KeyError, FileNotFoundError):
+        pass
+    return ""
+
+
+def get_group_state_label(group_name: str, unified_score: float) -> str:
     """
     Get state label for a group based on unified_score.
 
-    Maps unified_score to one of 4 bucket labels per group.
-    Thresholds based on quartiles (P25, P50, P75).
+    Maps unified_score (0-100 scale) to one of 4 bucket labels per group.
+    Labels are loaded from JSON files to stay in sync with iOS.
+
+    Symmetric quartile thresholds (matches iOS):
+        score < 25  -> bucket_labels[0]
+        score >= 25 && < 50  -> bucket_labels[1]
+        score >= 50 && < 75  -> bucket_labels[2]
+        score >= 75 -> bucket_labels[3]
+
+    Args:
+        group_name: Name of the meter group
+        unified_score: Unified score on 0-100 scale
 
     Returns:
         Bucket label string (e.g., "Clear", "Grounded", "Surging")
     """
-    # Calculate unified_score from intensity and harmony
-    unified_score, _ = calculate_unified_score(intensity, harmony)
+    labels = get_group_bucket_labels(group_name)
 
-    # Bucket thresholds (quartile-based)
-    # Bucket 1: < -25 (Challenge)
-    # Bucket 2: -25 to 10 (Mixed)
-    # Bucket 3: 10 to 50 (Good)
-    # Bucket 4: >= 50 (Peak)
-
-    # Group-specific bucket labels
-    BUCKET_LABELS = {
-        "mind": ("Overloaded", "Hazy", "Clear", "Sharp"),
-        "heart": ("Heavy", "Tender", "Grounded", "Magnetic"),
-        "body": ("Depleted", "Low Power Mode", "Powering Through", "Surging"),
-        "instincts": ("Disconnected", "Noisy", "Tuned In", "Aligned"),
-        "growth": ("Uphill", "Pacing", "Climbing", "Unstoppable"),
-        "overall": ("Challenging", "Turbulent", "Peaceful", "Flowing"),
-    }
-
-    labels = BUCKET_LABELS.get(group_name, ("Low", "Mixed", "Good", "Peak"))
-
-    if unified_score < -25:
-        return labels[0]  # Challenge bucket
-    elif unified_score < 10:
-        return labels[1]  # Mixed bucket
+    if unified_score < 25:
+        return labels[0]
     elif unified_score < 50:
-        return labels[2]  # Good bucket
+        return labels[1]
+    elif unified_score < 75:
+        return labels[2]
     else:
-        return labels[3]  # Peak bucket
+        return labels[3]
 
 
 def get_group_advice_category(group_name: str, intensity: float, harmony: float) -> str:
@@ -105,29 +152,88 @@ def get_group_description(group_name: str) -> Dict[str, str]:
 
 
 # =============================================================================
+# Top 2 Weighted Aggregation
+# =============================================================================
+
+def calculate_group_scores_top_2(meters: List[MeterReading]) -> Dict:
+    """
+    Calculate group scores using Top 2 by Intensity weighted average.
+
+    This approach:
+    - Selects the 2 highest-intensity meters (the "loudest voices")
+    - Weights their scores by intensity
+    - Filters out neutral noise from inactive meters
+
+    Why Top 2:
+    - Groups have 3-4 meters; Top 2 captures primary conflict without dilution
+    - Inactive meters (low intensity) don't drag score toward neutral
+    - More responsive and "alive" feeling for users
+
+    Args:
+        meters: List of MeterReading objects for this group
+
+    Returns:
+        Dict with unified_score, intensity, harmony, and driver (name of top meter)
+    """
+    # Safety check
+    if not meters:
+        return {"unified_score": 50.0, "intensity": 0.0, "harmony": 50.0, "driver": None}
+
+    # Sort by intensity (loudest first), stable sort for determinism
+    sorted_meters = sorted(meters, key=lambda m: m.intensity, reverse=True)
+
+    # Slice top 2 (gracefully handles 1-item lists)
+    top_meters = sorted_meters[:2]
+
+    # The driver is the highest-intensity meter
+    driver = top_meters[0].meter_name
+
+    # Weighted average of top 2
+    total_weighted_unified = 0.0
+    total_weighted_intensity = 0.0
+    total_weighted_harmony = 0.0
+    total_weight = 0.0
+
+    for m in top_meters:
+        # Use intensity as weight (add epsilon for safety)
+        weight = m.intensity + 0.01
+        total_weighted_unified += m.unified_score * weight
+        total_weighted_intensity += m.intensity * weight
+        total_weighted_harmony += m.harmony * weight
+        total_weight += weight
+
+    return {
+        "unified_score": round(total_weighted_unified / total_weight, 1),
+        "intensity": round(total_weighted_intensity / total_weight, 1),
+        "harmony": round(total_weighted_harmony / total_weight, 1),
+        "driver": driver,
+    }
+
+
+# =============================================================================
 # Quality Label Determination
 # =============================================================================
 
 def determine_quality_label(harmony: float, intensity: float) -> tuple[str, str]:
     """
-    Determine quality label based on unified_score quadrants.
+    Determine quality label based on unified_score (0-100 scale).
 
-    Calculates unified_score internally and maps to quadrant labels.
+    Calculates unified_score internally and maps to quality labels.
 
     Returns:
-        (quality, label) tuple based on unified_score:
-        - < -25: ("challenging", "Challenging")
-        - -25 to 10: ("turbulent", "Turbulent")
-        - 10 to 50: ("peaceful", "Peaceful")
-        - >= 50: ("flowing", "Flowing")
+        (quality, label) tuple based on unified_score quartiles:
+        - < 25: ("challenging", "Challenging")
+        - 25-50: ("turbulent", "Turbulent")
+        - 50-75: ("peaceful", "Peaceful")
+        - >= 75: ("flowing", "Flowing")
     """
     unified_score, _ = calculate_unified_score(intensity, harmony)
 
-    if unified_score < -25:
+    if unified_score < 25:
         return ("challenging", "Challenging")
-    elif unified_score < 10:
-        return ("turbulent", "Turbulent")
     elif unified_score < 50:
+        return ("turbulent", "Turbulent")
+    elif unified_score < 75:
         return ("peaceful", "Peaceful")
     else:
         return ("flowing", "Flowing")
@@ -245,21 +351,44 @@ def build_meter_group_data(
     Returns:
         Dict with complete group data
     """
-    # Aggregate scores
-    avg_intensity, avg_harmony = aggregate_meter_scores(today_meters)
-    unified_score, unified_quality = calculate_unified_score(avg_intensity, avg_harmony)
+    # Calculate all scores using Top 2 Weighted approach
+    # This selects the 2 highest-intensity meters and weights by intensity,
+    # filtering out neutral noise from inactive meters
+    scores = calculate_group_scores_top_2(today_meters)
+    unified_score = scores["unified_score"]
 
-    # Get state label from JSON labels
-    state_label = get_group_state_label(group.value, avg_intensity, avg_harmony)
+    # Get state label from unified_score (0-100 scale)
+    state_label = get_group_state_label(group.value, unified_score)
 
-    # Determine quality enum from harmony/intensity
-    quality, _ = determine_quality_label(avg_harmony, avg_intensity)
+    # Determine quality from unified_score quartiles
+    if unified_score < 25:
+        quality = "challenging"
+    elif unified_score < 50:
+        quality = "turbulent"
+    elif unified_score < 75:
+        quality = "peaceful"
+    else:
+        quality = "flowing"
 
     # Calculate trends if yesterday data available
     trend = calculate_group_trends(today_meters, yesterday_meters) if yesterday_meters else None
 
     # Get meter IDs
     meter_ids = [m.meter_name for m in today_meters]
+
+    # Find the top aspect driving this group (from the driver meter or highest intensity)
+    top_aspect = None
+    top_aspect_str = None
+    driver_meter_name = scores.get("driver")
+    if driver_meter_name:
+        # Find the driver meter and get its top aspect
+        for m in today_meters:
+            if m.meter_name == driver_meter_name and m.top_aspects:
+                asp = m.top_aspects[0]
+                top_aspect = asp
+                # Format as readable string: "Mars square natal Saturn"
+                top_aspect_str = f"{asp.transit_planet.value.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()}"
+                break
 
     # Use LLM interpretation if provided, otherwise use fallback from JSON description
     if llm_interpretation:
@@ -272,18 +401,15 @@ def build_meter_group_data(
     return {
         "group_name": group.value,
         "display_name": get_group_v2_display_name(group),
-        "scores": {
-            "unified_score": round(unified_score, 1),
-            "harmony": round(avg_harmony, 1),
-            "intensity": round(avg_intensity, 1)
-        },
+        "scores": scores,  # Contains unified_score, intensity, harmony, driver from Top 2
         "state": {
-            "label": state_label,  # From JSON labels (contextual to group)
-            "quality": quality      # Generic enum (excellent, supportive, etc.)
+            "label": state_label,
+            "quality": quality
         },
         "interpretation": interpretation,
         "trend": trend,
-        "meter_ids": meter_ids
+        "meter_ids": meter_ids,
+        "top_aspect": top_aspect_str  # Key transit driving this group
     }
 
 
