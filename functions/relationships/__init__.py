@@ -52,7 +52,6 @@ class RelationshipLabel(str, Enum):
 
     # Friend
     FRIEND = "friend"
-    BEST_FRIEND = "best_friend"
     CLOSE_FRIEND = "close_friend"
     NEW_FRIEND = "new_friend"
 
@@ -67,7 +66,6 @@ class RelationshipLabel(str, Enum):
     EXTENDED = "extended"
 
     # Coworker
-    BOSS = "boss"
     MANAGER = "manager"
     COLLEAGUE = "colleague"
     MENTOR = "mentor"
@@ -112,7 +110,6 @@ LABEL_TO_CATEGORY = {
 
     # Friend
     RelationshipLabel.FRIEND: RelationshipCategory.FRIEND,
-    RelationshipLabel.BEST_FRIEND: RelationshipCategory.FRIEND,
     RelationshipLabel.CLOSE_FRIEND: RelationshipCategory.FRIEND,
     RelationshipLabel.NEW_FRIEND: RelationshipCategory.FRIEND,
 
@@ -127,7 +124,6 @@ LABEL_TO_CATEGORY = {
     RelationshipLabel.EXTENDED: RelationshipCategory.FAMILY,
 
     # Coworker
-    RelationshipLabel.BOSS: RelationshipCategory.COWORKER,
     RelationshipLabel.MANAGER: RelationshipCategory.COWORKER,
     RelationshipLabel.COLLEAGUE: RelationshipCategory.COWORKER,
     RelationshipLabel.MENTOR: RelationshipCategory.COWORKER,

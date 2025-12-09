@@ -66,10 +66,6 @@
         "display_name": "Friend",
         "llm_guidance": "Regular friendship. Focus on what makes them click, how they support each other, and where misunderstandings might happen. Keep it light but real."
       },
-      "best_friend": {
-        "display_name": "Best Friend",
-        "llm_guidance": "Ride or die. This is deep platonic love. Focus on loyalty, how they show up for each other, and navigating the inevitable friction that comes with closeness."
-      },
       "close_friend": {
         "display_name": "Close Friend",
         "llm_guidance": "Inner circle but maybe not the bestie. Focus on what strengthens this bond and how to deepen it if that's what they want."
@@ -114,10 +110,6 @@
       }
     },
     "coworker": {
-      "boss": {
-        "display_name": "Boss",
-        "llm_guidance": "Power dynamic alert. Focus on communication style, how to be seen and valued, managing up effectively. What do they need to thrive under this leadership?"
-      },
       "manager": {
         "display_name": "Manager",
         "llm_guidance": "Direct supervisor relationship. Focus on feedback patterns, getting support for growth, and maintaining professional boundaries while building rapport."

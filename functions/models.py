@@ -125,6 +125,14 @@ class UserProfile(BaseModel):
     birth_timezone: Optional[str] = Field(None, max_length=64, description="IANA timezone (optional, V2+)")
     birth_lat: Optional[float] = Field(None, ge=-90, le=90, description="Birth latitude (optional)")
     birth_lon: Optional[float] = Field(None, ge=-180, le=180, description="Birth longitude (optional)")
+    birth_country: Optional[str] = Field(None, max_length=100, description="Birth country (e.g., 'USA')")
+    birth_city: Optional[str] = Field(None, max_length=200, description="Birth city with state/country (e.g., 'New York, NY, USA')")
+
+    # Device info (from iOS app)
+    device_timezone: Optional[str] = Field(None, max_length=64, description="User's device timezone (IANA format)")
+    device_language: Optional[str] = Field(None, max_length=10, description="User's device language code (e.g., 'en')")
+    device_country: Optional[str] = Field(None, max_length=2, description="User's device country code (e.g., 'US')")
+    device_currency: Optional[str] = Field(None, max_length=3, description="User's device currency code (e.g., 'USD')")
 
     # Computed data
     sun_sign: str = Field(description="Sun sign (e.g., 'taurus')")
@@ -712,6 +720,11 @@ class DailyHoroscope(BaseModel):
     generation_time_ms: Optional[int] = Field(None, description="Generation time in milliseconds")
     usage: dict = Field(default_factory=dict, description="Raw usage metadata from LLM API")
 
+    # Featured meters (for headline variety - avoid repeating same meters)
+    featured_meters: Optional[list[str]] = Field(
+        None, description="Names of meters featured in headline"
+    )
+
 
 # =============================================================================
 # Compressed Horoscope Storage Models
@@ -793,6 +806,11 @@ class CompressedHoroscope(BaseModel):
 
     # Metadata
     created_at: str = Field(description="ISO datetime of generation")
+
+    # Featured meters (for headline variety - avoid repeating same meters)
+    featured_meters: Optional[list[str]] = Field(
+        None, description="Names of meters featured in headline"
+    )
 
     @field_validator('relationship_weather', mode='before')
     @classmethod
@@ -931,7 +949,8 @@ def compress_horoscope(horoscope: DailyHoroscope) -> CompressedHoroscope:
         meter_groups=compressed_groups,
         astrometers=compressed_astrometers,
         transit_summary=compressed_transit_summary,
-        created_at=datetime.now().isoformat()
+        created_at=datetime.now().isoformat(),
+        featured_meters=horoscope.featured_meters,
     )
 
 

@@ -301,7 +301,7 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
         # 3c. Calculate synastry aspects for mentioned connections on-the-fly
         if mentioned_connections and user_data.get('natal_chart'):
             from astro import NatalChartData, compute_birth_chart
-            from compatibility import calculate_compatibility
+            from compatibility import calculate_synastry_aspects
 
             user_chart = NatalChartData(**user_data['natal_chart'])
 
@@ -321,10 +321,10 @@ def ask_the_stars(req: https_fn.Request) -> https_fn.Response:
                             birth_lon=conn.get('birth_lon')
                         )
                         conn_chart = NatalChartData(**conn_chart_dict)
-                        compatibility = calculate_compatibility(user_chart, conn_chart)
+                        aspects = calculate_synastry_aspects(user_chart, conn_chart)
 
                         # Get top 5 tightest aspects
-                        sorted_aspects = sorted(compatibility.aspects, key=lambda a: a.orb)[:5]
+                        sorted_aspects = sorted(aspects, key=lambda a: a.orb)[:5]
                         conn['synastry_aspects'] = [
                             {
                                 "user_planet": asp.user_planet,

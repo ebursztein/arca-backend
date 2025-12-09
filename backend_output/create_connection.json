@@ -1,36 +1,90 @@
 {
   "function_name": "create_connection",
   "request": {
-    "user_id": "test_crud_user",
+    "user_id": "test_user_a",
     "connection": {
-      "name": "Jordan",
-      "birth_date": "1975-09-10",
-      "birth_time": "06:30",
-      "birth_timezone": "America/Chicago",
-      "birth_lat": 41.8781,
-      "birth_lon": -87.6298,
-      "relationship_category": "coworker",
-      "relationship_label": "boss"
+      "name": "Alex",
+      "birth_date": "1992-01-15",
+      "birth_time": "14:30",
+      "birth_lat": 40.7128,
+      "birth_lon": -74.006,
+      "relationship_category": "love",
+      "relationship_label": "partner"
     }
   },
   "response": {
     "arca_notes": [],
-    "birth_date": "1975-09-10",
-    "birth_lat": 41.8781,
-    "birth_lon": -87.6298,
-    "birth_time": "06:30",
-    "birth_timezone": "America/Chicago",
-    "connection_id": "biE27nfV1VJWFOlXdnn7UA",
-    "created_at": "2025-12-03T02:40:22.597475",
-    "name": "Jordan",
+    "birth_date": "1992-01-15",
+    "birth_lat": 40.7128,
+    "birth_lon": -74.006,
+    "birth_time": "14:30",
+    "birth_timezone": null,
+    "connection_id": "SrOsMVA_sbYBQquTECfM8w",
+    "created_at": "2025-12-09T03:13:11.405741",
+    "name": "Alex",
     "photo_path": null,
-    "relationship_category": "coworker",
-    "relationship_label": "boss",
+    "relationship_category": "love",
+    "relationship_label": "partner",
     "source_user_id": null,
-    "sun_sign": "virgo",
-    "synastry_points": null,
-    "updated_at": "2025-12-03T02:40:22.597475",
+    "sun_sign": "capricorn",
+    "synastry_points": [
+      {
+        "degree": 130.36,
+        "label": "emotional connection point",
+        "planets": [
+          "moon",
+          "moon"
+        ],
+        "type": "moon_moon_midpoint"
+      },
+      {
+        "degree": 217.07,
+        "label": "core identity point",
+        "planets": [
+          "sun",
+          "sun"
+        ],
+        "type": "sun_sun_midpoint"
+      },
+      {
+        "degree": 221.56,
+        "label": "affection point",
+        "planets": [
+          "venus",
+          "venus"
+        ],
+        "type": "venus_venus_midpoint"
+      },
+      {
+        "degree": 208.39,
+        "label": "communication point",
+        "planets": [
+          "mercury",
+          "mercury"
+        ],
+        "type": "mercury_mercury_midpoint"
+      },
+      {
+        "degree": 229.81,
+        "label": "attraction point",
+        "planets": [
+          "venus",
+          "mars"
+        ],
+        "type": "venus_mars_midpoint"
+      },
+      {
+        "degree": 172.59,
+        "label": "passion point",
+        "planets": [
+          "mars",
+          "venus"
+        ],
+        "type": "mars_venus_midpoint"
+      }
+    ],
+    "updated_at": "2025-12-09T03:13:11.405741",
     "vibes": []
   },
-  "captured_at": "2025-12-03T02:40:22.604537+00:00"
+  "captured_at": "2025-12-09T03:13:11.417067+00:00"
 }

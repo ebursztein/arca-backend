@@ -1,0 +1,21 @@
+{
+  "function_name": "get_public_profile",
+  "request": {
+    "share_secret": "-51QpaudRV_I"
+  },
+  "response": {
+    "can_add": true,
+    "message": null,
+    "profile": {
+      "birth_date": "1990-06-15",
+      "birth_lat": null,
+      "birth_lon": null,
+      "birth_time": null,
+      "birth_timezone": null,
+      "name": "Test User",
+      "sun_sign": "gemini"
+    },
+    "share_mode": "public"
+  },
+  "captured_at": "2025-12-09T03:11:56.644140+00:00"
+}

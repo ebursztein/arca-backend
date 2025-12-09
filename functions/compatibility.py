@@ -565,6 +565,19 @@ class SynastryAspect(BaseModel):
     is_harmonious: bool = Field(description="True if supportive (trine/sextile), False if challenging (square/opposition)")
 
 
+class DrivingAspect(BaseModel):
+    """A simplified aspect for iOS display with human-readable meanings.
+
+    Used to show users WHY a category score is what it is.
+    """
+    aspect_id: str = Field(description="Reference to full aspect in aspects list (e.g., 'asp_001')")
+    user_planet: str = Field(description="Your planet (e.g., 'Moon')")
+    their_planet: str = Field(description="Their planet (e.g., 'Venus')")
+    aspect_type: str = Field(description="trine, square, conjunction, etc.")
+    is_harmonious: bool = Field(description="True if supportive, False if challenging")
+    summary: str = Field(description="Human-readable summary (e.g., 'Your emotional needs flow easily with their love style')")
+
+
 class CompatibilityCategory(BaseModel):
     """A single compatibility category with score and LLM insight.
 
@@ -579,11 +592,17 @@ class CompatibilityCategory(BaseModel):
     insight: Optional[str] = Field(None, description="LLM-generated 1-2 sentence insight for this category")
     aspect_ids: list[str] = Field(default_factory=list, description="Top 3-5 aspect IDs driving this score, ordered by tightest orb")
 
+    # NEW fields from labels system
+    label: str = Field(default="", description="Band label from JSON config (e.g., 'Warm', 'Soul-Level', 'Combustible')")
+    description: str = Field(default="", description="What this category measures (for iOS display)")
+    driving_aspects: list[DrivingAspect] = Field(default_factory=list, description="Top aspects with human-readable meanings explaining WHY the score is what it is")
+
 
 class ModeCompatibility(BaseModel):
     """Compatibility scores for the requested relationship type."""
     type: RelationshipType = Field(description="The relationship type: romantic, friendship, or coworker")
     overall_score: int = Field(ge=0, le=100, description="Overall compatibility score (0-100)")
+    overall_label: str = Field(default="", description="Overall band label (e.g., 'Solid', 'Seamless', 'Volatile')")
     vibe_phrase: Optional[str] = Field(None, description="Short energy label. Romantic: 'Slow Burn', 'Electric'. Friendship: 'Ride or Die'. Coworker: 'Power Partners'")
     categories: list[CompatibilityCategory] = Field(description="Category breakdowns with scores and insights")
 
@@ -862,6 +881,17 @@ def calculate_mode_compatibility(
     Returns:
         ModeCompatibility with scores per category
     """
+    # Import labels module
+    from compatibility_labels.labels import (
+        get_category_label,
+        get_category_description,
+        get_overall_label,
+        generate_driving_aspect_summary,
+    )
+
+    # Build aspect lookup for driving aspects
+    aspect_lookup = {a.id: a for a in aspects}
+
     categories = []
     total_score = 0
 
@@ -870,12 +900,41 @@ def calculate_mode_compatibility(
             aspects, planet_pairs, cat_id, chart1, chart2
         )
 
+        # Get label and description from JSON config
+        label = get_category_label(mode_type, cat_id, score)
+        description = get_category_description(mode_type, cat_id)
+
+        # Build driving aspects with summaries (top 3)
+        driving_aspects = []
+        for asp_id in aspect_ids[:3]:
+            asp = aspect_lookup.get(asp_id)
+            if asp:
+                summary = generate_driving_aspect_summary(
+                    user_planet=asp.user_planet,
+                    their_planet=asp.their_planet,
+                    aspect_type=asp.aspect_type,
+                    is_harmonious=asp.is_harmonious,
+                    mode=mode_type,
+                    category_id=cat_id,
+                )
+                driving_aspects.append(DrivingAspect(
+                    aspect_id=asp_id,
+                    user_planet=asp.user_planet.title(),
+                    their_planet=asp.their_planet.title(),
+                    aspect_type=asp.aspect_type,
+                    is_harmonious=asp.is_harmonious,
+                    summary=summary,
+                ))
+
         categories.append(CompatibilityCategory(
             id=cat_id,
             name=CATEGORY_NAMES.get(cat_id, cat_id.title()),
             score=score,
             insight=None,  # Will be filled by LLM
             aspect_ids=aspect_ids[:5],  # Top 3-5 aspects, already sorted by tightest orb
+            label=label,
+            description=description,
+            driving_aspects=driving_aspects,
         ))
 
         total_score += score
@@ -885,9 +944,13 @@ def calculate_mode_compatibility(
     overall = int(round(total_score / num_categories)) if num_categories > 0 else 50
     overall = max(0, min(100, overall))  # Safety clamp (should not be needed with sigmoid)
 
+    # Get overall label
+    overall_label = get_overall_label(overall)
+
     return ModeCompatibility(
         type=mode_type,
         overall_score=overall,
+        overall_label=overall_label,
         vibe_phrase=None,  # Will be filled by LLM
         categories=categories,
     )

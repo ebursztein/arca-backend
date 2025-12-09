@@ -240,7 +240,9 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         "birth_time": "14:30",  // HH:MM (optional)
         "birth_timezone": "America/New_York",  // IANA timezone (optional)
         "birth_lat": 40.7128,  // Latitude (optional)
-        "birth_lon": -74.0060  // Longitude (optional)
+        "birth_lon": -74.0060,  // Longitude (optional)
+        "birth_country": "USA",  // Country name for display (optional)
+        "birth_city": "New York, NY, USA"  // City with state/country for display (optional)
     }
 
     Note: user_id is extracted from Firebase auth token, not passed in request.
@@ -274,6 +276,14 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         birth_timezone = data.get("birth_timezone")
         birth_lat = data.get("birth_lat")
         birth_lon = data.get("birth_lon")
+        birth_country = data.get("birth_country")
+        birth_city = data.get("birth_city")
+
+        # Device info fields
+        device_timezone = data.get("device_timezone")
+        device_language = data.get("device_language")
+        device_country = data.get("device_country")
+        device_currency = data.get("device_currency")
 
         # Calculate sun sign (always works with just birth_date)
         sun_sign = get_sun_sign(birth_date)
@@ -321,6 +331,12 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
             birth_timezone=birth_timezone,
             birth_lat=birth_lat,
             birth_lon=birth_lon,
+            birth_country=birth_country,
+            birth_city=birth_city,
+            device_timezone=device_timezone,
+            device_language=device_language,
+            device_country=device_country,
+            device_currency=device_currency,
             sun_sign=sun_sign.value,
             natal_chart=natal_chart,
             exact_chart=exact_chart,
@@ -413,6 +429,8 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
         birth_timezone (str, optional): IANA timezone for birth time
         birth_lat (float, optional): Birth latitude
         birth_lon (float, optional): Birth longitude
+        birth_country (str, optional): Country name for display (e.g., 'USA')
+        birth_city (str, optional): City with state/country for display (e.g., 'New York, NY, USA')
 
     Returns:
         UserProfile
@@ -444,13 +462,17 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
         birth_timezone = data.get("birth_timezone")
         birth_lat = data.get("birth_lat")
         birth_lon = data.get("birth_lon")
+        birth_country = data.get("birth_country")
+        birth_city = data.get("birth_city")
 
         # Check if any birth data is being updated
         has_birth_update = any([
             birth_time is not None,
             birth_timezone is not None,
             birth_lat is not None,
-            birth_lon is not None
+            birth_lon is not None,
+            birth_country is not None,
+            birth_city is not None
         ])
 
         if has_birth_update:
@@ -463,6 +485,10 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
                 updates["birth_lat"] = birth_lat
             if birth_lon is not None:
                 updates["birth_lon"] = birth_lon
+            if birth_country is not None:
+                updates["birth_country"] = birth_country
+            if birth_city is not None:
+                updates["birth_city"] = birth_city
 
             # Merge with existing user data to get complete birth info
             final_birth_time = birth_time or user_data.get("birth_time")
@@ -698,6 +724,80 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
         # Generate enhanced transit data with natal-transit aspects
         transit_summary = format_transit_summary_for_ui(natal_chart, transit_chart, max_aspects=5)
 
+        # Fetch yesterday's featured meters (to avoid repeating same meters)
+        from datetime import datetime as dt, timedelta
+        yesterday_date = (dt.fromisoformat(date) - timedelta(days=1)).strftime('%Y-%m-%d')
+        yesterday_meters = None
+        try:
+            horoscopes_ref = db.collection("users").document(user_id).collection("horoscopes").document("latest")
+            horoscopes_doc = horoscopes_ref.get()
+            if horoscopes_doc.exists:
+                horoscopes_data = horoscopes_doc.to_dict()
+                yesterday_horoscope = horoscopes_data.get('horoscopes', {}).get(yesterday_date)
+                if yesterday_horoscope:
+                    yesterday_meters = yesterday_horoscope.get('featured_meters', [])
+        except Exception as e:
+            # Non-critical: if we can't fetch yesterday's data, continue without it
+            print(f"Warning: Could not fetch yesterday's meters: {e}")
+
+        # Enrich featured_connection with synastry transit data for the LLM prompt
+        # If synastry_points are missing (old connection), compute them on-the-fly
+        if featured_connection and featured_connection.get("birth_date"):
+            from compatibility import find_transits_to_synastry, calculate_vibe_score, calculate_synastry_points
+            from astro import NatalChartData
+
+            # Compute synastry_points on-the-fly if missing (for old connections)
+            if not featured_connection.get("synastry_points"):
+                try:
+                    user_chart_data = NatalChartData(**user_profile.natal_chart)
+                    conn_chart_dict, _ = compute_birth_chart(
+                        birth_date=featured_connection["birth_date"],
+                        birth_time=featured_connection.get("birth_time"),
+                        birth_timezone=featured_connection.get("birth_timezone"),
+                        birth_lat=featured_connection.get("birth_lat"),
+                        birth_lon=featured_connection.get("birth_lon")
+                    )
+                    conn_chart_data = NatalChartData(**conn_chart_dict)
+                    featured_connection["synastry_points"] = calculate_synastry_points(
+                        user_chart_data, conn_chart_data
+                    )
+
+                    # Also cache it on the connection for future calls
+                    if featured_connection.get("connection_id"):
+                        try:
+                            conn_ref = db.collection("users").document(user_id).collection(
+                                "connections"
+                            ).document(featured_connection["connection_id"])
+                            conn_ref.update({"synastry_points": featured_connection["synastry_points"]})
+                        except Exception as cache_err:
+                            print(f"Warning: Could not cache synastry_points: {cache_err}")
+                except Exception as e:
+                    print(f"Warning: Could not compute synastry on-the-fly: {e}")
+
+            # Now enrich with transit data if we have synastry_points
+            if featured_connection.get("synastry_points"):
+                transit_chart_data = NatalChartData(**transit_chart)
+                active_transits = find_transits_to_synastry(
+                    transit_chart=transit_chart_data,
+                    synastry_points=featured_connection["synastry_points"],
+                    orb=3.0
+                )
+                vibe_score = calculate_vibe_score(active_transits)
+
+                # Add computed data to featured_connection for the prompt
+                featured_connection["active_transits"] = active_transits
+                featured_connection["vibe_score"] = vibe_score
+
+            # Compute connection age
+            conn_birth_date = featured_connection.get("birth_date")
+            if conn_birth_date:
+                try:
+                    conn_birth_year = int(conn_birth_date.split("-")[0])
+                    current_year = int(date.split("-")[0])
+                    featured_connection["age"] = current_year - conn_birth_year
+                except (ValueError, IndexError):
+                    pass
+
         # Generate daily horoscope (Prompt 1)
         from llm import update_memory_with_connection_mention
         daily_horoscope = generate_daily_horoscope(
@@ -709,55 +809,26 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
             featured_connection=featured_connection,
             api_key=GEMINI_API_KEY.value,
             posthog_api_key=POSTHOG_API_KEY.value,
-            model_name=model_name
+            model_name=model_name,
+            yesterday_meters=yesterday_meters,
         )
 
-        # Calculate connection vibe and add to relationship_weather
-        if featured_connection and featured_connection.get("synastry_points"):
-            from compatibility import find_transits_to_synastry, calculate_vibe_score
-            from models import ConnectionVibe
-            from astro import NatalChartData
+        # Store vibe history on connection (FIFO last 10, like Co-Star updates)
+        # The connection_vibes in relationship_weather is now populated by the LLM in llm.py
+        if (featured_connection and
+            daily_horoscope.relationship_weather and
+            daily_horoscope.relationship_weather.connection_vibes):
 
-            transit_chart_data = NatalChartData(**transit_chart)
-            active_transits = find_transits_to_synastry(
-                transit_chart=transit_chart_data,
-                synastry_points=featured_connection["synastry_points"],
-                orb=3.0
-            )
-            vibe_score = calculate_vibe_score(active_transits)
+            # Get the LLM-generated vibe from relationship_weather
+            connection_vibe = daily_horoscope.relationship_weather.connection_vibes[0]
 
-            # Generate template-based vibe text
-            name = featured_connection.get("name", "")
-            if vibe_score >= 75:
-                vibe_text = f"Great energy between you and {name} today"
-            elif vibe_score >= 50:
-                vibe_text = f"Steady connection with {name}"
-            elif vibe_score >= 25:
-                vibe_text = f"Give {name} a little space today"
-            else:
-                vibe_text = f"Low-key day with {name}"
-
-            connection_vibe = ConnectionVibe(
-                connection_id=featured_connection.get("connection_id", ""),
-                name=name,
-                relationship_category=featured_connection.get("relationship_category", "friend"),
-                relationship_label=featured_connection.get("relationship_label", "friend"),
-                vibe=vibe_text,
-                vibe_score=vibe_score,
-                key_transit=active_transits[0]["description"] if active_transits else None
-            )
-
-            # Add to relationship_weather
-            if daily_horoscope.relationship_weather:
-                daily_horoscope.relationship_weather.connection_vibes = [connection_vibe]
-
-            # Store vibe on connection (FIFO last 10, like Co-Star updates)
+            # Store vibe history on connection record
             from connections import StoredVibe
             stored_vibe = StoredVibe(
                 date=date,
-                vibe=vibe_text,
-                vibe_score=vibe_score,
-                key_transit=active_transits[0]["description"] if active_transits else None
+                vibe=connection_vibe.vibe,  # LLM-generated text
+                vibe_score=connection_vibe.vibe_score,
+                key_transit=connection_vibe.key_transit
             )
 
             # Update connection with new vibe (FIFO)

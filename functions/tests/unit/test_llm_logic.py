@@ -131,7 +131,10 @@ def mock_llm_response_json():
         "growth_interpretation": "Growth is happening.",
         "look_ahead_preview": "Tomorrow looks good.",
         "energy_rhythm": "High energy.",
-        "relationship_weather": "Relationships are harmonious.",
+        "relationship_weather": {
+            "overview": "Relationships are harmonious.",
+            "connection_vibe": None
+        },
         "collective_energy": "Everyone is happy.",
         "follow_up_questions": ["What is your wish?"]
     }
@@ -177,7 +180,13 @@ def test_generate_daily_horoscope_success(
     mock_parsed.growth_interpretation = mock_llm_response_json["growth_interpretation"]
     mock_parsed.look_ahead_preview = mock_llm_response_json["look_ahead_preview"]
     mock_parsed.energy_rhythm = mock_llm_response_json["energy_rhythm"]
-    mock_parsed.relationship_weather = mock_llm_response_json["relationship_weather"]
+
+    # relationship_weather is now a nested object with overview + connection_vibe
+    mock_relationship_weather = MagicMock()
+    mock_relationship_weather.overview = mock_llm_response_json["relationship_weather"]["overview"]
+    mock_relationship_weather.connection_vibe = mock_llm_response_json["relationship_weather"]["connection_vibe"]
+    mock_parsed.relationship_weather = mock_relationship_weather
+
     mock_parsed.collective_energy = mock_llm_response_json["collective_energy"]
     mock_parsed.follow_up_questions = mock_llm_response_json["follow_up_questions"]
 
@@ -252,8 +261,14 @@ def test_generate_daily_horoscope_posthog_logging(
     mock_response.parsed.growth_interpretation = ""
     mock_response.parsed.look_ahead_preview = ""
     mock_response.parsed.energy_rhythm = ""
-    mock_response.parsed.relationship_weather = ""
-    mock_response.parsed.collective_energy = ""
+
+    # relationship_weather is now a nested object
+    mock_relationship_weather = MagicMock()
+    mock_relationship_weather.overview = "Test relationship weather"  # Must be non-empty
+    mock_relationship_weather.connection_vibe = None
+    mock_response.parsed.relationship_weather = mock_relationship_weather
+
+    mock_response.parsed.collective_energy = "Test"
     mock_response.parsed.follow_up_questions = []
     mock_response.parsed.technical_analysis = ""
     mock_response.parsed.lunar_cycle_update = ""
@@ -324,24 +339,235 @@ def test_select_featured_relationship_logic(sample_memory):
     assert selected.entity_id == "2"
 
 
-def test_select_featured_connection_logic(sample_memory):
-    """Test logic for selecting featured connection."""
-    date = "2025-01-01"
-    
-    c1 = {"connection_id": "c1", "name": "Friend A"}
-    c2 = {"connection_id": "c2", "name": "Friend B"}
-    connections = [c1, c2]
-    
-    # 1. No history -> pick first (Friend A)
-    selected = select_featured_connection(connections, sample_memory, date)
-    assert selected["connection_id"] == "c1"
-    
-    # 2. Friend A mentioned -> pick Friend B
-    sample_memory.connection_mentions.append(
-        ConnectionMention(connection_id="c1", connection_name="Friend A", relationship_category="friend", relationship_label="friend", date="2025-01-01", context="")
-    )
-    selected = select_featured_connection(connections, sample_memory, date)
-    assert selected["connection_id"] == "c2"
+class TestSelectFeaturedConnection:
+    """Test suite for select_featured_connection with 7-day gap and randomness."""
+
+    def test_no_connections_returns_none(self, sample_memory):
+        """Empty connections list returns None."""
+        selected = select_featured_connection([], sample_memory, "2025-01-15")
+        assert selected is None
+
+    def test_no_history_selects_randomly(self, sample_memory):
+        """With no mention history, randomly selects from all connections."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+            {"connection_id": "c2", "name": "Friend B"},
+            {"connection_id": "c3", "name": "Friend C"},
+        ]
+
+        # Run multiple times to verify randomness (should not always pick same one)
+        # Also accounts for 20% skip rate
+        selected_ids = set()
+        for _ in range(50):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected:
+                selected_ids.add(selected["connection_id"])
+
+        # With 50 runs and 3 options, should see at least 2 different selections
+        # (statistically almost certain unless broken)
+        assert len(selected_ids) >= 2, "Should randomly select different connections"
+
+    def test_7_day_gap_enforced(self, sample_memory):
+        """Connection mentioned within 7 days is not eligible."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+            {"connection_id": "c2", "name": "Friend B"},
+        ]
+
+        # Mention c1 3 days ago (within 7 days)
+        sample_memory.connection_mentions.append(
+            ConnectionMention(
+                connection_id="c1",
+                connection_name="Friend A",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-12",  # 3 days before test date
+                context=""
+            )
+        )
+
+        # Run multiple times - should only ever pick c2 (when not skipped)
+        for _ in range(20):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected:
+                assert selected["connection_id"] == "c2", "Should not select c1 (mentioned 3 days ago)"
+
+    def test_connection_eligible_after_7_days(self, sample_memory):
+        """Connection mentioned 8+ days ago is eligible again."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+        ]
+
+        # Mention c1 8 days ago (outside 7-day window)
+        sample_memory.connection_mentions.append(
+            ConnectionMention(
+                connection_id="c1",
+                connection_name="Friend A",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-07",  # 8 days before test date
+                context=""
+            )
+        )
+
+        # Should be able to select c1 again (when not skipped)
+        selected_count = 0
+        for _ in range(20):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected:
+                selected_count += 1
+                assert selected["connection_id"] == "c1"
+
+        # Should have selected at least some times (accounting for 20% skip)
+        assert selected_count > 0, "Should be able to select c1 after 8 days"
+
+    def test_all_connections_within_7_days_returns_none(self, sample_memory):
+        """When all connections were mentioned within 7 days, returns None."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+            {"connection_id": "c2", "name": "Friend B"},
+        ]
+
+        # Both mentioned within 7 days
+        sample_memory.connection_mentions.extend([
+            ConnectionMention(
+                connection_id="c1",
+                connection_name="Friend A",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-14",
+                context=""
+            ),
+            ConnectionMention(
+                connection_id="c2",
+                connection_name="Friend B",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-13",
+                context=""
+            ),
+        ])
+
+        # Should always return None (all ineligible)
+        for _ in range(20):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            assert selected is None, "Should return None when all connections are within 7-day window"
+
+    def test_20_percent_skip_rate(self, sample_memory):
+        """Approximately 20% of calls should return None (skip feature)."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+            {"connection_id": "c2", "name": "Friend B"},
+            {"connection_id": "c3", "name": "Friend C"},
+        ]
+
+        # Run many times to verify skip rate
+        skip_count = 0
+        total_runs = 500
+
+        for _ in range(total_runs):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected is None:
+                skip_count += 1
+
+        # 20% skip rate means ~100 skips out of 500
+        # Allow range of 10%-30% to account for randomness
+        skip_rate = skip_count / total_runs
+        assert 0.10 <= skip_rate <= 0.30, f"Skip rate {skip_rate:.1%} should be ~20%"
+
+    def test_mixed_eligibility(self, sample_memory):
+        """With some connections eligible and some not, only eligible ones are selected."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},  # Will be ineligible
+            {"connection_id": "c2", "name": "Friend B"},  # Eligible
+            {"connection_id": "c3", "name": "Friend C"},  # Will be ineligible
+            {"connection_id": "c4", "name": "Friend D"},  # Eligible
+        ]
+
+        # Mark c1 and c3 as recently mentioned
+        sample_memory.connection_mentions.extend([
+            ConnectionMention(
+                connection_id="c1",
+                connection_name="Friend A",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-14",
+                context=""
+            ),
+            ConnectionMention(
+                connection_id="c3",
+                connection_name="Friend C",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-10",
+                context=""
+            ),
+        ])
+
+        # Should only select c2 or c4
+        selected_ids = set()
+        for _ in range(50):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected:
+                selected_ids.add(selected["connection_id"])
+
+        assert selected_ids <= {"c2", "c4"}, f"Should only select eligible connections, got {selected_ids}"
+        assert len(selected_ids) == 2, "Should select both eligible connections over time"
+
+    def test_invalid_date_in_mentions_handled(self, sample_memory):
+        """Invalid date formats in mentions are gracefully skipped."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+        ]
+
+        # Add mention with invalid date
+        sample_memory.connection_mentions.append(
+            ConnectionMention(
+                connection_id="c1",
+                connection_name="Friend A",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="invalid-date",  # Invalid format
+                context=""
+            )
+        )
+
+        # Should not crash, and c1 should be selectable (invalid date is ignored)
+        selected_count = 0
+        for _ in range(20):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected:
+                selected_count += 1
+                assert selected["connection_id"] == "c1"
+
+        assert selected_count > 0, "Should handle invalid dates gracefully"
+
+    def test_exactly_7_days_ago_is_eligible(self, sample_memory):
+        """Connection mentioned exactly 7 days ago should be eligible (>7 days check)."""
+        connections = [
+            {"connection_id": "c1", "name": "Friend A"},
+        ]
+
+        # Mention exactly 7 days ago
+        sample_memory.connection_mentions.append(
+            ConnectionMention(
+                connection_id="c1",
+                connection_name="Friend A",
+                relationship_category="friend",
+                relationship_label="friend",
+                date="2025-01-08",  # Exactly 7 days before 2025-01-15
+                context=""
+            )
+        )
+
+        # Should be eligible (the check is > one_week_ago, so exactly 7 days is eligible)
+        selected_count = 0
+        for _ in range(20):
+            selected = select_featured_connection(connections, sample_memory, "2025-01-15")
+            if selected:
+                selected_count += 1
+
+        assert selected_count > 0, "Exactly 7 days ago should be eligible"
 
 
 # =============================================================================

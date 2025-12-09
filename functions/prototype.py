@@ -2,26 +2,27 @@
 """
 End-to-End Prototype for Arca Backend V1
 
-Demonstrates complete user journey:
-1. User onboarding with birth date
-2. Sun sign calculation and profile loading
-3. Daily transit data generation
-4. LLM-powered horoscope generation with memory/personalization
-5. Journal entry creation and memory updates
+Demonstrates complete user journey using the REAL Cloud Functions via Firebase emulator:
+1. User onboarding with birth date (create_user_profile)
+2. Connection creation with synastry calculation (create_connection)
+3. Daily horoscope generation with relationship weather (get_daily_horoscope)
+4. Ask the Stars conversational Q&A
 
-This prototype validates the entire V1 workflow before Firebase integration.
+This prototype calls actual Cloud Functions through the emulator, ensuring
+all data flows (synastry points, vibe scores, etc.) work correctly.
 
 Usage:
     python prototype.py
 
 Requirements:
+    - Firebase emulator running on localhost:5001
     - GEMINI_API_KEY environment variable
     - POSTHOG_API_KEY environment variable (optional)
 """
 
 import os
-os.environ["DEBUG_PROMPT"] = "1"  # Enable debug prompt output for prototype
-
+import json
+import requests
 from datetime import datetime
 from typing import Optional
 from rich.console import Console
@@ -29,38 +30,53 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich import print as rprint
 
-# Import our astrology module
-from astro import (
-    get_sun_sign,
-    get_sun_sign_profile,
-    compute_birth_chart,
-    format_transit_summary_for_ui,
-    find_natal_transit_aspects,
-    calculate_lunar_phase,
-    ZodiacSign,
-    SunSignProfile,
-    NatalChartData,
-)
-
-# Import our LLM modules
-from llm import generate_daily_horoscope, select_featured_connection, update_memory_with_connection_mention
-
-# Import our Pydantic models
-from models import (
-    UserProfile,
-    MemoryCollection,
-    CategoryEngagement,
-    DailyHoroscope,
-    create_empty_memory,
-    Entity,
-    EntityStatus,
-    EntityCategory,
-    AttributeKV,
-    RelationshipMention,
-)
-from astrometers.hierarchy import MeterGroupV2
+# Note: Most astro/models imports removed - prototype now uses Cloud Functions via emulator
 
 console = Console()
+
+# ---------------------------------------------------------------------------
+# Firebase Emulator HTTP Client (same as e2e tests)
+# ---------------------------------------------------------------------------
+
+EMULATOR_BASE_URL = "http://localhost:5001/arca-baf77/us-central1"
+
+
+def call_function(function_name: str, data: dict) -> dict:
+    """
+    Call a Cloud Function via the Firebase emulator.
+
+    Args:
+        function_name: Name of the function (e.g., 'create_user_profile')
+        data: Request data to send
+
+    Returns:
+        The 'result' field from the response
+
+    Raises:
+        Exception if the function returns an error or emulator is not running
+    """
+    url = f"{EMULATOR_BASE_URL}/{function_name}"
+    console.print(f"[dim]POST {url}[/dim]")
+
+    try:
+        response = requests.post(
+            url,
+            json={"data": data},
+            headers={"Content-Type": "application/json"},
+            timeout=120,
+        )
+    except requests.exceptions.ConnectionError:
+        raise Exception(
+            "Firebase emulator not running. Start it with: firebase emulators:start"
+        )
+
+    result = response.json()
+
+    if "error" in result:
+        error = result["error"]
+        raise Exception(f"{error.get('status', 'ERROR')}: {error.get('message', 'Unknown error')}")
+
+    return result.get("result", result)
 
 
 def print_section(title: str, content: str = "", style: str = "bold cyan"):
@@ -73,662 +89,328 @@ def print_section(title: str, content: str = "", style: str = "bold cyan"):
     console.print(f"[{style}]{'=' * 70}[/{style}]\n")
 
 
-# Memory formatting is now handled by MemoryCollection.format_for_llm() method
-
-
-def simulate_journal_entry_and_memory_update(
-    user_id: str,
-    date: str,
-    summary: str,
-    categories_viewed: list[dict],
-    memory_data: dict
-) -> tuple[str, dict]:
+def main(skip_setup: bool = False):
     """
-    Simulate journal entry creation and memory update.
-
-    In production, this would be:
-    1. add_journal_entry() callable function writes to Firestore
-    2. Firestore trigger automatically updates memory collection
+    Run the end-to-end prototype simulation using Firebase emulator.
 
     Args:
-        user_id: User ID
-        date: Reading date
-        summary: Summary text
-        categories_viewed: List of {category, text} dicts
-        memory_data: Current memory data (will be updated)
-
-    Returns:
-        (entry_id, updated_memory_data)
+        skip_setup: If True, skip user profile and connection creation (faster)
     """
-    # Generate entry ID
-    entry_id = f"entry_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    # Update memory - category counts
-    for cat_view in categories_viewed:
-        cat_name = cat_view["category"]
-        if cat_name not in memory_data["categories"]:
-            memory_data["categories"][cat_name] = {"count": 0, "last_mentioned": None}
+    print_section("ARCA BACKEND V1 PROTOTYPE (via Emulator)", style="bold magenta")
 
-        memory_data["categories"][cat_name]["count"] += 1
-        memory_data["categories"][cat_name]["last_mentioned"] = date
-
-    # Update memory - recent readings (FIFO, max 10)
-    reading = {
-        "date": date,
-        "summary": summary,
-        "categories_viewed": categories_viewed
-    }
-
-    memory_data["recent_readings"].append(reading)
-
-    # Keep only last 10 readings
-    if len(memory_data["recent_readings"]) > 10:
-        memory_data["recent_readings"] = memory_data["recent_readings"][-10:]
-
-    memory_data["updated_at"] = datetime.now().isoformat()
-
-    return entry_id, memory_data
-
-
-def main():
-    """Run the end-to-end prototype simulation."""
-    model_name = "gemini-2.5-flash-lite"
-
-
-    print_section("🌟 ARCA BACKEND V1 PROTOTYPE 🌟", style="bold magenta")
-
-
-
-
-    # ========================================================================
-    # 1. USER ONBOARDING
-    # ========================================================================
-    print_section("1️⃣  USER ONBOARDING", style="bold cyan")
-
-    # Simulated user
-    user = {
-        "id": "test_user_001",
-        "name": "Elie",
-        "email": "elie@example.com"
-    }
-
-    console.print(f"[green]✓ User authenticated: {user['name']} ({user['email']})[/green]")
-
-    # Birth information
+    # Use a dev account user ID (bypasses auth in emulator)
+    # Must be one of: test_user_a, test_user_b, test_user_c, test_user_d, test_user_e
+    user_id = "test_user_a"
+    user_name = "Elie"
     birth_date = "1987-06-02"
-    console.print(f"\n[cyan]Birth Date:[/cyan] {birth_date}")
 
-    # Calculate sun sign
-    sun_sign = get_sun_sign(birth_date)
-    console.print(f"[cyan]Sun Sign:[/cyan] {sun_sign.value.title()}")
+    if not skip_setup:
+        # ========================================================================
+        # 1. USER ONBOARDING (via Cloud Function)
+        # ========================================================================
+        print_section("1. USER ONBOARDING", style="bold cyan")
 
-    # Load sun sign profile
-    sun_sign_profile = get_sun_sign_profile(sun_sign)
-    if not sun_sign_profile:
-        raise ValueError(f"Sun sign profile not found for {sun_sign.value}")
+        console.print(f"[cyan]Creating user profile via emulator...[/cyan]")
+        console.print(f"  User ID: {user_id}")
+        console.print(f"  Name: {user_name}")
+        console.print(f"  Birth Date: {birth_date}")
 
-    if sun_sign_profile:
-        console.print("\n[yellow]Sun Sign Profile:[/yellow]")
-        console.print(f"  Element: {sun_sign_profile.element.value.title()}")
-        console.print(f"  Modality: {sun_sign_profile.modality.value.title()}")
-        console.print(f"  Ruling Planet: {sun_sign_profile.ruling_planet}")
-        console.print(f"\n  Summary: {sun_sign_profile.summary[:200]}...")
+        # Call create_user_profile Cloud Function
+        user_profile_response = call_function("create_user_profile", {
+            "user_id": user_id,
+            "name": user_name,
+            "email": f"{user_id}@test.com",
+            "birth_date": birth_date,
+        })
 
-    # Compute birth chart (V1 mode - approximate)
-    console.print(f"\n[cyan]Computing birth chart...[/cyan]")
-    natal_chart, is_exact = compute_birth_chart(birth_date)
-    console.print(f"[green]✓ Birth chart computed (exact: {is_exact})[/green]")
-    console.print(f"  Planets: {len(natal_chart['planets'])}")
-    console.print(f"  Houses: {len(natal_chart['houses'])}")
-    console.print(f"  Aspects: {len(natal_chart['aspects'])}")
+        sun_sign = user_profile_response.get("sun_sign", "unknown")
+        console.print(f"[green]User profile created[/green]")
+        console.print(f"  Sun Sign: {sun_sign.title()}")
+        console.print(f"  Chart computed: {user_profile_response.get('exact_chart', False)}")
 
-    # Create UserProfile Pydantic model
-    user_profile = UserProfile(
-        user_id=user["id"],
-        name=user["name"],
-        email=user["email"],
-        birth_date=birth_date,
-        birth_time=None,
-        birth_timezone=None,
-        birth_lat=None,
-        birth_lon=None,
-        sun_sign=sun_sign.value,
-        natal_chart=natal_chart,
-        exact_chart=is_exact,
-        created_at=datetime.now().isoformat(),
-        last_active=datetime.now().isoformat()
-    )
-    console.print(f"[green]✓ User profile created[/green]")
+        # ========================================================================
+        # 2. CREATE CONNECTIONS (via Cloud Function - computes synastry!)
+        # ========================================================================
+        print_section("2. CREATE CONNECTIONS", style="bold cyan")
 
-    # Initialize empty memory for first-time user using Pydantic model
-    memory = create_empty_memory(user["id"])
+        # Define connections to create
+        connections_to_create = [
+            {
+                "name": "John",
+                "birth_date": "1992-08-15",
+                "birth_time": "14:30",
+                "birth_timezone": "America/New_York",
+                "birth_lat": 40.7128,
+                "birth_lon": -74.0060,
+                "relationship_category": "love",
+                "relationship_label": "partner",
+            },
+            {
+                "name": "Mom",
+                "birth_date": "1965-07-10",
+                "birth_time": "12:00",
+                "birth_timezone": "UTC",
+                "birth_lat": 0.0,
+                "birth_lon": 0.0,
+                "relationship_category": "family",
+                "relationship_label": "mother",
+            },
+            {
+                "name": "Sarah",
+                "birth_date": "1995-06-05",
+                "birth_time": "12:00",
+                "birth_timezone": "UTC",
+                "birth_lat": 0.0,
+                "birth_lon": 0.0,
+                "relationship_category": "friend",
+                "relationship_label": "close_friend",
+            },
+            {
+                "name": "Mike",
+                "birth_date": "1980-01-12",
+                "birth_time": "12:00",
+                "birth_timezone": "UTC",
+                "birth_lat": 0.0,
+                "birth_lon": 0.0,
+                "relationship_category": "coworker",
+                "relationship_label": "colleague",
+            },
+        ]
 
-    # Simulate one previous relationship mention to demo rotation
-    # John was featured yesterday, so rotation should pick someone else
-    memory.relationship_mentions = [
-        RelationshipMention(
-            entity_id="ent_001",
-            entity_name="John",
-            category=EntityCategory.PARTNER,
-            date="2025-11-24",
-            context="Today's energy supports deeper connection with John."
-        ),
-    ]
+        created_connections = []
+        for conn_data in connections_to_create:
+            console.print(f"[cyan]Creating connection: {conn_data['name']}...[/cyan]")
 
-    console.print(f"[green]✓ Memory collection initialized (John mentioned yesterday)[/green]")
+            try:
+                # Note: create_connection expects data nested under "connection" key
+                conn_response = call_function("create_connection", {
+                    "user_id": user_id,
+                    "connection": conn_data,
+                })
+                created_connections.append(conn_response)
 
-    # Create sample connections for relationship weather
-    sample_connections = [
-        {
-            "connection_id": "conn_001",
-            "name": "John",
-            "relationship_type": "partner",
-            "sun_sign": "Leo",
-            "birth_date": "1992-08-15",
-            "arca_notes": [
-                {"date": "2025-11-20", "note": "Feeling some tension lately", "context": "ask_the_stars"}
-            ],
-        },
-        {
-            "connection_id": "conn_002",
-            "name": "Mom",
-            "relationship_type": "family",
-            "sun_sign": "Cancer",
-            "birth_date": "1965-07-10",
-            "arca_notes": [
-                {"date": "2025-11-18", "note": "Planning her birthday party", "context": "journal"}
-            ],
-        },
-        {
-            "connection_id": "conn_003",
-            "name": "Sarah",
-            "relationship_type": "friend",
-            "sun_sign": "Gemini",
-            "birth_date": "1995-06-05",
-            "arca_notes": [
-                {"date": "2025-11-15", "note": "Planning a trip together", "context": "ask_the_stars"}
-            ],
-        },
-        {
-            "connection_id": "conn_004",
-            "name": "Mike",
-            "relationship_type": "coworker",
-            "sun_sign": "Capricorn",
-            "birth_date": "1980-01-12",
-            "arca_notes": [
-                {"date": "2025-11-22", "note": "Performance review coming up", "context": "journal"}
-            ],
-        },
-    ]
+                # Show synastry points if computed
+                synastry_points = conn_response.get("synastry_points", [])
+                console.print(f"[green]  {conn_data['name']} created[/green]")
+                console.print(f"    Sun Sign: {conn_response.get('sun_sign', 'unknown')}")
+                console.print(f"    Synastry Points: {len(synastry_points)} computed")
+                if synastry_points:
+                    for point in synastry_points[:2]:
+                        console.print(f"      - {point.get('label', 'unknown')} at {point.get('degree', 0):.1f} deg")
+            except Exception as e:
+                console.print(f"[yellow]  Warning: {e}[/yellow]")
 
-    console.print(f"[green]✓ Sample connections created: {len(sample_connections)} relationships[/green]")
-    for conn in sample_connections:
-        console.print(f"  - {conn['name']} [{conn['relationship_type']}] - {conn['sun_sign']}")
+        console.print(f"\n[green]Created {len(created_connections)} connections with synastry data[/green]")
+    else:
+        console.print("[yellow]Skipping setup (--skip-setup flag). Using existing user/connections.[/yellow]")
+        sun_sign = "gemini"  # Default for display
 
     # ========================================================================
-    # 2. DAILY HOROSCOPE GENERATION
+    # 3. DAILY HOROSCOPE GENERATION (via Cloud Function - enriches connection data!)
     # ========================================================================
-    print_section("2️⃣  DAILY HOROSCOPE GENERATION", style="bold cyan")
+    print_section("3. DAILY HOROSCOPE GENERATION", style="bold cyan")
 
-    # Get today's date
     today = datetime.now().strftime("%Y-%m-%d")
     console.print(f"[cyan]Date:[/cyan] {today}")
+    console.print(f"[cyan]Generating daily horoscope via emulator...[/cyan]")
+    console.print(f"  (This computes synastry on-the-fly, calculates vibe_score, etc.)")
 
-    # Get transit data for today
-    console.print(f"\n[cyan]Computing current transits...[/cyan]")
-    transit_chart, _ = compute_birth_chart(
-        today,
-        birth_time="12:00",  # Use noon for transits
-    )
-    console.print("[green]✓ Transit chart computed[/green]")
+    # Call get_daily_horoscope Cloud Function
+    # This goes through main.py which does all the enrichment:
+    # - Selects featured connection
+    # - Computes synastry_points if missing
+    # - Calculates vibe_score and active_transits
+    # - Passes enriched data to LLM
+    horoscope_response = call_function("get_daily_horoscope", {
+        "user_id": user_id,
+    })
 
-    # Generate enhanced transit summary with NEW system
-    console.print("\n[cyan]Analyzing natal-transit aspects with enhanced system...[/cyan]")
-    transit_summary = format_transit_summary_for_ui(natal_chart, transit_chart, max_aspects=5)
-    console.print("[green]✓ Enhanced transit data generated[/green]")
+    console.print(f"[green]Daily horoscope generated[/green]")
+    console.print(f"  Generation time: {horoscope_response.get('generation_time_ms', 0)}ms")
+    console.print(f"  Model: {horoscope_response.get('model_used', 'unknown')}")
 
-    # Display priority transits
-    if transit_summary["priority_transits"]:
-        console.print("\n[yellow]Priority Transits Today:[/yellow]")
-        for i, transit in enumerate(transit_summary["priority_transits"][:3], 1):
-            console.print(f"  {i}. {transit['intensity_indicator']} {transit['description']}")
-            console.print(f"     Priority: {transit['priority_score']} | Orb: {transit['orb']}° ({transit['orb_label']}, {transit['applying_label']})")
-            if transit.get('speed_timing'):
-                console.print(f"     Timing: {transit['speed_timing']['timing_impact']}")
-
-    # Display lunar phase
-    moon = next((p for p in transit_chart["planets"] if p["name"] == "moon"), None)
-    sun = next((p for p in transit_chart["planets"] if p["name"] == "sun"), None)
-    if moon and sun:
-        lunar_phase = calculate_lunar_phase(sun["absolute_degree"], moon["absolute_degree"])
-        console.print("\n[yellow]Lunar Phase:[/yellow]")
-        console.print(f"  {lunar_phase.phase_name.replace('_', ' ').title()} {lunar_phase.phase_emoji}")
-        console.print(f"  Energy: {lunar_phase.energy}")
-
-    # Display theme synthesis
-    if transit_summary["theme_synthesis"].get("theme_synthesis"):
-        console.print(f"\n[yellow]Transit Theme:[/yellow]")
-        console.print(f"  {transit_summary['theme_synthesis']['theme_synthesis'][:150]}...")
-
-    console.print(f"\n[yellow]Total Aspects Found:[/yellow] {transit_summary['total_aspects_found']}")
-
-    # Format memory for LLM using Pydantic model method
-    memory_context = memory.format_for_llm()
-    console.print(f"\n[yellow]Memory Context:[/yellow]")
-    console.print(f"  {memory_context[:200]}...")
-
-    # Generate horoscope with ENHANCED TRANSIT SYSTEM
-    console.print(f"\n[cyan]Generating daily horoscope[/cyan]")
-
-    # Select featured connection for relationship weather (ONE per day, rotated)
-    featured_connection = select_featured_connection(sample_connections, memory, today)
-    if featured_connection:
-        console.print(f"[green]✓ Featured connection selected: {featured_connection['name']} ({featured_connection['relationship_type']})[/green]")
-    else:
-        console.print(f"[yellow]No connection to feature today[/yellow]")
-
-    # Generate daily horoscope with new transit summary
-    daily_horoscope = generate_daily_horoscope(
-        date=today,
-        user_profile=user_profile,
-        sun_sign_profile=sun_sign_profile,
-        transit_summary=transit_summary,  # Enhanced transit summary dict
-        memory=memory,
-        featured_connection=featured_connection,  # Pass selected connection for relationship weather
-        model_name=model_name)
-    console.print(f"[green]✓ Daily horoscope generated ({daily_horoscope.generation_time_ms}ms)[/green]")
-
-    # Update memory with connection mention (for rotation tracking)
-    if featured_connection:
-        # Extract overview string from RelationshipWeather object
-        rw_overview = ""
-        if daily_horoscope.relationship_weather:
-            rw_overview = daily_horoscope.relationship_weather.overview or ""
-        memory = update_memory_with_connection_mention(
-            memory=memory,
-            featured_connection=featured_connection,
-            date=today,
-            context=rw_overview
-        )
-        console.print(f"[green]✓ Memory updated with featured connection: {featured_connection['name']}[/green]")
-
-    # Save horoscope AND transit summary to JSON for inspection
+    # Save horoscope to JSON for inspection
     with open('debug_daily_horoscope.json', 'w') as f:
-        f.write(daily_horoscope.model_dump_json(indent=2))
-
-    import json
-    with open('debug_transit_summary.json', 'w') as f:
-        json.dump(transit_summary, f, indent=2, default=str)
+        json.dump(horoscope_response, f, indent=2, default=str)
+    console.print(f"[dim]  Saved to debug_daily_horoscope.json[/dim]")
 
 
 
     # ========================================================================
-    # 3. DISPLAY HOROSCOPE
+    # 4. DISPLAY HOROSCOPE
     # ========================================================================
-    print_section("3️⃣  YOUR DAILY HOROSCOPE", style="bold magenta")
+    print_section("4. YOUR DAILY HOROSCOPE", style="bold magenta")
 
     # Display date and sign
-    console.print(f"[bold cyan]{today} • {sun_sign.value.title()}[/bold cyan]\n")
+    console.print(f"[bold cyan]{today} - {sun_sign.title()}[/bold cyan]\n")
 
     # Daily Theme Headline (shareable wisdom)
     console.print(Panel(
-        daily_horoscope.daily_theme_headline,
-        title="[bold magenta]💫 Daily Theme[/bold magenta]",
+        horoscope_response.get("daily_theme_headline", ""),
+        title="[bold magenta]Daily Theme[/bold magenta]",
         border_style="magenta"
     ))
 
     # Daily Overview
     console.print(Panel(
-        daily_horoscope.daily_overview,
-        title="[bold cyan]🌊 Today's Energy[/bold cyan]",
+        horoscope_response.get("daily_overview", ""),
+        title="[bold cyan]Today's Energy[/bold cyan]",
         border_style="cyan"
     ))
 
     # Technical Analysis
     console.print(Panel(
-        daily_horoscope.technical_analysis,
-        title="[bold yellow]⭐ Technical Analysis[/bold yellow]",
+        horoscope_response.get("technical_analysis", ""),
+        title="[bold yellow]Technical Analysis[/bold yellow]",
         border_style="yellow"
     ))
 
     # Astrometers Summary (iOS-optimized structure)
-    astrometers_summary = f"""Overall Score: {daily_horoscope.astrometers.overall_unified_score:.1f}/100 ({daily_horoscope.astrometers.overall_state})
-Overall Quality: {daily_horoscope.astrometers.overall_quality.upper()}
+    astrometers = horoscope_response.get("astrometers", {})
+    astrometers_summary = f"""Overall Score: {astrometers.get('overall_unified_score', 0):.1f}/100 ({astrometers.get('overall_state', 'unknown')})
+Overall Quality: {astrometers.get('overall_quality', 'unknown').upper()}
 
-Top Active Meters: {', '.join(daily_horoscope.astrometers.top_active_meters[:3])}
-Top Challenging Meters: {', '.join(daily_horoscope.astrometers.top_challenging_meters[:3])}
-Top Flowing Meters: {', '.join(daily_horoscope.astrometers.top_flowing_meters[:3])}
+Top Active Meters: {', '.join(astrometers.get('top_active_meters', [])[:3])}
+Top Challenging Meters: {', '.join(astrometers.get('top_challenging_meters', [])[:3])}
+Top Flowing Meters: {', '.join(astrometers.get('top_flowing_meters', [])[:3])}
 
 Groups Summary:"""
 
-    for group in daily_horoscope.astrometers.groups:
-        astrometers_summary += f"\n• {group.display_name}: {group.unified_score:.1f}/100 ({group.state_label}) - {len(group.meters)} meters"
+    for group in astrometers.get("groups", []):
+        astrometers_summary += f"\n- {group.get('display_name', 'unknown')}: {group.get('unified_score', 0):.1f}/100 ({group.get('state_label', '')}) - {len(group.get('meters', []))} meters"
 
     console.print(Panel(
         astrometers_summary,
-        title="[bold cyan]📊 Astrometers Analysis[/bold cyan]",
+        title="[bold cyan]Astrometers Analysis[/bold cyan]",
         border_style="cyan"
     ))
 
     # Actionable Advice
-    advice_text = f"✨ DO: {daily_horoscope.actionable_advice.do}\n\n🚫 DON'T: {daily_horoscope.actionable_advice.dont}\n\n🔮 REFLECT ON: {daily_horoscope.actionable_advice.reflect_on}"
+    advice = horoscope_response.get("actionable_advice", {})
+    advice_text = f"DO: {advice.get('do', '')}\n\nDON'T: {advice.get('dont', '')}\n\nREFLECT ON: {advice.get('reflect_on', '')}"
     console.print(Panel(
         advice_text,
-        title="[bold green]💡 Actionable Guidance[/bold green]",
+        title="[bold green]Actionable Guidance[/bold green]",
         border_style="green"
     ))
 
     # Lunar Cycle Update (now in moon_detail.interpretation)
+    moon_detail = horoscope_response.get("moon_detail", {})
     console.print(Panel(
-        daily_horoscope.moon_detail.interpretation,
-        title="[bold white]🌙 Lunar Cycle[/bold white]",
+        moon_detail.get("interpretation", ""),
+        title="[bold white]Lunar Cycle[/bold white]",
         border_style="white"
     ))
 
-    # General Transits Overview - DEPRECATED (was redundant with technical_analysis)
-    # transits_text = "\n".join(f"• {item}" for item in detailed_horoscope.general_transits_overview)
-    # console.print(Panel(
-    #     transits_text,
-    #     title="[bold cyan]🌌 Collective Transits[/bold cyan]",
-    #     border_style="cyan"
-    # ))
-
-    # Look Ahead Preview - NOW IN DAILY HOROSCOPE
-    if daily_horoscope.look_ahead_preview:
+    # Relationship Weather - Overview + Connection Vibe
+    rw = horoscope_response.get("relationship_weather")
+    if rw:
+        rw_text = f"Overview: {rw.get('overview', '')}"
+        for cv in rw.get("connection_vibes", []):
+            rw_text += f"\n\n{cv.get('name', '')} ({cv.get('relationship_label', '')}): {cv.get('vibe', '')}"
+            if cv.get("vibe_score"):
+                rw_text += f" [Energy: {cv.get('vibe_score')}/100]"
+            if cv.get("key_transit"):
+                rw_text += f"\n  Key Transit: {cv.get('key_transit')}"
         console.print(Panel(
-            daily_horoscope.look_ahead_preview,
-            title="[bold yellow]🔭 Coming Soon[/bold yellow]",
+            rw_text,
+            title="[bold magenta]Relationship Weather[/bold magenta]",
+            border_style="magenta"
+        ))
+
+    # Look Ahead Preview
+    if horoscope_response.get("look_ahead_preview"):
+        console.print(Panel(
+            horoscope_response.get("look_ahead_preview", ""),
+            title="[bold yellow]Coming Soon[/bold yellow]",
             border_style="yellow"
         ))
 
 
     # ========================================================================
-    # 4. METER DATA VERIFICATION (DEBUG)
+    # 5. METER DATA VERIFICATION (DEBUG)
     # ========================================================================
-    print_section("4️⃣  METER DATA VERIFICATION", style="bold yellow")
+    print_section("5. METER DATA VERIFICATION", style="bold yellow")
 
-    console.print("[bold cyan]📊 Daily Horoscope Astrometers Data (iOS-Optimized):[/bold cyan]\n")
+    console.print("[bold cyan]Daily Horoscope Astrometers Data (iOS-Optimized):[/bold cyan]\n")
 
     # Overall metrics
     console.print(f"[yellow]Overall Metrics:[/yellow]")
-    console.print(f"  • Unified Score: {daily_horoscope.astrometers.overall_unified_score:.1f}/100")
-    console.print(f"  • State: {daily_horoscope.astrometers.overall_state}")
-    console.print(f"  • Quality: {daily_horoscope.astrometers.overall_quality.upper()}\n")
+    console.print(f"  - Unified Score: {astrometers.get('overall_unified_score', 0):.1f}/100")
+    console.print(f"  - State: {astrometers.get('overall_state', 'unknown')}")
+    console.print(f"  - Quality: {astrometers.get('overall_quality', 'unknown').upper()}\n")
 
     # Top meters
     console.print(f"[yellow]Top Meters:[/yellow]")
-    console.print(f"  • Most Active: {', '.join(daily_horoscope.astrometers.top_active_meters)}")
-    console.print(f"  • Most Challenging: {', '.join(daily_horoscope.astrometers.top_challenging_meters)}")
-    console.print(f"  • Most Flowing: {', '.join(daily_horoscope.astrometers.top_flowing_meters)}\n")
+    console.print(f"  - Most Active: {', '.join(astrometers.get('top_active_meters', []))}")
+    console.print(f"  - Most Challenging: {', '.join(astrometers.get('top_challenging_meters', []))}")
+    console.print(f"  - Most Flowing: {', '.join(astrometers.get('top_flowing_meters', []))}\n")
 
     # All 17 individual meters grouped in 5 groups (new iOS structure)
     console.print(f"\n[yellow]All 17 Meters by Group (iOS Structure):[/yellow]\n")
 
-    for group in daily_horoscope.astrometers.groups:
-        console.print(f"[cyan]{group.display_name} Group ({group.quality.upper()}):[/cyan]")
-        console.print(f"  Group Unified: {group.unified_score:.1f}/100 | State: {group.state_label}")
-        console.print(f"  LLM Interpretation: {group.interpretation[:100]}...")
+    for group in astrometers.get("groups", []):
+        console.print(f"[cyan]{group.get('display_name', '')} Group ({group.get('quality', '').upper()}):[/cyan]")
+        console.print(f"  Group Unified: {group.get('unified_score', 0):.1f}/100 | State: {group.get('state_label', '')}")
+        interpretation = group.get('interpretation', '')
+        console.print(f"  LLM Interpretation: {interpretation[:100]}...")
         console.print(f"\n  Member Meters:")
-        for meter in group.meters:
-            console.print(f"    • {meter.display_name}: {meter.unified_score:.1f}/100 ({meter.unified_quality.upper()}) | State: {meter.state_label}")
-            console.print(f"      LLM: {meter.interpretation[:80]}...")
-            console.print(f"      Top Aspects: {len(meter.top_aspects)} aspects tracked")
+        for meter in group.get("meters", []):
+            console.print(f"    - {meter.get('display_name', '')}: {meter.get('unified_score', 0):.1f}/100 ({meter.get('unified_quality', '').upper()}) | State: {meter.get('state_label', '')}")
+            meter_interp = meter.get('interpretation', '')
+            console.print(f"      LLM: {meter_interp[:80]}...")
+            console.print(f"      Top Aspects: {len(meter.get('top_aspects', []))} aspects tracked")
         console.print()
 
     # ========================================================================
-    # 5. METER GROUPS - 5 LIFE AREAS (NEW iOS STRUCTURE)
+    # 6. METER GROUPS - 5 LIFE AREAS (NEW iOS STRUCTURE)
     # ========================================================================
-    print_section("5️⃣  METER GROUPS (5 LIFE AREAS) - iOS Structure", style="bold cyan")
+    print_section("6. METER GROUPS (5 LIFE AREAS) - iOS Structure", style="bold cyan")
 
     # Display the 5 aggregated meter groups from new structure
     group_icons = {
-        "mind": "🧠",
-        "heart": "💕",
-        "body": "💪",
-        "instincts": "✨",
-        "evolution": "🌱"
+        "mind": "[M]",
+        "heart": "[H]",
+        "body": "[B]",
+        "instincts": "[I]",
+        "growth": "[G]"
     }
 
     console.print("[yellow]Note: Groups are now nested inside astrometers.groups (new iOS-optimized structure)[/yellow]\n")
 
-    for group in daily_horoscope.astrometers.groups:
-        group_name = group.group_name
-        icon = group_icons.get(group_name, "🔮")
+    for group in astrometers.get("groups", []):
+        group_name = group.get("group_name", "")
+        icon = group_icons.get(group_name, "[?]")
 
         # Format the group display
+        meter_names = [m.get('display_name', '') for m in group.get('meters', [])]
         scores_text = (
-            f"Score: {group.unified_score:.1f}/100\n"
-            f"State: {group.state_label} ({group.quality.upper()})\n\n"
-            f"{group.interpretation}\n\n"
-            f"Member Meters: {', '.join([m.display_name for m in group.meters])}"
+            f"Score: {group.get('unified_score', 0):.1f}/100\n"
+            f"State: {group.get('state_label', '')} ({group.get('quality', '').upper()})\n\n"
+            f"{group.get('interpretation', '')}\n\n"
+            f"Member Meters: {', '.join(meter_names)}"
         )
 
         console.print(Panel(
             scores_text,
-            title=f"[bold]{icon} {group.display_name}[/bold]",
+            title=f"[bold]{icon} {group.get('display_name', '')}[/bold]",
             border_style="blue"
         ))
 
     # ========================================================================
-    # 6. JOURNAL ENTRY & MEMORY UPDATE
+    # 7. ASK THE STARS (skipped - requires HTTP endpoint, not Cloud Function)
     # ========================================================================
-    # SKIPPED - Old 9-group system incompatible with new 5-group meter_groups
-    # print_section("6️⃣  JOURNAL ENTRY & MEMORY UPDATE", style="bold cyan")
-
-    # console.print("[cyan]Creating journal entry...[/cyan]")
-
-    # # Create journal entry using Pydantic model
-    # entry_id = f"entry_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    # journal_entry = JournalEntry(
-    #     entry_id=entry_id,
-    #     date=today,
-    #     entry_type=EntryType.HOROSCOPE_READING,
-    #     summary_viewed=daily_horoscope.summary,
-    #     categories_viewed=viewed_groups,
-    #     time_spent_seconds=180,  # Simulated
-    #     created_at=datetime.now().isoformat()
-    # )
-
-    # # Update memory using Pydantic model helper function
-    # memory = update_memory_from_journal(memory, journal_entry)
-
-    # console.print(f"[green]✓ Journal entry created: {entry_id}[/green]")
-    # console.print(f"[green]✓ Groups viewed: {[c.category.value for c in viewed_groups]}[/green]")
-    # console.print(f"[green]✓ Memory collection updated[/green]")
-
-    # Show updated memory state
-    console.print(f"\n[yellow]Updated Memory State:[/yellow]")
-    for cat_name, cat_data in memory.categories.items():
-        if cat_data.count > 0:
-            console.print(f"  • {cat_name.value.replace('_', ' ').title()}: {cat_data.count} views")
-
-    console.print(f"\n[yellow]Total Conversations:[/yellow] {memory.total_conversations}")
+    print_section("7. ASK THE STARS", style="bold magenta")
+    console.print("[yellow]Skipped - Ask the Stars uses HTTP streaming endpoint, not callable function[/yellow]")
+    console.print("[dim]To test Ask the Stars, use the e2e tests or call the endpoint directly[/dim]")
 
     # ========================================================================
-    # 6. ASK THE STARS - CONVERSATIONAL Q&A
+    # 8. PERFORMANCE SUMMARY
     # ========================================================================
-    print_section("6️⃣  ASK THE STARS - CONVERSATIONAL Q&A", style="bold magenta")
+    print_section("8. PERFORMANCE SUMMARY", style="bold cyan")
 
-    console.print("[cyan]Testing Ask the Stars feature with sample question...[/cyan]\n")
-
-    # Import Ask the Stars modules (Entity, EntityStatus, EntityCategory, AttributeKV already imported at top)
-    from models import (
-        Message, MessageRole, Conversation,
-        ExtractedEntities, ExtractedEntity, MergedEntities, EntityMergeAction,
-        UserEntities
-    )
-    from entity_extraction import (
-        extract_entities_from_message,
-        merge_entities_with_existing,
-        execute_merge_actions,
-        get_top_entities_by_importance
-    )
-    from ask_the_stars import stream_ask_the_stars_response
-    import os
-    from google import genai
-    import time
-
-    # Initialize Gemini client for entity extraction
-    gemini_api_key = os.environ.get("GEMINI_API_KEY")
-    posthog_api_key = os.environ.get("POSTHOG_API_KEY")
-    ask_the_stars_perf = None  # Default if test skipped
-
-    if not gemini_api_key:
-        console.print("[red]⚠️  GEMINI_API_KEY not set, skipping Ask the Stars test[/red]")
-    else:
-        # Create sample entities (simulating existing user data)
-        now = datetime.now()
-        sample_entities = [
-            Entity(
-                entity_id="ent_001",
-                name="John",
-                entity_type="relationship",
-                status=EntityStatus.ACTIVE,
-                aliases=["boyfriend", "partner"],
-                attributes=[
-                    AttributeKV(key="relationship_to_user", value="partner"),
-                    AttributeKV(key="relationship_status", value="dating")
-                ],
-                related_entities=[],
-                first_seen=now.isoformat(),
-                last_seen=now.isoformat(),
-                mention_count=5,
-                context_snippets=[
-                    "Met at coffee shop last year",
-                    "Anniversary in June",
-                    "Feeling some tension lately"
-                ],
-                importance_score=0.85,
-                created_at=now.isoformat(),
-                updated_at=now.isoformat()
-            ),
-            Entity(
-                entity_id="ent_002",
-                name="TechCorp",
-                entity_type="company",
-                status=EntityStatus.ACTIVE,
-                aliases=[],
-                attributes=[AttributeKV(key="user_role", value="software engineer")],
-                related_entities=[],
-                first_seen=(now).isoformat(),
-                last_seen=now.isoformat(),
-                mention_count=3,
-                context_snippets=["Working at TechCorp for 2 years", "Big project deadline coming up"],
-                importance_score=0.70,
-                created_at=now.isoformat(),
-                updated_at=now.isoformat()
-            ),
-            Entity(
-                entity_id="ent_003",
-                name="Luna",
-                entity_type="pet",
-                status=EntityStatus.ACTIVE,
-                aliases=["cat"],
-                attributes=[
-                    AttributeKV(key="species", value="cat"),
-                    AttributeKV(key="personality", value="playful")
-                ],
-                related_entities=[],
-                first_seen=now.isoformat(),
-                last_seen=now.isoformat(),
-                mention_count=2,
-                context_snippets=["Luna my cat keeps me company", "She's very cuddly"],
-                importance_score=0.60,
-                created_at=now.isoformat(),
-                updated_at=now.isoformat()
-            )
-        ]
-
-        console.print(f"[green]✓ Sample entities created: {len(sample_entities)} entities[/green]")
-        for entity in sample_entities:
-            console.print(f"  • {entity.name} ({entity.entity_type}) - {entity.mention_count} mentions")
-
-        # User asks a question
-        user_question = "Why am I feeling so much tension with John at work today? My cat Luna has been acting weird too."
-        console.print(f"\n[yellow]User Question:[/yellow]")
-        console.print(f"  \"{user_question}\"")
-
-        # Step 1: Extract entities from message (synchronous)
-        console.print(f"\n[cyan]Step 1: Extracting entities from message...[/cyan]")
-        extracted, perf_extract = extract_entities_from_message(
-            user_message=user_question,
-            current_date=today,
-            user_id=user_profile.user_id,
-            posthog_api_key=posthog_api_key
-        )
-        console.print(f"[green]✓ Extracted {len(extracted.entities)} entities ({perf_extract['time_ms']}ms)[/green]")
-        for ent in extracted.entities:
-            console.print(f"  • {ent.name} ({ent.entity_type}) - \"{ent.context}\"")
-            if ent.attributes:
-                attrs_dict = {attr.key: attr.value for attr in ent.attributes}
-                console.print(f"    Attributes: {attrs_dict}")
-
-        # Use sample entities directly (no merging in prototype)
-        top_entities = sample_entities
-
-        # Step 2: Generate answer using Ask the Stars
-        console.print(f"\n[cyan]Step 2: Generating answer with Ask the Stars...[/cyan]")
-        start_time = time.time()
-        answer_chunks = []
-
-        # Check if question mentions any connections (word-boundary matching)
-        import re
-        question_words = set(re.findall(r'\b\w+\b', user_question.lower()))
-        mentioned_connections = []
-        for conn in sample_connections:
-            conn_name_words = set(re.findall(r'\b\w+\b', conn['name'].lower()))
-            if conn_name_words & question_words:  # Set intersection
-                mentioned_connections.append(conn)
-
-        # Stream answer from LLM (sync generator)
-        for chunk in stream_ask_the_stars_response(
-            question=user_question,
-            horoscope_date=today,
-            user_profile=user_profile,
-            horoscope=daily_horoscope,
-            entities=top_entities,
-            memory=memory,
-            conversation_messages=[],  # First question in conversation
-            mentioned_connections=mentioned_connections,
-            posthog_api_key=posthog_api_key,
-            model=model_name
-        ):
-            # Parse SSE format: "data: {json}\n\n"
-            import json
-            if chunk.startswith("data: "):
-                chunk_json = json.loads(chunk[6:])  # Remove "data: " prefix
-                if chunk_json['type'] == 'chunk':
-                    answer_chunks.append(chunk_json['text'])
-
-        answer = "".join(answer_chunks)
-        answer_time_ms = (time.time() - start_time) * 1000
-
-        console.print(f"[green]✓ Generated answer ({answer_time_ms:.0f}ms)[/green]")
-        console.print(f"\n[yellow]Answer:[/yellow]")
-        console.print(Panel(
-            answer,
-            title="[bold magenta]🌟 Ask the Stars Response[/bold magenta]",
-            border_style="magenta"
-        ))
-
-        console.print(f"\n[cyan]Ask the Stars test completed[/cyan]")
-
-        # Store performance data for summary table
-        ask_the_stars_perf = {
-            "extract": perf_extract,
-            "answer": {
-                "time_ms": answer_time_ms,
-                "model": model_name,
-                "usage": {}  # Streaming doesn't return usage metadata
-            }
-        }
-
-    # ========================================================================
-    # 7. PERFORMANCE SUMMARY
-    # ========================================================================
-    print_section("7️⃣  PERFORMANCE SUMMARY", style="bold cyan")
-
-    # Show token usage
+    # Show token usage from horoscope response
     from rich.table import Table
     table = Table(title="LLM Token Usage", show_header=True, header_style="bold magenta")
     table.add_column("Stage", style="dim", width=30)
@@ -736,66 +418,29 @@ Groups Summary:"""
     table.add_column("Time (s)", justify="right")
     table.add_column("Prompt Tokens", justify="right")
     table.add_column("Output Tokens", justify="right")
-    table.add_column("Thinking Tokens", justify="right")
-    table.add_column("Cached Tokens", justify="right")
     table.add_column("Total Tokens", justify="right")
 
-
-    for stage, t in [
-        ("Daily Horoscope", daily_horoscope),
-        # ("Detailed Horoscope", detailed_horoscope)  # DEPRECATED
-    ]:
-        # force type hinting
-        data: DailyHoroscope = t
-
-        table.add_row(
-            stage,
-            data.model_used,
-            str(data.generation_time_ms / 1000),
-            str(data.usage.get("prompt_token_count", 0)),
-            str(data.usage.get("candidates_token_count", 0)),
-            str(data.usage.get("thoughts_token_count", 0)),
-            str(data.usage.get("cached_content_token_count", 0)),
-            str(data.usage.get("total_token_count", 0)),
-        )
-
-    # Add Ask the Stars performance data
-    if ask_the_stars_perf:
-        for stage_name, perf_data in [
-            ("Entity Extraction", ask_the_stars_perf["extract"]),
-            ("Answer Generation", ask_the_stars_perf["answer"])
-        ]:
-            usage = perf_data.get("usage", {})
-            table.add_row(
-                stage_name,
-                perf_data.get("model", "unknown"),
-                str(perf_data.get("time_ms", 0) / 1000),
-                str(usage.get("prompt_token_count", 0)),
-                str(usage.get("candidates_token_count", 0)),
-                str(usage.get("thoughts_token_count", 0)),
-                str(usage.get("cached_content_token_count", 0)),
-                str(usage.get("total_token_count", 0)),
-            )
+    usage = horoscope_response.get("usage", {})
+    table.add_row(
+        "Daily Horoscope",
+        horoscope_response.get("model_used", "unknown"),
+        f"{horoscope_response.get('generation_time_ms', 0) / 1000:.2f}",
+        str(usage.get("prompt_token_count", 0)),
+        str(usage.get("candidates_token_count", 0)),
+        str(usage.get("total_token_count", 0)),
+    )
 
     console.print(table)
 
-    # Summary of Ask the Stars performance
-    if ask_the_stars_perf:
-        console.print(f"\n[yellow]Ask the Stars Summary:[/yellow]")
-        extract_usage = ask_the_stars_perf["extract"]["usage"]
-        console.print(f"  Entity Extraction: {ask_the_stars_perf['extract']['time_ms']}ms | {extract_usage.get('prompt_token_count', 0)}→{extract_usage.get('candidates_token_count', 0)} tokens")
-        console.print(f"  Answer Generation: {ask_the_stars_perf['answer']['time_ms']:.0f}ms | (streaming - no token count)")
-        console.print(f"  Total: {ask_the_stars_perf['extract']['time_ms'] + ask_the_stars_perf['answer']['time_ms']:.0f}ms")
-
-
-
-
-    print_section("", style="bold magenta")
+    print_section("PROTOTYPE COMPLETE", style="bold magenta")
 
 
 if __name__ == "__main__":
+    import sys
+    full_setup = "--full" in sys.argv or "-f" in sys.argv
+
     try:
-        main()
+        main(skip_setup=not full_setup)
     except KeyboardInterrupt:
         console.print("\n[yellow]Prototype interrupted by user[/yellow]")
     except Exception as e:

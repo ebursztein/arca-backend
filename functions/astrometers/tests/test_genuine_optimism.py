@@ -36,8 +36,10 @@ def load_meter_labels():
     """Load all individual meter label files."""
     labels_dir = Path(__file__).parent.parent / "labels"
     meters = {}
+    # Files to skip (not meter labels)
+    skip_files = {"word_banks.json", "headline_examples.json"}
     for json_file in labels_dir.glob("*.json"):
-        if json_file.name == "word_banks.json":
+        if json_file.name in skip_files:
             continue
         if json_file.parent.name != "labels":
             continue

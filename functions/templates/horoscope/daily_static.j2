@@ -4,7 +4,7 @@
 
 # DAILY HOROSCOPE SPECIFICS
 
-**Input:** TODAY'S ENERGY FOCUS data, User Profile, and Relationship data.
+**Input:** TODAY'S ENERGY FOCUS data and User Profile. If a connection is featured, you will also receive CONNECTION VIBE data about that specific person.
 **Output:** A valid JSON object containing personalized daily guidance.
 
 ---
@@ -21,11 +21,11 @@ Each meter group shows:
 - **Trend:** How this meter is changing compared to yesterday (when available)
 
 ### Using Drivers (CRITICAL)
-The **Driver** tells you the SPECIFIC cause. Don't just say "your mind is foggy" - name the driver and why:
-- Driver "Clarity" with "Saturn square natal Sun" → "Your thinking feels sluggish - Saturn is pressing on your mental energy"
-- Driver "Vulnerability" with "South Node trine natal Neptune" → "You're emotionally open right now - Neptune is softening your guard"
+The **Driver** tells you the SPECIFIC cause. Don't just say "your mind is foggy" - name the driver and put the why at the END:
+- Driver "Clarity" with "Saturn square natal Sun" → "Your thinking feels sluggish today. Don't force big decisions - Saturn is pressing on your Sun."
+- Driver "Vulnerability" with "South Node trine natal Neptune" → "You're emotionally open right now. Let yourself feel things - Neptune is softening your guard."
 
-In meter interpretations, ALWAYS cite the Driver's "Why" transit to explain the state.
+In meter interpretations, ALWAYS cite the Driver's "Why" transit at the END to explain the state.
 
 ### Using "The Move" (CRITICAL)
 **The move** tells you exactly how to frame this state. Follow it:
@@ -44,7 +44,7 @@ Use trends to add nuance in daily_overview and meter interpretations:
 - Rising trend + low score = "things are starting to shift"
 - Falling trend + high score = "enjoy this while it lasts"
 - Rapid change = worth mentioning the volatility
-- Example: "Your energy is low, but it's climbing"
+- Example: "Your energy is low, but it's climbing. Rest now and you'll feel the lift by evening - Mars is moving off your Saturn."
 
 **OVERALL score** sets the day's tone. If Overall is low, don't pretend everything's great - be real, then be helpful.
 
@@ -58,11 +58,19 @@ Acknowledge how TODAY'S ENERGY specifically supports or challenges *their* sign:
 
 Name the friction, then show the path through it.
 
-### 2.2 THE SPOTLIGHT RULE
-Check `[RELATIONSHIPS]` section. If a person is marked **SPOTLIGHT**:
-- They are the **focus** of the `relationship_weather` section
-- Use their notes/context to make advice specific and helpful
-- Frame advice empoweringly: how can the user show up as their best self?
+### 2.2 RELATIONSHIP WEATHER
+The `relationship_weather` field has two parts:
+
+**relationship_weather.overview** (ALWAYS required):
+- About the USER's general relationship energy today based on HEART meter and Venus/Mars transits
+- Do NOT mention any specific person by name here
+- Example: "Sarah, you're feeling open and warm today. Good energy for connecting - Venus is trining your Moon."
+
+**relationship_weather.connection_vibe** (ONLY when [CONNECTION VIBE] section exists):
+- About the user's dynamic with ONE specific connection
+- Use their name and reference the synastry data provided
+- Frame it around what the user might feel or notice with this person today
+- Example: "You and Jake are in sync right now. Good time to make plans together - Venus is lighting up your connection."
 
 ---
 
@@ -84,7 +92,8 @@ Each field serves a specific purpose in the user experience. Here's what goes wh
 | `instincts_interpretation` | Intuition state | Cite the Why transit | 1-2 sentences |
 | `growth_interpretation` | Momentum state | Cite the Why transit | 1-2 sentences |
 | `energy_rhythm` | Day timing guidance | Based on Moon position | Helps plan WHEN to act |
-| `relationship_weather` | Connection guidance | SPOTLIGHT person + HEART state | Reference connection by name |
+| `relationship_weather.overview` | User's relationship energy | HEART meter + Venus/Mars transits | No names, just user's general connection energy |
+| `relationship_weather.connection_vibe` | Vibe with specific connection | Data from [CONNECTION VIBE] section | Use their name, what user feels with them today |
 | `collective_energy` | Shared experience | Based on outer planets | Validates they're not alone |
 | `look_ahead_preview` | Week preview | From [NEXT 7 DAYS] | Something to look forward to |
 | `follow_up_questions` | Prompts reflection | 5 simple, direct questions | No astro jargon |
@@ -92,13 +101,16 @@ Each field serves a specific purpose in the user experience. Here's what goes wh
 ### Field Examples
 
 **daily_theme_headline:**
-Use the conjunction from [HEADLINE GUIDANCE]:
-- both_thriving (and): "Maya, your mind is sharp and your energy is high - go big."
-- both_struggling (and): "Maya, your head's foggy and your heart's heavy - rest today."
-- contrast (but): "Maya, your head's clear but your body's tired - plan, don't push."
+iOS NOTIFICATION. Max 12 words.
+- Include user's name (for provocative mode) or "you/your" (for other modes)
+- Include "today" (temporality is required)
+- Be meter-specific based on [HEADLINE GUIDANCE]
+- Follow the VOICE MODE, Style, Formula, and Example from [HEADLINE GUIDANCE]
+
+DO NOT use: flowery language ("hums", "fragile", "quiet", "power"), generic statements, teasers without standalone value
 
 **daily_overview:**
-"Your thinking is sharp but your body's dragging - that's real. Mercury is trining your natal Jupiter, lighting up your mind. But Mars is squaring your natal Saturn, draining your energy. As a Gemini, let your brain lead today. Plan, strategize, decide - but skip the physical stuff."
+"Your thinking is sharp but your body's dragging - that's real. As a Gemini, let your brain lead today. Plan, strategize, decide - but skip the physical stuff. Mercury is trining your Jupiter while Mars squares your Saturn."
 
 **technical_analysis:**
 "Three transits are shaping today: Saturn squares your natal Sun in your 10th house (Gemini) - that's the weight on your energy. Mercury trines your natal Jupiter in your 3rd house - your mind stays sharp despite the drag. Venus opposes your natal Mercury, exact and challenging - conversations may feel tense. This is a thinking day, not a doing day."
@@ -109,20 +121,23 @@ Use the conjunction from [HEADLINE GUIDANCE]:
 - reflect_on: "What have you been overthinking that's actually simple?"
 
 **meter interpretations:**
-- mind (Crystal Clear): "Your thinking is sharp - Mercury is trining your natal Jupiter. Decisions that felt murky yesterday are clear now."
-- body (Drained): "Your body's running on empty - Mars is squaring your natal Saturn. Rest isn't optional today."
+- mind (Crystal Clear): "Your thinking is sharp. Decisions that felt murky yesterday are clear now - Mercury is trining your Jupiter."
+- body (Drained): "Your physical energy is running low today. Rest isn't optional - Mars is squaring your Saturn."
 
 **energy_rhythm:**
-"Morning's slow - don't schedule important calls. Energy picks up after 2pm."
+"Morning's slow - don't schedule important calls. Energy picks up after 2pm when the Moon moves into a stronger position."
 
-**relationship_weather (HEART Heavy):**
-"Things with Jake feel heavy right now. That's real. Today's not the day to hash it out - your heart needs space."
+**relationship_weather.overview:**
+"Sarah, you're warm and approachable today. Good day for reaching out or making plans with people you care about - Venus is trining your Moon."
+
+**relationship_weather.connection_vibe (only when [CONNECTION VIBE] section exists):**
+"You and Jake are in sync right now. If you've been meaning to reach out, today's the day - Venus is activating your connection."
 
 **collective_energy:**
 "Everyone's tired right now. It's not just you. Saturn's been grinding on all of us."
 
 **look_ahead_preview:**
-"Thursday's your day this week. Venus hits your sign - good for money talks, relationship stuff."
+"Thursday will be your day this week. Good time for important conversations and reconnecting with someone - Venus hits your sign."
 
 **follow_up_questions:**
 Simple, direct questions like: "What decision are you avoiding?" or "Who do you need to call?"

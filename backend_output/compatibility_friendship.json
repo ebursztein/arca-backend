@@ -1,5 +1,5 @@
 {
-  "advice": "Sofia, make an effort to actively listen and ask clarifying questions when you're talking with Maya, especially about sensitive topics.",
+  "advice": "Sofia, lean into the 'Wild Card' energy you share. Plan a spontaneous outing or adventure with Maya this week to celebrate your connection.",
   "aspects": [
     {
       "aspect_type": "conjunction",
@@ -514,17 +514,17 @@
       "user_planet": "venus"
     }
   ],
-  "calculated_at": "2025-12-03T02:39:53.821291",
+  "calculated_at": "2025-12-09T03:12:28.427731",
   "composite": {
     "dominant_element": "fire",
     "moon_sign": "leo",
-    "purpose": "Your Leo composite Sun and Moon mean this friendship is built to shine brightly together. You're meant to be a source of inspiration and bold energy for each other.",
+    "purpose": "Your Leo composite suggests this friendship is built for celebrating life with joy and enthusiasm. You're here to bring out each other's vibrant, expressive sides and share experiences that feel authentic and exciting.",
     "rising_sign": "leo",
     "sun_sign": "leo"
   },
-  "generation_time_ms": 2249,
-  "growth_areas": "While your friendship is strong, communication can sometimes be a challenge, requiring conscious effort to ensure you're both on the same page. The area of shared fun might also need a little extra spark to keep things exciting.",
-  "headline": "Scorpio & Gemini: Fierce Friends, Fire Sign",
+  "generation_time_ms": 3665,
+  "growth_areas": "While your core identities align well for fun, Sofia's Pluto challenging Maya's Sun and Sofia's Pluto adjusting to Maya's Venus can bring moments where deeper, more intense energies surface. Navigating these power dynamics requires open communication and respecting each other's core needs.",
+  "headline": "Scorpio & Gemini: Wild Adventures Together",
   "karmic": {
     "destiny_note": null,
     "is_karmic": false,
@@ -535,55 +535,169 @@
       {
         "aspect_ids": [
           "asp_005",
-          "asp_016"
+          "asp_016",
+          "asp_007"
+        ],
+        "description": "How deeply you can share feelings and be vulnerable with each other",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_005",
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "summary": "Your emotional needs and how you process feelings (Moon) merges with their core identity (Sun)",
+            "their_planet": "Sun",
+            "user_planet": "Moon"
+          },
+          {
+            "aspect_id": "asp_016",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your how you show care and appreciation (Venus) supports their emotional needs and how you process feelings (Moon)",
+            "their_planet": "Moon",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_007",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your emotional needs and how you process feelings (Moon) flows easily with their intuitive understanding and empathy (Neptune)",
+            "their_planet": "Neptune",
+            "user_planet": "Moon"
+          }
         ],
         "id": "emotional",
-        "insight": "You connect on a profound emotional level, Sofia, offering each other deep comfort and understanding. This is the bedrock of your friendship.",
+        "insight": "You connect on a deep, 'Soul Friends' level, Sofia. Your emotional processing naturally complements Maya's core identity, creating a safe space for vulnerability.",
+        "label": "Soul Friends",
         "name": "Emotional Connection",
-        "score": 100
+        "score": 92
       },
       {
         "aspect_ids": [
           "asp_013",
           "asp_022"
         ],
+        "description": "How easily conversation flows and how well you understand each other",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_013",
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "summary": "Your thinking style and how you express ideas (Mercury) merges with their openness, humor, and expansive conversation (Jupiter)",
+            "their_planet": "Jupiter",
+            "user_planet": "Mercury"
+          },
+          {
+            "aspect_id": "asp_022",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your openness, humor, and expansive conversation (Jupiter) polarizes with their thinking style and how you express ideas (Mercury)",
+            "their_planet": "Mercury",
+            "user_planet": "Jupiter"
+          }
+        ],
         "id": "communication",
-        "insight": "Sofia, your communication styles are quite different, which means you'll need to be mindful of how you express yourselves to avoid misunderstandings.",
+        "insight": "Conversations with Maya feel 'Easy,' Sofia. Your Mercury and Maya's Jupiter create a natural rhythm, making it simple to share ideas and understand each other's communication style.",
+        "label": "Easy",
         "name": "Communication",
-        "score": 14
-      },
-      {
-        "aspect_ids": [],
-        "id": "fun",
-        "insight": "To keep the fun flowing, Sofia, you might need to consciously plan new adventures or activities that excite both of you.",
-        "name": "Fun & Adventure",
-        "score": 0
+        "score": 74
       },
       {
         "aspect_ids": [
-          "asp_002"
+          "asp_001"
+        ],
+        "description": "How much joy and excitement you bring to each other's lives",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_001",
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "summary": "Your core identity (Sun) merges with their joy, adventure, and expanding horizons (Jupiter)",
+            "their_planet": "Jupiter",
+            "user_planet": "Sun"
+          }
+        ],
+        "id": "fun",
+        "insight": "This friendship is pure 'Wild Card' energy, Sofia! Your Scorpio Sun merging with Maya's Jupiter brings a fantastic sense of adventure and shared excitement.",
+        "label": "Wild Card",
+        "name": "Fun & Adventure",
+        "score": 95
+      },
+      {
+        "aspect_ids": [
+          "asp_002",
+          "asp_017",
+          "asp_025"
+        ],
+        "description": "How much you can count on each other when it matters",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_002",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your core respect and honoring who each other is (Sun) flows easily with their reliability, commitment, and showing up consistently (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Sun"
+          },
+          {
+            "aspect_id": "asp_017",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your love style (Venus) creates tension with their reliability, commitment, and showing up consistently (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_025",
+            "aspect_type": "conjunction",
+            "is_harmonious": true,
+            "summary": "Your reliability, commitment, and showing up consistently (Saturn) merges with their reliability, commitment, and showing up consistently (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Saturn"
+          }
         ],
         "id": "loyalty",
-        "insight": "Your loyalty to each other is a defining feature of this friendship, Sofia. You can always count on Maya to have your back, and vice versa.",
+        "insight": "You offer each other 'Steady' support, Sofia. Your respect for who Maya is aligns well with her reliable nature, creating a dependable bond.",
+        "label": "Steady",
         "name": "Loyalty & Support",
-        "score": 100
+        "score": 77
       },
       {
         "aspect_ids": [
           "asp_016",
           "asp_011"
         ],
+        "description": "How much overlap you have in hobbies, passions, and what you geek out about",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_016",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your aesthetic tastes and social preferences (Venus) supports their emotional needs (Moon)",
+            "their_planet": "Moon",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_011",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your intellectual interests and curiosities (Mercury) flows easily with their aesthetic tastes and social preferences (Venus)",
+            "their_planet": "Venus",
+            "user_planet": "Mercury"
+          }
+        ],
         "id": "sharedInterests",
-        "insight": "You share a natural ease in connecting over shared interests and tastes, Sofia. This makes spending time together feel effortless and enjoyable.",
+        "insight": "You share a 'Same Obsession' for what you geek out about, Sofia. Your Venus and Mercury connect beautifully with Maya's Moon and Venus, bringing overlap in tastes and curiosities.",
+        "label": "Same Obsession",
         "name": "Shared Interests",
-        "score": 100
+        "score": 94
       }
     ],
-    "overall_score": 81,
+    "overall_label": "Seamless",
+    "overall_score": 86,
     "type": "friendship",
-    "vibe_phrase": "Ride or Die"
+    "vibe_phrase": "Adventure Buddies"
   },
   "model_used": "gemini-2.5-flash-lite",
-  "strengths": "Your emotional connection and loyalty run incredibly deep, Sofia. You have a natural understanding and trust that makes you feel like ride-or-die friends. You also find common ground easily, enjoying similar tastes and activities together.",
-  "summary": "Sofia, you and Maya share a deep, loyal bond that feels like coming home. You show up for each other through thick and thin, creating a powerful friendship built on unwavering support and shared adventures. While conversations can sometimes hit a snag, your core connection is incredibly strong."
+  "strengths": "Your connection sparkles with 'Wild Card' energy, Sofia, thanks to your Scorpio Sun merging with Maya's Jupiter. This brings a natural sense of fun and adventure, encouraging spontaneous plans and shared stories. Conversations flow effortlessly, with your Mercury linking smoothly with Maya's Jupiter, making it easy to understand each other's perspectives.",
+  "summary": "Sofia, you and Maya share an incredibly strong foundation, built for shared adventures and easy conversation. This friendship offers a vibrant space for mutual growth and support, making it a truly special connection."
 }

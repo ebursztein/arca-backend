@@ -88,13 +88,13 @@ class TestGetSynastryChart:
     def test_user_chart_has_planets(self, synastry_response):
         """Test user chart has all planets."""
         assert "planets" in synastry_response["user_chart"]
-        assert len(synastry_response["user_chart"]["planets"]) == 11
+        assert len(synastry_response["user_chart"]["planets"]) == 12  # 10 planets + North Node + South Node
 
     @pytest.mark.llm
     def test_connection_chart_has_planets(self, synastry_response):
         """Test connection chart has all planets."""
         assert "planets" in synastry_response["connection_chart"]
-        assert len(synastry_response["connection_chart"]["planets"]) == 11
+        assert len(synastry_response["connection_chart"]["planets"]) == 12  # 10 planets + North Node + South Node
 
     @pytest.mark.llm
     def test_synastry_aspects_exist(self, synastry_response):

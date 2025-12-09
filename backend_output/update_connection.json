@@ -2,7 +2,7 @@
   "function_name": "update_connection",
   "request": {
     "user_id": "test_user_a",
-    "connection_id": "kmm2pTHHqBNLrTTmnZAsEA",
+    "connection_id": "5KhB95YchfiP8gQeLdr37Q",
     "updates": {
       "relationship_category": "love",
       "relationship_label": "partner"
@@ -15,8 +15,8 @@
     "birth_lon": null,
     "birth_time": null,
     "birth_timezone": null,
-    "connection_id": "kmm2pTHHqBNLrTTmnZAsEA",
-    "created_at": "2025-12-02T03:30:07.617694",
+    "connection_id": "5KhB95YchfiP8gQeLdr37Q",
+    "created_at": "2025-12-09T03:11:49.650013",
     "name": "Jane",
     "photo_path": null,
     "relationship_category": "love",
@@ -79,8 +79,8 @@
         "type": "mars_venus_midpoint"
       }
     ],
-    "updated_at": "2025-12-02T03:30:07.633520",
+    "updated_at": "2025-12-09T03:11:49.664495",
     "vibes": []
   },
-  "captured_at": "2025-12-02T03:30:07.637453+00:00"
+  "captured_at": "2025-12-09T03:11:49.668072+00:00"
 }

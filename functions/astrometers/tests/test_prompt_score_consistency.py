@@ -257,13 +257,15 @@ class TestPromptScoreConsistency:
             overview_scores[h["group"]] = h["group_score"]
 
         # Check that all groups in overview match all_groups
+        # Note: overview uses integer rounding, all_groups uses 1 decimal place
+        # So tolerance should be 1.0 to account for rounding difference
         print("\nScore comparison:")
         for group_name in overview_scores:
             all_groups_score = all_groups_scores[group_name]
             overview_score = overview_scores[group_name]
             print(f"  {group_name}: all_groups={all_groups_score}, overview={overview_score}")
 
-            assert abs(all_groups_score - overview_score) < 0.1, \
+            assert abs(all_groups_score - overview_score) < 1.0, \
                 f"{group_name} mismatch: all_groups={all_groups_score}, overview={overview_score}"
 
     def test_driver_meter_consistency(self):
@@ -361,6 +363,8 @@ class TestRealChartConsistency:
         )
 
         # Compare scores for all groups present in overview
+        # Note: overview uses integer rounding, meter_groups uses 1 decimal place
+        # So tolerance should be 1.0 to account for rounding difference
         print("\nReal chart score comparison:")
         for h in overview["highlights"]:
             group_name = h["group"]
@@ -369,7 +373,7 @@ class TestRealChartConsistency:
 
             print(f"  {group_name}: meter_groups={all_groups_score}, overview={overview_score}")
 
-            assert abs(all_groups_score - overview_score) < 0.1, \
+            assert abs(all_groups_score - overview_score) < 1.0, \
                 f"{group_name} score mismatch in real chart: " \
                 f"meter_groups={all_groups_score}, overview={overview_score}"
 
@@ -677,19 +681,20 @@ class TestPromptDeterminism:
 
 class TestHeadlineOverviewConsistency:
     """
-    Test that headline groups are always included in overview highlights.
+    Test that overview provides additional coverage beyond headline.
 
-    The overview should include:
-    1. All groups from the headline (so LLM has full context)
-    2. Additional extreme groups not in headline (to cover important stuff)
+    The overview should:
+    1. NOT include headline groups (they're already covered in headline_guidance)
+    2. Add the most extreme non-headline groups for broader coverage
+    3. Total coverage (headline + overview) should be ~3 groups
     """
 
-    def test_headline_groups_must_appear_in_overview(self):
+    def test_headline_groups_excluded_from_overview(self):
         """
-        CRITICAL: Groups featured in headline MUST appear in overview.
+        Groups featured in headline should NOT appear in overview.
 
-        If headline says "INSTINCTS and GROWTH are mismatched", the overview
-        MUST include both INSTINCTS and GROWTH so the LLM has the details.
+        The LLM already has headline groups in headline_guidance section.
+        Overview should add NEW groups for broader coverage.
         """
         meter_scores = {
             # Mind: moderate (69)
@@ -735,19 +740,19 @@ class TestHeadlineOverviewConsistency:
         print(f"Headline groups: instincts, growth")
         print(f"Overview highlights: {highlight_groups}")
 
-        # CRITICAL: Headline groups MUST be in overview
-        assert "instincts" in highlight_groups, \
-            "INSTINCTS is in headline, MUST be in overview"
-        assert "growth" in highlight_groups, \
-            "GROWTH is in headline, MUST be in overview"
+        # Headline groups should NOT be in overview (already covered)
+        assert "instincts" not in highlight_groups, \
+            "INSTINCTS is in headline, should not be duplicated in overview"
+        assert "growth" not in highlight_groups, \
+            "GROWTH is in headline, should not be duplicated in overview"
 
-        # Should ALSO include HEART (most extreme not in headline)
+        # Should include HEART (most extreme not in headline)
         assert "heart" in highlight_groups, \
-            "HEART (score 18, most extreme) should also be in overview"
+            "HEART (score 18, most extreme) should be in overview"
 
-    def test_overview_includes_headline_plus_extreme(self):
+    def test_overview_adds_extreme_non_headline_groups(self):
         """
-        Overview should include headline groups PLUS most extreme non-headline groups.
+        Overview should add most extreme non-headline groups for coverage.
         """
         meter_scores = {
             # Mind: high (80) - IN HEADLINE
@@ -792,13 +797,15 @@ class TestHeadlineOverviewConsistency:
         print(f"Headline group: mind")
         print(f"Overview highlights: {highlight_groups}")
 
-        # Headline group MUST be included
-        assert "mind" in highlight_groups, \
-            "MIND is in headline, MUST be in overview"
+        # Headline group should NOT be in overview
+        assert "mind" not in highlight_groups, \
+            "MIND is in headline, should not be duplicated in overview"
 
-        # Plus extreme non-headline groups
+        # Should have 2 extreme non-headline groups (since headline has 1)
         assert "heart" in highlight_groups, \
             "HEART (score 15) should be in overview as most extreme"
+        assert "body" in highlight_groups, \
+            "BODY (score 25) should be in overview as second most extreme"
 
 
 class TestScoreRounding:

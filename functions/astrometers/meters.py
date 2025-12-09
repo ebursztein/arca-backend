@@ -17,6 +17,7 @@ Usage:
 
 import os
 import json
+from pathlib import Path
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
 from enum import Enum
@@ -1092,18 +1093,32 @@ def select_state_words(
     return selected
 
 
+# Headline patterns for variety
+# Each day we randomly select from these patterns to vary the headline structure
+HEADLINE_PATTERNS = [
+    "one_positive",      # 1 meter, score >= 50
+    "one_negative",      # 1 meter, score < 50
+    "two_positive",      # 2 meters, both >= 50
+    "two_negative",      # 2 meters, both < 50
+    "contrast_pos_neg",  # 1 positive + 1 negative
+    "contrast_neg_pos",  # 1 negative + 1 positive (order swap)
+]
+
+
 def select_featured_meters(
     all_meters: AllMetersReading,
     user_id: str,
     date: str,
+    yesterday_meters: list[str] | None = None,
 ) -> dict:
     """
-    Select featured meters for today's horoscope using weighted random.
+    Select featured meters for today's horoscope using pattern-based weighted random.
 
     Logic:
+    - Randomly select a headline pattern (1 positive, 1 negative, 2 positive, etc.)
     - Weight = distance from neutral (50). Extremes are more interesting.
-    - If top 2 have CONTRAST (one >50, one <50): show both
-    - If top 2 are SAME DIRECTION: show only the most extreme one
+    - Hard exclude meters from yesterday to avoid repetition
+    - Fall back to available pattern if exact pattern can't be filled
 
     Each meter is labeled:
     - "flowing": score >= 50 (lean into it)
@@ -1113,6 +1128,7 @@ def select_featured_meters(
         all_meters: Complete meter readings
         user_id: User ID for reproducible selection
         date: Date string for reproducible selection
+        yesterday_meters: Optional list of meter names featured yesterday (to exclude)
 
     Returns:
         Dict with:
@@ -1121,6 +1137,7 @@ def select_featured_meters(
         - featured_groups: List of unique group names for featured meters
         - group_words: Dict mapping group_name -> list of state word inspirations
         - group_scores: Dict with scores for featured groups
+        - selected_pattern: The pattern that was actually used
     """
     import hashlib
     import random
@@ -1132,7 +1149,7 @@ def select_featured_meters(
     seed_hash = int(hashlib.sha256(seed_string.encode()).hexdigest()[:8], 16)
     rng = random.Random(seed_hash)
 
-    # Collect all 17 individual meters with their weights
+    # Collect all 17 individual meters
     all_individual_meters = []
     for meter in Meter:
         if meter.value in ["overall_intensity", "overall_harmony"]:
@@ -1149,43 +1166,62 @@ def select_featured_meters(
             "featured_list": [],
             "featured_groups": [],
             "group_words": {},
-            "group_scores": {}
+            "group_scores": {},
+            "selected_pattern": None,
         }
 
-    # Calculate weights: distance from neutral (50)
-    meter_weights = [abs(m.unified_score - 50) + 0.1 for m in all_individual_meters]
+    # Filter out yesterday's meters (hard exclude)
+    yesterday_meters = yesterday_meters or []
+    available_meters = [
+        m for m in all_individual_meters
+        if m.meter_name not in yesterday_meters
+    ]
 
-    # Weighted random selection of top 2 candidates
-    available_meters = list(all_individual_meters)
-    available_weights = list(meter_weights)
-    candidates = []
+    # Fall back to all meters if exclusion leaves us with nothing usable
+    if len(available_meters) < 2:
+        available_meters = all_individual_meters
 
-    for _ in range(min(2, len(available_meters))):
-        if not available_meters:
-            break
-        selected = rng.choices(available_meters, weights=available_weights, k=1)[0]
-        candidates.append(selected)
-        idx = available_meters.index(selected)
-        available_meters.pop(idx)
-        available_weights.pop(idx)
+    # Split into positive (>= 50) and negative (< 50) pools
+    positive_meters = [m for m in available_meters if m.unified_score >= 50]
+    negative_meters = [m for m in available_meters if m.unified_score < 50]
 
-    # Determine if we have contrast or same direction
-    if len(candidates) == 2:
-        first_positive = candidates[0].unified_score >= 50
-        second_positive = candidates[1].unified_score >= 50
-        has_contrast = first_positive != second_positive
+    # Calculate weights for each pool
+    def get_weights(meters: list) -> list[float]:
+        return [abs(m.unified_score - 50) + 0.1 for m in meters]
 
-        if has_contrast:
-            # Show both - interesting contrast
-            selected_meters = candidates
-        else:
-            # Same direction - show only the most extreme
-            if abs(candidates[0].unified_score - 50) >= abs(candidates[1].unified_score - 50):
-                selected_meters = [candidates[0]]
-            else:
-                selected_meters = [candidates[1]]
-    else:
-        selected_meters = candidates
+    # Randomly select a pattern
+    pattern = rng.choice(HEADLINE_PATTERNS)
+
+    # Try to fulfill the pattern, with fallback
+    selected_meters = _select_meters_for_pattern(
+        pattern=pattern,
+        positive_meters=positive_meters,
+        negative_meters=negative_meters,
+        get_weights=get_weights,
+        rng=rng,
+    )
+
+    # If pattern couldn't be fulfilled, try fallback patterns
+    if not selected_meters:
+        fallback_patterns = ["contrast_pos_neg", "one_positive", "one_negative"]
+        for fallback in fallback_patterns:
+            if fallback != pattern:
+                selected_meters = _select_meters_for_pattern(
+                    pattern=fallback,
+                    positive_meters=positive_meters,
+                    negative_meters=negative_meters,
+                    get_weights=get_weights,
+                    rng=rng,
+                )
+                if selected_meters:
+                    pattern = fallback
+                    break
+
+    # Last resort: just pick most extreme meter
+    if not selected_meters and available_meters:
+        most_extreme = max(available_meters, key=lambda m: abs(m.unified_score - 50))
+        selected_meters = [most_extreme]
+        pattern = "one_positive" if most_extreme.unified_score >= 50 else "one_negative"
 
     # Build featured_list with direction labels
     featured_list = []
@@ -1239,16 +1275,75 @@ def select_featured_meters(
             )
 
     # Generate headline guidance based on the 16-case matrix
-    headline_guidance = generate_headline_guidance(featured_list)
+    headline_guidance = generate_headline_guidance(featured_list, user_id, date)
 
     return {
         "featured_groups": featured_groups,
         "featured_meters": featured_meters_by_group,
-        "featured_list": featured_list,  # New: flat list with direction labels
+        "featured_list": featured_list,  # Flat list with direction labels
         "group_words": group_words,
         "group_scores": group_scores,
         "headline_guidance": headline_guidance,  # Programmatic guidance for LLM
+        "selected_pattern": pattern,  # Pattern used (for debugging/tracking)
     }
+
+
+def _select_meters_for_pattern(
+    pattern: str,
+    positive_meters: list,
+    negative_meters: list,
+    get_weights: callable,
+    rng,
+) -> list:
+    """
+    Select meters matching the specified pattern.
+
+    Args:
+        pattern: One of HEADLINE_PATTERNS
+        positive_meters: Meters with score >= 50
+        negative_meters: Meters with score < 50
+        get_weights: Function to calculate weights for a list of meters
+        rng: Random number generator
+
+    Returns:
+        List of selected meters, or empty list if pattern can't be fulfilled
+    """
+    def weighted_select(meters: list, count: int) -> list:
+        """Select count meters using weighted random selection."""
+        if len(meters) < count:
+            return []
+        selected = []
+        remaining = list(meters)
+        for _ in range(count):
+            if not remaining:
+                break
+            weights = get_weights(remaining)
+            choice = rng.choices(remaining, weights=weights, k=1)[0]
+            selected.append(choice)
+            remaining.remove(choice)
+        return selected
+
+    if pattern == "one_positive":
+        return weighted_select(positive_meters, 1)
+    elif pattern == "one_negative":
+        return weighted_select(negative_meters, 1)
+    elif pattern == "two_positive":
+        return weighted_select(positive_meters, 2)
+    elif pattern == "two_negative":
+        return weighted_select(negative_meters, 2)
+    elif pattern == "contrast_pos_neg":
+        pos = weighted_select(positive_meters, 1)
+        neg = weighted_select(negative_meters, 1)
+        if pos and neg:
+            return pos + neg
+        return []
+    elif pattern == "contrast_neg_pos":
+        neg = weighted_select(negative_meters, 1)
+        pos = weighted_select(positive_meters, 1)
+        if neg and pos:
+            return neg + pos
+        return []
+    return []
 
 
 # =============================================================================
@@ -1257,73 +1352,101 @@ def select_featured_meters(
 
 def get_score_band(score: float) -> str:
     """
-    Map unified_score to one of 4 bands.
+    Map unified_score to one of 4 bands using natural quartiles.
 
-    Bands:
+    Bands align with the positive/negative threshold (50) used in pattern selection:
     - high: 75-100
-    - mid_high: 55-75
-    - mid_low: 35-55
-    - low: 0-35
+    - mid_high: 50-75 (positive range)
+    - mid_low: 25-50 (negative range)
+    - low: 0-25
     """
     if score >= 75:
         return "high"
-    elif score >= 55:
+    elif score >= 50:
         return "mid_high"
-    elif score >= 35:
+    elif score >= 25:
         return "mid_low"
     else:
         return "low"
 
 
-# 16-case matrix: (band1, band2) -> (pattern, conjunction, tone)
+# 16-case matrix: (band1, band2) -> (pattern, conjunction)
+# Tone is now determined by headline_mode (provocative/personalized/imperative)
 HEADLINE_MATRIX = {
     # High + X
-    ("high", "high"): ("both_thriving", "and", "expansive, celebratory"),
-    ("high", "mid_high"): ("strong_and_solid", "and", "confident, stable"),
-    ("high", "mid_low"): ("contrast_up", "but", "balanced pivot"),
-    ("high", "low"): ("stark_contrast_up", "but", "strong pivot, acknowledge the struggle"),
+    ("high", "high"): ("two_positive", "and"),
+    ("high", "mid_high"): ("two_positive", "and"),
+    ("high", "mid_low"): ("contrast", "but"),
+    ("high", "low"): ("contrast", "but"),
     # Mid-High + X
-    ("mid_high", "high"): ("solid_and_strong", "and", "confident"),
-    ("mid_high", "mid_high"): ("both_solid", "and", "steady, grounded"),
-    ("mid_high", "mid_low"): ("slight_contrast", "but", "gentle pivot"),
-    ("mid_high", "low"): ("contrast_down", "but", "acknowledge then redirect"),
+    ("mid_high", "high"): ("two_positive", "and"),
+    ("mid_high", "mid_high"): ("two_positive", "and"),
+    ("mid_high", "mid_low"): ("contrast", "but"),
+    ("mid_high", "low"): ("contrast", "but"),
     # Mid-Low + X
-    ("mid_low", "high"): ("contrast_up", "but", "find the bright spot"),
-    ("mid_low", "mid_high"): ("slight_contrast", "but", "gentle pivot"),
-    ("mid_low", "mid_low"): ("both_struggling", "and", "compassionate, normalize the strain"),
-    ("mid_low", "low"): ("both_low", "and", "honest, rest-focused"),
+    ("mid_low", "high"): ("contrast", "but"),
+    ("mid_low", "mid_high"): ("contrast", "but"),
+    ("mid_low", "mid_low"): ("two_negative", "and"),
+    ("mid_low", "low"): ("two_negative", "and"),
     # Low + X
-    ("low", "high"): ("stark_contrast_up", "but", "anchor to positive"),
-    ("low", "mid_high"): ("contrast_down", "but", "acknowledge then redirect"),
-    ("low", "mid_low"): ("both_low", "and", "honest, rest-focused"),
-    ("low", "low"): ("both_depleted", "and", "survival-mode validation"),
+    ("low", "high"): ("contrast", "but"),
+    ("low", "mid_high"): ("contrast", "but"),
+    ("low", "mid_low"): ("two_negative", "and"),
+    ("low", "low"): ("two_negative", "and"),
 }
 
 
-def generate_headline_guidance(featured_list: list[dict]) -> dict:
+def _load_headline_examples() -> dict:
+    """Load headline examples from JSON file."""
+    labels_dir = Path(__file__).parent / "labels"
+    with open(labels_dir / "headline_examples.json") as f:
+        return json.load(f)
+
+
+def _get_headline_mode(user_id: str, date_str: str) -> str:
+    """Deterministic mode selection based on user_id and date."""
+    modes = ["provocative", "personalized", "imperative"]
+    # Use hash for deterministic but varied selection
+    hash_input = f"{user_id}_{date_str}"
+    mode_index = hash(hash_input) % 3
+    return modes[mode_index]
+
+
+def generate_headline_guidance(
+    featured_list: list[dict],
+    user_id: str = "",
+    date_str: str = "",
+) -> dict:
     """
     Generate programmatic headline guidance based on the 16-case matrix.
 
     This provides the LLM with:
     - The correct conjunction ("and" vs "but")
     - The pattern name for the combination
-    - The tone/angle to take
-    - Concrete instruction text
+    - The headline mode (provocative/personalized/imperative)
+    - Mode-specific style, formula, and example
 
     Args:
         featured_list: List of dicts with 'meter' and 'direction' keys
+        user_id: User ID for deterministic mode selection
+        date_str: Date string for deterministic mode selection
 
     Returns:
-        Dict with pattern, conjunction, tone, and instruction text
+        Dict with pattern, conjunction, headline_mode, and mode-specific guidance
     """
     if not featured_list:
+        headline_examples = _load_headline_examples()
+        mode_data = headline_examples["modes"]["imperative"]
         return {
             "pattern": "neutral",
             "conjunction": None,
-            "tone": "balanced, flexible",
+            "headline_mode": "imperative",
             "meter_count": 0,
             "meters": [],
-            "instruction": "Neutral day - no standout meters. Focus on balance and flexibility.",
+            "mode_style": mode_data["style"],
+            "mode_formula": mode_data["formula"],
+            "mode_rules": mode_data["rules"],
+            "mode_example": "✨ Take it easy today. Nothing urgent.",
         }
 
     # Load meter descriptions and planets
@@ -1332,10 +1455,12 @@ def generate_headline_guidance(featured_list: list[dict]) -> dict:
 
     # Build meter info with all context
     meters_info = []
+    bands = []  # Track bands internally for matrix lookup
     for item in featured_list:
         meter = item["meter"]
         score = meter.unified_score
         band = get_score_band(score)
+        bands.append(band)
         # Get the GROUP label (not the meter label)
         group_label = _get_group_label(meter.group.value, score)
         # Get top aspect driving this meter
@@ -1353,128 +1478,58 @@ def generate_headline_guidance(featured_list: list[dict]) -> dict:
             "group_label": group_label,
             "meter_name": meter.meter_name,
             "meter_label": meter.state_label,
-            "score": round(score),  # Group score (integer for cleaner prompts)
-            "driver_score": round(meter.unified_score),  # Driver meter score
+            "score": round(score),
+            "driver_score": round(meter.unified_score),
             "driver_meaning": meter_descriptions.get(meter.meter_name, ""),
             "driver_planets": meter_planets.get(meter.meter_name, ""),
-            "band": band,
             "top_aspect": top_aspect,
             "trend": trend_str,
         })
 
-    if len(featured_list) == 1:
-        # Single meter case
-        m = meters_info[0]
-        band = m["band"]
+    # Load headline examples and get mode
+    headline_examples = _load_headline_examples()
+    headline_mode = _get_headline_mode(user_id, date_str)
+    mode_data = headline_examples["modes"][headline_mode]
 
-        if band == "high":
-            tone = "confident, lean into it"
-            instruction = f"Lead with {m['group'].upper()} ({m['group_label']}). Emphasize {m['meter_name']} as the driver."
-        elif band == "mid_high":
-            tone = "steady, reliable"
-            instruction = f"Acknowledge solid {m['group'].upper()} ({m['group_label']}). Emphasize {m['meter_name']} as the driver."
-        elif band == "mid_low":
-            tone = "honest but not dire"
-            instruction = f"Name that {m['group'].upper()} is challenged ({m['group_label']}). Emphasize {m['meter_name']} as the main issue."
-        else:  # low
-            tone = "compassionate, rest-focused"
-            instruction = f"Validate that {m['group'].upper()} is depleted ({m['group_label']}). Emphasize {m['meter_name']} as the main issue."
+    if len(featured_list) == 1:
+        # Single meter case - determine pattern based on score
+        band = bands[0]
+        if band in ("high", "mid_high"):
+            pattern = "one_positive"
+        else:
+            pattern = "one_negative"
 
         return {
-            "pattern": f"single_{band}",
             "conjunction": None,
-            "tone": tone,
+            "pattern": pattern,
+            "headline_mode": headline_mode,
             "meter_count": 1,
             "meters": meters_info,
-            "instruction": instruction,
+            "mode_style": mode_data["style"],
+            "mode_formula": mode_data["formula"],
+            "mode_rules": mode_data["rules"],
+            "mode_example": mode_data["examples"][pattern],
         }
 
     # Two meters - use the 16-case matrix
-    m1, m2 = meters_info[0], meters_info[1]
-    band1, band2 = m1["band"], m2["band"]
+    band1, band2 = bands[0], bands[1]
 
-    pattern, conjunction, tone = HEADLINE_MATRIX.get(
+    pattern, conjunction = HEADLINE_MATRIX.get(
         (band1, band2),
-        ("mixed", "and", "balanced")  # fallback
+        ("contrast", "and")  # fallback
     )
 
-    # Generate specific instruction based on pattern
-    instruction = _build_headline_instruction(pattern, conjunction, tone, m1, m2)
-
     return {
-        "pattern": pattern,
         "conjunction": conjunction,
-        "tone": tone,
+        "pattern": pattern,
+        "headline_mode": headline_mode,
         "meter_count": 2,
         "meters": meters_info,
-        "instruction": instruction,
+        "mode_style": mode_data["style"],
+        "mode_formula": mode_data["formula"],
+        "mode_rules": mode_data["rules"],
+        "mode_example": mode_data["examples"][pattern],
     }
-
-
-def _build_headline_instruction(
-    pattern: str,
-    conjunction: str,
-    tone: str,
-    m1: dict,
-    m2: dict
-) -> str:
-    """Build concrete instruction text for the LLM based on pattern."""
-
-    g1, gl1, mn1 = m1["group"].upper(), m1["group_label"], m1["meter_name"]
-    g2, gl2, mn2 = m2["group"].upper(), m2["group_label"], m2["meter_name"]
-
-    # Pattern-specific instructions
-    instructions = {
-        "both_thriving": (
-            f"Celebrate {g1} ({gl1}) AND {g2} ({gl2}). "
-            f"Use 'and'. Expansive tone. Drivers: {mn1} and {mn2}."
-        ),
-        "strong_and_solid": (
-            f"Lead with {g1} ({gl1}) AND {g2} ({gl2}) supports it. "
-            f"Use 'and'. Drivers: {mn1} and {mn2}."
-        ),
-        "solid_and_strong": (
-            f"{g1} ({gl1}) is solid AND {g2} ({gl2}) is even stronger. "
-            f"Use 'and'. Drivers: {mn1} and {mn2}."
-        ),
-        "both_solid": (
-            f"Both {g1} ({gl1}) and {g2} ({gl2}) are reliable. "
-            f"Use 'and'. Steady tone. Drivers: {mn1} and {mn2}."
-        ),
-        "contrast_up": (
-            f"{g1} ({gl1}) is struggling BUT {g2} ({gl2}) is strong. "
-            f"Use 'but' to pivot. Drivers: {mn1} and {mn2}."
-        ),
-        "stark_contrast_up": (
-            f"Be honest: {g1} ({gl1}) is hard. BUT {g2} ({gl2}) is strong - anchor there. "
-            f"Use 'but'. Drivers: {mn1} and {mn2}."
-        ),
-        "slight_contrast": (
-            f"{g1} ({gl1}) and {g2} ({gl2}) are mismatched. "
-            f"Use 'but' for gentle pivot. Drivers: {mn1} and {mn2}."
-        ),
-        "contrast_down": (
-            f"Lead with {g1} ({gl1}) BUT {g2} ({gl2}) needs care. "
-            f"Use 'but'. Drivers: {mn1} and {mn2}."
-        ),
-        "both_struggling": (
-            f"Both {g1} ({gl1}) AND {g2} ({gl2}) are challenged. "
-            f"Use 'and' - no fake contrast. Compassionate. Drivers: {mn1} and {mn2}."
-        ),
-        "both_low": (
-            f"{g1} ({gl1}) AND {g2} ({gl2}) are both depleted. "
-            f"Use 'and'. Rest-focused. Drivers: {mn1} and {mn2}."
-        ),
-        "both_depleted": (
-            f"{g1} ({gl1}) AND {g2} ({gl2}) are both at the bottom. "
-            f"Use 'and'. Survival mode is okay. Drivers: {mn1} and {mn2}."
-        ),
-    }
-
-    return instructions.get(pattern, (
-        f"Combine {g1} ({gl1}) {conjunction.upper()} {g2} ({gl2}). "
-        f"Tone: {tone}. Drivers: {mn1} and {mn2}."
-    ))
 
 
 def generate_overview_guidance(
@@ -1563,23 +1618,23 @@ def generate_overview_guidance(
     all_group_info.sort(key=lambda g: g["distance_from_neutral"], reverse=True)
 
     # Select highlights for overview:
-    # 1. ALWAYS include headline groups (so LLM has context for what it's writing)
-    # 2. Add most extreme non-headline groups (up to 1-2 more)
+    # Goal: cover ~3 groups total between headline + overview
+    # - If headline has 2 meters: add 1 most extreme non-headline group
+    # - If headline has 1 meter: add 2 most extreme non-headline groups
+    # - DO NOT include headline groups (they're already covered)
+    headline_meter_count = len(featured_list)
+    max_overview_groups = 3 - headline_meter_count  # 1 or 2 depending on headline
+
     overview_highlights = []
-
-    # First: add ALL headline groups (critical for LLM context)
     for group in all_group_info:
-        if group["in_headline"]:
-            overview_highlights.append(group)
-
-    # Then: add most extreme non-headline groups (up to ~3 total)
-    for group in all_group_info:
-        if len(overview_highlights) >= 3:
+        if len(overview_highlights) >= max_overview_groups:
             break
-        if not group["in_headline"]:
-            # Only include if interesting (outside 40-60 range)
-            if group["group_score"] < 40 or group["group_score"] > 60:
-                overview_highlights.append(group)
+        # Skip groups already in headline
+        if group["in_headline"]:
+            continue
+        # Only include if interesting (outside 40-60 range)
+        if group["group_score"] < 40 or group["group_score"] > 60:
+            overview_highlights.append(group)
 
     # Format for template - no labels, just scores and guidance
     formatted_highlights = []

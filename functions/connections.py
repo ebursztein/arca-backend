@@ -23,7 +23,7 @@ from astro import get_sun_sign, ZodiacSign, compute_birth_chart, NatalChartData
 from models import VALID_SUN_SIGNS
 from relationships import RelationshipCategory, RelationshipLabel
 
-from compatibility import calculate_synastry_points, calculate_compatibility
+from compatibility import calculate_synastry_points, calculate_synastry_aspects
 
 
 # Constants
@@ -988,11 +988,11 @@ def calculate_and_cache_synastry(
         # Calculate synastry points (midpoints for transit tracking)
         synastry_points = calculate_synastry_points(user_chart, conn_chart)
 
-        # Calculate full compatibility to get aspects
-        compatibility = calculate_compatibility(user_chart, conn_chart)
+        # Calculate synastry aspects for display (raw aspects, no relationship_type needed)
+        aspects = calculate_synastry_aspects(user_chart, conn_chart)
 
         # Get top 6 tightest aspects for display
-        sorted_aspects = sorted(compatibility.aspects, key=lambda a: a.orb)[:6]
+        sorted_aspects = sorted(aspects, key=lambda a: a.orb)[:6]
         synastry_aspects = [
             {
                 "user_planet": asp.user_planet,

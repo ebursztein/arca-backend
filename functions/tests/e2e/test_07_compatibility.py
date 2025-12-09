@@ -432,7 +432,7 @@ def friendship_user_profile(friendship_user_id):
 
 @pytest.fixture(scope="module")
 def friendship_connection_id(friendship_user_profile):
-    """Create friendship connection - Maya (best friend)."""
+    """Create friendship connection - Maya (close friend)."""
     conn_result = call_function("create_connection", {
         "user_id": friendship_user_profile,
         "connection": {
@@ -443,7 +443,7 @@ def friendship_connection_id(friendship_user_profile):
             "birth_lat": 39.7392,
             "birth_lon": -104.9903,
             "relationship_category": "friend",
-            "relationship_label": "best_friend",
+            "relationship_label": "close_friend",  # Valid label (not 'best_friend')
         }
     })
     return conn_result["connection_id"]
@@ -532,7 +532,7 @@ def coworker_user_profile(coworker_user_id):
 
 @pytest.fixture(scope="module")
 def coworker_connection_id(coworker_user_profile):
-    """Create coworker connection - Jordan (boss)."""
+    """Create coworker connection - Jordan (manager)."""
     conn_result = call_function("create_connection", {
         "user_id": coworker_user_profile,
         "connection": {
@@ -543,7 +543,7 @@ def coworker_connection_id(coworker_user_profile):
             "birth_lat": 41.8781,
             "birth_lon": -87.6298,
             "relationship_category": "coworker",
-            "relationship_label": "boss",
+            "relationship_label": "manager",  # Valid label (not 'boss')
         }
     })
     return conn_result["connection_id"]

@@ -563,7 +563,7 @@ def assert_natal_chart_contract(response: dict) -> None:
 
     # Validate planets
     if "planets" in response:
-        assert len(response["planets"]) == 11, "Expected 11 planets"
+        assert len(response["planets"]) == 12, "Expected 12 planets (10 + North Node + South Node)"
         for i, planet in enumerate(response["planets"]):
             assert_ios_contract(
                 planet,

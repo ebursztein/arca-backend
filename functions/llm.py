@@ -687,8 +687,9 @@ def select_featured_connection(
     """
     Select ONE connection to feature in today's relationship_weather.
 
-    Uses round-robin rotation, prioritizing connections not recently featured.
-    Uses connection_mentions in memory to track what was last featured.
+    - 20% chance to skip featuring anyone (feels more natural)
+    - Enforces minimum 7-day gap before featuring same connection again
+    - Randomly selects from eligible connections to avoid predictable patterns
 
     Args:
         connections: List of connection dicts from Firestore
@@ -696,36 +697,47 @@ def select_featured_connection(
         date: Today's date (YYYY-MM-DD)
 
     Returns:
-        Connection dict to feature, or None if no connections exist
+        Connection dict to feature, or None if no connections, all were
+        featured within last 7 days, or random skip triggered
     """
+    import random
+    from datetime import datetime, timedelta
+
     if not connections:
         return None
 
-    # Get recently featured connection IDs from memory
-    recent_mentions = memory.connection_mentions or []
-    recently_featured_ids = {m.connection_id for m in recent_mentions[-10:]}
+    # 20% chance to skip featuring anyone - feels more natural
+    if random.random() < 0.2:
+        return None
 
-    # Prioritize connections NOT recently featured
-    not_recently_featured = [
+    # Parse today's date
+    today = datetime.strptime(date, "%Y-%m-%d")
+    one_week_ago = today - timedelta(days=7)
+
+    # Find connections featured within last 7 days
+    recent_mentions = memory.connection_mentions or []
+    recently_featured_ids = set()
+
+    for m in recent_mentions:
+        try:
+            mention_date = datetime.strptime(m.date, "%Y-%m-%d")
+            if mention_date > one_week_ago:
+                recently_featured_ids.add(m.connection_id)
+        except ValueError:
+            pass
+
+    # Filter to connections NOT featured in the last 7 days
+    eligible_connections = [
         c for c in connections
         if c.get("connection_id") not in recently_featured_ids
     ]
 
-    if not_recently_featured:
-        # Pick first not recently featured (could add priority by relationship_category/label)
-        return not_recently_featured[0]
+    if eligible_connections:
+        # Randomly select from eligible pool
+        return random.choice(eligible_connections)
 
-    # All have been featured recently - pick the one featured longest ago
-    if recent_mentions:
-        mention_dates = {m.connection_id: m.date for m in recent_mentions}
-        sorted_by_oldest = sorted(
-            connections,
-            key=lambda c: mention_dates.get(c.get("connection_id"), "1900-01-01")
-        )
-        return sorted_by_oldest[0]
-
-    # Fallback: just pick the first one
-    return connections[0]
+    # All connections were featured in the last 7 days - don't feature anyone
+    return None
 
 
 def update_memory_with_connection_mention(
@@ -775,6 +787,47 @@ def update_memory_with_connection_mention(
     return memory
 
 
+def _build_relationship_weather(
+    llm_response,  # RelationshipWeatherResponse from LLM
+    featured_connection: Optional[dict]
+) -> RelationshipWeather:
+    """
+    Build RelationshipWeather from LLM response.
+
+    Args:
+        llm_response: LLM's RelationshipWeatherResponse with overview + connection_vibe
+        featured_connection: The featured connection dict (or None)
+
+    Returns:
+        RelationshipWeather with overview and connection_vibes populated
+    """
+    connection_vibes = []
+
+    # If we have a featured connection AND the LLM generated a vibe for it
+    if featured_connection and llm_response.connection_vibe:
+        from models import ConnectionVibe
+
+        # Get vibe_score from featured_connection (computed in main.py)
+        vibe_score = featured_connection.get("vibe_score", 50)
+        active_transits = featured_connection.get("active_transits", [])
+
+        connection_vibe = ConnectionVibe(
+            connection_id=featured_connection.get("connection_id", ""),
+            name=featured_connection.get("name", ""),
+            relationship_category=featured_connection.get("relationship_category", "friend"),
+            relationship_label=featured_connection.get("relationship_label", "friend"),
+            vibe=llm_response.connection_vibe,  # LLM-generated text!
+            vibe_score=vibe_score,
+            key_transit=active_transits[0]["description"] if active_transits else None
+        )
+        connection_vibes.append(connection_vibe)
+
+    return RelationshipWeather(
+        overview=llm_response.overview,
+        connection_vibes=connection_vibes
+    )
+
+
 def generate_daily_horoscope(
     date: str,
     user_profile: UserProfile,
@@ -785,6 +838,7 @@ def generate_daily_horoscope(
     api_key: Optional[str] = None,
     posthog_api_key: Optional[str] = None,
     model_name: str = "gemini-2.5-flash-lite",
+    yesterday_meters: Optional[list[str]] = None,
 ) -> DailyHoroscope:
     """
     Generate daily horoscope (Prompt 1) - core transit analysis (async internal).
@@ -799,6 +853,7 @@ def generate_daily_horoscope(
         api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
         posthog_api_key: PostHog API key for observability
         model_name: Model to use (default: gemini-2.5-flash-lite)
+        yesterday_meters: Optional list of meter names featured in yesterday's headline (to avoid repetition)
 
     Returns:
         DailyHoroscope with all fields populated
@@ -863,12 +918,13 @@ def generate_daily_horoscope(
     groups_summary = meter_groups_summary(meter_groups)
 
     # Select featured meters for programmatic curation
-    # Logic: 2 meters if contrast (one flowing, one pushing), 1 if same direction
+    # Logic: Randomly select from 6 patterns, exclude yesterday's meters for variety
     from astrometers.meters import select_featured_meters
     featured = select_featured_meters(
         all_meters=astrometers,
         user_id=user_profile.user_id,
         date=date,
+        yesterday_meters=yesterday_meters,
     )
 
     # Get comprehensive moon transit detail
@@ -1030,6 +1086,30 @@ def generate_daily_horoscope(
 
         key_transits.append(transit_str)
 
+    # Extract relationship-specific data for the template
+    # Heart group (connections, vulnerability, resilience)
+    heart_group = next((g for g in all_groups if g["name"] == "heart"), None)
+
+    # Venus/Mars transits (relationship planets)
+    relationship_transits = []
+    for asp in astrometers.key_aspects[:10]:  # Check more aspects
+        planet = asp.transit_planet.value.lower()
+        if planet in ("venus", "mars"):
+            house = _ordinal(asp.natal_planet_house)
+            phase = _get_phase(asp)
+            quality = "harmonious" if asp.polarity > 0 else "challenging" if asp.polarity < 0 else "neutral"
+            relationship_transits.append({
+                "planet": planet.title(),
+                "aspect": asp.aspect_type.value,
+                "natal_planet": asp.natal_planet.value.title(),
+                "house": house,
+                "quality": quality,
+                "phase": phase,
+                "description": f"{planet.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()} in {house} house ({quality})"
+            })
+        if len(relationship_transits) >= 3:
+            break
+
     # Render dynamic template with featured connection (replacing entities)
     dynamic_template = jinja_env.get_template("horoscope/daily_dynamic.j2")
     dynamic_prompt = dynamic_template.render(
@@ -1047,9 +1127,13 @@ def generate_daily_horoscope(
         # Void-of-course guidance (programmatic, overrides actionable_advice direction)
         is_void_of_course=is_void_of_course,
         void_guidance=void_guidance,
-        # Connection data for relationship weather section
+        # Relationship data for general relationship_weather.overview
+        heart_group=heart_group,  # Heart meter group (connections, vulnerability, resilience)
+        relationship_transits=relationship_transits,  # Venus/Mars transits
+        # Connection data for connection-specific vibe (when featured_connection exists)
         has_relationships=featured_connection is not None,
-        featured_connection=featured_connection
+        featured_connection=featured_connection,
+        user_name=user_profile.name
     )
 
     # Calculate age and generation
@@ -1093,6 +1177,11 @@ def generate_daily_horoscope(
         print("\n[yellow]End of Prompt[/yellow]\n")
 
     # Define response schema
+    class RelationshipWeatherResponse(BaseModel):
+        """LLM response for relationship weather - overview + optional connection vibe."""
+        overview: str  # General relationship energy for ALL relationships (no names)
+        connection_vibe: Optional[str] = None  # Personalized vibe for featured connection (with name)
+
     class DailyHoroscopeResponse(BaseModel):
         technical_analysis: str
         lunar_cycle_update: str
@@ -1112,7 +1201,7 @@ def generate_daily_horoscope(
 
         # Phase 1 Extensions
         energy_rhythm: str
-        relationship_weather: str
+        relationship_weather: RelationshipWeatherResponse  # Now a nested object
         collective_energy: str
 
         # Engagement
@@ -1205,6 +1294,11 @@ def generate_daily_horoscope(
         # Populate moon_detail.interpretation with LLM output
         moon_detail.interpretation = parsed.lunar_cycle_update
 
+        # Extract featured meter names for storage (to avoid repeating tomorrow)
+        featured_meter_names = [
+            item["meter"].meter_name for item in featured.get("featured_list", [])
+        ]
+
         horoscope = DailyHoroscope(
             date=date,
             sun_sign=user_profile.sun_sign,
@@ -1217,17 +1311,19 @@ def generate_daily_horoscope(
             moon_detail=moon_detail,
             look_ahead_preview=parsed.look_ahead_preview,
             energy_rhythm=parsed.energy_rhythm,
-            # Wrap LLM string response in RelationshipWeather object
-            # connection_vibes will be populated separately when connections exist
-            relationship_weather=RelationshipWeather(
-                overview=parsed.relationship_weather,
-                connection_vibes=[]
+            # Use LLM-generated relationship weather
+            # overview: general relationship energy (no names)
+            # connection_vibes: populated here with LLM-generated vibe text for featured connection
+            relationship_weather=_build_relationship_weather(
+                parsed.relationship_weather,
+                featured_connection
             ) if parsed.relationship_weather else None,
             collective_energy=parsed.collective_energy,
             follow_up_questions=parsed.follow_up_questions,
             model_used=model_name,
             generation_time_ms=generation_time_ms,
-            usage=usage
+            usage=usage,
+            featured_meters=featured_meter_names,
         )
 
         return horoscope
@@ -1451,26 +1547,39 @@ Theme: {karmic.theme}
         "powerDynamics": "Authority and control - Pluto-Sun, Pluto-Mars",
     }
 
-    # Build enhanced category context with explanations
-    # Scores are 0-100 where 50 is neutral
+    # Import headline guidance generator
+    from compatibility_labels.labels import generate_compat_headline_guidance, get_overall_guidance
+
+    # Build enhanced category context with labels and guidance from JSON
     categories_with_explanations = []
     for cat in mode.categories:
-        # Score interpretation for 0-100 scale (50 = neutral)
-        if cat.score >= 70:
-            score_label = "strong - rare, indicates genuine resonance"
-        elif cat.score >= 55:
-            score_label = "positive - good natural fit"
-        elif cat.score >= 45:
-            score_label = "neutral - typical, neither strong nor weak"
-        elif cat.score >= 30:
-            score_label = "challenging - requires awareness and effort"
-        else:
-            score_label = "difficult - rare, indicates significant friction"
+        # Use the label from JSON config (already populated in calculate_mode_compatibility)
+        label_display = f'"{cat.label}"' if cat.label else ""
 
-        explanation = category_explanations.get(cat.id, "")
+        # Build driving aspects context
+        driving_context = ""
+        if cat.driving_aspects:
+            driving_lines = [f"    - {da.summary}" for da in cat.driving_aspects[:2]]
+            driving_context = "\n" + "\n".join(driving_lines)
+
+        # Get explanation from category_explanations or fall back to description
+        explanation = category_explanations.get(cat.id, cat.description)
+
         categories_with_explanations.append(
-            f"- {cat.id} ({cat.name}): {cat.score} [{score_label}]\n  What it measures: {explanation}"
+            f"- {cat.id} ({cat.name}): {cat.score}, Label: {label_display}\n"
+            f"  Description: {cat.description}\n"
+            f"  LLM Guidance: Use the label {label_display} in your insight.{driving_context}"
         )
+
+    # Generate headline guidance using the 25-case matrix
+    categories_for_matrix = [
+        {"id": cat.id, "name": cat.name, "score": cat.score}
+        for cat in mode.categories
+    ]
+    headline_guidance = generate_compat_headline_guidance(categories_for_matrix, mode.type)
+
+    # Get overall guidance
+    overall_guidance = get_overall_guidance(mode.overall_score)
 
     prompt = f"""{voice_content}
 
@@ -1518,8 +1627,24 @@ Scores are 0-100 where 50 is neutral. Most scores fall in the 35-65 range.
 Extreme scores (above 75 or below 25) are uncommon and indicate either exceptional chemistry or notable friction.
 
 Overall Score: {mode.overall_score}/100
+Overall Label: "{mode.overall_label}"
+Overall Guidance: {overall_guidance}
 
-CATEGORY SCORES (what each area measures):
+HEADLINE GUIDANCE (use this to structure your narrative):
+Pattern: {headline_guidance["pattern"]}
+Conjunction: "{headline_guidance["conjunction"]}"
+Tone: {headline_guidance["tone"]}
+Instruction: {headline_guidance["instruction"]}
+
+TOP FOCUS AREA:
+- {headline_guidance["top_category"].get("name", "N/A")} (score: {headline_guidance["top_category"].get("score", "N/A")}, label: "{headline_guidance["top_category"].get("label", "")}")
+- Guidance: {headline_guidance["top_category"].get("guidance", "")}
+
+BOTTOM FOCUS AREA:
+- {headline_guidance["bottom_category"].get("name", "N/A")} (score: {headline_guidance["bottom_category"].get("score", "N/A")}, label: "{headline_guidance["bottom_category"].get("label", "")}")
+- Guidance: {headline_guidance["bottom_category"].get("guidance", "")}
+
+CATEGORY SCORES (with labels and guidance):
 {chr(10).join(categories_with_explanations)}
 
 KEY ASPECTS (planetary connections creating the chemistry):
@@ -1632,12 +1757,16 @@ For "Difficult" or "Challenging" categories, the path forward should be about re
             score=cat.score,
             insight=insights_dict.get(cat.id),
             aspect_ids=cat.aspect_ids,  # Preserve aspect_ids from calculation
+            label=cat.label,  # Preserve label from calculation
+            description=cat.description,  # Preserve description from calculation
+            driving_aspects=cat.driving_aspects,  # Preserve driving_aspects from calculation
         ))
 
     # Build enriched mode
     enriched_mode = ModeCompatibility(
         type=mode.type,
         overall_score=mode.overall_score,
+        overall_label=mode.overall_label,  # Preserve overall_label from calculation
         vibe_phrase=llm_result.get("vibe_phrase"),
         categories=enriched_categories,
     )

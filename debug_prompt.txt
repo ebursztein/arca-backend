@@ -140,7 +140,7 @@ When in doubt, stay grounded, kind, and honest. Name the tension. Point to their
 
 # DAILY HOROSCOPE SPECIFICS
 
-**Input:** TODAY'S ENERGY FOCUS data, User Profile, and Relationship data.
+**Input:** TODAY'S ENERGY FOCUS data and User Profile. If a connection is featured, you will also receive CONNECTION VIBE data about that specific person.
 **Output:** A valid JSON object containing personalized daily guidance.
 
 ---
@@ -157,11 +157,11 @@ Each meter group shows:
 - **Trend:** How this meter is changing compared to yesterday (when available)
 
 ### Using Drivers (CRITICAL)
-The **Driver** tells you the SPECIFIC cause. Don't just say "your mind is foggy" - name the driver and why:
-- Driver "Clarity" with "Saturn square natal Sun" → "Your thinking feels sluggish - Saturn is pressing on your mental energy"
-- Driver "Vulnerability" with "South Node trine natal Neptune" → "You're emotionally open right now - Neptune is softening your guard"
+The **Driver** tells you the SPECIFIC cause. Don't just say "your mind is foggy" - name the driver and put the why at the END:
+- Driver "Clarity" with "Saturn square natal Sun" → "Your thinking feels sluggish today. Don't force big decisions - Saturn is pressing on your Sun."
+- Driver "Vulnerability" with "South Node trine natal Neptune" → "You're emotionally open right now. Let yourself feel things - Neptune is softening your guard."
 
-In meter interpretations, ALWAYS cite the Driver's "Why" transit to explain the state.
+In meter interpretations, ALWAYS cite the Driver's "Why" transit at the END to explain the state.
 
 ### Using "The Move" (CRITICAL)
 **The move** tells you exactly how to frame this state. Follow it:
@@ -180,7 +180,7 @@ Use trends to add nuance in daily_overview and meter interpretations:
 - Rising trend + low score = "things are starting to shift"
 - Falling trend + high score = "enjoy this while it lasts"
 - Rapid change = worth mentioning the volatility
-- Example: "Your energy is low, but it's climbing"
+- Example: "Your energy is low, but it's climbing. Rest now and you'll feel the lift by evening - Mars is moving off your Saturn."
 
 **OVERALL score** sets the day's tone. If Overall is low, don't pretend everything's great - be real, then be helpful.
 
@@ -194,11 +194,19 @@ Acknowledge how TODAY'S ENERGY specifically supports or challenges *their* sign:
 
 Name the friction, then show the path through it.
 
-### 2.2 THE SPOTLIGHT RULE
-Check `[RELATIONSHIPS]` section. If a person is marked **SPOTLIGHT**:
-- They are the **focus** of the `relationship_weather` section
-- Use their notes/context to make advice specific and helpful
-- Frame advice empoweringly: how can the user show up as their best self?
+### 2.2 RELATIONSHIP WEATHER
+The `relationship_weather` field has two parts:
+
+**relationship_weather.overview** (ALWAYS required):
+- About the USER's general relationship energy today based on HEART meter and Venus/Mars transits
+- Do NOT mention any specific person by name here
+- Example: "Sarah, you're feeling open and warm today. Good energy for connecting - Venus is trining your Moon."
+
+**relationship_weather.connection_vibe** (ONLY when [CONNECTION VIBE] section exists):
+- About the user's dynamic with ONE specific connection
+- Use their name and reference the synastry data provided
+- Frame it around what the user might feel or notice with this person today
+- Example: "You and Jake are in sync right now. Good time to make plans together - Venus is lighting up your connection."
 
 ---
 
@@ -220,7 +228,8 @@ Each field serves a specific purpose in the user experience. Here's what goes wh
 | `instincts_interpretation` | Intuition state | Cite the Why transit | 1-2 sentences |
 | `growth_interpretation` | Momentum state | Cite the Why transit | 1-2 sentences |
 | `energy_rhythm` | Day timing guidance | Based on Moon position | Helps plan WHEN to act |
-| `relationship_weather` | Connection guidance | SPOTLIGHT person + HEART state | Reference connection by name |
+| `relationship_weather.overview` | User's relationship energy | HEART meter + Venus/Mars transits | No names, just user's general connection energy |
+| `relationship_weather.connection_vibe` | Vibe with specific connection | Data from [CONNECTION VIBE] section | Use their name, what user feels with them today |
 | `collective_energy` | Shared experience | Based on outer planets | Validates they're not alone |
 | `look_ahead_preview` | Week preview | From [NEXT 7 DAYS] | Something to look forward to |
 | `follow_up_questions` | Prompts reflection | 5 simple, direct questions | No astro jargon |
@@ -228,13 +237,16 @@ Each field serves a specific purpose in the user experience. Here's what goes wh
 ### Field Examples
 
 **daily_theme_headline:**
-Use the conjunction from [HEADLINE GUIDANCE]:
-- both_thriving (and): "Maya, your mind is sharp and your energy is high - go big."
-- both_struggling (and): "Maya, your head's foggy and your heart's heavy - rest today."
-- contrast (but): "Maya, your head's clear but your body's tired - plan, don't push."
+iOS NOTIFICATION. Max 12 words.
+- Include user's name (for provocative mode) or "you/your" (for other modes)
+- Include "today" (temporality is required)
+- Be meter-specific based on [HEADLINE GUIDANCE]
+- Follow the VOICE MODE, Style, Formula, and Example from [HEADLINE GUIDANCE]
+
+DO NOT use: flowery language ("hums", "fragile", "quiet", "power"), generic statements, teasers without standalone value
 
 **daily_overview:**
-"Your thinking is sharp but your body's dragging - that's real. Mercury is trining your natal Jupiter, lighting up your mind. But Mars is squaring your natal Saturn, draining your energy. As a Gemini, let your brain lead today. Plan, strategize, decide - but skip the physical stuff."
+"Your thinking is sharp but your body's dragging - that's real. As a Gemini, let your brain lead today. Plan, strategize, decide - but skip the physical stuff. Mercury is trining your Jupiter while Mars squares your Saturn."
 
 **technical_analysis:**
 "Three transits are shaping today: Saturn squares your natal Sun in your 10th house (Gemini) - that's the weight on your energy. Mercury trines your natal Jupiter in your 3rd house - your mind stays sharp despite the drag. Venus opposes your natal Mercury, exact and challenging - conversations may feel tense. This is a thinking day, not a doing day."
@@ -245,20 +257,23 @@ Use the conjunction from [HEADLINE GUIDANCE]:
 - reflect_on: "What have you been overthinking that's actually simple?"
 
 **meter interpretations:**
-- mind (Crystal Clear): "Your thinking is sharp - Mercury is trining your natal Jupiter. Decisions that felt murky yesterday are clear now."
-- body (Drained): "Your body's running on empty - Mars is squaring your natal Saturn. Rest isn't optional today."
+- mind (Crystal Clear): "Your thinking is sharp. Decisions that felt murky yesterday are clear now - Mercury is trining your Jupiter."
+- body (Drained): "Your physical energy is running low today. Rest isn't optional - Mars is squaring your Saturn."
 
 **energy_rhythm:**
-"Morning's slow - don't schedule important calls. Energy picks up after 2pm."
+"Morning's slow - don't schedule important calls. Energy picks up after 2pm when the Moon moves into a stronger position."
 
-**relationship_weather (HEART Heavy):**
-"Things with Jake feel heavy right now. That's real. Today's not the day to hash it out - your heart needs space."
+**relationship_weather.overview:**
+"Sarah, you're warm and approachable today. Good day for reaching out or making plans with people you care about - Venus is trining your Moon."
+
+**relationship_weather.connection_vibe (only when [CONNECTION VIBE] section exists):**
+"You and Jake are in sync right now. If you've been meaning to reach out, today's the day - Venus is activating your connection."
 
 **collective_energy:**
 "Everyone's tired right now. It's not just you. Saturn's been grinding on all of us."
 
 **look_ahead_preview:**
-"Thursday's your day this week. Venus hits your sign - good for money talks, relationship stuff."
+"Thursday will be your day this week. Good time for important conversations and reconnecting with someone - Venus hits your sign."
 
 **follow_up_questions:**
 Simple, direct questions like: "What decision are you avoiding?" or "Who do you need to call?"
@@ -296,71 +311,85 @@ Use this data to build continuity, reference explored themes, avoid repetition, 
 Category Interests:
   (First time user - no history yet)
 
-TODAY'S READING (2025-12-05)
+TODAY'S READING (2025-12-08)
 
 ================================================================================
 HEADLINE GUIDANCE (for daily_theme_headline)
 ================================================================================
-For the headline, emphasize the following meters:
 
-INSTINCTS: 52/100
-  Driver: intuition (52/100)
-  What intuition is: Intuition represents your access to inner knowing, psychic awareness, and ability to sense what isn't visible.
-  Planets tracked: Uranus, Neptune
+HEART: 43/100 (Tender)
+  Driver: resilience
   Why: Saturn square natal Uranus
-  Trend: increasing (stable, +1 from yesterday)
 
-GROWTH: 46/100
-  Driver: evolution (46/100)
-  What evolution is: Evolution represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.
-  Planets tracked: Jupiter, Uranus
-  Why: Saturn square natal Uranus
-  Trend: increasing (rapid, +12 from yesterday)
+INSTINCTS: 57/100 (Tuned In)
+  Driver: flow
+  Why: Neptune square natal Neptune
 
-Combine using "and" - one area is up, one is down.
+Use "but" to connect both areas.
+
+VOICE MODE: personalized
+Style: Names the transit behind the vibe and gives you a path through. Uses 'you/your'.
+Formula: [Planet] is [doing X] today. [How you handle it].
+Rules:
+- Reference the main planet shaping the state (e.g. Mercury, Venus, Mars, Neptune).
+- Optionally mention a second planet if it's meaningful (e.g. 'Mercury and Mars').
+- Use 'you' or 'your' at least once.
+- Include the word 'today' for temporality in at least one sentence.
+- End with supportive guidance (the path through).
+- No emoji.
+- Avoid astro jargon (no houses/aspects; keep it simple and human).
+
+Example: Mercury's clear but Mars is low today. Let your mind lead.
 
 ================================================================================
 OVERVIEW GUIDANCE (for daily_overview)
 ================================================================================
 Overall: 50/100
-Name the instability and swings; coach grounding, flexibility, and not overreacting to sudden emotional/energy spikes.
+Frame the day as workable and fairly even; good for handling normal life and taking modest, steady steps forward.
 
 Highlights to cover:
 
-GROWTH: 57/100
-  Driver: evolution (46/100)
-  What evolution is: Evolution represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.
-  Planets tracked: Jupiter, Uranus
-  Why: Saturn square natal Uranus
-  Trend: increasing (rapid, +12 from yesterday)
-  How to write about it: Affirm that progress is happening; suggest continuing consistent action and noticing the small wins.
+MIND: 72/100
+  Driver: communication (72/100)
+  What communication is: Communication represents how easily you express yourself, connect through words, and understand others in conversations.
+  Planets tracked: Mercury
+  Why: Neptune square natal Mercury
+  Trend: decreasing (slow, -5 from yesterday)
+  How to write about it: Highlight that their thinking is reliable and focused; good moment for planning, problem-solving, and clear conversations.
 
-INSTINCTS: 51/100
-  Driver: intuition (52/100)
-  What intuition is: Intuition represents your access to inner knowing, psychic awareness, and ability to sense what isn't visible.
-  Planets tracked: Uranus, Neptune
-  Why: Saturn square natal Uranus
-  Trend: increasing (stable, +1 from yesterday)
-  How to write about it: Affirm that their intuition is fairly trustworthy; encourage listening to body cues and subtle nudges.
+================================================================================
+RELATIONSHIP WEATHER (for relationship_weather.overview)
+================================================================================
+This is about Elie's general energy for connecting with others today.
+Do NOT mention any specific person by name here.
 
-HEART: 28/100
-  Driver: resilience (22/100)
-  What resilience is: Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.
-  Planets tracked: Moon
-  Why: Saturn square natal Uranus
-  Trend: decreasing (moderate, -7 from yesterday)
-  How to write about it: Name their sensitivity; suggest soft boundaries, honest feelings shared in safe spaces, and not forcing tough talks.
+
+HEART METER:
+- Score: 52/100
+- Driver: resilience (Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.)
+- Key aspect: Saturn square natal Uranus in 4th house (Sagittarius)
+
+
+RELATIONSHIP TRANSITS (Venus/Mars activity):
+- Venus opposition natal Sun in 9th house (challenging)
 
 
 ================================================================================
-RELATIONSHIPS (for relationship_weather)
+CONNECTION VIBE (for relationship_weather.connection_vibe)
 ================================================================================
+This is about Elie's dynamic with John today.
+Write 1-2 sentences using their name. Focus on what Elie might feel or notice with this person.
 
-SPOTLIGHT: John
+CONNECTION DETAILS:
+- Name: John
 - Relationship: /
-- Sun sign: Leo
-- Recent notes: Feeling some tension lately
+- Their sun sign: Leo
 
+
+TODAY'S CONNECTION ENERGY:
+
+
+- Notes: Feeling some tension lately
 
 
 ================================================================================
@@ -371,107 +400,116 @@ LUNAR CLIMATE - Your Emotional Weather Right Now
 ═══════════════════════════════════════════════════════════════════
 
 [CURRENT LUNAR POSITION]
-├─ Phase: Full Moon 🌕 (95% illuminated)
-├─ Sign: Gemini (21.2°)
-├─ House: 1st (self, identity, appearance)
-└─ Void of Course: Not Void
+├─ Phase: Waning Gibbous 🌖 (72% illuminated)
+├─ Sign: Leo (5.4°)
+├─ House: 3rd (communication, siblings, short trips)
+└─ Void of Course: Active
 
 [PHASE WISDOM]
-├─ Energy: Culmination, illumination, release
-└─ Ritual: Celebrate and let go
+├─ Energy: Gratitude, sharing wisdom
+└─ Ritual: Give back, teach others
 
 [EMOTIONAL TONE]
-└─ Gemini Moon brings mental stimulation, curiosity, and emotional versatility
+└─ Leo Moon brings warmth, generosity, and desire for recognition
 
 [ACTIVE MOON ASPECTS - Next 2-3 Hours]
-├─ Sextile natal Jupiter (0.1° orb, BUILDING) - opportunity
-├─ Opposition natal Saturn (2.8° orb, BUILDING) - awareness through contrast
+├─ Square natal Pluto (2.3° orb, BUILDING) - tension requiring action
+├─ Trine natal North Node (3.0° orb, BUILDING) - natural flow
+├─ Sextile natal South Node (3.0° orb, BUILDING) - opportunity
 
 [MOON'S DISPOSITOR]
-└─ Your emotional state is filtered through Mercury in Scorpio, expanded by beliefs and meaning-seeking
+└─ Your emotional state is filtered through Sun in Sagittarius, expanded by beliefs and meaning-seeking
 
 [TIMING GUIDANCE]
-└─ Moon is active. Good time for emotional processing and taking action on feelings.
+└─ Moon is void-of-course. Avoid starting new projects or making major decisions. Focus on reflection, completion, and rest.
+   Void ends: 05:56 AM UTC when Moon enters next sign
 
 [NEXT LUNAR EVENTS]
-├─ Sign Change: Moon enters Cancer in 13.9 hours
-├─ Next Aspect: Moon sextile natal Jupiter in 0.2 hours
-└─ Next Phase: New Moon in 13.1 days
+├─ Sign Change: Moon enters Virgo in 41.9 hours
+├─ Next Aspect: Moon square natal Pluto in 4.1 hours
+└─ Next Phase: New Moon in 9.9 days
+
+
+**VOID-OF-COURSE OVERRIDE (for actionable_advice)**
+The moon is void-of-course. This OVERRIDES normal actionable_advice guidance:
+- actionable_advice.do: Focus on: rest, reflection, editing, completing existing work (not starting new things)
+- actionable_advice.dont: Avoid: launching new initiatives, starting fresh projects, making big decisions
+- Note: The moon is void-of-course - new starts tend to fizzle. Not failure, just timing.
 
 
 ================================================================================
 NEXT 7 DAYS (for look_ahead_preview)
 ================================================================================
-TODAY (Friday):
-- Saturn square your natal Uranus (EXACT)
-- Moon sextile your natal Jupiter (EXACT)
-
-Day +1 - Saturday (2025-12-06):
-- Saturn square your natal Uranus (EXACT)
-- Moon conjunction your natal Mars
-
-Day +2 - Sunday (2025-12-07):
+TODAY (Monday):
 - Saturn square your natal Uranus (EXACT)
 - Sun trine your natal Moon
 
-Day +3 - Monday (2025-12-08):
-- Saturn square your natal Uranus (EXACT)
-- Sun trine your natal Moon
-
-Day +4 - Tuesday (2025-12-09):
+Day +1 - Tuesday (2025-12-09):
 - Saturn square your natal Uranus (EXACT)
 - Venus opposition your natal Sun
 
-Day +5 - Wednesday (2025-12-10):
+Day +2 - Wednesday (2025-12-10):
 - Saturn square your natal Uranus (EXACT)
 - Venus opposition your natal Sun
 
-Day +6 - Thursday (2025-12-11):
+Day +3 - Thursday (2025-12-11):
 - Saturn square your natal Uranus (EXACT)
 - Venus opposition your natal Sun
 
-Day +7 - Friday (2025-12-12):
+Day +4 - Friday (2025-12-12):
 - Saturn square your natal Uranus (EXACT)
 - Sun trine your natal Jupiter
+
+Day +5 - Saturday (2025-12-13):
+- Saturn square your natal Uranus (EXACT)
+- Venus trine your natal Moon (EXACT)
+
+Day +6 - Sunday (2025-12-14):
+- Saturn square your natal Uranus (EXACT)
+- Venus conjunction your natal Saturn
+
+Day +7 - Monday (2025-12-15):
+- Saturn square your natal Uranus (EXACT)
+- Venus conjunction your natal Saturn (EXACT)
 
 ================================================================================
 REFERENCE: ALL METER GROUPS
 ================================================================================
 
-MIND: 69/100
-  Driver: focus (76/100)
-  What focus is: Focus represents your ability to concentrate, stay on task, and direct your attention without distraction.
+MIND: 72/100
+  Driver: communication (72/100)
+  What communication is: Communication represents how easily you express yourself, connect through words, and understand others in conversations.
   Planets tracked: Mercury
   Why: Neptune square natal Mercury in 10th house (Cancer)
-  Trend: increasing (rapid, +23 from yesterday)
+  Trend: decreasing (slow, -5 from yesterday)
 
-HEART: 28/100
-  Driver: resilience (22/100)
+HEART: 52/100
+  Driver: resilience (43/100)
   What resilience is: Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.
   Planets tracked: Moon
   Why: Saturn square natal Uranus in 4th house (Sagittarius)
-  Trend: decreasing (moderate, -7 from yesterday)
+  Trend: increasing (slow, +4 from yesterday)
 
-BODY: 43/100
-  Driver: strength (45/100)
-  What strength is: Strength represents your daily health routines, work-life balance, and overall sense of physical and mental wellbeing.
-  Planets tracked: Moon, Mars, Saturn
-  Why: Saturn square natal Saturn in 4th house (Sagittarius)
-  Trend: increasing (moderate, +6 from yesterday)
+BODY: 55/100
+  Driver: energy (51/100)
+  What energy is: Energy represents your physical energy, stamina, and life force available for daily activities and bold action.
+  Planets tracked: Sun
+  Why: Venus opposition natal Sun in 9th house (Gemini)
+  Trend: decreasing (rapid, -15 from yesterday)
 
-INSTINCTS: 51/100
-  Driver: intuition (52/100)
+INSTINCTS: 33/100
+  Driver: intuition (31/100)
   What intuition is: Intuition represents your access to inner knowing, psychic awareness, and ability to sense what isn't visible.
   Planets tracked: Uranus, Neptune
   Why: Saturn square natal Uranus in 4th house (Sagittarius)
-  Trend: increasing (stable, +1 from yesterday)
+  Trend: increasing (rapid, +13 from yesterday)
 
-GROWTH: 57/100
-  Driver: evolution (46/100)
+GROWTH: 40/100
+  Driver: evolution (39/100)
   What evolution is: Evolution represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.
   Planets tracked: Jupiter, Uranus
   Why: Saturn square natal Uranus in 4th house (Sagittarius)
-  Trend: increasing (rapid, +12 from yesterday)
+  Trend: increasing (rapid, +22 from yesterday)
 
 
 ================================================================================
@@ -480,6 +518,6 @@ REFERENCE: KEY TRANSITS
 
 - Neptune square natal Mercury in 10th house (Cancer)
 
-- Jupiter square natal Jupiter in 8th house (Aries)
-
 - Neptune square natal Neptune in 4th house (Capricorn)
+
+- Venus opposition natal Sun in 9th house (Gemini)

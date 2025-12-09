@@ -154,7 +154,7 @@ class TestDailyTransitFunction:
 
         assert "planets" in result
         assert "aspects" in result
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12  # 10 planets + North Node + South Node
 
     def test_specific_date(self):
         """Test requesting specific date."""
@@ -180,7 +180,7 @@ class TestUserTransitFunction:
         assert "planets" in result
         assert "houses" in result
         assert "aspects" in result
-        assert len(result["planets"]) == 11
+        assert len(result["planets"]) == 12  # 10 planets + North Node + South Node
 
     def test_houses_relative_to_birth_location(self):
         """Test houses are computed relative to birth location."""
@@ -240,7 +240,7 @@ class TestGetNatalChartForConnection:
 
             assert "chart" in result
             assert "planets" in result["chart"]
-            assert len(result["chart"]["planets"]) == 11
+            assert len(result["chart"]["planets"]) == 12  # 10 planets + North Node + South Node
 
     def test_missing_connection_raises_error(self, test_user_id):
         """Test getting chart for nonexistent connection raises error."""

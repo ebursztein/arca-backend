@@ -283,11 +283,11 @@ def assert_valid_relationship_label(label: str) -> None:
         # Love
         "crush", "dating", "situationship", "partner", "boyfriend", "girlfriend", "spouse", "ex",
         # Friend
-        "friend", "best_friend", "close_friend", "new_friend",
+        "friend", "close_friend", "new_friend",
         # Family
         "mother", "father", "sister", "brother", "daughter", "son", "grandparent", "extended",
         # Coworker
-        "boss", "manager", "colleague", "mentor", "mentee", "client", "business_partner",
+        "manager", "colleague", "mentor", "mentee", "client", "business_partner",
         # Other
         "acquaintance", "neighbor", "ex_friend", "complicated",
     }

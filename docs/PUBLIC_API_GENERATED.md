@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-05 15:28:41
+> Auto-generated on 2025-12-08 22:14:51
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -148,6 +148,8 @@ Create user profile with birth chart computation and LLM-generated summary.
 | `birth_timezone` | string | Yes | - |
 | `birth_lat` | float | No | Latitude (optional) |
 | `birth_lon` | float | No | Longitude (optional) |
+| `birth_country` | string | No | Country name for display (optional) |
+| `birth_city` | string | Yes | - |
 
 **Response:** `{ "success": ..., "user_id": ..., "sun_sign": ..., "exact_chart": ..., "mode": ... }`
 
@@ -176,6 +178,8 @@ Update user profile with optional natal chart regeneration.
 | `birth_timezone` | str | No | IANA timezone for birth time |
 | `birth_lat` | float | No | Birth latitude |
 | `birth_lon` | float | No | Birth longitude |
+| `birth_country` | str | No | Country name for display (e.g., 'USA') |
+| `birth_city` | str | No | City with state/country for display (e.g., 'New York, NY, USA') |
 
 **Response:** `UserProfile`
 
@@ -532,6 +536,12 @@ Get compatibility analysis between user and a connection.
 | `birth_timezone` | string | null | No | null | max_length: 64 | IANA timezone (optional, V2+) |
 | `birth_lat` | float | null | No | null | >= -90, <= 90 | Birth latitude (optional) |
 | `birth_lon` | float | null | No | null | >= -180, <= 180 | Birth longitude (optional) |
+| `birth_country` | string | null | No | null | max_length: 100 | Birth country (e.g., 'USA') |
+| `birth_city` | string | null | No | null | max_length: 200 | Birth city with state/country (e.g., 'New York, NY, USA') |
+| `device_timezone` | string | null | No | null | max_length: 64 | User's device timezone (IANA format) |
+| `device_language` | string | null | No | null | max_length: 10 | User's device language code (e.g., 'en') |
+| `device_country` | string | null | No | null | max_length: 2 | User's device country code (e.g., 'US') |
+| `device_currency` | string | null | No | null | max_length: 3 | User's device currency code (e.g., 'USD') |
 | `sun_sign` | string | Yes | PydanticUndefined | - | Sun sign (e.g., 'taurus') |
 | `natal_chart` | object | Yes | PydanticUndefined | - | Complete NatalChartData from get_astro_chart() |
 | `exact_chart` | boolean | Yes | PydanticUndefined | - | True if birth_time + timezone provided |
@@ -604,6 +614,7 @@ Get compatibility analysis between user and a connection.
 | `model_used` | string | null | No | null | - | LLM model used |
 | `generation_time_ms` | int | null | No | null | - | Generation time in milliseconds |
 | `usage` | object | No | PydanticUndefined | - | Raw usage metadata from LLM API |
+| `featured_meters` | string[] | null | No | null | - | Names of meters featured in headline |
 
 #### `ActionableAdvice`
 
@@ -967,6 +978,7 @@ Get compatibility analysis between user and a connection.
 |-------|------|----------|---------|-------------|-------------|
 | `type` | "romantic" | "friendship" | "coworker" | Yes | PydanticUndefined | - | The relationship type: romantic, friendship, or coworker |
 | `overall_score` | int | Yes | PydanticUndefined | >= 0, <= 100 | Overall compatibility score (0-100) |
+| `overall_label` | string | No | '' | - | Overall band label (e.g., 'Solid', 'Seamless', 'Volatile') |
 | `vibe_phrase` | string | null | No | null | - | Short energy label. Romantic: 'Slow Burn', 'Electric'. Fr... |
 | `categories` | CompatibilityCategory[] | Yes | PydanticUndefined | - | Category breakdowns with scores and insights |
 
@@ -979,6 +991,20 @@ Get compatibility analysis between user and a connection.
 | `score` | int | Yes | PydanticUndefined | >= 0, <= 100 | Category score: 0 (challenging) to 100 (flowing), 50 is n... |
 | `insight` | string | null | No | null | - | LLM-generated 1-2 sentence insight for this category |
 | `aspect_ids` | string[] | No | PydanticUndefined | - | Top 3-5 aspect IDs driving this score, ordered by tightes... |
+| `label` | string | No | '' | - | Band label from JSON config (e.g., 'Warm', 'Soul-Level', ... |
+| `description` | string | No | '' | - | What this category measures (for iOS display) |
+| `driving_aspects` | DrivingAspect[] | No | PydanticUndefined | - | Top aspects with human-readable meanings explaining WHY t... |
+
+#### `DrivingAspect`
+
+| Field | Type | Required | Default | Constraints | Description |
+|-------|------|----------|---------|-------------|-------------|
+| `aspect_id` | string | Yes | PydanticUndefined | - | Reference to full aspect in aspects list (e.g., 'asp_001') |
+| `user_planet` | string | Yes | PydanticUndefined | - | Your planet (e.g., 'Moon') |
+| `their_planet` | string | Yes | PydanticUndefined | - | Their planet (e.g., 'Venus') |
+| `aspect_type` | string | Yes | PydanticUndefined | - | trine, square, conjunction, etc. |
+| `is_harmonious` | boolean | Yes | PydanticUndefined | - | True if supportive, False if challenging |
+| `summary` | string | Yes | PydanticUndefined | - | Human-readable summary (e.g., 'Your emotional needs flow ... |
 
 #### `SynastryAspect`
 
@@ -1110,6 +1136,7 @@ Get compatibility analysis between user and a connection.
 | `astrometers` | CompressedAstrometers | Yes | PydanticUndefined | - | Summary of astrometers: overall state and top meters |
 | `transit_summary` | CompressedTransitSummary | Yes | PydanticUndefined | - | Top priority transits with interpretations |
 | `created_at` | string | Yes | PydanticUndefined | - | ISO datetime of generation |
+| `featured_meters` | string[] | null | No | null | - | Names of meters featured in headline |
 
 #### `CompressedMeterGroup`
 
@@ -1496,7 +1523,6 @@ Get compatibility analysis between user and a connection.
 | `SPOUSE` | `"spouse"` |
 | `EX` | `"ex"` |
 | `FRIEND` | `"friend"` |
-| `BEST_FRIEND` | `"best_friend"` |
 | `CLOSE_FRIEND` | `"close_friend"` |
 | `NEW_FRIEND` | `"new_friend"` |
 | `MOTHER` | `"mother"` |
@@ -1507,7 +1533,6 @@ Get compatibility analysis between user and a connection.
 | `SON` | `"son"` |
 | `GRANDPARENT` | `"grandparent"` |
 | `EXTENDED` | `"extended"` |
-| `BOSS` | `"boss"` |
 | `MANAGER` | `"manager"` |
 | `COLLEAGUE` | `"colleague"` |
 | `MENTOR` | `"mentor"` |

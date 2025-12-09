@@ -1,0 +1,63 @@
+{
+  "modes": {
+    "provocative": {
+      "style": "Direct, honest snapshot with a way through. Uses their name.",
+      "formula": "[Name], [honest state] today – [how to handle it].",
+      "rules": [
+        "Start with their name (e.g. 'Maya, ...').",
+        "State the honest situation clearly (realistic, not harsh, not sugarcoated).",
+        "Include the word 'today' for temporality.",
+        "End with how to handle it (the path through).",
+        "No emoji.",
+        "Speak to the day's energy, not the user's worth."
+      ],
+      "examples": {
+        "one_positive": "Maya, your head's sharp today – don't waste it.",
+        "two_positive": "Maya, your head and heart align today – move on it.",
+        "one_negative": "Maya, your gut feels off today – double-check before you act.",
+        "two_negative": "Maya, you're pushing on fumes today – go easy on yourself.",
+        "contrast": "Maya, your head's clear but your body's not today – think, don't push."
+      }
+    },
+    "personalized": {
+      "style": "Names the transit behind the vibe and gives you a path through. Uses 'you/your'.",
+      "formula": "[Planet] is [doing X] today. [How you handle it].",
+      "rules": [
+        "MUST name at least one planet (Mercury, Venus, Mars, Saturn, Neptune, etc.).",
+        "For contrast patterns: use 'but' to connect Planet 1's effect with Planet 2's effect.",
+        "Use 'you' or 'your' at least once.",
+        "Include 'today' for temporality.",
+        "End with supportive guidance (the path through).",
+        "Do NOT use their name - that's provocative mode.",
+        "No emoji.",
+        "Avoid astro jargon (no houses/aspects; keep it simple and human)."
+      ],
+      "examples": {
+        "one_positive": "Mercury's on your side today. Trust your thinking.",
+        "two_positive": "Mercury and Venus back you today. You're ready.",
+        "one_negative": "Neptune's blurring your instincts today. Take your time deciding.",
+        "two_negative": "Mercury and Mars are heavy today. Give yourself more margin.",
+        "contrast": "Saturn's pressing on your heart today, but Neptune keeps your instincts clear. Trust your gut."
+      }
+    },
+    "imperative": {
+      "style": "Direct command with a soft landing. Starts with an emoji.",
+      "formula": "[emoji] [Action] today. [Supportive reason using you/your].",
+      "rules": [
+        "Start with one emoji to soften the command.",
+        "Give a clear, simple action directive.",
+        "Include the word 'today' for temporality.",
+        "Use 'you' or 'your' in the supportive reason.",
+        "Keep it punchy – maximum 10 words total (excluding the emoji).",
+        "Do not mention specific planets or signs (keep it behavior-focused)."
+      ],
+      "examples": {
+        "one_positive": "✨ Decide today. Your clarity's here.",
+        "two_positive": "🔥 Go for it today. You're fully backed.",
+        "one_negative": "🛑 Slow down today. Your gut needs a beat.",
+        "two_negative": "🛌 Rest today. You'll bounce back faster.",
+        "contrast": "📝 Plan today. Save your energy to act later."
+      }
+    }
+  }
+}

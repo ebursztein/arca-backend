@@ -539,7 +539,7 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict, astromet
         "Astrometers": ["AstrometersForIOS", "MeterGroupForIOS", "MeterForIOS", "MeterAspect", "AstrologicalFoundation", "MeterReading"],
         "Charts": ["NatalChartData", "ChartAngles", "AnglePosition", "PlanetPosition", "HouseCusp", "AspectData", "ChartDistributions", "ElementDistribution", "ModalityDistribution", "QuadrantDistribution", "HemisphereDistribution"],
         "Connections": ["Connection", "StoredVibe", "ShareLink", "ConnectionRequest", "ShareLinkResponse", "PublicProfileResponse", "ImportConnectionResponse", "ConnectionListResponse"],
-        "Compatibility": ["CompatibilityResult", "CompatibilityInterpretation", "ModeCompatibility", "CompatibilityCategory", "SynastryAspect", "CompositeSummary", "KarmicSummary", "KarmicAspect"],
+        "Compatibility": ["CompatibilityResult", "CompatibilityInterpretation", "ModeCompatibility", "CompatibilityCategory", "DrivingAspect", "SynastryAspect", "CompositeSummary", "KarmicSummary", "KarmicAspect"],
         "Entities": ["Entity", "UserEntities", "ExtractedEntity", "ExtractedEntities", "EntityMergeAction", "MergedEntities", "AttributeKV"],
         "Conversations": ["Conversation", "Message"],
         "Compressed Storage": ["CompressedHoroscope", "CompressedMeterGroup", "CompressedMeter", "CompressedAstrometers", "CompressedTransitSummary", "CompressedTransit", "UserHoroscopes"],
@@ -826,7 +826,7 @@ def main():
 
     # compatibility.py
     from compatibility import (
-        SynastryAspect, CompatibilityCategory, Composite, ModeCompatibility, CompatibilityResult,
+        SynastryAspect, DrivingAspect, CompatibilityCategory, Composite, ModeCompatibility, CompatibilityResult,
         Karmic,
     )
 
@@ -859,7 +859,7 @@ def main():
         Connection, StoredVibe, ShareLink, ConnectionRequest,
         ShareLinkResponse, PublicProfileResponse, ImportConnectionResponse, ConnectionListResponse,
         # Compatibility
-        SynastryAspect, CompatibilityCategory, Composite, ModeCompatibility, CompatibilityResult,
+        SynastryAspect, DrivingAspect, CompatibilityCategory, Composite, ModeCompatibility, CompatibilityResult,
         Karmic,
     ]
 

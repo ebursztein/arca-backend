@@ -1,5 +1,5 @@
 {
-  "advice": "Focus on structured communication. When discussing sensitive topics, agree beforehand on how long each of you will speak without interruption, and commit to active listening.",
+  "advice": "Tonight, try a structured conversation about needs, focusing on listening without immediate reaction. Write down what you each need from this relationship, then share them calmly.",
   "aspects": [
     {
       "aspect_type": "sextile",
@@ -506,63 +506,186 @@
       "user_planet": "mars"
     }
   ],
-  "calculated_at": "2025-12-03T02:39:50.445858",
+  "calculated_at": "2025-12-09T03:12:23.615468",
   "composite": {
     "dominant_element": "fire",
     "moon_sign": "aquarius",
-    "purpose": "Your combined energies are built to push boundaries and forge a unique path. This relationship is a crucible for transformation, designed to help you both evolve into stronger, more self-aware individuals.",
+    "purpose": "This relationship is built to explore the depths of emotion and transform individual desires into shared reality. It's a space for profound personal evolution, pushing both of you to confront your inner worlds.",
     "rising_sign": "sagittarius",
     "sun_sign": "taurus"
   },
-  "generation_time_ms": 1677,
-  "growth_areas": "The stars highlight significant differences in how you both process emotions and communicate. Navigating these deep divides requires conscious effort to understand each other's distinct needs and to establish clear boundaries.",
-  "headline": "Pisces & Leo: A Fiery, Deep Dive",
+  "generation_time_ms": 5349,
+  "growth_areas": "Your emotional worlds operate very differently, making it hard to truly meet each other's needs. Communication can also be a flashpoint, requiring conscious effort to understand each other's perspective.",
+  "headline": "Pisces Sun Leo Moon: A Fiery, Deeply Felt Connection",
   "karmic": {
-    "destiny_note": "This connection feels fated, Emma, with a strong sense of duty or unfinished business drawing you together. You're bound to build something lasting, learning to create stability and structure through your shared journey.",
-    "is_karmic": true,
-    "theme": "Future growth through saturn"
+    "destiny_note": null,
+    "is_karmic": false,
+    "theme": null
   },
   "mode": {
     "categories": [
       {
         "aspect_ids": [
-          "asp_014"
+          "asp_015",
+          "asp_014",
+          "asp_018",
+          "asp_007",
+          "asp_033"
+        ],
+        "description": "How deeply you connect emotionally - whether you truly 'get' each other's feelings",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_015",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your love style and what you value (Venus) polarizes with their love style and what you value (Venus)",
+            "their_planet": "Venus",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_014",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your love style and what you value (Venus) creates tension with their emotional needs and instincts (Moon)",
+            "their_planet": "Moon",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_018",
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "summary": "Your love style and what you value (Venus) adapts to their dreams, idealization, and intuition (Neptune)",
+            "their_planet": "Neptune",
+            "user_planet": "Venus"
+          }
         ],
         "id": "emotional",
-        "insight": null,
+        "insight": "Emma, you and James struggle to connect emotionally, often feeling shut off from each other's inner worlds. It's important to acknowledge that deep emotional support may not be the natural flow of this partnership.",
+        "label": "Shut Off",
         "name": "Emotional Connection",
-        "score": -100
+        "score": 10
       },
       {
         "aspect_ids": [
           "asp_008",
+          "asp_038",
+          "asp_027",
           "asp_009"
         ],
+        "description": "How well you understand each other's words, tone, and meaning",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_008",
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "summary": "Your how you think and express ideas (Mercury) adapts to their how you think and express ideas (Mercury)",
+            "their_planet": "Mercury",
+            "user_planet": "Mercury"
+          },
+          {
+            "aspect_id": "asp_038",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your independence (Uranus) supports their how you think and express ideas (Mercury)",
+            "their_planet": "Mercury",
+            "user_planet": "Uranus"
+          },
+          {
+            "aspect_id": "asp_027",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your openness and generosity in conversation (Jupiter) polarizes with their how you think and express ideas (Mercury)",
+            "their_planet": "Mercury",
+            "user_planet": "Jupiter"
+          }
+        ],
         "id": "communication",
-        "insight": null,
+        "insight": "Your communication styles can be combustible, Emma. While your ideas can sometimes spark inspiration for James, misunderstandings are frequent and require careful navigation to avoid arguments.",
+        "label": "Combustible",
         "name": "Communication",
-        "score": -100
+        "score": 15
       },
       {
         "aspect_ids": [
           "asp_015",
+          "asp_003",
+          "asp_022",
           "asp_023",
-          "asp_016"
+          "asp_019"
+        ],
+        "description": "The physical and magnetic pull between you two",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_015",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your attraction style and what draws you in (Venus) polarizes with their attraction style and what draws you in (Venus)",
+            "their_planet": "Venus",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_003",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your core identity (Sun) polarizes with their desire, passion, and physical drive (Mars)",
+            "their_planet": "Mars",
+            "user_planet": "Sun"
+          },
+          {
+            "aspect_id": "asp_022",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your desire, passion, and physical drive (Mars) supports their core identity (Sun)",
+            "their_planet": "Sun",
+            "user_planet": "Mars"
+          }
         ],
         "id": "attraction",
-        "insight": null,
+        "insight": "The initial physical and magnetic pull between you two feels faint, Emma. Your core identities and what draws you in are quite opposite, making attraction a challenge to ignite and sustain.",
+        "label": "Faint",
         "name": "Attraction",
-        "score": -43
+        "score": 21
       },
       {
         "aspect_ids": [
           "asp_015",
-          "asp_028"
+          "asp_014",
+          "asp_006",
+          "asp_028",
+          "asp_026"
+        ],
+        "description": "How aligned you are on what matters most in life",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_015",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your love style (Venus) polarizes with their love style (Venus)",
+            "their_planet": "Venus",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_014",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your love style (Venus) creates tension with their emotional needs (Moon)",
+            "their_planet": "Moon",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_006",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your emotional needs (Moon) supports their beliefs, growth direction, and what you expand toward (Jupiter)",
+            "their_planet": "Jupiter",
+            "user_planet": "Moon"
+          }
         ],
         "id": "values",
-        "insight": null,
+        "insight": "While your core values are generally aligned, Emma, how you each express them creates tension. You can work side-by-side, but differences in your love styles and emotional needs mean you must consciously bridge any gaps.",
+        "label": "Side-by-Side",
         "name": "Shared Values",
-        "score": -100
+        "score": 44
       },
       {
         "aspect_ids": [
@@ -572,28 +695,87 @@
           "asp_034",
           "asp_033"
         ],
+        "description": "How likely this connection is to last and deepen over time",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_007",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your emotional needs (Moon) creates tension with their staying power, commitment, and building together (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Moon"
+          },
+          {
+            "aspect_id": "asp_001",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your core identity (Sun) flows easily with their core identity (Sun)",
+            "their_planet": "Sun",
+            "user_planet": "Sun"
+          },
+          {
+            "aspect_id": "asp_004",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your core identity (Sun) polarizes with their staying power, commitment, and building together (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Sun"
+          }
+        ],
         "id": "longTerm",
-        "insight": null,
+        "insight": "The long-term potential of this connection feels fragile, Emma. Your emotional needs clash with James's need for structure and commitment, making it difficult to build a lasting foundation.",
+        "label": "Fragile",
         "name": "Long-term Potential",
-        "score": -64
+        "score": 26
       },
       {
         "aspect_ids": [
+          "asp_037",
+          "asp_020",
+          "asp_031",
           "asp_050",
-          "asp_057",
-          "asp_019"
+          "asp_057"
+        ],
+        "description": "How much you help each other evolve and become better versions of yourselves",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_037",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your commitment and structure (Saturn) polarizes with their past patterns (South Node)",
+            "their_planet": "South Node",
+            "user_planet": "Saturn"
+          },
+          {
+            "aspect_id": "asp_020",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your love style (Venus) polarizes with their growth direction and life lessons (North Node)",
+            "their_planet": "North Node",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_031",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your growth and expansion (Jupiter) supports their transformation, depth, and fundamental change (Pluto)",
+            "their_planet": "Pluto",
+            "user_planet": "Jupiter"
+          }
         ],
         "id": "growth",
-        "insight": null,
+        "insight": "This relationship acts as a rough mirror, Emma, challenging you both to grow. Your approach to commitment clashes with James's past patterns, and your love style pushes against his future direction.",
+        "label": "Rough Mirror",
         "name": "Growth Together",
-        "score": -25
+        "score": 21
       }
     ],
-    "overall_score": 14,
+    "overall_label": "Rocky",
+    "overall_score": 23,
     "type": "romantic",
-    "vibe_phrase": "Transformative Fire"
+    "vibe_phrase": "Deep Waters, Fiery Hearts"
   },
   "model_used": "gemini-2.5-flash-lite",
-  "strengths": "Your relationship sparks transformation, with Emma's intuitive insights helping James to break through old patterns. You both possess a powerful drive to evolve, creating a dynamic where you can consciously build a future together.",
-  "summary": "Emma, you and James share a connection that's both deeply challenging and incredibly transformative. While the stars show significant friction in everyday emotional and communication realms, the intensity of your bond pushes you both toward profound personal growth."
+  "strengths": "You both share a desire for a life lived with purpose and passion, finding common ground in your values. When you align, James's dreams can lift you up, and your own drive helps ground his more ethereal ideas.",
+  "summary": "Emma, your connection with James is a potent mix of shared dreams and intense emotional currents. While you can inspire each other's passions, navigating your deep-seated needs requires patience and clear communication."
 }

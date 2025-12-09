@@ -1,0 +1,11 @@
+{
+  "function_name": "update_share_mode",
+  "request": {
+    "user_id": "test_user_a",
+    "share_mode": "public"
+  },
+  "response": {
+    "share_mode": "public"
+  },
+  "captured_at": "2025-12-09T03:12:03.533633+00:00"
+}

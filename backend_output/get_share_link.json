@@ -1,0 +1,12 @@
+{
+  "function_name": "get_share_link",
+  "request": {
+    "user_id": "test_user_a"
+  },
+  "response": {
+    "qr_code_data": "https://arca-app.com/u/1T5HbGS2p6fs",
+    "share_mode": "public",
+    "share_url": "https://arca-app.com/u/1T5HbGS2p6fs"
+  },
+  "captured_at": "2025-12-09T03:12:00.696844+00:00"
+}

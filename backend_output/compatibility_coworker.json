@@ -1,5 +1,5 @@
 {
-  "advice": "Alex, focus on structuring your collaborative projects with clear objectives and defined responsibilities to navigate the collaboration challenges with Jordan.",
+  "advice": "Set clear expectations for each project and define who is responsible for what to leverage your individual strengths effectively.",
   "aspects": [
     {
       "aspect_type": "quincunx",
@@ -490,17 +490,17 @@
       "user_planet": "jupiter"
     }
   ],
-  "calculated_at": "2025-12-03T02:40:24.372790",
+  "calculated_at": "2025-12-09T03:12:33.521743",
   "composite": {
     "dominant_element": "air",
     "moon_sign": "aquarius",
-    "purpose": "Your combined energies, with a Virgo rising and Scorpio Sun, are geared towards focused execution and deep, analytical work. This partnership is built to tackle complex projects and establish a solid professional foundation.",
+    "purpose": "This relationship is built for focused professional mentorship and building a shared empire. You are here to refine ideas and execute plans with clarity and purpose.",
     "rising_sign": "virgo",
     "sun_sign": "scorpio"
   },
-  "generation_time_ms": 1637,
-  "growth_areas": "Collaboration and reliability present the biggest hurdles. Your approaches to working together are fundamentally different, and dependable follow-through may be a point of friction. Managing the power dynamic requires awareness from both sides to ensure respect.",
-  "headline": "Aquarius-Virgo: Building Empires Together",
+  "generation_time_ms": 3597,
+  "growth_areas": "Direct collaboration on shared tasks can be difficult, requiring clear role definition and independent work streams. You may also find reliability a challenge, needing to actively establish accountability and structure to ensure follow-through.",
+  "headline": "Aquarius Insight, Virgo Action: Building Together",
   "karmic": {
     "destiny_note": null,
     "is_karmic": false,
@@ -510,23 +510,82 @@
     "categories": [
       {
         "aspect_ids": [
+          "asp_013",
           "asp_024",
-          "asp_012"
+          "asp_012",
+          "asp_029"
+        ],
+        "description": "How well you exchange ideas and information in a work context",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_013",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your how you exchange information and ideas (Mercury) supports their openness to new ideas and big-picture thinking (Jupiter)",
+            "their_planet": "Jupiter",
+            "user_planet": "Mercury"
+          },
+          {
+            "aspect_id": "asp_024",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your drive and passion (Mars) supports their how you exchange information and ideas (Mercury)",
+            "their_planet": "Mercury",
+            "user_planet": "Mars"
+          },
+          {
+            "aspect_id": "asp_012",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your how you exchange information and ideas (Mercury) flows easily with their drive and passion (Mars)",
+            "their_planet": "Mars",
+            "user_planet": "Mercury"
+          }
         ],
         "id": "communication",
-        "insight": null,
+        "insight": "You and Jordan are 'In Sync' when it comes to communication, effortlessly exchanging ideas and information. Your Mercury supports their Jupiter, creating a dynamic where new ideas and big-picture thinking thrive.",
+        "label": "In Sync",
         "name": "Communication",
-        "score": 100
+        "score": 89
       },
       {
         "aspect_ids": [
+          "asp_020",
           "asp_025",
           "asp_023"
         ],
+        "description": "How well you work together on shared projects and tasks",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_020",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your cooperation, compromise, and working in harmony (Venus) creates tension with their action style, initiative, and how you tackle tasks (Mars)",
+            "their_planet": "Mars",
+            "user_planet": "Venus"
+          },
+          {
+            "aspect_id": "asp_025",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your action style, initiative, and how you tackle tasks (Mars) polarizes with their action style, initiative, and how you tackle tasks (Mars)",
+            "their_planet": "Mars",
+            "user_planet": "Mars"
+          },
+          {
+            "aspect_id": "asp_023",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your action style, initiative, and how you tackle tasks (Mars) creates tension with their core identity (Sun)",
+            "their_planet": "Sun",
+            "user_planet": "Mars"
+          }
+        ],
         "id": "collaboration",
-        "insight": null,
+        "insight": "Collaboration between you two is a 'Clash', as your approaches to teamwork and task execution create tension. It's best to work independently on shared projects, maintaining clear roles to avoid friction.",
+        "label": "Clash",
         "name": "Collaboration",
-        "score": -100
+        "score": 5
       },
       {
         "aspect_ids": [
@@ -534,39 +593,126 @@
           "asp_007",
           "asp_001"
         ],
+        "description": "How much you can count on them to deliver and follow through",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_037",
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "summary": "Your discipline, structure, and follow-through (Saturn) adapts to their discipline, structure, and follow-through (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Saturn"
+          },
+          {
+            "aspect_id": "asp_007",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your emotional needs (Moon) creates tension with their discipline, structure, and follow-through (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Moon"
+          },
+          {
+            "aspect_id": "asp_001",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your integrity and commitment to their word (Sun) polarizes with their discipline, structure, and follow-through (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Sun"
+          }
+        ],
         "id": "reliability",
-        "insight": null,
+        "insight": "Reliability is 'Unsteady' in this dynamic. While your Saturn provides structure, Alex's emotional needs can create tension with Jordan's need for discipline, requiring conscious effort to ensure follow-through.",
+        "label": "Unsteady",
         "name": "Reliability",
-        "score": -100
+        "score": 7
       },
       {
         "aspect_ids": [
           "asp_036",
+          "asp_001",
           "asp_032"
         ],
+        "description": "How aligned your career drives and professional goals are",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_036",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your long-term career building and professional discipline (Saturn) flows easily with their growth aspirations and where you aim high (Jupiter)",
+            "their_planet": "Jupiter",
+            "user_planet": "Saturn"
+          },
+          {
+            "aspect_id": "asp_001",
+            "aspect_type": "opposition",
+            "is_harmonious": false,
+            "summary": "Your core identity (Sun) polarizes with their long-term career building and professional discipline (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Sun"
+          },
+          {
+            "aspect_id": "asp_032",
+            "aspect_type": "square",
+            "is_harmonious": false,
+            "summary": "Your growth aspirations and where you aim high (Jupiter) creates tension with their long-term career building and professional discipline (Saturn)",
+            "their_planet": "Saturn",
+            "user_planet": "Jupiter"
+          }
+        ],
         "id": "ambition",
-        "insight": null,
+        "insight": "Your ambitions are 'Parallel,' aligning well for long-term career building. Your drive supports Jordan's growth aspirations, creating a pathway for shared professional development.",
+        "label": "Parallel",
         "name": "Ambition Alignment",
-        "score": 20
+        "score": 44
       },
       {
         "aspect_ids": [
           "asp_049",
           "asp_027",
           "asp_004",
+          "asp_025",
           "asp_047"
         ],
+        "description": "How balanced the authority and influence feels between you",
+        "driving_aspects": [
+          {
+            "aspect_id": "asp_049",
+            "aspect_type": "quincunx",
+            "is_harmonious": false,
+            "summary": "Your power, control, and who holds influence (Pluto) adapts to their drive and passion (Mars)",
+            "their_planet": "Mars",
+            "user_planet": "Pluto"
+          },
+          {
+            "aspect_id": "asp_027",
+            "aspect_type": "sextile",
+            "is_harmonious": true,
+            "summary": "Your drive and passion (Mars) supports their power, control, and who holds influence (Pluto)",
+            "their_planet": "Pluto",
+            "user_planet": "Mars"
+          },
+          {
+            "aspect_id": "asp_004",
+            "aspect_type": "trine",
+            "is_harmonious": true,
+            "summary": "Your ego, authority, and need for recognition (Sun) flows easily with their power, control, and who holds influence (Pluto)",
+            "their_planet": "Pluto",
+            "user_planet": "Sun"
+          }
+        ],
         "id": "powerDynamics",
-        "insight": null,
+        "insight": "The power dynamics are 'Balanced,' creating a sense of equal influence and control. Your assertiveness supports Jordan's leadership, and vice-versa, fostering a respectful professional environment.",
+        "label": "Balanced",
         "name": "Power Dynamics",
-        "score": 50
+        "score": 63
       }
     ],
-    "overall_score": 47,
+    "overall_label": "Mixed",
+    "overall_score": 42,
     "type": "coworker",
     "vibe_phrase": "Empire Builders"
   },
   "model_used": "gemini-2.5-flash-lite",
-  "strengths": "Your communication styles align remarkably well, Alex. Jordan's Jupiter supports your Mercury, making it easy for you to understand each other's ideas and professional needs. Furthermore, your shared North Node aspects indicate a natural alignment in your long-term career direction and professional growth.",
-  "summary": "Alex, your connection with Jordan is built for professional synergy and shared ambition. While communication flows easily, navigating collaboration and reliability requires conscious effort. Together, you can build something significant if you focus on clear roles and mutual respect."
+  "strengths": "Your communication styles are incredibly aligned, making it easy to understand each other's professional vision. This synergy allows for a natural exchange of ideas and a deep anticipation of each other's thinking, essential for any partnership aiming high.",
+  "summary": "You and Jordan share a powerful professional connection where your communication flows effortlessly. While your collaborative energy is challenging, your shared ambition and balanced power dynamics offer a strong foundation for building something significant."
 }
