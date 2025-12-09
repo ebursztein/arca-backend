@@ -1,16 +1,17 @@
 TODAY'S READING ({{ date }})
 
 ================================================================================
-HEADLINE GUIDANCE (for daily_theme_headline)
+DAILY DRIVER{% if headline_guidance.meter_count == 2 %}S{% endif %} (for daily_theme_headline AND daily_overview)
 ================================================================================
-{% for m in headline_guidance.meters %}
-{{ m.group|upper }}: {{ m.score }}/100 ({{ m.group_label }})
-  Driver: {{ m.meter_name }}
-  Why: {{ m.top_aspect or 'multiple transits' }}
-{% endfor %}
-{% if headline_guidance.meter_count == 2 %}Use "{{ headline_guidance.conjunction }}" to connect both areas.{% endif %}
+{% if headline_guidance.meter_count == 1 %}Today's focus is ONE meter. Lead with this in both headline and overview.{% else %}Today's focus is TWO meters. Cover both in headline (use "{{ headline_guidance.conjunction }}") and overview.{% endif %}
 
-VOICE MODE: {{ headline_guidance.headline_mode }}
+{% for m in headline_guidance.meters %}
+DRIVER {{ loop.index }}: {{ m.group|upper }} - {{ m.meter_name }} ({{ m.score }}/100, {{ m.group_label }})
+  Why: {{ m.top_aspect or 'multiple transits' }}
+  Direction: {% if m.score >= 50 %}FLOWING - lean into it, encourage action{% else %}PUSHING - acknowledge difficulty, show path through{% endif %}
+{% endfor %}
+
+HEADLINE VOICE: {{ headline_guidance.headline_mode }}
 Style: {{ headline_guidance.mode_style }}
 Formula: {{ headline_guidance.mode_formula }}
 Rules:
@@ -21,10 +22,10 @@ Example: {{ headline_guidance.mode_example }}
 ================================================================================
 OVERVIEW GUIDANCE (for daily_overview)
 ================================================================================
-Overall: {{ overall_unified_score|round(0)|int }}/100
-{{ overall_guidance }}
+Overall Energy: {{ overall_unified_score|round(0)|int }}/100 ({{ overall_state }})
+Writing direction: {{ overall_guidance }}
 
-Highlights to cover:
+Start with {% for m in headline_guidance.meters %}{{ m.meter_name|upper }}{% if not loop.last %} and {% endif %}{% endfor %} (the Daily Driver{% if headline_guidance.meter_count == 2 %}s{% endif %}), then weave in these additional highlights:
 {% for item in overview_guidance.formatted_highlights %}
 {{ item }}
 {% endfor %}
@@ -48,27 +49,21 @@ RELATIONSHIP TRANSITS (Venus/Mars activity):
 ================================================================================
 CONNECTION VIBE (for relationship_weather.connection_vibe)
 ================================================================================
-This is about {{ user_name }}'s dynamic with {{ featured_connection.name }} today.
-Write 1-2 sentences using their name. Focus on what {{ user_name }} might feel or notice with this person.
+Write 1-2 sentences from {{ user_name }}'s perspective about {{ featured_connection.name }} today.
+Mention {{ featured_connection.name }}'s name naturally. Use "you" or "{{ user_name }}" for the user.
 
-CONNECTION DETAILS:
-- Name: {{ featured_connection.name }}
-- Relationship: {{ featured_connection.relationship_category }}/{{ featured_connection.relationship_label }}
-{% if featured_connection.sun_sign %}- Their sun sign: {{ featured_connection.sun_sign }}{% endif %}
-{% if featured_connection.age %}- Their age: {{ featured_connection.age }}{% endif %}
+{{ featured_connection.name }} is {{ user_name }}'s {{ featured_connection.relationship_label }}{% if featured_connection.sun_sign %} ({{ featured_connection.sun_sign|title }}){% endif %}
 
-TODAY'S CONNECTION ENERGY:
-{% if featured_connection.vibe_score is defined %}- Energy level: {% if featured_connection.vibe_score >= 75 %}excellent - strong connection today{% elif featured_connection.vibe_score >= 50 %}steady - good baseline energy{% elif featured_connection.vibe_score >= 25 %}mixed - some friction possible{% else %}low-key - not the best day for big talks{% endif %}
-{% endif %}{% if featured_connection.active_transits %}- Active transits affecting this connection:
-{% for transit in featured_connection.active_transits[:3] %}  * {{ transit.description }}{% if transit.quality %} ({{ transit.quality }}){% endif %}
-{% endfor %}{% endif %}{% if featured_connection.synastry_points %}- Key connection points:
-{% for point in featured_connection.synastry_points[:3] %}  * {{ point.label }}
-{% endfor %}{% endif %}
+{{ user_name }}'S VIBE WITH {{ featured_connection.name|upper }} TODAY:
+{% if featured_connection.vibe_score is defined %}- Score: {{ featured_connection.vibe_score }}/100 {% if featured_connection.vibe_score >= 75 %}(EXCELLENT - {{ user_name }} should lean into this connection){% elif featured_connection.vibe_score >= 50 %}(STEADY - reliable energy for {{ user_name }}){% elif featured_connection.vibe_score >= 25 %}(MIXED - {{ user_name }} may feel some friction){% else %}(LOW - {{ user_name }} should avoid heavy talks){% endif %}
+{% endif %}{% if featured_connection.active_transits %}- Why: {% for transit in featured_connection.active_transits[:2] %}{{ transit.transit_planet|title }} {{ transit.aspect }} {{ user_name }}'s {{ transit.synastry_label }} with {{ featured_connection.name }}{% if transit.is_harmonious %} (supportive){% else %} (tense){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}
+{% endif %}
 {% if featured_connection.vibes %}
-RECENT HISTORY:
-{% for vibe in featured_connection.vibes[:3] %}- {{ vibe.date }}: {{ vibe.vibe }}
+{{ user_name }}'S RECENT FEELINGS ABOUT {{ featured_connection.name|upper }}:
+{% for vibe in featured_connection.vibes[:2] %}- {{ vibe.date }}: {{ vibe.vibe }}
 {% endfor %}{% endif %}
-{% if featured_connection.arca_notes %}- Notes: {% for note in featured_connection.arca_notes[-2:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}{% endif %}
+{% if featured_connection.arca_notes %}{{ user_name }}'S NOTES: {% for note in featured_connection.arca_notes[-2:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}
+{% endif %}
 {% endif %}
 
 ================================================================================

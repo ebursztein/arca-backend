@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-08 22:14:51
+> Auto-generated on 2025-12-09 14:14:43
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -650,7 +650,7 @@ Get compatibility analysis between user and a connection.
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
 | `date` | string | Yes | PydanticUndefined | - | ISO date of reading |
-| `overall_unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | Overall unified score across all meters (-100 to +100) |
+| `overall_unified_score` | float | Yes | PydanticUndefined | >= 0, <= 100 | Overall unified score across all meters (0-100, 50=neutral) |
 | `overall_intensity` | MeterReading | Yes | PydanticUndefined | - | Overall intensity meter with state_label |
 | `overall_harmony` | MeterReading | Yes | PydanticUndefined | - | Overall harmony meter with state_label |
 | `overall_quality` | string | Yes | PydanticUndefined | - | Overall quality from unified_score quadrant: challenging,... |
@@ -736,7 +736,7 @@ Get compatibility analysis between user and a connection.
 | `meter_name` | string | Yes | PydanticUndefined | - | - |
 | `date` | datetime | Yes | PydanticUndefined | - | - |
 | `group` | string (enum: MeterGroupV2) | Yes | PydanticUndefined | - | - |
-| `unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | - |
+| `unified_score` | float | Yes | PydanticUndefined | >= 0, <= 100 | - |
 | `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | - |
 | `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | - |
 | `unified_quality` | "challenging" | "turbulent" | "peaceful" | "flowing" | Yes | PydanticUndefined | - | - |
@@ -1285,7 +1285,7 @@ Get compatibility analysis between user and a connection.
 
 | Field | Type | Required | Default | Constraints | Description |
 |-------|------|----------|---------|-------------|-------------|
-| `unified_score` | float | Yes | PydanticUndefined | >= -100, <= 100 | Primary display value (-100 to +100), average of member m... |
+| `unified_score` | float | Yes | PydanticUndefined | >= 0, <= 100 | Primary display value (0-100, 50=neutral), average of mem... |
 | `harmony` | float | Yes | PydanticUndefined | >= 0, <= 100 | Supportive vs challenging quality (0-100) |
 | `intensity` | float | Yes | PydanticUndefined | >= 0, <= 100 | Activity level (0-100) |
 

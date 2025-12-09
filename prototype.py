@@ -109,6 +109,51 @@ def print_horoscope(horoscope: dict):
             border_style="green"
         ))
 
+    # Energy Rhythm
+    if horoscope.get('energy_rhythm'):
+        console.print(Panel(
+            horoscope['energy_rhythm'],
+            title="[bold blue]Energy Rhythm[/bold blue]",
+            border_style="blue"
+        ))
+
+    # Collective Energy
+    if horoscope.get('collective_energy'):
+        console.print(Panel(
+            horoscope['collective_energy'],
+            title="[bold cyan]Collective Energy[/bold cyan]",
+            border_style="cyan"
+        ))
+
+    # Relationship Weather
+    rw = horoscope.get('relationship_weather')
+    if rw:
+        rw_text = f"Overview: {rw.get('overview', 'N/A')}"
+
+        # Connection vibes
+        for cv in rw.get('connection_vibes', []):
+            rw_text += f"\n\n{cv.get('name', 'N/A')} ({cv.get('relationship_label', 'N/A')}): {cv.get('vibe', 'N/A')}"
+            if cv.get('vibe_score'):
+                rw_text += f" [Energy: {cv.get('vibe_score')}/100]"
+            if cv.get('key_transit'):
+                rw_text += f"\n  Key Transit: {cv.get('key_transit')}"
+
+        console.print(Panel(
+            rw_text,
+            title="[bold magenta]Relationship Weather[/bold magenta]",
+            border_style="magenta"
+        ))
+
+    # Follow-up Questions
+    if horoscope.get('follow_up_questions'):
+        questions = horoscope['follow_up_questions']
+        questions_text = "\n".join([f"- {q}" for q in questions])
+        console.print(Panel(
+            questions_text,
+            title="[bold cyan]Ask the Stars[/bold cyan]",
+            border_style="cyan"
+        ))
+
 
 def print_astrometers(horoscope: dict):
     """Print astrometers data from horoscope."""

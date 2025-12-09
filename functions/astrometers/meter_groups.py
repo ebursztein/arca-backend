@@ -133,18 +133,6 @@ def get_group_state_label(group_name: str, unified_score: float) -> str:
         return labels[3]
 
 
-def get_group_advice_category(group_name: str, intensity: float, harmony: float) -> str:
-    """Get advice category for a group from JSON."""
-    try:
-        labels = load_group_labels(group_name)
-        intensity_level = get_intensity_level(intensity)
-        harmony_level = get_harmony_level(harmony)
-        advice_templates = labels.get("advice_templates", {})
-        return advice_templates.get(intensity_level, {}).get(harmony_level, "Focus on this area")
-    except (KeyError, FileNotFoundError):
-        return "Focus on this area"
-
-
 def get_group_description(group_name: str) -> Dict[str, str]:
     """Get group description from JSON."""
     labels = load_group_labels(group_name)
@@ -152,91 +140,63 @@ def get_group_description(group_name: str) -> Dict[str, str]:
 
 
 # =============================================================================
-# Top 2 Weighted Aggregation
+# Group Score Calculation
 # =============================================================================
 
-def calculate_group_scores_top_2(meters: List[MeterReading]) -> Dict:
+def calculate_group_scores(meters: List[MeterReading]) -> Dict:
     """
-    Calculate group scores using Top 2 by Intensity weighted average.
+    Calculate group unified_score using median formula.
 
-    This approach:
-    - Selects the 2 highest-intensity meters (the "loudest voices")
-    - Weights their scores by intensity
-    - Filters out neutral noise from inactive meters
+    Formula:
+    1. Sort all meter unified_scores
+    2. Calculate median (average of middle values for even count)
+    3. Driver = meter furthest from 50 in the median's direction
+       - If median >= 50, driver is the highest scoring meter
+       - If median < 50, driver is the lowest scoring meter
 
-    Why Top 2:
-    - Groups have 3-4 meters; Top 2 captures primary conflict without dilution
-    - Inactive meters (low intensity) don't drag score toward neutral
-    - More responsive and "alive" feeling for users
+    This approach is more intuitive and resistant to outliers than
+    the previous direction-based top-2 averaging.
 
     Args:
         meters: List of MeterReading objects for this group
 
     Returns:
-        Dict with unified_score, intensity, harmony, and driver (name of top meter)
+        Dict with unified_score and driver (name of top meter)
     """
-    # Safety check
+    # Empty check
     if not meters:
-        return {"unified_score": 50.0, "intensity": 0.0, "harmony": 50.0, "driver": None}
+        return {"unified_score": 50.0, "driver": None}
 
-    # Sort by intensity (loudest first), stable sort for determinism
-    sorted_meters = sorted(meters, key=lambda m: m.intensity, reverse=True)
+    # Single meter
+    if len(meters) == 1:
+        return {"unified_score": meters[0].unified_score, "driver": meters[0].meter_name}
 
-    # Slice top 2 (gracefully handles 1-item lists)
-    top_meters = sorted_meters[:2]
+    # Sort by unified_score
+    sorted_meters = sorted(meters, key=lambda m: m.unified_score)
+    scores = [m.unified_score for m in sorted_meters]
 
-    # The driver is the highest-intensity meter
-    driver = top_meters[0].meter_name
+    # Calculate median
+    n = len(scores)
+    if n % 2 == 0:
+        # Even count: average of middle two
+        median = (scores[n // 2 - 1] + scores[n // 2]) / 2
+    else:
+        # Odd count: middle value
+        median = scores[n // 2]
 
-    # Weighted average of top 2
-    total_weighted_unified = 0.0
-    total_weighted_intensity = 0.0
-    total_weighted_harmony = 0.0
-    total_weight = 0.0
-
-    for m in top_meters:
-        # Use intensity as weight (add epsilon for safety)
-        weight = m.intensity + 0.01
-        total_weighted_unified += m.unified_score * weight
-        total_weighted_intensity += m.intensity * weight
-        total_weighted_harmony += m.harmony * weight
-        total_weight += weight
+    # Determine driver: furthest from 50 in the median's direction
+    if median >= 50:
+        # Positive direction: driver is highest scoring meter
+        driver_meter = sorted_meters[-1]
+    else:
+        # Negative direction: driver is lowest scoring meter
+        driver_meter = sorted_meters[0]
 
     return {
-        "unified_score": round(total_weighted_unified / total_weight, 1),
-        "intensity": round(total_weighted_intensity / total_weight, 1),
-        "harmony": round(total_weighted_harmony / total_weight, 1),
-        "driver": driver,
+        "unified_score": round(median, 1),
+        "driver": driver_meter.meter_name,
     }
 
-
-# =============================================================================
-# Quality Label Determination
-# =============================================================================
-
-def determine_quality_label(harmony: float, intensity: float) -> tuple[str, str]:
-    """
-    Determine quality label based on unified_score (0-100 scale).
-
-    Calculates unified_score internally and maps to quality labels.
-
-    Returns:
-        (quality, label) tuple based on unified_score quartiles:
-        - < 25: ("challenging", "Challenging")
-        - 25-50: ("turbulent", "Turbulent")
-        - 50-75: ("peaceful", "Peaceful")
-        - >= 75: ("flowing", "Flowing")
-    """
-    unified_score, _ = calculate_unified_score(intensity, harmony)
-
-    if unified_score < 25:
-        return ("challenging", "Challenging")
-    elif unified_score < 50:
-        return ("turbulent", "Turbulent")
-    elif unified_score < 75:
-        return ("peaceful", "Peaceful")
-    else:
-        return ("flowing", "Flowing")
 
 
 # =============================================================================
@@ -351,10 +311,8 @@ def build_meter_group_data(
     Returns:
         Dict with complete group data
     """
-    # Calculate all scores using Top 2 Weighted approach
-    # This selects the 2 highest-intensity meters and weights by intensity,
-    # filtering out neutral noise from inactive meters
-    scores = calculate_group_scores_top_2(today_meters)
+    # Calculate group scores using direction-based top-2 formula
+    scores = calculate_group_scores(today_meters)
     unified_score = scores["unified_score"]
 
     # Get state label from unified_score (0-100 scale)
@@ -401,7 +359,7 @@ def build_meter_group_data(
     return {
         "group_name": group.value,
         "display_name": get_group_v2_display_name(group),
-        "scores": scores,  # Contains unified_score, intensity, harmony, driver from Top 2
+        "scores": scores,  # Contains unified_score and driver
         "state": {
             "label": state_label,
             "quality": quality

@@ -56,7 +56,7 @@ def visualize_daily_horoscope(daily_horoscope: DailyHoroscope, sun_sign: str, da
 
     # Astrometers Summary (v2 structure)
     astrometers = daily_horoscope.astrometers
-    astrometers_summary = f"""overall_unified_score: {astrometers.overall_unified_score:.1f} (-100 to +100)
+    astrometers_summary = f"""overall_unified_score: {astrometers.overall_unified_score:.1f}/100 (50=neutral)
 overall_intensity: {astrometers.overall_intensity.intensity:.1f}/100 ({astrometers.overall_intensity.state_label})
 overall_harmony: {astrometers.overall_harmony.harmony:.1f}/100 ({astrometers.overall_harmony.state_label})
 overall_quality: {astrometers.overall_quality.upper()}
@@ -89,7 +89,7 @@ Top Flowing: {', '.join(astrometers.top_flowing_meters[:3])}"""
 
     # Overall metrics
     console.print("[yellow]Overall Metrics:[/yellow]")
-    console.print(f"  - overall_unified_score: {astrometers.overall_unified_score:.1f} (-100 to +100)")
+    console.print(f"  - overall_unified_score: {astrometers.overall_unified_score:.1f}/100 (50=neutral)")
     console.print(f"  - overall_intensity: {astrometers.overall_intensity.intensity:.1f}/100 ({astrometers.overall_intensity.state_label})")
     console.print(f"  - overall_harmony: {astrometers.overall_harmony.harmony:.1f}/100 ({astrometers.overall_harmony.state_label})")
     console.print(f"  - overall_quality: {astrometers.overall_quality.upper()}")

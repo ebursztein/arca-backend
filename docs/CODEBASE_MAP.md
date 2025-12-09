@@ -465,7 +465,7 @@ All 17 meter calculations.
 
 **Unified Score Formula:**
 ```python
-base_direction = (harmony - 50) * 2  # -100 to +100
+base_direction = (harmony - 50) * 2  # intermediate calc, final output is 0-100
 magnitude = 0.3 + 0.7 * (intensity / 100)  # 0.3 to 1.0
 raw_score = base_direction * magnitude
 stretched = 100 * tanh(raw_score / 60)  # Sigmoid stretch

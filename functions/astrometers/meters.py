@@ -73,7 +73,7 @@ class MeterReading(BaseModel):
     group: MeterGroupV2
 
     # Primary scores
-    unified_score: float = Field(ge=-100, le=100)  # V2: polar-style -100 to +100
+    unified_score: float = Field(ge=0, le=100)  # 0-100, 50=neutral
     intensity: float = Field(ge=0, le=100)
     harmony: float = Field(ge=0, le=100)
 
@@ -1142,7 +1142,7 @@ def select_featured_meters(
     import hashlib
     import random
     from .hierarchy import Meter, MeterGroupV2, get_meters_in_group_v2
-    from .meter_groups import calculate_group_scores_top_2
+    from .meter_groups import calculate_group_scores
 
     # Create reproducible RNG
     seed_string = f"{user_id}:{date}:featured_selection"
@@ -1255,11 +1255,9 @@ def select_featured_meters(
                 meters_in_group.append(meter_reading)
 
         if meters_in_group:
-            scores = calculate_group_scores_top_2(meters_in_group)
+            scores = calculate_group_scores(meters_in_group)
             group_scores[group_name] = {
                 "unified_score": scores["unified_score"],
-                "intensity": scores["intensity"],
-                "harmony": scores["harmony"],
             }
 
     # Get state words for featured groups
@@ -1551,7 +1549,7 @@ def generate_overview_guidance(
     Returns:
         Dict with overview highlights including group, key meter, transit, and meaning
     """
-    from .meter_groups import calculate_group_scores_top_2
+    from .meter_groups import calculate_group_scores, get_group_bucket_guidance
 
     # Load meter descriptions and planets from JSON
     meter_descriptions = _load_meter_overviews()
@@ -1574,8 +1572,8 @@ def generate_overview_guidance(
                 group_meters.append(meter)
 
         if group_meters:
-            # Use the same Top-2 weighted calculation as all_groups for consistency
-            scores = calculate_group_scores_top_2(group_meters)
+            # Use direction-based top-2 formula
+            scores = calculate_group_scores(group_meters)
             group_score = scores["unified_score"]
             driver_name = scores["driver"]
 
@@ -1589,7 +1587,7 @@ def generate_overview_guidance(
                 top_aspect = f"{asp.transit_planet.value.title()} {asp.aspect_type.value} natal {asp.natal_planet.value.title()}"
 
             # Get the group guidance (how to push through)
-            group_guidance = _get_group_guidance(group_name, group_score)
+            group_guidance = get_group_bucket_guidance(group_name, group_score)
 
             # Get trend info
             trend_str = None
@@ -1752,15 +1750,3 @@ def _get_group_label(group_name: str, score: float) -> str:
         return ""
 
 
-def _get_group_guidance(group_name: str, score: float) -> str:
-    """Get the guidance for a group at a given score (how to push through)."""
-    labels_dir = os.path.join(os.path.dirname(__file__), "labels", "groups")
-    label_file = os.path.join(labels_dir, f"{group_name}.json")
-
-    try:
-        with open(label_file, "r") as f:
-            data = json.load(f)
-            bucket = _get_score_bucket(score)
-            return data.get("bucket_labels", {}).get(bucket, {}).get("guidance", "")
-    except Exception:
-        return ""

@@ -156,10 +156,32 @@ Each meter group shows:
 - **The move:** How to write about this state - FOLLOW THIS GUIDANCE
 - **Trend:** How this meter is changing compared to yesterday (when available)
 
+### The 4 Quality Buckets
+Scores map to 4 distinct states. Know where you are:
+
+| Score Range | Quality | What It Means | How to Write About It |
+|-------------|---------|---------------|----------------------|
+| 0-25 | **Challenging** | Actively difficult. Real friction. | Be direct about the struggle. Name what's hard. Then give a concrete way through. |
+| 25-50 | **Turbulent** | Unsteady. Not terrible, but not reliable. | Acknowledge the instability. "Choppy waters" energy. Advise caution, not avoidance. |
+| 50-75 | **Peaceful** | Stable. Nothing dramatic. | This is neutral-good. Don't oversell it. "Steady" is the vibe. |
+| 75-100 | **Flowing** | Active support. Things click. | This is where things work. Encourage action. Lean into it. |
+
+**Important:** Don't treat 50 as "bad" - it's neutral.
+
 ### Using Drivers (CRITICAL)
-The **Driver** tells you the SPECIFIC cause. Don't just say "your mind is foggy" - name the driver and put the why at the END:
-- Driver "Clarity" with "Saturn square natal Sun" → "Your thinking feels sluggish today. Don't force big decisions - Saturn is pressing on your Sun."
-- Driver "Vulnerability" with "South Node trine natal Neptune" → "You're emotionally open right now. Let yourself feel things - Neptune is softening your guard."
+The **Driver** tells you the SPECIFIC meter causing this group's state. Use the driver's score AND the "Why" transit to write about it:
+
+**Challenging (0-25):** Name the struggle, give a way through
+- Driver "Clarity" score 18, Why: "Saturn square natal Sun" → "Your thinking feels sluggish today. Don't force big decisions - Saturn is pressing on your Sun."
+
+**Turbulent (25-50):** Acknowledge instability, advise caution
+- Driver "Focus" score 35, Why: "Neptune opposite natal Mercury" → "Your concentration keeps slipping. Work in short bursts - Neptune is fogging your Mercury."
+
+**Peaceful (50-75):** Steady energy, don't oversell
+- Driver "Resilience" score 62, Why: "Moon trine natal Saturn" → "You're emotionally steady today. Nothing dramatic, just solid ground - the Moon is supporting your Saturn."
+
+**Flowing (75-100):** Things click, encourage action
+- Driver "Clarity" score 82, Why: "Mercury trine natal Jupiter" → "Your thinking is sharp. Make that decision you've been sitting on - Mercury is lighting up your Jupiter."
 
 In meter interpretations, ALWAYS cite the Driver's "Why" transit at the END to explain the state.
 
@@ -289,15 +311,15 @@ USER & PERSONALIZATION CONTEXT
 ═══════════════════════════════════════════════════════════════════
 
 [USER PROFILE]
-Name: Test User
-Birth Date: 1990-06-15
-Age: 35 (Millennial)
+Name: Elie
+Birth Date: 1987-06-02
+Age: 38 (Millennial)
 Sun Sign: Gemini
 Natal Chart Overview:
 • Sun in Gemini
-• Ascendant: Leo at 26.13°
-• Moon: Pisces
-• Chart Emphasis: 4 planets in Earth signs, 5 planets in Cardinal mode
+• Ascendant: Virgo at 8.8°
+• Moon: Leo
+• Chart Emphasis: 5 planets in Fire signs, 5 planets in Cardinal mode
 
 [SUN SIGN ESSENCE]
 Element: Air | Modality: Mutable
@@ -306,7 +328,7 @@ Core Keywords: Communicative, Curious, Adaptable, Witty, Intellectual
 Life Lesson: To find wisdom in facts, to integrate scattered knowledge into a cohesive understanding, and to communicate with depth and vulnerability, not just intellectual agility.
 Evolutionary Goal: To become a master of synthesis and communication, bridging disparate ideas and people. The goal is to move from being a collector of information (shadow) to a conscious weaver of connection and understanding (highest expression), embracing dialogue over dogma.
 
-[PERSONALIZATION MEMORY (from Test User's journey)]
+[PERSONALIZATION MEMORY (from Elie's journey)]
 Use this data to build continuity, reference explored themes, avoid repetition, and connect today's transit to the user's ongoing story.
 Category Interests:
   (First time user - no history yet)
@@ -314,89 +336,87 @@ Category Interests:
 TODAY'S READING (2025-12-09)
 
 ================================================================================
-HEADLINE GUIDANCE (for daily_theme_headline)
+DAILY DRIVERS (for daily_theme_headline AND daily_overview)
 ================================================================================
-
-HEART: 19/100 (Heavy)
-  Driver: connections
-  Why: Sun square natal Moon
+Today's focus is TWO meters. Cover both in headline (use "but") and overview.
 
 
+DRIVER 1: GROWTH - circle (16/100, Stuck)
+  Why: Neptune square natal Mercury
+  Direction: PUSHING - acknowledge difficulty, show path through
 
-VOICE MODE: personalized
-Style: Names the transit behind the vibe and gives you a path through. Uses 'you/your'.
-Formula: [Planet] is [doing X] today. [How you handle it].
+DRIVER 2: MIND - focus (72/100, On Point)
+  Why: Neptune square natal Mercury
+  Direction: FLOWING - lean into it, encourage action
+
+
+HEADLINE VOICE: imperative
+Style: Direct command with a soft landing. Starts with an emoji.
+Formula: [emoji] [Action] today. [Supportive reason using you/your].
 Rules:
-- MUST name at least one planet (Mercury, Venus, Mars, Saturn, Neptune, etc.).
-- For contrast patterns: use 'but' to connect Planet 1's effect with Planet 2's effect.
-- Use 'you' or 'your' at least once.
-- Include 'today' for temporality.
-- End with supportive guidance (the path through).
-- Do NOT use their name - that's provocative mode.
-- No emoji.
-- Avoid astro jargon (no houses/aspects; keep it simple and human).
+- Start with one emoji to soften the command.
+- Give a clear, simple action directive.
+- Include the word 'today' for temporality.
+- Use 'you' or 'your' in the supportive reason.
+- Keep it punchy – maximum 10 words total (excluding the emoji).
+- Do not mention specific planets or signs (keep it behavior-focused).
 
-Example: Neptune's blurring your instincts today. Take your time deciding.
+Example: 📝 Plan today. Save your energy to act later.
 
 ================================================================================
 OVERVIEW GUIDANCE (for daily_overview)
 ================================================================================
-Overall: 40/100
-Name the instability and swings; coach grounding, flexibility, and not overreacting to sudden emotional/energy spikes.
+Overall Energy: 31/100 (Turbulent)
+Writing direction: Name the instability and swings; coach grounding, flexibility, and not overreacting to sudden emotional/energy spikes.
 
-Highlights to cover:
+Start with CIRCLE and FOCUS (the Daily Drivers), then weave in these additional highlights:
 
-MIND: 71/100
-  Driver: focus (93/100)
-  What focus is: Focus represents your ability to concentrate, stay on task, and direct your attention without distraction.
-  Planets tracked: Mercury
-  Why: Neptune sextile natal Mercury
-  Trend: increasing (stable, +0 from yesterday)
-  How to write about it: Highlight that their thinking is reliable and focused; good moment for planning, problem-solving, and clear conversations.
+INSTINCTS: 33/100
+  Driver: creativity (13/100)
+  What creativity is: Creativity represents your access to creative flow, self-expression, and ability to bring something new into being.
+  Planets tracked: Venus, Neptune
+  Why: Neptune square natal Neptune
+  Trend: decreasing (rapid, -36 from yesterday)
+  How to write about it: Acknowledge mixed or conflicting signals; suggest slowing down, observing more, and not forcing a big read on situations.
 
 ================================================================================
 RELATIONSHIP WEATHER (for relationship_weather.overview)
 ================================================================================
-This is about Test User's general energy for connecting with others today.
+This is about Elie's general energy for connecting with others today.
 Do NOT mention any specific person by name here.
 
 
 HEART METER:
-- Score: 34/100
-- Driver: connections (Connections represents your romantic connection energy, openness to intimacy, and the flow of affection in relationships.)
-- Key aspect: Sun square natal Moon in 7th house (Pisces)
+- Score: 51/100
+- Driver: resilience (Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.)
+- Key aspect: Saturn square natal Uranus in 4th house (Sagittarius)
 
 
 RELATIONSHIP TRANSITS (Venus/Mars activity):
-- Venus trine natal Mars in 8th house (harmonious)
+- Venus opposition natal Sun in 9th house (challenging)
 
 
 ================================================================================
 CONNECTION VIBE (for relationship_weather.connection_vibe)
 ================================================================================
-This is about Test User's dynamic with Maya today.
-Write 1-2 sentences using their name. Focus on what Test User might feel or notice with this person.
+This is about Elie's dynamic with John today.
+Write 1-2 sentences using their name. Focus on what Elie might feel or notice with this person.
 
 CONNECTION DETAILS:
-- Name: Maya
-- Relationship: friend/close_friend
-- Their sun sign: gemini
-- Their age: 31
+- Name: John
+- Relationship: love/partner
+- Their sun sign: leo
+- Their age: 33
 
 TODAY'S CONNECTION ENERGY:
-- Energy level: mixed - some friction possible
+- Energy level: excellent - strong connection today
 - Active transits affecting this connection:
-  * Transit Sun sextile your attraction point
-  * Transit Sun square your affection point
-  * Transit Mercury square your communication point
+  * Transit Venus trine your passion point
 - Key connection points:
   * emotional connection point
   * core identity point
   * affection point
 
-
-RECENT HISTORY:
-- 2025-12-08: Maya, your connection feels bright and supportive today, with the Moon enhancing your emotional bond and the Sun sparking attraction. Enjoy this easy vibe together.
 
 
 
@@ -422,7 +442,9 @@ LUNAR CLIMATE - Your Emotional Weather Right Now
 └─ Leo Moon brings warmth, generosity, and desire for recognition
 
 [ACTIVE MOON ASPECTS - Next 2-3 Hours]
-├─ Square natal Venus (0.3° orb, BUILDING) - tension requiring action
+├─ Square natal Venus (0.2° orb, BUILDING) - tension requiring action
+├─ Trine natal Saturn (0.9° orb, BUILDING) - natural flow
+├─ Trine natal Jupiter (1.9° orb, BUILDING) - natural flow
 
 [MOON'S DISPOSITOR]
 └─ Your emotional state is filtered through Sun in Sagittarius, expanded by beliefs and meaning-seeking
@@ -432,7 +454,7 @@ LUNAR CLIMATE - Your Emotional Weather Right Now
 
 [NEXT LUNAR EVENTS]
 ├─ Sign Change: Moon enters Virgo in 19.1 hours
-├─ Next Aspect: Moon square natal Venus in 0.6 hours
+├─ Next Aspect: Moon square natal Venus in 0.3 hours
 └─ Next Phase: New Moon in 9.0 days
 
 
@@ -440,83 +462,83 @@ LUNAR CLIMATE - Your Emotional Weather Right Now
 NEXT 7 DAYS (for look_ahead_preview)
 ================================================================================
 TODAY (Tuesday):
-- Saturn square your natal Sun
-- Sun square your natal Moon
+- Saturn square your natal Uranus (EXACT)
+- Venus opposition your natal Sun
 
 Day +1 - Wednesday (2025-12-10):
-- Saturn square your natal Sun
-- Jupiter opposition your natal Saturn
+- Saturn square your natal Uranus (EXACT)
+- Venus opposition your natal Sun
 
 Day +2 - Thursday (2025-12-11):
-- Saturn square your natal Sun
-- Jupiter opposition your natal Saturn
+- Saturn square your natal Uranus (EXACT)
+- Venus opposition your natal Sun
 
 Day +3 - Friday (2025-12-12):
-- Saturn square your natal Sun
-- Jupiter opposition your natal Saturn
+- Saturn square your natal Uranus (EXACT)
+- Sun trine your natal Jupiter
 
 Day +4 - Saturday (2025-12-13):
-- Saturn square your natal Sun
-- Venus square your natal Moon
+- Saturn square your natal Uranus (EXACT)
+- Venus trine your natal Moon (EXACT)
 
 Day +5 - Sunday (2025-12-14):
-- Saturn square your natal Sun
-- Venus square your natal Moon
+- Saturn square your natal Uranus (EXACT)
+- Venus conjunction your natal Saturn
 
 Day +6 - Monday (2025-12-15):
-- Sun opposition your natal Sun
-- Saturn square your natal Sun
+- Saturn square your natal Uranus (EXACT)
+- Venus conjunction your natal Saturn (EXACT)
 
 Day +7 - Tuesday (2025-12-16):
-- Sun opposition your natal Sun
-- Saturn square your natal Sun
+- Saturn square your natal Uranus (EXACT)
+- Moon square your natal Moon
 
 ================================================================================
 REFERENCE: ALL METER GROUPS
 ================================================================================
 
-MIND: 71/100
-  Driver: focus (93/100)
-  What focus is: Focus represents your ability to concentrate, stay on task, and direct your attention without distraction.
-  Planets tracked: Mercury
-  Why: Neptune sextile natal Mercury in 10th house (Gemini)
-  Trend: increasing (stable, +0 from yesterday)
+MIND: 41/100
+  Driver: clarity (18/100)
+  What clarity is: Clarity represents your cognitive sharpness, how clearly you think, and how easily you process and communicate information.
+  Planets tracked: Sun, Mercury
+  Why: Neptune square natal Mercury in 10th house (Cancer)
+  Trend: decreasing (rapid, -46 from yesterday)
 
-HEART: 34/100
-  Driver: connections (19/100)
-  What connections is: Connections represents your romantic connection energy, openness to intimacy, and the flow of affection in relationships.
-  Planets tracked: Venus, Moon
-  Why: Sun square natal Moon in 7th house (Pisces)
-  Trend: increasing (rapid, +13 from yesterday)
+HEART: 51/100
+  Driver: resilience (59/100)
+  What resilience is: Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.
+  Planets tracked: Moon
+  Why: Saturn square natal Uranus in 4th house (Sagittarius)
+  Trend: increasing (moderate, +10 from yesterday)
 
-BODY: 57/100
-  Driver: strength (42/100)
+BODY: 63/100
+  Driver: strength (74/100)
   What strength is: Strength represents your daily health routines, work-life balance, and overall sense of physical and mental wellbeing.
   Planets tracked: Moon, Mars, Saturn
-  Why: Sun square natal Moon in 7th house (Pisces)
-  Trend: increasing (rapid, +36 from yesterday)
+  Why: Saturn square natal Saturn in 4th house (Sagittarius)
+  Trend: increasing (moderate, +8 from yesterday)
 
-INSTINCTS: 43/100
-  Driver: intuition (68/100)
-  What intuition is: Intuition represents your access to inner knowing, psychic awareness, and ability to sense what isn't visible.
-  Planets tracked: Uranus, Neptune
-  Why: Venus trine natal Mars in 8th house (Aries)
-  Trend: increasing (rapid, +14 from yesterday)
+INSTINCTS: 33/100
+  Driver: creativity (13/100)
+  What creativity is: Creativity represents your access to creative flow, self-expression, and ability to bring something new into being.
+  Planets tracked: Venus, Neptune
+  Why: Neptune square natal Neptune in 4th house (Capricorn)
+  Trend: decreasing (rapid, -36 from yesterday)
 
-GROWTH: 52/100
-  Driver: evolution (64/100)
-  What evolution is: Evolution represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.
-  Planets tracked: Jupiter, Uranus
-  Why: Jupiter opposition natal Saturn in 5th house (Capricorn)
-  Trend: increasing (rapid, +18 from yesterday)
+GROWTH: 38/100
+  Driver: circle (16/100)
+  What circle is: Circle represents your friendships, community connections, and ease of social interaction and belonging.
+  Planets tracked: Venus, Mercury
+  Why: Neptune square natal Mercury in 10th house (Cancer)
+  Trend: decreasing (rapid, -48 from yesterday)
 
 
 ================================================================================
 REFERENCE: KEY TRANSITS
 ================================================================================
 
-- Uranus conjunction natal Mercury in 10th house (Gemini)
+- Neptune square natal Mercury in 10th house (Cancer)
 
-- Neptune sextile natal Mercury in 10th house (Gemini)
+- Moon square natal Venus in 9th house (Taurus)
 
-- Saturn square natal Sun in 10th house (Gemini)
+- Neptune square natal Neptune in 4th house (Capricorn)

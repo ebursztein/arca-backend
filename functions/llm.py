@@ -49,7 +49,7 @@ from models import (
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
 from compatibility import CompatibilityData
-from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance
+from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance, calculate_group_scores
 from astrometers.summary import meter_groups_summary
 from astrometers.core import AspectContribution
 from moon import get_moon_transit_detail, format_moon_summary_for_llm
@@ -377,10 +377,14 @@ def build_astrometers_for_ios(
     for group_name in ["mind", "heart", "body", "instincts", "growth"]:
         meter_names = METER_GROUP_MAPPING[group_name]
 
+        # Collect MeterReading objects for group score calculation
+        meter_readings_for_group = []
+
         # Build MeterForIOS for each meter in group
         meters_for_ios = []
         for meter_name in meter_names:
             meter_reading = getattr(all_meters_reading, meter_name)
+            meter_readings_for_group.append(meter_reading)
             meter_desc = meter_descriptions.get(meter_name, {})
 
             # Convert top aspects using real data from AspectContribution
@@ -431,23 +435,22 @@ def build_astrometers_for_ios(
             meters_for_ios.append(meter_for_ios)
             all_meters_list.append(meter_for_ios)
 
-        # Calculate group aggregates
-        avg_unified = sum(m.unified_score for m in meters_for_ios) / len(meters_for_ios)
-        avg_intensity = sum(m.intensity for m in meters_for_ios) / len(meters_for_ios)
-        avg_harmony = sum(m.harmony for m in meters_for_ios) / len(meters_for_ios)
+        # Calculate group scores using unified formula
+        group_scores = calculate_group_scores(meter_readings_for_group)
+        group_unified = group_scores["unified_score"]
 
         # Determine group quality from unified_score quartiles (0-100 scale)
-        if avg_unified < 25:
+        if group_unified < 25:
             quality = "challenging"
-        elif avg_unified < 50:
+        elif group_unified < 50:
             quality = "turbulent"
-        elif avg_unified < 75:
+        elif group_unified < 75:
             quality = "peaceful"
         else:
             quality = "flowing"
 
         # State label computed by backend from unified_score
-        state_label = get_group_state_label(group_name, avg_unified)
+        state_label = get_group_state_label(group_name, group_unified)
 
         # Extract group trend (calculate from member meter trends)
         group_trend_delta = None
@@ -465,10 +468,14 @@ def build_astrometers_for_ios(
 
         group_desc = group_descriptions.get(group_name, {})
 
+        # Simple averages for internal-use fields (not displayed to users)
+        avg_intensity = sum(m.intensity for m in meters_for_ios) / len(meters_for_ios)
+        avg_harmony = sum(m.harmony for m in meters_for_ios) / len(meters_for_ios)
+
         group_for_ios = MeterGroupForIOS(
             group_name=group_name,
             display_name=group_name.title(),
-            unified_score=avg_unified,
+            unified_score=group_unified,
             intensity=avg_intensity,
             harmony=avg_harmony,
             state_label=state_label,

@@ -140,8 +140,8 @@ class TestGetAstrometers:
             meter = astrometers_response[meter_name]
             assert 0 <= meter["intensity"] <= 100, f"{meter_name} intensity out of range"
             assert 0 <= meter["harmony"] <= 100, f"{meter_name} harmony out of range"
-            # unified_score is polar-style: -100 to +100 (positive=harmonious, negative=challenging)
-            assert -100 <= meter["unified_score"] <= 100, f"{meter_name} unified_score out of range"
+            # unified_score: 0-100, 50=neutral (>50=harmonious, <50=challenging)
+            assert 0 <= meter["unified_score"] <= 100, f"{meter_name} unified_score out of range"
 
     @pytest.mark.llm
     def test_meters_have_correct_groups(self, astrometers_response):

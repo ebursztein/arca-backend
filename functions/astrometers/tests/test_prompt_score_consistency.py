@@ -5,10 +5,7 @@ This catches bugs where different functions calculate group scores differently,
 leading to mismatched numbers in the LLM prompt (e.g., "BODY: 55/100" in one
 section but "BODY: 57.2/100" in another).
 
-The bug this catches:
-- all_groups uses calculate_group_scores_top_2 (Top-2 weighted)
-- generate_overview_guidance was using simple average
-- These produce different numbers for the same group
+All code paths now use calculate_group_scores (direction-based top-2 formula).
 """
 
 import sys
@@ -26,7 +23,7 @@ from astrometers.meters import (
 )
 from astrometers.meter_groups import (
     build_all_meter_groups,
-    calculate_group_scores_top_2,
+    calculate_group_scores,
 )
 from astro import compute_birth_chart
 
@@ -131,7 +128,7 @@ class TestPromptScoreConsistency:
 
     def test_overview_guidance_uses_top2_weighted_scoring(self):
         """
-        Test that generate_overview_guidance uses calculate_group_scores_top_2.
+        Test that generate_overview_guidance uses calculate_group_scores.
 
         This is the core test that catches the bug where overview_guidance
         used simple averaging while all_groups used Top-2 weighted.
@@ -151,7 +148,7 @@ class TestPromptScoreConsistency:
         body_meters = [mock_meters.energy, mock_meters.drive, mock_meters.strength]
 
         # Calculate using Top-2 weighted (the correct method)
-        top2_scores = calculate_group_scores_top_2(body_meters)
+        top2_scores = calculate_group_scores(body_meters)
         top2_unified = top2_scores["unified_score"]
 
         # Calculate simple average (the buggy method)
@@ -286,7 +283,7 @@ class TestPromptScoreConsistency:
         body_meters = [mock_meters.energy, mock_meters.drive, mock_meters.strength]
 
         # Get driver from Top-2 calculation
-        top2_scores = calculate_group_scores_top_2(body_meters)
+        top2_scores = calculate_group_scores(body_meters)
         expected_driver = top2_scores["driver"]
 
         # Get driver from overview_guidance

@@ -597,7 +597,7 @@ class MeterGroupScores(BaseModel):
     """
     Aggregated scores for a meter group (arithmetic mean of member meters).
     """
-    unified_score: float = Field(ge=-100, le=100, description="Primary display value (-100 to +100), average of member meters")
+    unified_score: float = Field(ge=0, le=100, description="Primary display value (0-100, 50=neutral), average of member meters")
     harmony: float = Field(ge=0, le=100, description="Supportive vs challenging quality (0-100)")
     intensity: float = Field(ge=0, le=100, description="Activity level (0-100)")
 
@@ -1144,7 +1144,7 @@ class AstrometersForIOS(BaseModel):
     date: str = Field(description="ISO date of reading")
 
     # Overall stats (aggregated across all 17 meters)
-    overall_unified_score: float = Field(ge=-100, le=100, description="Overall unified score across all meters (-100 to +100)")
+    overall_unified_score: float = Field(ge=0, le=100, description="Overall unified score across all meters (0-100, 50=neutral)")
     overall_intensity: "MeterReading" = Field(description="Overall intensity meter with state_label")
     overall_harmony: "MeterReading" = Field(description="Overall harmony meter with state_label")
     overall_quality: str = Field(description="Overall quality from unified_score quadrant: challenging, turbulent, peaceful, flowing")
