@@ -188,8 +188,9 @@ def test_create_user_profile_v2(mock_gen_summary):
     """Test V2 profile creation (full birth info)."""
     mock_gen_summary.return_value = "You are a Gemini with Virgo Rising."
 
-    # Setup Firestore mock
+    # Setup Firestore mock for new user
     mock_db = MagicMock()
+    _setup_firestore_mock_for_profile(mock_db, user_exists=False)
     mock_firestore.client.return_value = mock_db
 
     req = MagicMock()
@@ -210,5 +211,79 @@ def test_create_user_profile_v2(mock_gen_summary):
     assert result["mode"] == "v2"
     assert result["exact_chart"] is True
 
-    # Verify Firestore write
-    mock_db.collection.return_value.document.return_value.set.assert_called()
+
+@patch("llm.generate_natal_chart_summary")
+def test_create_user_profile_preserves_protected_fields(mock_gen_summary):
+    """Test that calling create_user_profile repeatedly preserves premium/trial/created_at."""
+    mock_gen_summary.return_value = "You are a Gemini."
+
+    # Simulate existing user with premium status and trial info
+    existing_data = {
+        "is_premium": True,
+        "premium_expiry": "2025-12-31",
+        "is_trial_active": True,
+        "trial_end_date": "2025-01-15",
+        "created_at": "2024-06-01T10:00:00",
+    }
+
+    mock_db = MagicMock()
+    _setup_firestore_mock_for_profile(mock_db, user_exists=True, existing_data=existing_data)
+    mock_firestore.client.return_value = mock_db
+
+    # Track what gets written to Firestore
+    captured_profile = {}
+
+    def capture_set(data):
+        captured_profile.update(data)
+
+    mock_db.collection.side_effect = None  # Reset side_effect
+
+    # Re-setup with capture
+    mock_user_doc = MagicMock()
+    mock_user_doc.exists = True
+    mock_user_doc.to_dict.return_value = existing_data
+
+    mock_memory_doc = MagicMock()
+    mock_memory_doc.exists = True  # Memory already exists
+
+    mock_user_ref = MagicMock()
+    mock_user_ref.get.return_value = mock_user_doc
+    mock_user_ref.set.side_effect = capture_set
+
+    mock_memory_ref = MagicMock()
+    mock_memory_ref.get.return_value = mock_memory_doc
+
+    def collection_side_effect(name):
+        mock_collection = MagicMock()
+        if name == "users":
+            mock_collection.document.return_value = mock_user_ref
+        elif name == "memory":
+            mock_collection.document.return_value = mock_memory_ref
+        return mock_collection
+
+    mock_db.collection.side_effect = collection_side_effect
+
+    req = MagicMock()
+    req.auth.uid = "user_123"
+    req.data = {
+        "name": "Updated Name",
+        "email": "test@test.com",
+        "birth_date": "1990-06-15"
+    }
+
+    result = main.create_user_profile(req)
+
+    assert result["success"] is True
+
+    # Verify protected fields were preserved
+    assert captured_profile["is_premium"] is True
+    assert captured_profile["premium_expiry"] == "2025-12-31"
+    assert captured_profile["is_trial_active"] is True
+    assert captured_profile["trial_end_date"] == "2025-01-15"
+    assert captured_profile["created_at"] == "2024-06-01T10:00:00"
+
+    # Verify updatable fields were updated
+    assert captured_profile["name"] == "Updated Name"
+
+    # Verify memory was NOT reset (already exists)
+    mock_memory_ref.set.assert_not_called()

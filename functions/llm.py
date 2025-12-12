@@ -1050,11 +1050,13 @@ def generate_daily_horoscope(
         meter_scores = group_data['scores'].get('meter_scores', {})
 
         # Get writing guidance based on score configuration
+        # Pass first name only (not full name) to avoid LLM using "Test User" instead of "Test"
+        user_first_name = user_profile.name.split()[0] if user_profile.name else ""
         writing_guidance = get_group_writing_guidance(
             unified_score=unified_score,
             meter_scores=meter_scores,
             driver_name=driver_name,
-            user_name=user_profile.name,
+            user_name=user_first_name,
         )
 
         all_groups.append({
