@@ -270,9 +270,23 @@ class TestTemplateRendersConnectionEnergy:
             "headline_guidance": {"meters": [], "conjunction": None},
             "overall_unified_score": 62,
             "overall_guidance": "Test guidance",
+            "overall_writing_guidance": {
+                "pattern": "neutral_day",
+                "formula": "Test formula",
+                "strongest_group": "mind",
+                "strongest_score": 55,
+                "challenging_group": None,
+                "challenging_score": None,
+                "flowing_groups": [],
+                "challenging_groups": [],
+                "shining_group": None,
+            },
             "overview_guidance": {"formatted_highlights": []},
             "has_relationships": True,
             "user_name": "Test User",
+            "user_first_name": "Test",
+            "heart_group": None,
+            "relationship_transits": [],
             "featured_connection": {
                 "name": "Johnny",
                 "relationship_category": "friend",
@@ -289,7 +303,13 @@ class TestTemplateRendersConnectionEnergy:
             "moon_summary": "Moon in Leo",
             "is_void_of_course": False,
             "upcoming_transits": [],
-            "all_groups": [],
+            "all_groups": [
+                {"name": "mind", "unified_score": 55, "meter_scores": {"clarity": 55, "focus": 54, "communication": 56}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "heart", "unified_score": 50, "meter_scores": {"connections": 50, "resilience": 51, "vulnerability": 49}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "body", "unified_score": 52, "meter_scores": {"energy": 52, "drive": 53, "strength": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "instincts", "unified_score": 48, "meter_scores": {"vision": 48, "flow": 47, "intuition": 49, "creativity": 48}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "growth", "unified_score": 51, "meter_scores": {"momentum": 51, "ambition": 50, "evolution": 52, "circle": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+            ],
             "key_transits": []
         }
 
@@ -298,8 +318,8 @@ class TestTemplateRendersConnectionEnergy:
         # Assertions - check current template format
         assert "75/100" in output, \
             "Template should render vibe_score when present"
-        assert "EXCELLENT" in output, \
-            "Template should render energy level label when vibe_score is high"
+        assert "Good vibe" in output, \
+            "Template should render writing formula for good vibe (75 is >= 60)"
         assert "CONNECTION VIBE" in output, \
             "Template should render CONNECTION VIBE section"
 
@@ -316,9 +336,21 @@ class TestTemplateRendersConnectionEnergy:
             "headline_guidance": {"meters": [], "conjunction": None},
             "overall_unified_score": 62,
             "overall_guidance": "Test guidance",
+            "overall_writing_guidance": {
+                "pattern": "neutral_day",
+                "formula": "Test formula",
+                "strongest_group": "mind",
+                "strongest_score": 55,
+                "challenging_group": None,
+                "challenging_score": None,
+                "flowing_groups": [],
+                "challenging_groups": [],
+                "shining_group": None,
+            },
             "overview_guidance": {"formatted_highlights": []},
             "has_relationships": True,
             "user_name": "Test User",
+            "user_first_name": "Test",
             "heart_group": None,
             "relationship_transits": [],
             "featured_connection": {
@@ -331,7 +363,13 @@ class TestTemplateRendersConnectionEnergy:
             "moon_summary": "Moon in Leo",
             "is_void_of_course": False,
             "upcoming_transits": [],
-            "all_groups": [],
+            "all_groups": [
+                {"name": "mind", "unified_score": 55, "meter_scores": {"clarity": 55, "focus": 54, "communication": 56}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "heart", "unified_score": 50, "meter_scores": {"connections": 50, "resilience": 51, "vulnerability": 49}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "body", "unified_score": 52, "meter_scores": {"energy": 52, "drive": 53, "strength": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "instincts", "unified_score": 48, "meter_scores": {"vision": 48, "flow": 47, "intuition": 49, "creativity": 48}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "growth", "unified_score": 51, "meter_scores": {"momentum": 51, "ambition": 50, "evolution": 52, "circle": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+            ],
             "key_transits": []
         }
 
@@ -971,14 +1009,32 @@ class TestRelationshipWeatherPromptData:
             "headline_guidance": {"meters": [], "conjunction": None},
             "overall_unified_score": 62,
             "overall_guidance": "Test",
+            "overall_writing_guidance": {
+                "pattern": "neutral_day",
+                "formula": "Test formula",
+                "strongest_group": "mind",
+                "strongest_score": 55,
+                "challenging_group": None,
+                "challenging_score": None,
+                "flowing_groups": [],
+                "challenging_groups": [],
+                "shining_group": None,
+            },
             "overview_guidance": {"formatted_highlights": []},
             "has_relationships": True,
             "user_name": "Test User",
+            "user_first_name": "Test",
             "heart_group": {
                 "unified_score": 65,
                 "driver": "connections",
+                "driver_score": 70,
                 "driver_meaning": "Your ability to bond with others",
-                "driver_aspect": "Venus trine Moon"
+                "driver_aspect": "Venus trine Moon",
+                "meter_scores": {"connections": 70, "resilience": 60, "vulnerability": 65},
+                "writing_guidance": {
+                    "pattern": "all_positive",
+                    "formula": "Test heart formula",
+                },
             },
             "relationship_transits": [
                 {"description": "Venus trine natal Moon in 7th house (harmonious)"}
@@ -997,7 +1053,13 @@ class TestRelationshipWeatherPromptData:
             "moon_summary": "Moon in Leo",
             "is_void_of_course": False,
             "upcoming_transits": [],
-            "all_groups": [],
+            "all_groups": [
+                {"name": "mind", "unified_score": 55, "meter_scores": {"clarity": 55, "focus": 54, "communication": 56}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "heart", "unified_score": 65, "meter_scores": {"connections": 70, "resilience": 60, "vulnerability": 65}, "writing_guidance": {"pattern": "all_positive", "formula": "Test"}},
+                {"name": "body", "unified_score": 52, "meter_scores": {"energy": 52, "drive": 53, "strength": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "instincts", "unified_score": 48, "meter_scores": {"vision": 48, "flow": 47, "intuition": 49, "creativity": 48}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "growth", "unified_score": 51, "meter_scores": {"momentum": 51, "ambition": 50, "evolution": 52, "circle": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+            ],
             "key_transits": []
         }
 
@@ -1005,7 +1067,7 @@ class TestRelationshipWeatherPromptData:
 
         # Check vibe score appears in output
         assert "75/100" in output, "Vibe score should appear in prompt"
-        assert "EXCELLENT" in output, "Energy level label should appear in prompt"
+        assert "Good vibe" in output, "Writing formula for good vibe (75 >= 60) should appear"
         # Check general relationship data appears
         assert "HEART METER" in output, "Heart meter section should appear"
         assert "RELATIONSHIP TRANSITS" in output, "Relationship transits should appear"
@@ -1028,9 +1090,21 @@ class TestRelationshipWeatherPromptData:
             "headline_guidance": {"meters": [], "conjunction": None},
             "overall_unified_score": 62,
             "overall_guidance": "Test",
+            "overall_writing_guidance": {
+                "pattern": "neutral_day",
+                "formula": "Test formula",
+                "strongest_group": "mind",
+                "strongest_score": 55,
+                "challenging_group": None,
+                "challenging_score": None,
+                "flowing_groups": [],
+                "challenging_groups": [],
+                "shining_group": None,
+            },
             "overview_guidance": {"formatted_highlights": []},
             "has_relationships": True,
             "user_name": "Test User",
+            "user_first_name": "Test",
             "heart_group": None,  # No heart group data
             "relationship_transits": [],  # No Venus/Mars transits
             "featured_connection": {
@@ -1043,7 +1117,13 @@ class TestRelationshipWeatherPromptData:
             "moon_summary": "Moon in Leo",
             "is_void_of_course": False,
             "upcoming_transits": [],
-            "all_groups": [],
+            "all_groups": [
+                {"name": "mind", "unified_score": 55, "meter_scores": {"clarity": 55, "focus": 54, "communication": 56}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "heart", "unified_score": 50, "meter_scores": {"connections": 50, "resilience": 51, "vulnerability": 49}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "body", "unified_score": 52, "meter_scores": {"energy": 52, "drive": 53, "strength": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "instincts", "unified_score": 48, "meter_scores": {"vision": 48, "flow": 47, "intuition": 49, "creativity": 48}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+                {"name": "growth", "unified_score": 51, "meter_scores": {"momentum": 51, "ambition": 50, "evolution": 52, "circle": 51}, "writing_guidance": {"pattern": "all_neutral", "formula": "Test"}},
+            ],
             "key_transits": []
         }
 

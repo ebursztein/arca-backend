@@ -122,7 +122,7 @@ NEVER use:
 ## 5. Style
 
 1. **Lead with the direct answer.** No long preambles.
-2. **Use their nam at least once once** naturally, not repeatedly.
+2. **Use their FIRST NAME only** (not their full name) at least once naturally, not repeatedly. If you receive "Sarah Johnson", use only "Sarah".
 3. **Be sun-sign specific** when relevant – acknowledge how today’s energy interacts with who they are.
 4. **One concrete action** per reading – with timing if relevant (e.g., "Tonight," "This week," "Before you respond").
 5. **No emojis** in horoscope text.
@@ -250,11 +250,11 @@ Each field serves a specific purpose in the user experience. Here's what goes wh
 | `actionable_advice.do` | One micro-action | Leverage strongest meter | Aligned with day's strength |
 | `actionable_advice.dont` | One boundary | Protect weakest meter | Aligned with day's challenge |
 | `actionable_advice.reflect_on` | One question | Open possibility | Forward-looking |
-| `mind_interpretation` | Mental state | Follow WRITING FORMULA from MIND group | 1-2 sentences, use user's name |
-| `heart_interpretation` | Emotional state | Follow WRITING FORMULA from HEART group | 1-2 sentences, use user's name |
-| `body_interpretation` | Physical state | Follow WRITING FORMULA from BODY group | 1-2 sentences, use user's name |
-| `instincts_interpretation` | Intuition state | Follow WRITING FORMULA from INSTINCTS group | 1-2 sentences, use user's name |
-| `growth_interpretation` | Momentum state | Follow WRITING FORMULA from GROWTH group | 1-2 sentences, use user's name |
+| `mind_interpretation` | Mental state | Follow WRITING FORMULA from MIND group | 1-2 sentences, use user's first name |
+| `heart_interpretation` | Emotional state | Follow WRITING FORMULA from HEART group | 1-2 sentences, use user's first name |
+| `body_interpretation` | Physical state | Follow WRITING FORMULA from BODY group | 1-2 sentences, use user's first name |
+| `instincts_interpretation` | Intuition state | Follow WRITING FORMULA from INSTINCTS group | 1-2 sentences, use user's first name |
+| `growth_interpretation` | Momentum state | Follow WRITING FORMULA from GROWTH group | 1-2 sentences, use user's first name |
 | `energy_rhythm` | Day timing guidance | Based on Moon position | Helps plan WHEN to act |
 | `relationship_weather.overview` | User's relationship energy | HEART meter + Venus/Mars transits | No names, just user's general connection energy |
 | `relationship_weather.connection_vibe` | Vibe with specific connection | Data from [CONNECTION VIBE] section | Use their name, what user feels with them today |
@@ -266,7 +266,7 @@ Each field serves a specific purpose in the user experience. Here's what goes wh
 
 **daily_theme_headline:**
 iOS NOTIFICATION. Max 12 words.
-- Include user's name (for provocative mode) or "you/your" (for other modes)
+- Include user's first name (for provocative mode) or "you/your" (for other modes)
 - Include "today" (temporality is required)
 - Be meter-specific based on [HEADLINE GUIDANCE]
 - Follow the VOICE MODE, Style, Formula, and Example from [HEADLINE GUIDANCE]
@@ -285,7 +285,7 @@ DO NOT use: flowery language ("hums", "fragile", "quiet", "power"), generic stat
 - reflect_on: "What have you been overthinking that's actually simple?"
 
 **meter interpretations:**
-CRITICAL: Follow the WRITING FORMULA and STRUCTURE from each group in [REFERENCE: ALL METER GROUPS]. Use the user's name naturally. Include a concrete action. Be concrete, not abstract (see voice rules 4.2).
+CRITICAL: Follow the WRITING FORMULA and STRUCTURE from each group in [REFERENCE: ALL METER GROUPS]. Use the user's first name naturally. Include a concrete action. Be concrete, not abstract (see voice rules 4.2).
 
 Examples:
 - all_positive: "Sarah, your mind is sharp today with your mental clarity at peak and strong focus energy backing it up. This is driven by Mercury trining your Jupiter. Make that decision you've been sitting on."
@@ -322,14 +322,14 @@ USER & PERSONALIZATION CONTEXT
 
 [USER PROFILE]
 Name: Test User
-Birth Date: 1990-06-15
-Age: 35 (Millennial)
+Birth Date: 1987-06-02
+Age: 38 (Millennial)
 Sun Sign: Gemini
 Natal Chart Overview:
 • Sun in Gemini
-• Ascendant: Leo at 26.13°
-• Moon: Pisces
-• Chart Emphasis: 4 planets in Earth signs, 5 planets in Cardinal mode
+• Ascendant: Virgo at 8.8°
+• Moon: Leo
+• Chart Emphasis: 5 planets in Fire signs, 5 planets in Cardinal mode
 
 [SUN SIGN ESSENCE]
 Element: Air | Modality: Mutable
@@ -343,64 +343,76 @@ Use this data to build continuity, reference explored themes, avoid repetition, 
 Category Interests:
   (First time user - no history yet)
 
-TODAY'S READING (2025-12-10)
+TODAY'S READING (2025-12-12)
 
 ================================================================================
 DAILY DRIVERS (for daily_theme_headline AND daily_overview)
 ================================================================================
-Today's focus is TWO meters. Cover both in headline (use "and") and overview.
+Today's focus is TWO meters. Cover both in headline (use "but") and overview.
 
 
-DRIVER 1: MIND - communication (30/100, Distracted)
-  Why: Neptune sextile natal Mercury
+DRIVER 1: MIND - focus (65/100, On Point)
+  Why: Neptune square natal Mercury
+  Direction: FLOWING - lean into it, encourage action
+
+DRIVER 2: INSTINCTS - creativity (41/100, Noisy)
+  Why: Neptune square natal Neptune
   Direction: PUSHING - acknowledge difficulty, show path through
 
-DRIVER 2: INSTINCTS - creativity (21/100, Off)
-  Why: Jupiter opposition natal Saturn
-  Direction: PUSHING - acknowledge difficulty, show path through
 
-
-HEADLINE VOICE: provocative
-Style: Direct, honest snapshot with a way through. Uses their name.
-Formula: [Name], [honest state] today – [how to handle it].
+HEADLINE VOICE: personalized
+Style: Names the transit behind the vibe and gives you a path through. Uses 'you/your'.
+Formula: [Planet] is [doing X] today. [How you handle it].
 Rules:
-- Start with their name (e.g. 'Maya, ...').
-- State the honest situation clearly (realistic, not harsh, not sugarcoated).
-- Include the word 'today' for temporality.
-- End with how to handle it (the path through).
+- MUST name at least one planet (Mercury, Venus, Mars, Saturn, Neptune, etc.).
+- For contrast patterns: use 'but' to connect Planet 1's effect with Planet 2's effect.
+- Use 'you' or 'your' at least once.
+- Include 'today' for temporality.
+- End with supportive guidance (the path through).
+- Do NOT use their name - that's provocative mode.
 - No emoji.
-- Speak to the day's energy, not the user's worth.
+- Avoid astro jargon (no houses/aspects; keep it simple and human).
 
-Example: Maya, you're pushing on fumes today – go easy on yourself.
+Example: Saturn's pressing on your heart today, but Neptune keeps your instincts clear. Trust your gut.
 
 ================================================================================
 OVERVIEW GUIDANCE (for daily_overview)
 ================================================================================
-Overall Energy: 45/100 (Turbulent)
-Writing direction: Name the instability and swings; coach grounding, flexibility, and not overreacting to sudden emotional/energy spikes.
+Groups: mind=57, heart=30, body=51, instincts=52, growth=47
+Key transit: Neptune square natal Mercury in 10th house (Cancer)
 
-Start with COMMUNICATION and CREATIVITY (the Daily Drivers), then weave in these additional highlights:
+Flowing: mind. Challenging: heart. Address Test User by name naturally. Cite transit. Give 1-2 actions that play to strengths and work around challenges.
 
-HEART: 64/100
-  Driver: vulnerability (72/100)
-  What vulnerability is: Vulnerability represents your emotional awareness, empathy, and attunement to the feelings and energy around you.
-  Planets tracked: Moon, Neptune
-  Why: Jupiter trine natal Moon
-  Trend: increasing (rapid, +27 from yesterday)
-  How to write about it: Describe steady, calm emotions; good for honest check-ins, stable connection, and showing up dependably.
+
+After the overview hook, weave in these additional highlights from today's featured meters:
+
+HEART: 30/100
+  Driver: resilience (17/100)
+  What resilience is: Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.
+  Planets tracked: Moon
+  Why: Saturn square natal Uranus
+  Trend: decreasing (slow, -4 from yesterday)
+  How to write about it: Name their sensitivity; suggest soft boundaries, honest feelings shared in safe spaces, and not forcing tough talks.
+
 
 ================================================================================
 RELATIONSHIP WEATHER (for relationship_weather.overview)
 ================================================================================
-This is about Test User's general energy for connecting with others today.
+This is about Test's general energy for connecting with others today.
 Do NOT mention any specific person by name here.
 
 
-HEART METER:
-- Score: 64/100
-- Driver: vulnerability (Vulnerability represents your emotional awareness, empathy, and attunement to the feelings and energy around you.)
-- Key aspect: Jupiter trine natal Moon in 7th house (Pisces)
+HEART METER: 30/100
+Meters configuration: all_negative (connections=35, resilience=17, vulnerability=37)
+Main energy driver: resilience (17/100)
+Key transit: Saturn square natal Uranus in 4th house (Sagittarius)
 
+WRITING FORMULA:
+Acknowledge the overall challenge. Name what the user feels, then give a concrete path through. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
+
+
+RELATIONSHIP TRANSITS (Venus/Mars activity):
+- Mars opposition natal Mercury in 10th house (challenging)
 
 
 
@@ -412,28 +424,32 @@ LUNAR CLIMATE - Your Emotional Weather Right Now
 ═══════════════════════════════════════════════════════════════════
 
 [CURRENT LUNAR POSITION]
-├─ Phase: Waning Gibbous 🌖 (58% illuminated)
-├─ Sign: Virgo (2.5°)
+├─ Phase: Last Quarter 🌗 (45% illuminated)
+├─ Sign: Virgo (27.9°)
 ├─ House: 4th (home, family, roots)
 └─ Void of Course: Active
 
 [PHASE WISDOM]
-├─ Energy: Gratitude, sharing wisdom
-└─ Ritual: Give back, teach others
+├─ Energy: Reevaluation, course correction
+└─ Ritual: Release what's not working
 
 [EMOTIONAL TONE]
 └─ Virgo Moon brings analytical feelings, attention to detail, and practical concerns
 
+[ACTIVE MOON ASPECTS - Next 2-3 Hours]
+├─ Square natal Uranus (2.6° orb, BUILDING) - tension requiring action
+
 [MOON'S DISPOSITOR]
-└─ Your emotional state is filtered through Mercury in Scorpio, expanded by beliefs and meaning-seeking
+└─ Your emotional state is filtered through Mercury in Sagittarius, expanded by beliefs and meaning-seeking
 
 [TIMING GUIDANCE]
 └─ Moon is void-of-course. Avoid starting new projects or making major decisions. Focus on reflection, completion, and rest.
-   Void ends: 02:22 PM UTC when Moon enters next sign
+   Void ends: 04:05 PM UTC when Moon enters next sign
 
 [NEXT LUNAR EVENTS]
-├─ Sign Change: Moon enters Libra in 50.4 hours
-└─ Next Phase: New Moon in 8.0 days
+├─ Sign Change: Moon enters Libra in 4.1 hours
+├─ Next Aspect: Moon square natal Uranus in 4.7 hours
+└─ Next Phase: New Moon in 6.3 days
 
 
 **VOID-OF-COURSE OVERRIDE (for actionable_advice)**
@@ -446,108 +462,108 @@ The moon is void-of-course. This OVERRIDES normal actionable_advice guidance:
 ================================================================================
 NEXT 7 DAYS (for look_ahead_preview)
 ================================================================================
-TODAY (Wednesday):
-- Saturn square your natal Sun
-- Jupiter opposition your natal Saturn
+TODAY (Friday):
+- Saturn square your natal Uranus (EXACT)
+- Sun trine your natal Jupiter
 
-Day +1 - Thursday (2025-12-11):
-- Saturn square your natal Sun
-- Jupiter opposition your natal Saturn
+Day +1 - Saturday (2025-12-13):
+- Saturn square your natal Uranus (EXACT)
+- Venus trine your natal Moon (EXACT)
 
-Day +2 - Friday (2025-12-12):
-- Saturn square your natal Sun
-- Jupiter opposition your natal Saturn
+Day +2 - Sunday (2025-12-14):
+- Saturn square your natal Uranus (EXACT)
+- Venus conjunction your natal Saturn
 
-Day +3 - Saturday (2025-12-13):
-- Saturn square your natal Sun
-- Venus square your natal Moon
+Day +3 - Monday (2025-12-15):
+- Saturn square your natal Uranus (EXACT)
+- Venus conjunction your natal Saturn (EXACT)
 
-Day +4 - Sunday (2025-12-14):
-- Saturn square your natal Sun
-- Venus square your natal Moon
+Day +4 - Tuesday (2025-12-16):
+- Saturn square your natal Uranus (EXACT)
+- Moon square your natal Moon
 
-Day +5 - Monday (2025-12-15):
-- Sun opposition your natal Sun
-- Saturn square your natal Sun
+Day +5 - Wednesday (2025-12-17):
+- Saturn square your natal Uranus (EXACT)
+- Sun conjunction your natal Uranus
 
-Day +6 - Tuesday (2025-12-16):
-- Sun opposition your natal Sun
-- Saturn square your natal Sun
+Day +6 - Thursday (2025-12-18):
+- Saturn square your natal Uranus
+- Jupiter square your natal Jupiter
 
-Day +7 - Wednesday (2025-12-17):
-- Saturn square your natal Sun
-- Sun opposition your natal Sun
+Day +7 - Friday (2025-12-19):
+- Saturn square your natal Uranus
+- Jupiter square your natal Jupiter
 
 ================================================================================
 REFERENCE: ALL METER GROUPS
 ================================================================================
 
-MIND: 45/100
-  Meters configuration: one_positive_outlier (clarity=56, focus=48, communication=30)
-  Main energy driver: communication (30/100) - decreasing (rapid, -18 from yesterday)
+MIND: 57/100
+  Meters configuration: one_negative_outlier (clarity=40, focus=65, communication=65)
+  Main energy driver: communication (65/100) - increasing (moderate, +8 from yesterday)
 
   What communication is: Communication represents how easily you express yourself, connect through words, and understand others in conversations.
   Planets tracked: Mercury
-  Why: Neptune sextile natal Mercury in 10th house (Gemini)
+  Why: Neptune square natal Mercury in 10th house (Cancer)
 
-  WRITING FORMULA: Most of this area is struggling, but clarity is working. Lean on that. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
+  WRITING FORMULA: Name clarity as the one thing that's off. The rest of this area is fine - focus, communication are holding. Focus on navigating around clarity. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
   STRUCTURE: two_parts
-  First: Name what the user feels with clarity (what's working). Cite the 'Why' transit to explain astrologically.
-  Then: Acknowledge focus, communication are struggling. Name what the user feels there.
+  First: Name what the user feels with clarity (the challenge). Cite the 'Why' transit to explain astrologically.
+  Then: Acknowledge focus, communication are fine. The rest of this area is holding.
 
 
-HEART: 64/100
-  Meters configuration: all_positive (resilience=61, connections=59, vulnerability=72)
-  Main energy driver: vulnerability (72/100) - increasing (rapid, +27 from yesterday)
+HEART: 30/100
+  Meters configuration: all_negative (resilience=17, connections=35, vulnerability=37)
+  Main energy driver: resilience (17/100) - decreasing (slow, -4 from yesterday)
 
-  What vulnerability is: Vulnerability represents your emotional awareness, empathy, and attunement to the feelings and energy around you.
-  Planets tracked: Moon, Neptune
-  Why: Jupiter trine natal Moon in 7th house (Pisces)
-
-  WRITING FORMULA: Everything's aligned. Lead with the driver, mention the steady support from the others. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
-  STRUCTURE: one_block
-  Write one unified explanation. Lead with vulnerability, then mention resilience, connections as supporting. Name what the user feels. Cite the 'Why' transit to explain astrologically.
-
-
-BODY: 40/100
-  Meters configuration: one_positive_outlier (energy=30, drive=56, strength=32)
-  Main energy driver: energy (30/100) - decreasing (stable, -2 from yesterday)
-
-  What energy is: Energy represents your physical energy, stamina, and life force available for daily activities and bold action.
-  Planets tracked: Sun
-  Why: Saturn square natal Sun in 10th house (Gemini)
-
-  WRITING FORMULA: Most of this area is struggling, but drive is working. Lean on that. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
-  STRUCTURE: two_parts
-  First: Name what the user feels with drive (what's working). Cite the 'Why' transit to explain astrologically.
-  Then: Acknowledge energy, strength are struggling. Name what the user feels there.
-
-
-INSTINCTS: 54/100
-  Meters configuration: split (vision=48, flow=82, intuition=67, creativity=21)
-  Main energy driver: flow (82/100) - increasing (moderate, +10 from yesterday)
-
-  What flow is: Flow represents your sense of spiritual belonging, unity with something larger, and feeling part of the whole.
-  Planets tracked: Neptune
-  Why: Jupiter conjunction natal Jupiter in 11th house (Cancer)
-
-  WRITING FORMULA: Split energy. flow, intuition are strong, vision, creativity need caution. Acknowledge both sides. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
-  STRUCTURE: two_parts
-  First: Name what the user feels with the strong side - flow, intuition. Cite the 'Why' transit.
-  Then: Name what the user feels with the challenging side - vision, creativity. Cite the 'Why' transit.
-
-
-GROWTH: 39/100
-  Meters configuration: all_negative (momentum=36, ambition=38, evolution=35, circle=48)
-  Main energy driver: evolution (35/100) - decreasing (rapid, -40 from yesterday)
-
-  What evolution is: Evolution represents your capacity for personal evolution, stepping into new versions of yourself, and life chapter transitions.
-  Planets tracked: Jupiter, Uranus
-  Why: Jupiter opposition natal Saturn in 5th house (Capricorn)
+  What resilience is: Resilience represents your emotional equilibrium, sense of security, and ability to stay grounded through challenges.
+  Planets tracked: Moon
+  Why: Saturn square natal Uranus in 4th house (Sagittarius)
 
   WRITING FORMULA: Acknowledge the overall challenge. Name what the user feels, then give a concrete path through. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
   STRUCTURE: one_block
-  Write one unified explanation about the challenge. Name what the user feels with evolution, give a path through. Cite the 'Why' transit to explain astrologically.
+  Write one unified explanation about the challenge. Name what the user feels with resilience, give a path through. Cite the 'Why' transit to explain astrologically.
+
+
+BODY: 51/100
+  Meters configuration: all_neutral (energy=55, drive=40, strength=57)
+  Main energy driver: strength (57/100) - increasing (rapid, +12 from yesterday)
+
+  What strength is: Strength represents your daily health routines, work-life balance, and overall sense of physical and mental wellbeing.
+  Planets tracked: Moon, Mars, Saturn
+  Why: Saturn square natal Saturn in 4th house (Sagittarius)
+
+  WRITING FORMULA: Nothing dramatic here. Overall solid. Don't oversell or undersell. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
+  STRUCTURE: one_block
+  Write one unified explanation about solid, unremarkable energy. Describe how the user feels.
+
+
+INSTINCTS: 52/100
+  Meters configuration: split (vision=67, flow=64, intuition=36, creativity=41)
+  Main energy driver: vision (67/100) - increasing (rapid, +18 from yesterday)
+
+  What vision is: Vision represents your sense of meaning, life direction, and connection to what you're here to do.
+  Planets tracked: Jupiter, Sun
+  Why: Neptune square natal Mercury in 10th house (Cancer)
+
+  WRITING FORMULA: Split energy. vision, flow are strong, intuition, creativity need caution. Acknowledge both sides. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
+  STRUCTURE: two_parts
+  First: Name what the user feels with the strong side - vision, flow. Cite the 'Why' transit.
+  Then: Name what the user feels with the challenging side - intuition, creativity. Cite the 'Why' transit.
+
+
+GROWTH: 47/100
+  Meters configuration: split (momentum=54, ambition=36, evolution=57, circle=42)
+  Main energy driver: ambition (36/100) - decreasing (rapid, -25 from yesterday)
+
+  What ambition is: Ambition represents your professional momentum, recognition, and the structure of your work life and public role.
+  Planets tracked: Saturn
+  Why: Neptune square natal Mercury in 10th house (Cancer)
+
+  WRITING FORMULA: Split energy. momentum, evolution are strong, ambition, circle need caution. Acknowledge both sides. Use the user's name naturally (e.g., 'Test User, your...' or 'Your... Test User, you...'). Name what they FEEL. Make sure to include a concrete action.
+  STRUCTURE: two_parts
+  First: Name what the user feels with the strong side - momentum, evolution. Cite the 'Why' transit.
+  Then: Name what the user feels with the challenging side - ambition, circle. Cite the 'Why' transit.
 
 
 
@@ -555,8 +571,8 @@ GROWTH: 39/100
 REFERENCE: KEY TRANSITS
 ================================================================================
 
-- Uranus conjunction natal Mercury in 10th house (Gemini)
+- Neptune square natal Mercury in 10th house (Cancer)
 
-- Neptune sextile natal Mercury in 10th house (Gemini)
+- Sun trine natal Jupiter in 8th house (Aries)
 
-- Saturn square natal Sun in 10th house (Gemini)
+- Jupiter square natal Jupiter in 8th house (Aries)

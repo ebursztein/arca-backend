@@ -579,3 +579,150 @@ def build_all_meter_groups(
         meter_groups[group.value] = group_data
 
     return meter_groups
+
+
+# =============================================================================
+# Overall Writing Guidance
+# =============================================================================
+
+# Tie-breaking priority: emotional/relational areas first
+_GROUP_PRIORITY = ["heart", "mind", "body", "instincts", "growth"]
+
+
+def get_overall_writing_guidance(
+    all_groups: List[Dict],
+    user_name: str = "",
+) -> Dict:
+    """
+    Generate writing guidance for daily overview based on all 5 meter groups.
+
+    Uses a 6-pattern matrix based on group score configuration:
+    - all_flowing: All 5 groups >= 60
+    - all_challenging: All 5 groups < 40
+    - one_challenging: Exactly 1 group < 40, others >= 50
+    - one_shining: Exactly 1 group >= 60, others < 50
+    - mixed_day: Some >= 60, some < 40
+    - neutral_day: All groups in 40-60 range
+
+    Threshold zones:
+    - Strong/Flowing: >= 55
+    - Neutral: 45-55 (unremarkable)
+    - Challenging: < 45
+
+    Args:
+        all_groups: List of 5 group dicts with 'name' and 'unified_score'
+        user_name: User's name for personalized formulas
+
+    Returns:
+        Dict with pattern, formula, strongest_group, challenging_group, etc.
+    """
+    if not all_groups:
+        return {
+            "pattern": "unknown",
+            "formula": "Describe the overall energy.",
+            "strongest_group": None,
+            "strongest_score": None,
+            "challenging_group": None,
+            "challenging_score": None,
+            "flowing_groups": [],
+            "challenging_groups": [],
+            "shining_group": None,
+        }
+
+    # Categorize groups by threshold zones
+    flowing_groups = []  # >= 55
+    challenging_groups = []  # < 45
+    neutral_groups = []  # 45-55
+
+    for g in all_groups:
+        score = g["unified_score"]
+        name = g["name"]
+        if score >= 55:
+            flowing_groups.append(name)
+        elif score < 45:
+            challenging_groups.append(name)
+        else:
+            neutral_groups.append(name)
+
+    # Find strongest and weakest groups (with tie-breaking)
+    def priority_key(g):
+        """Sort by score, then by priority order for ties."""
+        name = g["name"]
+        priority = _GROUP_PRIORITY.index(name) if name in _GROUP_PRIORITY else 99
+        return (g["unified_score"], -priority)  # Higher score wins, lower priority wins ties
+
+    sorted_by_score = sorted(all_groups, key=priority_key)
+    weakest = sorted_by_score[0]
+    strongest = sorted_by_score[-1]
+
+    # Common formula components
+    name_note = f"Address {user_name} by name naturally." if user_name else "Address user by name naturally."
+
+    # Determine pattern
+    total = len(all_groups)
+    num_flowing = len(flowing_groups)
+    num_challenging = len(challenging_groups)
+    num_neutral = len(neutral_groups)
+
+    # Pattern: all_flowing (all >= 55)
+    if num_flowing == total:
+        pattern = "all_flowing"
+        flowing_str = ", ".join(flowing_groups)
+        formula = f"""Flowing: {flowing_str}. {name_note} Describe 2-3 feelings (mental clarity, emotional warmth, physical energy). Cite transit. Give 1-2 actions to capitalize."""
+
+    # Pattern: all_challenging (all < 45)
+    elif num_challenging == total:
+        pattern = "all_challenging"
+        challenging_str = ", ".join(challenging_groups)
+        formula = f"""Challenging: {challenging_str}. {name_note} Name what feels hard. Cite transit. Show strength ("you've weathered harder"). Give 1-2 actions that work WITH the energy. No doom-and-gloom."""
+
+    # Pattern: mixed_day (at least one >= 55 AND at least one < 45)
+    elif num_flowing >= 1 and num_challenging >= 1:
+        pattern = "mixed_day"
+        flowing_str = ", ".join(flowing_groups)
+        challenging_str = ", ".join(challenging_groups)
+        formula = f"""Flowing: {flowing_str}. Challenging: {challenging_str}. {name_note} Cite transit. Give 1-2 actions that play to strengths and work around challenges."""
+
+    # Pattern: one_challenging (1 < 45, no flowing)
+    elif num_challenging >= 1 and num_flowing == 0:
+        if num_challenging == 1:
+            pattern = "one_challenging"
+            challenge = challenging_groups[0]
+            formula = f"""Challenging: {challenge}. {name_note} Describe what they feel. Cite transit. Acknowledge rest is steady. Give 1-2 actions that work AROUND the challenge."""
+        else:
+            # Multiple challenging, no flowing = mostly_challenging
+            pattern = "mostly_challenging"
+            challenging_str = ", ".join(challenging_groups)
+            formula = f"""Challenging: {challenging_str}. {name_note} Cite transit. Acknowledge {num_neutral} groups holding steady. Give 1-2 actions that protect energy."""
+
+    # Pattern: one_shining (1 >= 55, no challenging)
+    elif num_flowing >= 1 and num_challenging == 0:
+        if num_flowing == 1:
+            pattern = "one_shining"
+            shining = flowing_groups[0]
+            formula = f"""Flowing: {shining}. {name_note} Cite transit. Acknowledge other areas steady. Give 1-2 actions that USE {shining}."""
+        else:
+            # Multiple flowing, no challenging = mostly_flowing
+            pattern = "mostly_flowing"
+            flowing_str = ", ".join(flowing_groups)
+            formula = f"""Flowing: {flowing_str}. {name_note} Describe what they'll feel - good day. Cite transit. Give 1-2 actions to make the most of it."""
+
+    # Pattern: neutral_day (all 45-55)
+    else:
+        pattern = "neutral_day"
+        formula = f"""Neutral day. {name_note} Keep it simple. Strongest: {strongest['name']}. Give 1 grounded action. Don't oversell."""
+
+    # Build shining_group for one_shining pattern
+    shining_group = flowing_groups[0] if pattern == "one_shining" and flowing_groups else None
+
+    return {
+        "pattern": pattern,
+        "formula": formula,
+        "strongest_group": strongest["name"],
+        "strongest_score": int(round(strongest["unified_score"])),
+        "challenging_group": weakest["name"] if weakest["unified_score"] < 45 else None,
+        "challenging_score": int(round(weakest["unified_score"])) if weakest["unified_score"] < 45 else None,
+        "flowing_groups": flowing_groups,
+        "challenging_groups": challenging_groups,
+        "shining_group": shining_group,
+    }

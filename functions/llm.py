@@ -49,7 +49,7 @@ from models import (
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
 from compatibility import CompatibilityData
-from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance, calculate_group_scores, get_group_writing_guidance
+from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance, calculate_group_scores, get_group_writing_guidance, get_overall_writing_guidance
 from astrometers.summary import meter_groups_summary
 from astrometers.core import AspectContribution
 from moon import get_moon_transit_detail, format_moon_summary_for_llm
@@ -1106,6 +1106,15 @@ def generate_daily_horoscope(
 
         key_transits.append(transit_str)
 
+    # Build overall writing guidance from the 5 groups (8-pattern matrix)
+    overall_writing_guidance = get_overall_writing_guidance(
+        all_groups=[
+            {"name": g["name"], "unified_score": g["unified_score"]}
+            for g in all_groups
+        ],
+        user_name=user_profile.name,
+    )
+
     # Extract relationship-specific data for the template
     # Heart group (connections, vulnerability, resilience)
     heart_group = next((g for g in all_groups if g["name"] == "heart"), None)
@@ -1137,6 +1146,7 @@ def generate_daily_horoscope(
         overall_unified_score=overall_unified_score,  # 0-100 scale, 50=neutral
         overall_state=overall_state,  # "Overwhelmed", "Turbulent", "Balanced", "Flowing"
         overall_guidance=overall_guidance,  # LLM guidance for this state
+        overall_writing_guidance=overall_writing_guidance,  # 8-pattern matrix for daily_overview
         key_transits=key_transits,  # Top 3 transits driving today's energy
         all_groups=all_groups,  # All 5 groups with scores + state + guidance + top_aspect
         featured_list=featured_list,  # 1-2 featured meters with direction labels

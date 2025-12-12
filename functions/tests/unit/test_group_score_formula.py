@@ -311,5 +311,223 @@ class TestRealWorldScenario:
         assert result["driver"] == "ambition"
 
 
+class TestOverallWritingGuidance:
+    """Tests for get_overall_writing_guidance() function."""
+
+    def test_all_flowing(self):
+        """All groups >= 60."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 65},
+            {"name": "heart", "unified_score": 70},
+            {"name": "body", "unified_score": 75},
+            {"name": "instincts", "unified_score": 62},
+            {"name": "growth", "unified_score": 68},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "all_flowing"
+        assert result["strongest_group"] == "body"  # highest
+        assert result["strongest_score"] == 75
+        assert result["challenging_group"] is None  # nothing < 40
+        assert set(result["flowing_groups"]) == {"mind", "heart", "body", "instincts", "growth"}
+
+    def test_all_challenging(self):
+        """All groups < 40."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 35},
+            {"name": "heart", "unified_score": 25},
+            {"name": "body", "unified_score": 38},
+            {"name": "instincts", "unified_score": 30},
+            {"name": "growth", "unified_score": 32},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "all_challenging"
+        assert result["challenging_group"] == "heart"  # lowest
+        assert result["challenging_score"] == 25
+        assert set(result["challenging_groups"]) == {"mind", "heart", "body", "instincts", "growth"}
+
+    def test_one_challenging(self):
+        """1 group < 45, no flowing groups (all others in neutral 45-55 zone)."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 50},
+            {"name": "heart", "unified_score": 35},  # challenging (< 45)
+            {"name": "body", "unified_score": 50},
+            {"name": "instincts", "unified_score": 52},
+            {"name": "growth", "unified_score": 48},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "one_challenging"
+        assert result["challenging_group"] == "heart"
+        assert result["challenging_groups"] == ["heart"]
+
+    def test_one_shining(self):
+        """1 group >= 55, others in neutral zone."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 48},
+            {"name": "heart", "unified_score": 70},  # shining (>= 55)
+            {"name": "body", "unified_score": 50},
+            {"name": "instincts", "unified_score": 48},
+            {"name": "growth", "unified_score": 52},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "one_shining"
+        assert result["shining_group"] == "heart"
+        assert result["flowing_groups"] == ["heart"]
+
+    def test_mixed_day(self):
+        """Some >= 55, some < 45."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 65},   # flowing (>= 55)
+            {"name": "heart", "unified_score": 35},  # challenging (< 45)
+            {"name": "body", "unified_score": 70},   # flowing
+            {"name": "instincts", "unified_score": 30},  # challenging
+            {"name": "growth", "unified_score": 50},  # neutral
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "mixed_day"
+        assert set(result["flowing_groups"]) == {"mind", "body"}
+        assert set(result["challenging_groups"]) == {"heart", "instincts"}
+
+    def test_neutral_day(self):
+        """All groups in 45-55 range."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 52},
+            {"name": "heart", "unified_score": 48},
+            {"name": "body", "unified_score": 54},
+            {"name": "instincts", "unified_score": 46},
+            {"name": "growth", "unified_score": 50},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "neutral_day"
+        assert result["challenging_group"] is None  # nothing < 45
+
+    def test_tie_breaking_priority(self):
+        """When scores tie, heart > mind > body > instincts > growth."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        # All groups at same score
+        groups = [
+            {"name": "mind", "unified_score": 65},
+            {"name": "heart", "unified_score": 65},  # should win ties
+            {"name": "body", "unified_score": 65},
+            {"name": "instincts", "unified_score": 65},
+            {"name": "growth", "unified_score": 65},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        # Heart should be strongest due to priority
+        assert result["strongest_group"] == "heart"
+
+    def test_empty_groups(self):
+        """Empty list returns unknown pattern."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        result = get_overall_writing_guidance([], "Sarah")
+        assert result["pattern"] == "unknown"
+        assert result["strongest_group"] is None
+
+    def test_boundary_scores_55(self):
+        """Test boundary at exactly 55 (should be flowing)."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 55},  # exactly 55 = flowing
+            {"name": "heart", "unified_score": 55},
+            {"name": "body", "unified_score": 55},
+            {"name": "instincts", "unified_score": 55},
+            {"name": "growth", "unified_score": 55},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "all_flowing"
+        assert len(result["flowing_groups"]) == 5
+
+    def test_boundary_scores_45(self):
+        """Test boundary at exactly 45 (should be neutral, not challenging)."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 45},  # exactly 45 = neutral
+            {"name": "heart", "unified_score": 48},
+            {"name": "body", "unified_score": 50},
+            {"name": "instincts", "unified_score": 52},
+            {"name": "growth", "unified_score": 54},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "neutral_day"
+        assert len(result["challenging_groups"]) == 0  # 45 is not challenging
+
+    def test_formula_includes_user_name(self):
+        """Formula should include user name when provided."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 65},
+            {"name": "heart", "unified_score": 70},
+            {"name": "body", "unified_score": 75},
+            {"name": "instincts", "unified_score": 62},
+            {"name": "growth", "unified_score": 68},
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert "Sarah" in result["formula"]
+
+    def test_mostly_flowing(self):
+        """Multiple flowing groups (>= 55), no challenging groups."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 65},   # flowing (>= 55)
+            {"name": "heart", "unified_score": 70},  # flowing
+            {"name": "body", "unified_score": 62},   # flowing
+            {"name": "instincts", "unified_score": 50},  # neutral (45-55)
+            {"name": "growth", "unified_score": 48},  # neutral
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "mostly_flowing"
+        assert set(result["flowing_groups"]) == {"mind", "heart", "body"}
+        assert len(result["challenging_groups"]) == 0
+
+    def test_mostly_challenging(self):
+        """Multiple challenging groups (< 45), no flowing groups."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 35},   # challenging (< 45)
+            {"name": "heart", "unified_score": 30},  # challenging
+            {"name": "body", "unified_score": 50},   # neutral (45-55)
+            {"name": "instincts", "unified_score": 48},  # neutral
+            {"name": "growth", "unified_score": 38},  # challenging
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "mostly_challenging"
+        assert set(result["challenging_groups"]) == {"mind", "heart", "growth"}
+        assert len(result["flowing_groups"]) == 0
+
+    def test_mixed_day_with_one_each(self):
+        """Mixed day: 1 flowing AND 1 challenging (others neutral)."""
+        from astrometers.meter_groups import get_overall_writing_guidance
+
+        groups = [
+            {"name": "mind", "unified_score": 65},   # flowing (>= 55)
+            {"name": "heart", "unified_score": 35},  # challenging (< 45)
+            {"name": "body", "unified_score": 50},   # neutral
+            {"name": "instincts", "unified_score": 52},  # neutral
+            {"name": "growth", "unified_score": 48},  # neutral
+        ]
+        result = get_overall_writing_guidance(groups, "Sarah")
+        assert result["pattern"] == "mixed_day"
+        assert result["flowing_groups"] == ["mind"]
+        assert result["challenging_groups"] == ["heart"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

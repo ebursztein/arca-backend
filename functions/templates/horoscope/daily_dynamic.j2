@@ -22,13 +22,17 @@ Example: {{ headline_guidance.mode_example }}
 ================================================================================
 OVERVIEW GUIDANCE (for daily_overview)
 ================================================================================
-Overall Energy: {{ overall_unified_score|round(0)|int }}/100 ({{ overall_state }})
-Writing direction: {{ overall_guidance }}
+Groups: mind={{ (all_groups|selectattr('name', 'equalto', 'mind')|first).unified_score|round(0)|int }}, heart={{ (all_groups|selectattr('name', 'equalto', 'heart')|first).unified_score|round(0)|int }}, body={{ (all_groups|selectattr('name', 'equalto', 'body')|first).unified_score|round(0)|int }}, instincts={{ (all_groups|selectattr('name', 'equalto', 'instincts')|first).unified_score|round(0)|int }}, growth={{ (all_groups|selectattr('name', 'equalto', 'growth')|first).unified_score|round(0)|int }}
+{% if key_transits %}Key transit: {{ key_transits[0] }}
+{% endif %}
+{{ overall_writing_guidance.formula }}
+{% if overview_guidance.formatted_highlights %}
 
-Start with {% for m in headline_guidance.meters %}{{ m.meter_name|upper }}{% if not loop.last %} and {% endif %}{% endfor %} (the Daily Driver{% if headline_guidance.meter_count == 2 %}s{% endif %}), then weave in these additional highlights:
+After the overview hook, weave in these additional highlights from today's featured meters:
 {% for item in overview_guidance.formatted_highlights %}
 {{ item }}
 {% endfor %}
+{% endif %}
 ================================================================================
 RELATIONSHIP WEATHER (for relationship_weather.overview)
 ================================================================================
@@ -36,10 +40,13 @@ This is about {{ user_first_name }}'s general energy for connecting with others 
 Do NOT mention any specific person by name here.
 
 {% if heart_group %}
-HEART METER:
-- Score: {{ heart_group.unified_score|round(0)|int }}/100
-- Driver: {{ heart_group.driver }} ({{ heart_group.driver_meaning }})
-{% if heart_group.driver_aspect %}- Key aspect: {{ heart_group.driver_aspect }}{% endif %}
+HEART METER: {{ heart_group.unified_score|round(0)|int }}/100
+Meters configuration: {{ heart_group.writing_guidance.pattern }} (connections={{ heart_group.meter_scores.connections|round(0)|int }}, resilience={{ heart_group.meter_scores.resilience|round(0)|int }}, vulnerability={{ heart_group.meter_scores.vulnerability|round(0)|int }})
+Main energy driver: {{ heart_group.driver }} ({{ heart_group.driver_score }}/100)
+Key transit: {{ heart_group.driver_aspect or 'multiple transits' }}
+
+WRITING FORMULA:
+{{ heart_group.writing_guidance.formula }}
 {% endif %}
 {% if relationship_transits %}
 RELATIONSHIP TRANSITS (Venus/Mars activity):
@@ -49,20 +56,19 @@ RELATIONSHIP TRANSITS (Venus/Mars activity):
 ================================================================================
 CONNECTION VIBE (for relationship_weather.connection_vibe)
 ================================================================================
-Write 1-2 sentences from {{ user_first_name }}'s perspective about {{ featured_connection.name }} today.
-Mention {{ featured_connection.name }}'s name naturally. Use "you" or "{{ user_first_name }}" for the user.
-
 {{ featured_connection.name }} is {{ user_first_name }}'s {{ featured_connection.relationship_label }}{% if featured_connection.sun_sign %} ({{ featured_connection.sun_sign|title }}){% endif %}
 
-{{ user_first_name }}'S VIBE WITH {{ featured_connection.name|upper }} TODAY:
-{% if featured_connection.vibe_score is defined %}- Score: {{ featured_connection.vibe_score }}/100 {% if featured_connection.vibe_score >= 75 %}(EXCELLENT - {{ user_first_name }} should lean into this connection){% elif featured_connection.vibe_score >= 50 %}(STEADY - reliable energy for {{ user_first_name }}){% elif featured_connection.vibe_score >= 25 %}(MIXED - {{ user_first_name }} may feel some friction){% else %}(LOW - {{ user_first_name }} should avoid heavy talks){% endif %}
-{% endif %}{% if featured_connection.active_transits %}- Why: {% for transit in featured_connection.active_transits[:2] %}{{ transit.transit_planet|title }} {{ transit.aspect }} {{ user_first_name }}'s {{ transit.synastry_label }} with {{ featured_connection.name }}{% if transit.is_harmonious %} (supportive){% else %} (tense){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}
+{% if featured_connection.vibe_score is defined %}Score: {{ featured_connection.vibe_score }}/100
+{% endif %}{% if featured_connection.active_transits %}Transit: {% for transit in featured_connection.active_transits[:2] %}{{ transit.transit_planet|title }} {{ transit.aspect }} {{ user_first_name }}'s {{ transit.synastry_label }} with {{ featured_connection.name }}{% if transit.is_harmonious %} (supportive){% else %} (tense){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}
 {% endif %}
-{% if featured_connection.vibes %}
-{{ user_first_name }}'S RECENT FEELINGS ABOUT {{ featured_connection.name|upper }}:
-{% for vibe in featured_connection.vibes[:2] %}- {{ vibe.date }}: {{ vibe.vibe }}
-{% endfor %}{% endif %}
-{% if featured_connection.arca_notes %}{{ user_first_name }}'S NOTES: {% for note in featured_connection.arca_notes[-2:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}
+{% if featured_connection.vibe_score is defined %}{% if featured_connection.vibe_score >= 80 %}High vibe. Describe: "deeply in sync", "extra warm". Cite transit. Action: lean in, have important talk.
+{% elif featured_connection.vibe_score >= 60 %}Good vibe. Describe: "flowing", "easy connection". Cite transit. Action: reach out, make plans.
+{% elif featured_connection.vibe_score >= 40 %}Neutral vibe. Keep simple, nothing charged. Cite transit. Action: keep things authentic.
+{% elif featured_connection.vibe_score >= 20 %}Edgy vibe. Name friction: "sensitive", "easily misunderstood". Cite transit. Action: create space, communicate gently.
+{% else %}Tense vibe. Name tension: "volatile", "old patterns". Cite transit. Action: avoid heavy talks, give room.
+{% endif %}{% endif %}
+{% if featured_connection.vibes %}Recent feelings: {% for vibe in featured_connection.vibes[:2] %}{{ vibe.vibe }}{% if not loop.last %}; {% endif %}{% endfor %}
+{% endif %}{% if featured_connection.arca_notes %}Notes: {% for note in featured_connection.arca_notes[-2:] %}{{ note.note }}{% if not loop.last %}; {% endif %}{% endfor %}
 {% endif %}
 {% endif %}
 

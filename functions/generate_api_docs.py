@@ -385,8 +385,11 @@ def parse_docstring_returns(docstring: str) -> str:
         if model_match:
             return model_match.group(1)
 
-        # If it's a JSON example, extract all keys to show response shape
+        # If it's a JSON example, show it directly if simple, else extract keys
         if returns_text.startswith("{"):
+            # Simple single-line JSON - show as-is
+            if returns_text.count('\n') == 0 and len(returns_text) < 50:
+                return returns_text
             # Extract all keys (including nested) so iOS knows full structure
             keys = re.findall(r'"(\w+)":', returns_text)
             if keys:
@@ -497,7 +500,7 @@ def generate_markdown(functions: list[dict], models: dict, enums: dict, astromet
     # Group functions by category
     categories = {
         "Charts": ["natal_chart", "daily_transit", "user_transit", "get_synastry_chart", "get_natal_chart_for_connection"],
-        "User Management": ["create_user_profile", "get_user_profile", "update_user_profile", "get_memory", "get_sun_sign_from_date", "register_device_token"],
+        "User Management": ["create_user_profile", "get_user_profile", "update_user_profile", "delete_user", "get_memory", "get_sun_sign_from_date", "register_device_token"],
         "Horoscope": ["get_daily_horoscope", "get_astrometers"],
         "Conversations": ["ask_the_stars", "get_conversation_history", "get_user_entities", "update_entity", "delete_entity"],
         "Connections": ["create_connection", "update_connection", "delete_connection", "list_connections"],

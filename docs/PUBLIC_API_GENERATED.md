@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-10 11:17:08
+> Auto-generated on 2025-12-12 12:36:16
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 
@@ -217,7 +217,15 @@ Register device token for push notifications.
 |-------|------|----------|-------------|
 | `device_token` | string | Yes | - |
 
-**Response:** `{ "success": ... }`
+**Response:** `{ "success": true }`
+
+---
+
+#### `delete_user`
+
+Delete all user data for GDPR compliance.
+
+**Response:** `{"success": true}`
 
 ---
 
@@ -265,7 +273,7 @@ Get full conversation with all messages.
 |-------|------|----------|-------------|
 | `conversation_id` | str | Yes | Conversation ID to fetch |
 
-**Response:** `{ "conversation": ... }`
+**Response:** `{ "conversation": Conversation }`
 
 ---
 
@@ -280,7 +288,7 @@ Get user's entities with optional filtering.
 | `status` | str | No | Filter by status: "active", "archived", "resolved" |
 | `limit` | int | No | Max entities to return (default 50) |
 
-**Response:** `{ "entities": ..., "total_count": ... }`
+**Response:** `{ "entities": Entity[], "total_count": int }`
 
 ---
 
@@ -297,7 +305,7 @@ Update an entity (status, aliases, context).
 | `add_aliases` | str[] | No | Aliases to add |
 | `add_context` | str | No | Context snippet to add |
 
-**Response:** `{ "success": ..., "entity": ... }`
+**Response:** `{ "success": true, "entity": Entity }`
 
 ---
 
@@ -311,7 +319,7 @@ Delete an entity permanently.
 |-------|------|----------|-------------|
 | `entity_id` | str | Yes | Entity ID to delete |
 
-**Response:** `{ "success": ... }`
+**Response:** `{ "success": true }`
 
 ---
 
@@ -401,7 +409,7 @@ Delete a connection.
 |-------|------|----------|-------------|
 | `connection_id` | string | Yes | - |
 
-**Response:** `{ "success": ... }`
+**Response:** `{ "success": true }`
 
 ---
 
@@ -477,7 +485,7 @@ Toggle between public and request-only share modes.
 |-------|------|----------|-------------|
 | `share_mode` | string | Yes | "request" or "public" |
 
-**Response:** `{ "share_mode": ... }`
+**Response:** `{ "share_mode": "request" }`
 
 ---
 

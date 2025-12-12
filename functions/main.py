@@ -3,7 +3,7 @@
 # Deploy with `firebase deploy`
 
 from firebase_functions import https_fn, options, firestore_fn, params
-from firebase_admin import initialize_app, firestore
+from firebase_admin import initialize_app, firestore, auth
 from datetime import datetime
 from typing import Optional
 
@@ -319,13 +319,35 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         # Create timestamps
         now = datetime.now().isoformat()
 
+        # Check for existing profile to preserve protected fields
+        db = firestore.client(database_id=DATABASE_ID)
+        user_ref = db.collection("users").document(user_id)
+        existing_doc = user_ref.get()
+
+        # Preserve subscription/trial fields and created_at if profile exists
+        if existing_doc.exists:
+            existing_data = existing_doc.to_dict()
+            is_premium = existing_data.get("is_premium", False)
+            premium_expiry = existing_data.get("premium_expiry")
+            is_trial_active = existing_data.get("is_trial_active", False)
+            trial_end_date = existing_data.get("trial_end_date")
+            created_at = existing_data.get("created_at", now)
+        else:
+            is_premium = False
+            premium_expiry = None
+            is_trial_active = False
+            trial_end_date = None
+            created_at = now
+
         # Create user profile (Pydantic validates)
         user_profile = UserProfile(
             user_id=user_id,
             name=name,
             email=email,
-            is_premium=False,  # Default to non-premium
-            premium_expiry=None,
+            is_premium=is_premium,
+            premium_expiry=premium_expiry,
+            is_trial_active=is_trial_active,
+            trial_end_date=trial_end_date,
             birth_date=birth_date,
             birth_time=birth_time,
             birth_timezone=birth_timezone,
@@ -340,17 +362,18 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
             sun_sign=sun_sign.value,
             natal_chart=natal_chart,
             exact_chart=exact_chart,
-            created_at=now,
+            created_at=created_at,
             last_active=now
         )
 
         # Save to Firestore
-        db = firestore.client(database_id=DATABASE_ID)
-        db.collection("users").document(user_id).set(user_profile.model_dump())
+        user_ref.set(user_profile.model_dump())
 
-        # Initialize empty memory collection
-        memory = create_empty_memory(user_id)
-        db.collection("memory").document(user_id).set(memory.model_dump())
+        # Initialize memory only if it doesn't exist (preserve existing entities)
+        memory_ref = db.collection("memory").document(user_id)
+        if not memory_ref.get().exists:
+            memory = create_empty_memory(user_id)
+            memory_ref.set(memory.model_dump())
 
         return {
             "success": True,
@@ -1832,4 +1855,88 @@ def get_synastry_chart(req: https_fn.CallableRequest) -> dict:
         raise https_fn.HttpsError(
             code=https_fn.FunctionsErrorCode.INTERNAL,
             message=f"Error getting synastry chart: {str(e)}"
+        )
+
+
+# =============================================================================
+# GDPR Compliance - User Data Deletion
+# =============================================================================
+
+@https_fn.on_call()
+def delete_user(req: https_fn.CallableRequest) -> dict:
+    """
+    Delete all user data for GDPR compliance.
+
+    Permanently removes all data associated with the authenticated user:
+    - User profile and natal chart
+    - All horoscopes history
+    - All entities
+    - All connections
+    - All connection requests
+    - Memory/personalization data
+    - All conversations
+    - Share link
+    - Firebase Auth account
+
+    This action is irreversible. The user will be signed out after completion.
+
+    Expected request data:
+        {}
+
+    Returns:
+        {"success": true}
+    """
+    try:
+        user_id = get_authenticated_user_id(req)
+        db = firestore.client(database_id=DATABASE_ID)
+
+        # Get user doc first to find share_secret
+        user_doc = db.collection("users").document(user_id).get()
+        share_secret = None
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            share_secret = user_data.get("share_secret")
+
+        # Delete subcollections under users/{userId}
+        for doc in db.collection("users").document(user_id).collection("horoscopes").stream():
+            doc.reference.delete()
+
+        for doc in db.collection("users").document(user_id).collection("entities").stream():
+            doc.reference.delete()
+
+        for doc in db.collection("users").document(user_id).collection("connections").stream():
+            doc.reference.delete()
+
+        for doc in db.collection("users").document(user_id).collection("connection_requests").stream():
+            doc.reference.delete()
+
+        # Delete main user document
+        if user_doc.exists:
+            db.collection("users").document(user_id).delete()
+
+        # Delete memory document
+        db.collection("memory").document(user_id).delete()
+
+        # Delete all conversations for this user
+        for doc in db.collection("conversations").where("user_id", "==", user_id).stream():
+            doc.reference.delete()
+
+        # Delete share link reverse lookup
+        if share_secret:
+            db.collection("share_links").document(share_secret).delete()
+
+        # Delete Firebase Auth account last
+        try:
+            auth.delete_user(user_id)
+        except auth.UserNotFoundError:
+            pass
+
+        return {"success": True}
+
+    except https_fn.HttpsError:
+        raise
+    except Exception as e:
+        raise https_fn.HttpsError(
+            code=https_fn.FunctionsErrorCode.INTERNAL,
+            message=f"Error deleting user data: {str(e)}"
         )
