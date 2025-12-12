@@ -36,13 +36,13 @@ GOOD (explains what they'll feel): "You're feeling pulled in two directions - th
 
 # CONTEXT
 
-{{ user_name }} ({{ sun_sign }}, age {{ age }}) asked: "{{ question }}"
+{{ user_first_name }} ({{ sun_sign }}, age {{ age }}) asked: "{{ question }}"
 
 {% if horoscope %}
 ## Today's Astrological Picture ({{ horoscope_date }})
 
 {% if horoscope.technical_analysis %}
-### What's happening in the sky for {{ user_name }}:
+### What's happening in the sky for {{ user_first_name }}:
 {{ horoscope.technical_analysis }}
 {% endif %}
 
@@ -72,12 +72,12 @@ What's hard: nothing major
 
 {% if mentioned_connections %}
 ## CONNECTION INFO - USE THIS IN YOUR ANSWER
-When {{ user_name }} asks about a person, reference their specific synastry aspects. Explain what the aspects mean for their dynamic.
+When {{ user_first_name }} asks about a person, reference their specific synastry aspects. Explain what the aspects mean for their dynamic.
 {% for conn in mentioned_connections %}
 ### {{ conn.name }} ({{ conn.relationship_label | default(conn.relationship_type, true) }}{% if conn.sun_sign %}, {{ conn.sun_sign }}{% endif %}):
 {% if conn.synastry_aspects %}
 Their chart connection:
-{% for asp in conn.synastry_aspects[:4] %}- {{ user_name }}'s {{ asp.user_planet }} {{ asp.aspect_type }} {{ conn.name }}'s {{ asp.their_planet }} {% if asp.is_harmonious %}(harmonious - flows naturally){% else %}(challenging - creates friction){% endif %}
+{% for asp in conn.synastry_aspects[:4] %}- {{ user_first_name }}'s {{ asp.user_planet }} {{ asp.aspect_type }} {{ conn.name }}'s {{ asp.their_planet }} {% if asp.is_harmonious %}(harmonious - flows naturally){% else %}(challenging - creates friction){% endif %}
 {% endfor %}
 {% elif conn.synastry_points %}
 Connection dynamics: {% for point in conn.synastry_points[:3] %}{{ point.label }}{% if not loop.last %}, {% endif %}{% endfor %}
@@ -89,12 +89,12 @@ Recent context: {% for note in conn.arca_notes[-3:] %}{{ note.note }}{% if not l
 {% endif %}
 {% endfor %}
 {% if mentioned_connections|length > 1 %}
-NOTE: Multiple people matched. Use the context above to determine which person {{ user_name }} is asking about.
+NOTE: Multiple people matched. Use the context above to determine which person {{ user_first_name }} is asking about.
 {% endif %}
 {% endif %}
 
 {% if entities %}
-{{ user_name }}'s life context:
+{{ user_first_name }}'s life context:
 {% for entity in entities[:5] %}
 - {{ entity.name }} ({{ entity.entity_type }})
 {% endfor %}
@@ -111,4 +111,4 @@ Recent conversation:
 {% endfor %}
 {% endif %}
 
-Now answer {{ user_name }}'s question in 3-5 sentences. Direct answer first, then brief why, then one action.
+Now answer {{ user_first_name }}'s question in 3-5 sentences. Direct answer first, then brief why, then one action.

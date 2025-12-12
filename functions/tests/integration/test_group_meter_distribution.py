@@ -673,13 +673,12 @@ class TestRandomChartGroupConsistency:
 
         assert len(bugs) == 0, f"Found {len(bugs)} direction bugs: {bugs}"
 
-    def test_random_charts_direction_follows_median(self):
+    def test_random_charts_direction_follows_average(self):
         """
-        Verify that group direction follows the median of meter scores.
+        Verify that group unified_score matches the simple average of meter scores.
 
-        The median formula calculates the median of all meter unified_scores
-        in the group. This is more intuitive and resistant to outliers than
-        the previous distance-based formula.
+        The average formula calculates the mean of all meter unified_scores
+        in the group.
         """
         LOCATIONS = [
             ('New York', 40.7128, -74.0060, 'America/New_York'),
@@ -727,24 +726,20 @@ class TestRandomChartGroupConsistency:
                 result = calculate_group_scores(meters)
                 group_score = result['unified_score']
 
-                # Calculate expected median
-                scores = sorted([m.unified_score for m in meters])
-                n = len(scores)
-                if n % 2 == 0:
-                    expected_median = (scores[n // 2 - 1] + scores[n // 2]) / 2
-                else:
-                    expected_median = scores[n // 2]
+                # Calculate expected average
+                scores = [m.unified_score for m in meters]
+                expected_average = sum(scores) / len(scores)
 
-                # Group score should match the median
-                if abs(group_score - expected_median) > 0.1:
+                # Group score should match the average (with rounding tolerance)
+                if abs(group_score - expected_average) > 0.15:
                     mismatches.append({
                         'group': group_name,
                         'meters': [round(m.unified_score, 1) for m in meters],
                         'group_score': group_score,
-                        'expected_median': expected_median,
+                        'expected_average': round(expected_average, 1),
                     })
 
-        assert len(mismatches) == 0, f"Median mismatches: {mismatches}"
+        assert len(mismatches) == 0, f"Average mismatches: {mismatches}"
 
     def test_random_charts_group_scores_well_distributed(self):
         """

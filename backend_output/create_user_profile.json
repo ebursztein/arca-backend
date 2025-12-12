@@ -1,17 +1,21 @@
 {
   "function_name": "create_user_profile",
   "request": {
-    "user_id": "test_user_c",
-    "name": "Horoscope Test User",
-    "email": "test_user_c@test.com",
-    "birth_date": "1990-06-15"
+    "user_id": "test_user_a",
+    "name": "Test User",
+    "email": "test_user_a@test.com",
+    "birth_date": "1990-06-15",
+    "birth_time": "14:30",
+    "birth_timezone": "America/New_York",
+    "birth_lat": 40.7128,
+    "birth_lon": -74.006
   },
   "response": {
-    "exact_chart": false,
-    "mode": "v1",
+    "exact_chart": true,
+    "mode": "v2",
     "success": true,
     "sun_sign": "gemini",
-    "user_id": "test_user_c"
+    "user_id": "test_user_a"
   },
-  "captured_at": "2025-12-09T16:13:35.058197+00:00"
+  "captured_at": "2025-12-10T15:35:42.869900+00:00"
 }

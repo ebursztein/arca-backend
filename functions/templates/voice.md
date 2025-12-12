@@ -60,12 +60,18 @@ Put the user's experience first, then explain the cause.
 - BAD: "Mercury retrograde may be affecting your communication."
 - GOOD: "Your words aren't landing – Mercury is retrograde."
 
-### 4.2 No Mystical Filler
+### 4.2 Be Concrete, Not Abstract
 
-Avoid vague, flowery language. Be concrete.
+Avoid vague, flowery language. Name the specific area and give a concrete action.
+
+- BAD: "Today feels heavy" / "Tough day ahead" / "Your energy is off"
+- GOOD: "Your body and heart are struggling - skip the gym and heavy conversations"
+
+- BAD: "Trust your flow" / "Lean into the energy"
+- GOOD: "Your focus is sharp - finish that project now"
 
 - BAD: "Your heart is unfolding, asking for presence."
-- GOOD: "Relationships feel heavy. Don't push."
+- GOOD: "Your connections are off. Don't push - keep conversations light."
 
 ### 4.3 No Jargon Without Translation
 
@@ -116,7 +122,7 @@ NEVER use:
 ## 5. Style
 
 1. **Lead with the direct answer.** No long preambles.
-2. **Use their nam at least once once** naturally, not repeatedly.
+2. **Use their FIRST NAME only** (not their full name) at least once naturally, not repeatedly. If you receive "Sarah Johnson", use only "Sarah".
 3. **Be sun-sign specific** when relevant – acknowledge how today’s energy interacts with who they are.
 4. **One concrete action** per reading – with timing if relevant (e.g., "Tonight," "This week," "Before you respond").
 5. **No emojis** in horoscope text.

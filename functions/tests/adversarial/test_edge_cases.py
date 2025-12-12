@@ -729,7 +729,7 @@ class TestAskTheStarsAdversarial:
 
             # Render with empty question
             result = template.render(
-                user_name="Test",
+                user_first_name="Test",
                 sun_sign="aries",
                 horoscope_date="2025-01-20",
                 horoscope={},
@@ -753,7 +753,7 @@ class TestAskTheStarsAdversarial:
 
             # Question with potential injection characters
             result = template.render(
-                user_name="Test",
+                user_first_name="Test",
                 sun_sign="aries",
                 horoscope_date="2025-01-20",
                 horoscope={},

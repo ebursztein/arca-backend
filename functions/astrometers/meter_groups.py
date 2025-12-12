@@ -101,6 +101,140 @@ def get_group_bucket_guidance(group_name: str, unified_score: float) -> str:
     return ""
 
 
+def get_group_writing_guidance(
+    unified_score: float,
+    meter_scores: dict,
+    driver_name: str,
+    user_name: str = "",
+) -> dict:
+    """
+    Generate writing guidance based on group score and meter configuration.
+
+    Uses a 6-pattern matrix based on meter configuration:
+    - all_positive: All meters positive (>=50)
+    - all_negative: All meters negative (<50)
+    - one_negative_outlier: One negative outlier, rest positive
+    - one_positive_outlier: One positive outlier, rest negative
+    - split: Mixed (roughly half positive, half negative)
+    - all_neutral: All neutral (40-60 range)
+
+    Args:
+        unified_score: The group's score (0-100)
+        meter_scores: Dict of meter_name -> score for all meters in group
+        driver_name: Name of the driver meter
+        user_name: User's name for personalized examples
+
+    Returns:
+        Dict with:
+        - pattern: The configuration pattern name
+        - formula: How to write about this configuration
+        - structure: "one_block" or "two_parts"
+        - part1: First part of the interpretation (or only part if one_block)
+        - part2: Second part (only for two_parts structure)
+    """
+    if not meter_scores:
+        return {
+            "pattern": "unknown",
+            "formula": "Describe the energy based on the score.",
+            "structure": "one_block",
+            "part1": "",
+            "part2": "",
+        }
+
+    # Categorize each meter
+    positive_meters = [n for n, s in meter_scores.items() if s >= 50]
+    negative_meters = [n for n, s in meter_scores.items() if s < 50]
+    neutral_meters = [n for n, s in meter_scores.items() if 40 <= s <= 60]
+    high_meters = [n for n, s in meter_scores.items() if s >= 60]
+    low_meters = [n for n, s in meter_scores.items() if s < 40]
+
+    total = len(meter_scores)
+    other_meters = [n for n in meter_scores.keys() if n != driver_name]
+    other_meters_str = ", ".join(other_meters)
+
+    # Common reminder for all patterns
+    name_example = f"'{user_name}, your...' or 'Your... {user_name}, you...'" if user_name else "'[Name], your...' or 'Your... [Name], you...'"
+    name_reminder = f"Use the user's name naturally (e.g., {name_example}). Name what they FEEL. Make sure to include a concrete action."
+
+    # Determine pattern
+    # Check for flat first (all neutral 40-60)
+    if len(neutral_meters) == total:
+        return {
+            "pattern": "all_neutral",
+            "formula": f"Nothing dramatic here. Overall solid. Don't oversell or undersell. {name_reminder}",
+            "structure": "one_block",
+            "part1": "Write one unified explanation about solid, unremarkable energy. Describe how the user feels.",
+            "part2": "",
+        }
+
+    # Check for all positive
+    if len(positive_meters) == total:
+        return {
+            "pattern": "all_positive",
+            "formula": f"Everything's aligned. Lead with the driver, mention the steady support from the others. {name_reminder}",
+            "structure": "one_block",
+            "part1": f"Write one unified explanation. Lead with {driver_name}, then mention {other_meters_str} as supporting. Name what the user feels. Cite the 'Why' transit to explain astrologically.",
+            "part2": "",
+        }
+
+    # Check for all negative
+    if len(negative_meters) == total:
+        return {
+            "pattern": "all_negative",
+            "formula": f"Acknowledge the overall challenge. Name what the user feels, then give a concrete path through. {name_reminder}",
+            "structure": "one_block",
+            "part1": f"Write one unified explanation about the challenge. Name what the user feels with {driver_name}, give a path through. Cite the 'Why' transit to explain astrologically.",
+            "part2": "",
+        }
+
+    # Check for one negative outlier, rest positive
+    if len(negative_meters) == 1 and len(positive_meters) >= 2:
+        outlier = negative_meters[0]
+        rest = [n for n in positive_meters]
+        rest_str = ", ".join(rest)
+        return {
+            "pattern": "one_negative_outlier",
+            "formula": f"Name {outlier} as the one thing that's off. The rest of this area is fine - {rest_str} are holding. Focus on navigating around {outlier}. {name_reminder}",
+            "structure": "two_parts",
+            "part1": f"First: Name what the user feels with {outlier} (the challenge). Cite the 'Why' transit to explain astrologically.",
+            "part2": f"Then: Acknowledge {rest_str} are fine. The rest of this area is holding.",
+        }
+
+    # Check for one positive outlier, rest negative
+    if len(positive_meters) == 1 and len(negative_meters) >= 2:
+        outlier = positive_meters[0]
+        rest = [n for n in negative_meters]
+        rest_str = ", ".join(rest)
+        return {
+            "pattern": "one_positive_outlier",
+            "formula": f"Most of this area is struggling, but {outlier} is working. Lean on that. {name_reminder}",
+            "structure": "two_parts",
+            "part1": f"First: Name what the user feels with {outlier} (what's working). Cite the 'Why' transit to explain astrologically.",
+            "part2": f"Then: Acknowledge {rest_str} are struggling. Name what the user feels there.",
+        }
+
+    # Check for split (mixed - roughly half and half)
+    if len(positive_meters) >= 1 and len(negative_meters) >= 1:
+        pos_str = ", ".join(positive_meters)
+        neg_str = ", ".join(negative_meters)
+        return {
+            "pattern": "split",
+            "formula": f"Split energy. {pos_str} {'is' if len(positive_meters) == 1 else 'are'} strong, {neg_str} need{'s' if len(negative_meters) == 1 else ''} caution. Acknowledge both sides. {name_reminder}",
+            "structure": "two_parts",
+            "part1": f"First: Name what the user feels with the strong side - {pos_str}. Cite the 'Why' transit.",
+            "part2": f"Then: Name what the user feels with the challenging side - {neg_str}. Cite the 'Why' transit.",
+        }
+
+    # Fallback
+    return {
+        "pattern": "mixed",
+        "formula": f"Mixed energy. Acknowledge both what's working and what's not. {name_reminder}",
+        "structure": "one_block",
+        "part1": "Write about the overall mixed state. Name what the user feels.",
+        "part2": "",
+    }
+
+
 def get_group_state_label(group_name: str, unified_score: float) -> str:
     """
     Get state label for a group based on unified_score.
@@ -145,47 +279,47 @@ def get_group_description(group_name: str) -> Dict[str, str]:
 
 def calculate_group_scores(meters: List[MeterReading]) -> Dict:
     """
-    Calculate group unified_score using median formula.
+    Calculate group unified_score using simple average with driver selection.
 
     Formula:
-    1. Sort all meter unified_scores
-    2. Calculate median (average of middle values for even count)
-    3. Driver = meter furthest from 50 in the median's direction
-       - If median >= 50, driver is the highest scoring meter
-       - If median < 50, driver is the lowest scoring meter
+    1. Calculate average of all meter unified_scores
+    2. Driver = meter furthest from 50 in the average's direction
+       - If average >= 50, driver is the highest scoring meter
+       - If average < 50, driver is the lowest scoring meter
 
-    This approach is more intuitive and resistant to outliers than
-    the previous direction-based top-2 averaging.
+    The driver represents the "most moving" meter that emphasizes the group's
+    direction.
 
     Args:
         meters: List of MeterReading objects for this group
 
     Returns:
-        Dict with unified_score and driver (name of top meter)
+        Dict with unified_score, driver (name of driving meter), and meter_scores
     """
     # Empty check
     if not meters:
-        return {"unified_score": 50.0, "driver": None}
+        return {"unified_score": 50.0, "driver": None, "meter_scores": {}}
+
+    # Build meter_scores dict for all meters
+    meter_scores = {m.meter_name: round(m.unified_score, 1) for m in meters}
 
     # Single meter
     if len(meters) == 1:
-        return {"unified_score": meters[0].unified_score, "driver": meters[0].meter_name}
+        return {
+            "unified_score": meters[0].unified_score,
+            "driver": meters[0].meter_name,
+            "meter_scores": meter_scores,
+        }
 
     # Sort by unified_score
     sorted_meters = sorted(meters, key=lambda m: m.unified_score)
     scores = [m.unified_score for m in sorted_meters]
 
-    # Calculate median
-    n = len(scores)
-    if n % 2 == 0:
-        # Even count: average of middle two
-        median = (scores[n // 2 - 1] + scores[n // 2]) / 2
-    else:
-        # Odd count: middle value
-        median = scores[n // 2]
+    # Calculate simple average
+    average = sum(scores) / len(scores)
 
-    # Determine driver: furthest from 50 in the median's direction
-    if median >= 50:
+    # Determine driver: furthest from 50 in the average's direction
+    if average >= 50:
         # Positive direction: driver is highest scoring meter
         driver_meter = sorted_meters[-1]
     else:
@@ -193,8 +327,9 @@ def calculate_group_scores(meters: List[MeterReading]) -> Dict:
         driver_meter = sorted_meters[0]
 
     return {
-        "unified_score": round(median, 1),
+        "unified_score": round(average, 1),
         "driver": driver_meter.meter_name,
+        "meter_scores": meter_scores,
     }
 
 

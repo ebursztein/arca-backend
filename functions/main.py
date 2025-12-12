@@ -305,7 +305,7 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
         natal_chart_summary = generate_natal_chart_summary(
             chart_dict=natal_chart,
             sun_sign_profile=sun_sign_profile,
-            user_name=name.split()[0],  # First name only
+            user_first_name=name.split()[0],  # First name only
             api_key=GEMINI_API_KEY.value,
             user_id=user_id,
             posthog_api_key=POSTHOG_API_KEY.value
@@ -513,7 +513,7 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
             natal_chart_summary = generate_natal_chart_summary(
                 chart_dict=natal_chart,
                 sun_sign_profile=sun_sign_profile,
-                user_name=user_data.get("name", "").split()[0],
+                user_first_name=user_data.get("name", "").split()[0],
                 api_key=GEMINI_API_KEY.value,
                 user_id=user_id,
                 posthog_api_key=POSTHOG_API_KEY.value
@@ -701,8 +701,12 @@ def get_daily_horoscope(req: https_fn.CallableRequest) -> dict:
                 message=f"Sun sign profile not found: {sun_sign.value}"
             )
 
-        # Memory collection: Using empty memory for all users
-        memory = create_empty_memory(user_id)
+        # Load memory from Firestore (for connection rotation tracking)
+        memory_doc = db.collection("memory").document(user_id).get()
+        if memory_doc.exists:
+            memory = MemoryCollection(**memory_doc.to_dict())
+        else:
+            memory = create_empty_memory(user_id)
 
         # Fetch user connections for relationship weather (replacing entities)
         from connections import get_connections_for_horoscope

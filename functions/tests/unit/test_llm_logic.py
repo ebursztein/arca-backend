@@ -590,7 +590,7 @@ def test_generate_natal_chart_summary_success(
         summary = generate_natal_chart_summary(
             chart_dict=sample_user_profile.natal_chart,
             sun_sign_profile=sample_sun_sign_profile,
-            user_name="Test User",
+            user_first_name="Test",
             api_key="test_key"
         )
     
@@ -599,6 +599,6 @@ def test_generate_natal_chart_summary_success(
     # Verify prompt
     call_args = mock_genai_client.models.generate_content.call_args
     prompt = call_args.kwargs["contents"]
-    assert "Test User" in prompt
+    assert "Test" in prompt
     assert "Gemini" in prompt
     assert "Sun Sign: Gemini" in prompt

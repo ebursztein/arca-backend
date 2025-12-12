@@ -73,7 +73,7 @@ def stream_ask_the_stars_response(
 
     template = template_env.get_template('ask_the_stars.j2')
     prompt = template.render(
-        user_name=user_profile.name,
+        user_first_name=user_profile.name.split()[0],  # Extract first name only
         sun_sign=user_profile.sun_sign,
         birth_date=user_profile.birth_date,
         age=age,

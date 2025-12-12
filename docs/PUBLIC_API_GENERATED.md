@@ -1,6 +1,6 @@
 # Arca Backend API Reference
 
-> Auto-generated on 2025-12-09 14:14:43
+> Auto-generated on 2025-12-10 11:17:08
 > 
 > DO NOT EDIT MANUALLY. Run `uv run python functions/generate_api_docs.py` to regenerate.
 

@@ -276,9 +276,13 @@ def daily_meters_summary(
 
 def meter_groups_summary(meter_groups: dict) -> str:
     """
-    Generate compact summary table for meter groups (unified_score only).
+    Generate summary table for meter groups with individual meter scores.
 
-    Creates a single table showing all 5 groups with unified_score and state labels.
+    Creates a table showing all 5 groups with:
+    - Group average score
+    - Individual meter scores within each group
+    - Driver meter (most extreme in group's direction) marked with *
+
     This is injected into the LLM prompt to provide group-level context.
 
     Args:
@@ -292,7 +296,7 @@ def meter_groups_summary(meter_groups: dict) -> str:
             "mind": {
                 "group_name": "mind",
                 "display_name": "Mind",
-                "scores": {"unified_score": 75.3},
+                "scores": {"unified_score": 75.3, "driver": "clarity", "meter_scores": {...}},
                 "state": {"label": "Clear", "quality": "peaceful"},
                 "interpretation": "",
                 "trend": {"unified_score": {...}} or None,
@@ -305,13 +309,9 @@ def meter_groups_summary(meter_groups: dict) -> str:
         return ""
 
     output = "\n"
-    output += "=" * 60 + "\n"
-    output += "METER GROUPS (5 Life Areas)".center(60) + "\n"
-    output += "=" * 60 + "\n"
-
-    # Simple table header
-    output += f"{'Group':<15} {'State':<20} {'Score':>7} {'Trend':>15}\n"
-    output += "-" * 60 + "\n"
+    output += "=" * 70 + "\n"
+    output += "METER GROUPS (5 Life Areas)".center(70) + "\n"
+    output += "=" * 70 + "\n"
 
     # Sort groups in a consistent order
     group_order = ["mind", "heart", "body", "instincts", "growth"]
@@ -322,11 +322,14 @@ def meter_groups_summary(meter_groups: dict) -> str:
 
         group = meter_groups[group_name]
 
-        # Extract unified_score
+        # Extract unified_score (average)
         unified = group["scores"]["unified_score"]
 
         # Extract state
         state_label = group["state"]["label"]
+
+        # Extract driver
+        driver = group["scores"].get("driver", "")
 
         # Extract unified trend if available
         trend = group.get("trend")
@@ -338,8 +341,21 @@ def meter_groups_summary(meter_groups: dict) -> str:
         else:
             trend_str = "-"
 
-        output += f"{group['display_name']:<15} {state_label:<20} {unified:7.1f} {trend_str:>15}\n"
+        # Group header line
+        output += f"\n{group['display_name'].upper()}: {unified:.0f} ({state_label}) {trend_str}\n"
 
-    output += "=" * 60 + "\n"
+        # Individual meter scores
+        meter_scores = group["scores"].get("meter_scores", {})
+        if meter_scores:
+            meter_strs = []
+            for meter_name, score in meter_scores.items():
+                if meter_name == driver:
+                    meter_strs.append(f"  *{meter_name}: {score:.0f}")
+                else:
+                    meter_strs.append(f"  {meter_name}: {score:.0f}")
+            output += "\n".join(meter_strs) + "\n"
+
+    output += "\n" + "=" * 70 + "\n"
+    output += "* = main energy driver\n"
 
     return output

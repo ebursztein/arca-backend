@@ -49,7 +49,7 @@ from models import (
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
 from compatibility import CompatibilityData
-from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance, calculate_group_scores
+from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance, calculate_group_scores, get_group_writing_guidance
 from astrometers.summary import meter_groups_summary
 from astrometers.core import AspectContribution
 from moon import get_moon_transit_detail, format_moon_summary_for_llm
@@ -69,7 +69,7 @@ jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 def generate_natal_chart_summary(
     chart_dict: dict,
     sun_sign_profile: SunSignProfile,
-    user_name: str,
+    user_first_name: str,
     api_key: str,
     user_id: str = "",
     posthog_api_key: Optional[str] = None,
@@ -81,7 +81,7 @@ def generate_natal_chart_summary(
     Args:
         chart_dict: NatalChartData as dict
         sun_sign_profile: User's sun sign profile
-        user_name: User's first name for personalization
+        user_first_name: User's first name only for personalization (not full name)
         api_key: Gemini API key
         user_id: User ID for PostHog tracking
         posthog_api_key: PostHog API key for observability
@@ -143,7 +143,7 @@ def generate_natal_chart_summary(
 
 ---
 
-Generate a natal chart summary for {user_name}.
+Generate a natal chart summary for {user_first_name}.
 
 CHART DATA:
 - Sun Sign: {sun_sign}
@@ -166,7 +166,7 @@ Write exactly 4 sentences (approx. 50-60 words total) using this structure:
    - Look for Elemental conflict (e.g., Fire vs. Water) or Modality friction (Fixed vs. Mutable).
    - Example: "This creates a dynamic where your head wants to race ahead (Gemini), but your heart needs time to drift (Pisces)."
 
-Use {user_name}'s name once naturally in sentence 1. Write like a wise friend, not an astrology textbook.
+Use {user_first_name}'s first name once naturally in sentence 1. Write like a wise friend, not an astrology textbook.
 No jargon. No "energy" or "vibe". Be specific and grounded.
 
 Return ONLY the summary text, no JSON wrapping."""
@@ -191,7 +191,7 @@ Return ONLY the summary text, no JSON wrapping."""
         import json
         debug_path = Path(__file__).parent / "debug_natal_chart_summary.json"
         debug_data = {
-            "user_name": user_name,
+            "user_first_name": user_first_name,
             "prompt": prompt,
             "response": result_text,
             "sun_sign": str(sun_sign),
@@ -200,7 +200,7 @@ Return ONLY the summary text, no JSON wrapping."""
         }
         debug_path.write_text(json.dumps(debug_data, indent=2))
         print(f"[DEBUG] Natal chart summary dumped to {debug_path}")
-        print(f"[DEBUG] user_name passed: '{user_name}'")
+        print(f"[DEBUG] user_first_name passed: '{user_first_name}'")
 
     # Track with PostHog
     if posthog_api_key and user_id:
@@ -1046,6 +1046,17 @@ def generate_daily_horoscope(
             t = driver_meter.trend.unified_score
             trend_str = f"{t.direction} ({t.change_rate}, {t.delta:+.0f} from yesterday)"
 
+        # Get all meter scores for this group
+        meter_scores = group_data['scores'].get('meter_scores', {})
+
+        # Get writing guidance based on score configuration
+        writing_guidance = get_group_writing_guidance(
+            unified_score=unified_score,
+            meter_scores=meter_scores,
+            driver_name=driver_name,
+            user_name=user_profile.name,
+        )
+
         all_groups.append({
             'name': group_name,
             'unified_score': unified_score,
@@ -1055,6 +1066,8 @@ def generate_daily_horoscope(
             'driver_planets': driver_planets,
             'driver_aspect': driver_aspect,
             'trend': trend_str,
+            'meter_scores': meter_scores,
+            'writing_guidance': writing_guidance,
         })
 
     # Get featured meters with direction labels (flowing/pushing)
@@ -1140,7 +1153,7 @@ def generate_daily_horoscope(
         # Connection data for connection-specific vibe (when featured_connection exists)
         has_relationships=featured_connection is not None,
         featured_connection=featured_connection,
-        user_name=user_profile.name
+        user_first_name=user_profile.name.split()[0]  # Extract first name only
     )
 
     # Calculate age and generation
