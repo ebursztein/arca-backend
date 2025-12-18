@@ -427,3 +427,138 @@ class TestDeleteConnection:
                 "user_id": test_user_id,
                 "connection_id": "nonexistent_conn_xyz",
             })
+
+
+class TestConnectionLifecycle:
+    """E2E test for complete connection add/list/delete/list cycle."""
+
+    @pytest.mark.llm
+    def test_add_list_delete_list_cycle(self, clean_connections, firestore_emulator):
+        """
+        Test complete lifecycle: add -> list (verify exists) -> delete -> list (verify gone).
+
+        This test uses a clean user with no connections to ensure accurate counts.
+        """
+        user_id = clean_connections  # clean_connections fixture returns the user_id
+
+        # Step 0: Create user profile (required for connection creation)
+        call_function("create_user_profile", {
+            "user_id": user_id,
+            "name": "Lifecycle Test User",
+            "email": f"{user_id}@test.com",
+            "birth_date": "1990-06-15",
+        })
+
+        # Step 1: List - should be empty
+        list_before = call_function("list_connections", {"user_id": user_id})
+        assert list_before["total_count"] == 0, "Expected 0 connections before add"
+        assert len(list_before["connections"]) == 0
+
+        # Step 2: Add connection
+        create_result = call_function("create_connection", {
+            "user_id": user_id,
+            "connection": {
+                "name": "LifecycleTestPerson",
+                "birth_date": "1995-03-22",
+                "relationship_category": "friend",
+                "relationship_label": "friend",
+            }
+        })
+        conn_id = create_result["connection_id"]
+        assert conn_id is not None
+        assert create_result["name"] == "LifecycleTestPerson"
+        print(f"[TEST] Created connection: {conn_id}")
+
+        # Step 3: List - should have 1 connection
+        list_after_add = call_function("list_connections", {"user_id": user_id})
+        assert list_after_add["total_count"] == 1, "Expected 1 connection after add"
+        assert len(list_after_add["connections"]) == 1
+
+        # Verify the connection details
+        conn = list_after_add["connections"][0]
+        assert conn["connection_id"] == conn_id
+        assert conn["name"] == "LifecycleTestPerson"
+        assert conn["relationship_category"] == "friend"
+        print(f"[TEST] Verified connection in list: {conn['name']}")
+
+        # Step 4: Delete connection
+        delete_result = call_function("delete_connection", {
+            "user_id": user_id,
+            "connection_id": conn_id,
+        })
+        assert delete_result["success"] is True
+        print(f"[TEST] Deleted connection: {conn_id}")
+
+        # Step 5: List - should be empty again
+        list_after_delete = call_function("list_connections", {"user_id": user_id})
+        assert list_after_delete["total_count"] == 0, "Expected 0 connections after delete"
+        assert len(list_after_delete["connections"]) == 0
+
+        # Verify the connection_id is not in the list
+        conn_ids = {c["connection_id"] for c in list_after_delete["connections"]}
+        assert conn_id not in conn_ids, f"Connection {conn_id} should not exist after delete"
+        print("[TEST] Verified connection no longer in list")
+
+    @pytest.mark.llm
+    def test_add_multiple_delete_one_list(self, clean_connections, firestore_emulator):
+        """
+        Test adding multiple connections, deleting one, and verifying the other remains.
+        """
+        user_id = clean_connections
+
+        # Create user profile
+        call_function("create_user_profile", {
+            "user_id": user_id,
+            "name": "Multi Connection Test User",
+            "email": f"{user_id}@test.com",
+            "birth_date": "1990-06-15",
+        })
+
+        # Add two connections
+        result1 = call_function("create_connection", {
+            "user_id": user_id,
+            "connection": {
+                "name": "PersonToDelete",
+                "birth_date": "1992-08-15",
+                "relationship_category": "friend",
+                "relationship_label": "friend",
+            }
+        })
+
+        result2 = call_function("create_connection", {
+            "user_id": user_id,
+            "connection": {
+                "name": "PersonToKeep",
+                "birth_date": "1995-03-22",
+                "relationship_category": "love",
+                "relationship_label": "partner",
+            }
+        })
+
+        conn_id_to_delete = result1["connection_id"]
+        conn_id_to_keep = result2["connection_id"]
+
+        # Verify both exist
+        list_result = call_function("list_connections", {"user_id": user_id})
+        assert list_result["total_count"] == 2
+        names = {c["name"] for c in list_result["connections"]}
+        assert "PersonToDelete" in names
+        assert "PersonToKeep" in names
+
+        # Delete one
+        call_function("delete_connection", {
+            "user_id": user_id,
+            "connection_id": conn_id_to_delete,
+        })
+
+        # Verify only one remains
+        list_after = call_function("list_connections", {"user_id": user_id})
+        assert list_after["total_count"] == 1
+        assert len(list_after["connections"]) == 1
+        assert list_after["connections"][0]["name"] == "PersonToKeep"
+        assert list_after["connections"][0]["connection_id"] == conn_id_to_keep
+
+        # Verify deleted connection is gone
+        conn_ids = {c["connection_id"] for c in list_after["connections"]}
+        assert conn_id_to_delete not in conn_ids
+        assert conn_id_to_keep in conn_ids
