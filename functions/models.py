@@ -231,13 +231,17 @@ class MemoryCollection(BaseModel):
         # Map old names to new names
         name_mapping = {
             'spirit': 'growth',
+            'spiritual': 'growth',
             'emotions': 'heart',
-            # Add more mappings if needed
         }
+        # Valid MeterGroupV2 values
+        valid_groups = {'mind', 'heart', 'body', 'instincts', 'growth'}
         migrated = {}
         for key, value in v.items():
             new_key = name_mapping.get(key, key)
-            migrated[new_key] = value
+            # Skip keys that don't map to valid MeterGroupV2 values
+            if new_key in valid_groups:
+                migrated[new_key] = value
         return migrated
 
     # Ask the Stars - Conversation tracking

@@ -319,6 +319,56 @@ def get_overall_guidance(score: float) -> str:
     return str(bucket.get("guidance", ""))
 
 
+def get_vibe_phrase_examples(score: float, mode: str) -> list[str]:
+    """
+    Get score-calibrated vibe phrase examples for the overall compatibility.
+
+    Args:
+        score: Overall score (0-100)
+        mode: Relationship mode (romantic, friendship, coworker)
+
+    Returns:
+        List of appropriate vibe phrase examples for this score band and mode
+    """
+    config = load_overall_labels()
+    if not config:
+        return []
+
+    bands = config.get("bands", [])
+    band_id = get_band_for_score(score, bands)
+
+    bucket_labels: dict[str, Any] = config.get("bucket_labels", {})
+    bucket = bucket_labels.get(band_id, {})
+
+    vibe_examples = bucket.get("vibe_examples", {})
+
+    return vibe_examples.get(mode, [])
+
+
+def format_vibe_hint(score: float, mode: str) -> str:
+    """
+    Format vibe phrase examples as a comma-separated hint string for LLM prompts.
+
+    Args:
+        score: Overall score (0-100)
+        mode: Relationship mode (romantic, friendship, coworker)
+
+    Returns:
+        Comma-separated string of vibe examples (e.g., "Slow Burn, Gentle Pull, Steady Ground")
+    """
+    examples = get_vibe_phrase_examples(score, mode)
+    if not examples:
+        # Fallback to mid-tier examples if lookup fails
+        fallback = {
+            "romantic": ["Slow Burn", "Gentle Pull", "Steady Ground"],
+            "friendship": ["Easy Going", "Chill Vibes", "Low Key"],
+            "coworker": ["Functional Fit", "Solid Base", "Reliable"],
+        }
+        examples = fallback.get(mode, fallback["friendship"])
+
+    return ", ".join(examples)
+
+
 def generate_driving_aspect_summary(
     user_planet: str,
     their_planet: str,

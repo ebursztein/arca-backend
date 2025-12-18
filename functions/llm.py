@@ -48,7 +48,7 @@ from models import (
     RelationshipWeather,
 )
 from astrometers import get_meters, daily_meters_summary, get_meter_list
-from compatibility import CompatibilityData
+from compatibility import CompatibilityData, CompatibilityResult
 from astrometers.meter_groups import build_all_meter_groups, get_group_state_label, get_group_bucket_guidance, calculate_group_scores, get_group_writing_guidance, get_overall_writing_guidance
 from astrometers.summary import meter_groups_summary
 from astrometers.core import AspectContribution
@@ -184,6 +184,8 @@ Return ONLY the summary text, no JSON wrapping."""
     )
 
     latency_seconds = time.time() - start_time
+    if not response.text:
+        raise ValueError("Gemini returned no text for natal chart summary")
     result_text = response.text.strip()
 
     # Debug: dump prompt and response to file (only when DEBUG_LLM is set)
@@ -595,6 +597,10 @@ def update_memory_with_relationship_mention(
         Updated MemoryCollection
     """
     if not featured_relationship:
+        return memory
+
+    # Skip if entity has no category (required for RelationshipMention)
+    if not featured_relationship.category:
         return memory
 
     # Create new mention
@@ -1433,6 +1439,10 @@ def generate_compatibility_result(
         CompatibilityResult, ModeCompatibility, CompatibilityCategory,
         Composite, Karmic, RelationshipType,
     )
+    from compatibility_labels.labels import (
+        format_vibe_hint,
+        get_category_guidance,
+    )
 
     start_time = time.time()
 
@@ -1521,13 +1531,8 @@ Theme: {karmic.theme}
     # When NOT karmic, don't show node aspects at all to avoid LLM mentioning karmic themes
     node_aspects_section = ""
 
-    # Mode-specific vibe phrase examples
-    vibe_examples = {
-        "romantic": "Electric, Slow Burn, Twin Flames, Magnetic Pull, Deep Waters",
-        "friendship": "Ride or Die, Adventure Buddies, Soul Sisters, Low Maintenance, Kindred Spirits",
-        "coworker": "Power Partners, Dream Team, Creative Tension, Complementary Skills, Empire Builders",
-    }
-    vibe_hint = vibe_examples.get(mode.type, vibe_examples["friendship"])
+    # Score-calibrated vibe phrase examples (from overall.json bands)
+    vibe_hint = format_vibe_hint(mode.overall_score, mode.type)
 
     # Mode-specific tone guidance
     mode_tone = {
@@ -1580,7 +1585,10 @@ Theme: {karmic.theme}
     }
 
     # Import headline guidance generator
-    from compatibility_labels.labels import generate_compat_headline_guidance, get_overall_guidance
+    from compatibility_labels.labels import (
+        generate_compat_headline_guidance,
+        get_overall_guidance,
+    )
 
     # Build enhanced category context with labels and guidance from JSON
     categories_with_explanations = []
@@ -1597,10 +1605,14 @@ Theme: {karmic.theme}
         # Get explanation from category_explanations or fall back to description
         explanation = category_explanations.get(cat.id, cat.description)
 
+        # Get score-calibrated writing guidance for this category
+        category_guidance = get_category_guidance(mode.type, cat.id, cat.score)
+
         categories_with_explanations.append(
             f"- {cat.id} ({cat.name}): {cat.score}, Label: {label_display}\n"
             f"  Description: {cat.description}\n"
-            f"  LLM Guidance: Use the label {label_display} in your insight.{driving_context}"
+            f"  Writing Guidance: {category_guidance}\n"
+            f"  (Use the label {label_display} naturally in your insight){driving_context}"
         )
 
     # Generate headline guidance using the 25-case matrix
@@ -1727,7 +1739,7 @@ For "Difficult" or "Challenging" categories, the path forward should be about re
 ## OUTPUT RULES:
 0. {user_name} is the main user viewing this chart. {connection_name} is the person they added.
 1. Write TO {user_name} (use "you"), refer to {connection_name} by name. Example: "Sarah, you share a powerful bond with Emma"
-2. vibe_phrase: Pick 1-3 words from style "{vibe_hint}" or create similar
+2. vibe_phrase: Pick 1-3 words from these score-calibrated options: "{vibe_hint}" (match intensity to score band - do NOT use higher-intensity phrases)
 3. headline: 5-8 words combining their signs + composite vibe
 4. category_insights: For EACH category_id ({', '.join(category_ids)}), write 1-2 sentences explaining WHY
 5. composite_purpose: 1-2 sentences on what this relationship is "built for"

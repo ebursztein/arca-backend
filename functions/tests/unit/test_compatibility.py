@@ -1332,3 +1332,106 @@ class TestScoreRanges:
         extreme_rate = extreme_count / total_categories
         assert extreme_rate < 0.1, \
             f"Too many boundary scores ({extreme_rate*100:.1f}%), suggesting hard clamping"
+
+
+# =============================================================================
+# Test Score-Calibrated Vibe Phrase Functions
+# =============================================================================
+
+class TestGetVibePhraseExamples:
+    """Tests for get_vibe_phrase_examples function."""
+
+    def test_very_high_score_gets_premium_phrases(self):
+        """Very high scores (80+) should get premium vibe phrases."""
+        from compatibility_labels.labels import get_vibe_phrase_examples
+        examples = get_vibe_phrase_examples(85, "romantic")
+        assert len(examples) > 0
+        # Should contain premium phrases
+        assert any(phrase in examples for phrase in ["Twin Flames", "Electric", "Soul Bond", "Once in a Lifetime"])
+
+    def test_mid_score_gets_moderate_phrases(self):
+        """Mid scores (40-60) should get moderate vibe phrases."""
+        from compatibility_labels.labels import get_vibe_phrase_examples
+        examples = get_vibe_phrase_examples(55, "romantic")
+        assert len(examples) > 0
+        # Should NOT contain premium phrases
+        assert "Twin Flames" not in examples
+        assert "Electric" not in examples
+        # Should contain mid-tier phrases
+        assert any(phrase in examples for phrase in ["Slow Burn", "Gentle Pull", "Steady Ground", "Quiet Chemistry"])
+
+    def test_low_score_gets_effort_phrases(self):
+        """Low scores (20-40) should get effort-required phrases."""
+        from compatibility_labels.labels import get_vibe_phrase_examples
+        examples = get_vibe_phrase_examples(30, "romantic")
+        assert len(examples) > 0
+        assert "Twin Flames" not in examples
+        assert any(phrase in examples for phrase in ["Slow Start", "Work in Progress", "Learning Curve", "Patient Path"])
+
+    def test_very_low_score_gets_challenging_phrases(self):
+        """Very low scores (0-20) should get honest challenging phrases."""
+        from compatibility_labels.labels import get_vibe_phrase_examples
+        examples = get_vibe_phrase_examples(15, "romantic")
+        assert len(examples) > 0
+        assert any(phrase in examples for phrase in ["Rocky Road", "Intense", "Push-Pull", "Complicated"])
+
+    def test_all_modes_have_examples(self):
+        """All three modes should return examples."""
+        from compatibility_labels.labels import get_vibe_phrase_examples
+        for mode in ["romantic", "friendship", "coworker"]:
+            examples = get_vibe_phrase_examples(50, mode)
+            assert len(examples) > 0, f"No examples for mode {mode}"
+
+    def test_boundary_scores(self):
+        """Boundary scores should return correct band examples."""
+        from compatibility_labels.labels import get_vibe_phrase_examples
+        # Score 20 should be in "low" band (20-40)
+        examples_20 = get_vibe_phrase_examples(20, "romantic")
+        assert any(phrase in examples_20 for phrase in ["Slow Start", "Work in Progress"])
+
+        # Score 40 should be in "mid" band (40-60)
+        examples_40 = get_vibe_phrase_examples(40, "romantic")
+        assert any(phrase in examples_40 for phrase in ["Slow Burn", "Gentle Pull"])
+
+        # Score 80 should be in "very_high" band (80-100)
+        examples_80 = get_vibe_phrase_examples(80, "romantic")
+        assert any(phrase in examples_80 for phrase in ["Twin Flames", "Electric"])
+
+
+class TestFormatVibeHint:
+    """Tests for format_vibe_hint function."""
+
+    def test_returns_comma_separated_string(self):
+        """Should return comma-separated string."""
+        from compatibility_labels.labels import format_vibe_hint
+        hint = format_vibe_hint(50, "friendship")
+        assert isinstance(hint, str)
+        assert ", " in hint
+
+    def test_contains_expected_phrases_for_score(self):
+        """Returned string should contain phrases appropriate for score band."""
+        from compatibility_labels.labels import format_vibe_hint
+        # Mid-tier romantic
+        hint = format_vibe_hint(55, "romantic")
+        # Should contain at least one mid-tier phrase
+        assert any(phrase in hint for phrase in ["Slow Burn", "Gentle Pull", "Steady Ground", "Quiet Chemistry"])
+
+    def test_fallback_when_invalid_mode(self):
+        """Should use fallback for invalid mode."""
+        from compatibility_labels.labels import format_vibe_hint
+        hint = format_vibe_hint(50, "invalid_mode")
+        # Should return fallback (defaults to friendship)
+        assert isinstance(hint, str)
+        assert len(hint) > 0
+
+    def test_different_scores_give_different_hints(self):
+        """Different score bands should give different hints."""
+        from compatibility_labels.labels import format_vibe_hint
+        hint_low = format_vibe_hint(25, "romantic")
+        hint_mid = format_vibe_hint(55, "romantic")
+        hint_high = format_vibe_hint(85, "romantic")
+
+        # All should be different
+        assert hint_low != hint_mid
+        assert hint_mid != hint_high
+        assert hint_low != hint_high

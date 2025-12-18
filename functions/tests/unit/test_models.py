@@ -105,6 +105,100 @@ class TestMemoryCollection:
         assert "no history yet" in llm_text
         print("✓ Empty memory LLM formatting works")
 
+    def test_memory_migration_spiritual_to_growth(self):
+        """Test that 'spiritual' category migrates to 'growth'.
+
+        Bug: Firestore had old category names causing validation errors.
+        """
+        from datetime import datetime
+        now = datetime.now().isoformat()
+
+        # Simulate Firestore document with old 'spiritual' category
+        firestore_data = {
+            "user_id": "user_migration_1",
+            "categories": {
+                "spiritual": {"count": 5, "last_mentioned": now},
+                "mind": {"count": 3, "last_mentioned": now},
+            },
+            "updated_at": now,
+        }
+
+        # Should not raise ValidationError
+        memory = MemoryCollection(**firestore_data)
+
+        # 'spiritual' should be migrated to 'growth'
+        assert MeterGroupV2.GROWTH in memory.categories
+        assert memory.categories[MeterGroupV2.GROWTH].count == 5
+        # Original 'spiritual' key should not exist
+        assert "spiritual" not in [g.value for g in memory.categories.keys()]
+        print("✓ 'spiritual' -> 'growth' migration works")
+
+    def test_memory_migration_overview_filtered_out(self):
+        """Test that 'overview' category (invalid) is filtered out.
+
+        Bug: Firestore had 'overview' key causing validation errors.
+        """
+        from datetime import datetime
+        now = datetime.now().isoformat()
+
+        # Simulate Firestore document with invalid 'overview' category
+        firestore_data = {
+            "user_id": "user_migration_2",
+            "categories": {
+                "overview": {"count": 10, "last_mentioned": now},
+                "mind": {"count": 3, "last_mentioned": now},
+                "heart": {"count": 2, "last_mentioned": now},
+            },
+            "updated_at": now,
+        }
+
+        # Should not raise ValidationError
+        memory = MemoryCollection(**firestore_data)
+
+        # 'overview' should be filtered out (not a valid MeterGroupV2)
+        category_values = [g.value for g in memory.categories.keys()]
+        assert "overview" not in category_values
+        # Valid categories should still exist
+        assert MeterGroupV2.MIND in memory.categories
+        assert MeterGroupV2.HEART in memory.categories
+        print("✓ 'overview' filtered out correctly")
+
+    def test_memory_migration_multiple_old_categories(self):
+        """Test migration with multiple old category names.
+
+        Comprehensive test for all legacy category name mappings.
+        """
+        from datetime import datetime
+        now = datetime.now().isoformat()
+
+        # Simulate Firestore document with multiple old category names
+        firestore_data = {
+            "user_id": "user_migration_3",
+            "categories": {
+                "spirit": {"count": 1, "last_mentioned": now},  # -> growth
+                "spiritual": {"count": 2, "last_mentioned": now},  # -> growth (merged?)
+                "emotions": {"count": 3, "last_mentioned": now},  # -> heart
+                "overview": {"count": 99, "last_mentioned": now},  # filtered out
+                "mind": {"count": 4, "last_mentioned": now},  # unchanged
+            },
+            "updated_at": now,
+        }
+
+        # Should not raise ValidationError
+        memory = MemoryCollection(**firestore_data)
+
+        # Verify valid MeterGroupV2 keys only
+        valid_groups = {MeterGroupV2.MIND, MeterGroupV2.HEART, MeterGroupV2.BODY,
+                       MeterGroupV2.INSTINCTS, MeterGroupV2.GROWTH}
+        for key in memory.categories.keys():
+            assert key in valid_groups, f"Invalid category key: {key}"
+
+        # Verify specific migrations
+        assert MeterGroupV2.MIND in memory.categories
+        assert MeterGroupV2.GROWTH in memory.categories
+        assert MeterGroupV2.HEART in memory.categories
+        print("✓ Multiple old category migrations work")
+
 
 class TestDailyHoroscope:
     """Test DailyHoroscope model validation."""

@@ -290,6 +290,11 @@ def create_user_profile(req: https_fn.CallableRequest) -> dict:
 
         # Get sun sign profile for summary generation
         sun_sign_profile = get_sun_sign_profile(sun_sign)
+        if not sun_sign_profile:
+            raise https_fn.HttpsError(
+                code=https_fn.FunctionsErrorCode.INTERNAL,
+                message=f"Sun sign profile not found: {sun_sign.value}"
+            )
 
         # Compute birth chart (handles both V1 and V2 modes)
         natal_chart, exact_chart = compute_birth_chart(
@@ -532,6 +537,11 @@ def update_user_profile(req: https_fn.CallableRequest) -> dict:
             from llm import generate_natal_chart_summary
             sun_sign = get_sun_sign(user_data["birth_date"])
             sun_sign_profile = get_sun_sign_profile(sun_sign)
+            if not sun_sign_profile:
+                raise https_fn.HttpsError(
+                    code=https_fn.FunctionsErrorCode.INTERNAL,
+                    message=f"Sun sign profile not found: {sun_sign.value}"
+                )
 
             natal_chart_summary = generate_natal_chart_summary(
                 chart_dict=natal_chart,

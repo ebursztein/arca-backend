@@ -16,23 +16,48 @@
   "bucket_labels": {
     "very_low": {
       "label": "Volatile",
-      "guidance": "Treat as intense and draining; name volatility, focus on boundaries and self-protection."
+      "guidance": "Treat as intense and draining; name volatility, focus on boundaries and self-protection.",
+      "vibe_examples": {
+        "romantic": ["Rocky Road", "Intense", "Push-Pull", "Complicated"],
+        "friendship": ["On-Off", "High Maintenance", "Complicated", "Mixed Signals"],
+        "coworker": ["Friction Zone", "Tough Fit", "Oil and Water", "Rough Terrain"]
+      }
     },
     "low": {
       "label": "Rocky",
-      "guidance": "Acknowledge real connection mixed with frequent bumps; talk about patience."
+      "guidance": "Acknowledge real connection mixed with frequent bumps; talk about patience.",
+      "vibe_examples": {
+        "romantic": ["Slow Start", "Work in Progress", "Learning Curve", "Patient Path"],
+        "friendship": ["Warming Up", "Growing Pains", "Takes Time", "Effort Required"],
+        "coworker": ["Finding Rhythm", "Building Blocks", "Needs Structure", "Work in Progress"]
+      }
     },
     "mid": {
       "label": "Mixed",
-      "guidance": "Could tilt closer or looser depending on how they both show up."
+      "guidance": "Could tilt closer or looser depending on how they both show up.",
+      "vibe_examples": {
+        "romantic": ["Slow Burn", "Gentle Pull", "Steady Ground", "Quiet Chemistry"],
+        "friendship": ["Easy Going", "Chill Vibes", "Low Key", "Comfortable"],
+        "coworker": ["Functional Fit", "Solid Base", "Steady Partners", "Reliable"]
+      }
     },
     "high": {
       "label": "Solid",
-      "guidance": "Generally healthy, dependable bond; encourage investing time while naming weak spots."
+      "guidance": "Generally healthy, dependable bond; encourage investing time while naming weak spots.",
+      "vibe_examples": {
+        "romantic": ["Magnetic", "Deep Waters", "Natural Fit", "Real Chemistry"],
+        "friendship": ["Kindred Spirits", "Adventure Buddies", "True Blue", "Solid Crew"],
+        "coworker": ["Dream Team", "Power Partners", "Synced Up", "Strong Alliance"]
+      }
     },
     "very_high": {
       "label": "Seamless",
-      "guidance": "Natural fit where things click; invite them to enjoy it with healthy boundaries."
+      "guidance": "Natural fit where things click; invite them to enjoy it with healthy boundaries.",
+      "vibe_examples": {
+        "romantic": ["Twin Flames", "Electric", "Soul Bond", "Once in a Lifetime"],
+        "friendship": ["Ride or Die", "Soul Sisters", "Chosen Family", "Unbreakable"],
+        "coworker": ["Empire Builders", "Unstoppable Duo", "Career Soulmates", "Legacy Partners"]
+      }
     }
   }
 }
