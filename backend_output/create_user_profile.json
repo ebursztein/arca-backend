@@ -1,21 +1,17 @@
 {
   "function_name": "create_user_profile",
   "request": {
-    "user_id": "test_user_a",
-    "name": "Test User",
-    "email": "test_user_a@test.com",
-    "birth_date": "1990-06-15",
-    "birth_time": "14:30",
-    "birth_timezone": "America/New_York",
-    "birth_lat": 40.7128,
-    "birth_lon": -74.006
+    "user_id": "test_sharing_importer",
+    "name": "Importing User",
+    "email": "test_sharing_importer@test.com",
+    "birth_date": "1992-08-15"
   },
   "response": {
-    "exact_chart": true,
-    "mode": "v2",
+    "exact_chart": false,
+    "mode": "v1",
     "success": true,
-    "sun_sign": "gemini",
-    "user_id": "test_user_a"
+    "sun_sign": "leo",
+    "user_id": "test_sharing_importer"
   },
-  "captured_at": "2025-12-10T15:35:42.869900+00:00"
+  "captured_at": "2025-12-17T15:31:43.665858+00:00"
 }

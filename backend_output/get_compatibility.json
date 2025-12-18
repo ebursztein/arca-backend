@@ -2,10 +2,10 @@
   "function_name": "get_compatibility",
   "request": {
     "user_id": "test_crud_user",
-    "connection_id": "znn7IOpUb5IXCjEZnG8tFw"
+    "connection_id": "e_pOS1ZTpKees9HmjMfEiQ"
   },
   "response": {
-    "advice": "Set clear expectations for each project and define who is responsible for what to leverage your individual strengths effectively.",
+    "advice": "Alex, before diving into a shared project, clarify who owns which part and how you'll hand off tasks to minimize conflict.",
     "aspects": [
       {
         "aspect_type": "quincunx",
@@ -496,17 +496,17 @@
         "user_planet": "jupiter"
       }
     ],
-    "calculated_at": "2025-12-09T03:12:33.521743",
+    "calculated_at": "2025-12-17T14:26:36.061693",
     "composite": {
       "dominant_element": "air",
       "moon_sign": "aquarius",
-      "purpose": "This relationship is built for focused professional mentorship and building a shared empire. You are here to refine ideas and execute plans with clarity and purpose.",
+      "purpose": "Your combined energies form a Virgo Sun, Aquarius Moon, and Virgo Rising, creating a powerhouse for focused, analytical work. This connection is built for building professional structures and driving projects forward with clear intention.",
       "rising_sign": "virgo",
       "sun_sign": "scorpio"
     },
-    "generation_time_ms": 3597,
-    "growth_areas": "Direct collaboration on shared tasks can be difficult, requiring clear role definition and independent work streams. You may also find reliability a challenge, needing to actively establish accountability and structure to ensure follow-through.",
-    "headline": "Aquarius Insight, Virgo Action: Building Together",
+    "generation_time_ms": 3333,
+    "growth_areas": "Collaboration is where you'll face the biggest hurdles. Your natural styles for tackling tasks can clash, and reliability may feel unsteady at times. Defining clear roles and responsibilities is key to mitigating friction.",
+    "headline": "Aquarius-Virgo: Bridging Minds, Defining Roles",
     "karmic": {
       "destiny_note": null,
       "is_karmic": false,
@@ -549,10 +549,10 @@
             }
           ],
           "id": "communication",
-          "insight": "You and Jordan are 'In Sync' when it comes to communication, effortlessly exchanging ideas and information. Your Mercury supports their Jupiter, creating a dynamic where new ideas and big-picture thinking thrive.",
+          "insight": null,
           "label": "In Sync",
           "name": "Communication",
-          "score": 89
+          "score": 92
         },
         {
           "aspect_ids": [
@@ -588,7 +588,7 @@
             }
           ],
           "id": "collaboration",
-          "insight": "Collaboration between you two is a 'Clash', as your approaches to teamwork and task execution create tension. It's best to work independently on shared projects, maintaining clear roles to avoid friction.",
+          "insight": null,
           "label": "Clash",
           "name": "Collaboration",
           "score": 5
@@ -627,7 +627,7 @@
             }
           ],
           "id": "reliability",
-          "insight": "Reliability is 'Unsteady' in this dynamic. While your Saturn provides structure, Alex's emotional needs can create tension with Jordan's need for discipline, requiring conscious effort to ensure follow-through.",
+          "insight": null,
           "label": "Unsteady",
           "name": "Reliability",
           "score": 7
@@ -666,10 +666,10 @@
             }
           ],
           "id": "ambition",
-          "insight": "Your ambitions are 'Parallel,' aligning well for long-term career building. Your drive supports Jordan's growth aspirations, creating a pathway for shared professional development.",
+          "insight": null,
           "label": "Parallel",
           "name": "Ambition Alignment",
-          "score": 44
+          "score": 46
         },
         {
           "aspect_ids": [
@@ -707,20 +707,20 @@
             }
           ],
           "id": "powerDynamics",
-          "insight": "The power dynamics are 'Balanced,' creating a sense of equal influence and control. Your assertiveness supports Jordan's leadership, and vice-versa, fostering a respectful professional environment.",
+          "insight": null,
           "label": "Balanced",
           "name": "Power Dynamics",
           "score": 63
         }
       ],
       "overall_label": "Mixed",
-      "overall_score": 42,
+      "overall_score": 43,
       "type": "coworker",
-      "vibe_phrase": "Empire Builders"
+      "vibe_phrase": "Complementary Skills"
     },
     "model_used": "gemini-2.5-flash-lite",
-    "strengths": "Your communication styles are incredibly aligned, making it easy to understand each other's professional vision. This synergy allows for a natural exchange of ideas and a deep anticipation of each other's thinking, essential for any partnership aiming high.",
-    "summary": "You and Jordan share a powerful professional connection where your communication flows effortlessly. While your collaborative energy is challenging, your shared ambition and balanced power dynamics offer a strong foundation for building something significant."
+    "strengths": "Your communication styles are remarkably aligned, Alex. You anticipate each other's thinking, making professional rapport effortless. This synergy lays a strong foundation for understanding and respecting each other's perspectives.",
+    "summary": "Alex, your connection with Jordan is a study in contrasts, designed for clear communication and distinct contributions. While your minds easily connect, your approaches to teamwork require careful navigation."
   },
-  "captured_at": "2025-12-09T03:12:33.527488+00:00"
+  "captured_at": "2025-12-17T14:26:36.064979+00:00"
 }

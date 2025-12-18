@@ -2,6 +2,7 @@
   "function_name": "update_user_profile",
   "request": {
     "user_id": "test_user_a",
+    "birth_time": "14:30",
     "birth_timezone": "America/New_York",
     "birth_lat": 40.7128,
     "birth_lon": -74.006
@@ -15,7 +16,7 @@
       "birth_lon": -74.006,
       "birth_time": "14:30",
       "birth_timezone": "America/New_York",
-      "created_at": "2025-12-09T03:11:26.498452",
+      "created_at": "2025-12-10T15:35:42.410507",
       "device_country": null,
       "device_currency": null,
       "device_language": null,
@@ -24,7 +25,7 @@
       "exact_chart": true,
       "is_premium": false,
       "is_trial_active": false,
-      "last_active": "2025-12-09T03:11:28.429952",
+      "last_active": "2025-12-17T15:31:17.684565",
       "name": "Test User",
       "natal_chart": {
         "angles": {
@@ -586,7 +587,7 @@
             "symbol": "\u260b"
           }
         ],
-        "summary": "Test, as a Gemini, you're naturally curious and quick-witted. Your Leo rising gives you a warm, confident presence that draws people in. With a Pisces moon, you feel deeply and process emotions with great empathy. This blend means your bright ideas often come with a compassionate heart."
+        "summary": "Test, as a Gemini, you're naturally curious and quick-witted. Your Leo rising makes you shine, drawing attention with warmth and flair. Your Pisces moon means you feel deeply, often sensing others' emotions. This blend means your sharp mind and vibrant presence are guided by a sensitive, empathetic heart."
       },
       "photo_path": null,
       "premium_expiry": null,
@@ -596,5 +597,5 @@
     },
     "success": true
   },
-  "captured_at": "2025-12-09T03:11:28.441123+00:00"
+  "captured_at": "2025-12-17T15:31:17.695021+00:00"
 }

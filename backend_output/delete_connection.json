@@ -2,10 +2,10 @@
   "function_name": "delete_connection",
   "request": {
     "user_id": "test_user_a",
-    "connection_id": "r_sOnhhg_uWb9hSK_sZLew"
+    "connection_id": "yymMehdVmkAXHHAo5oy_CQ"
   },
   "response": {
     "success": true
   },
-  "captured_at": "2025-12-09T03:11:52.216192+00:00"
+  "captured_at": "2025-12-17T14:25:49.368102+00:00"
 }

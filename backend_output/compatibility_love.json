@@ -1,5 +1,5 @@
 {
-  "advice": "Tonight, try a structured conversation about needs, focusing on listening without immediate reaction. Write down what you each need from this relationship, then share them calmly.",
+  "advice": "Emma, accept that deep emotional support may not be the primary gift of this connection. Focus on enjoying the moments of shared inspiration and creativity, but protect your own emotional well-being by not over-investing in expecting James to meet all your needs here.",
   "aspects": [
     {
       "aspect_type": "sextile",
@@ -506,17 +506,17 @@
       "user_planet": "mars"
     }
   ],
-  "calculated_at": "2025-12-09T03:12:23.615468",
+  "calculated_at": "2025-12-17T14:26:26.498045",
   "composite": {
     "dominant_element": "fire",
     "moon_sign": "aquarius",
-    "purpose": "This relationship is built to explore the depths of emotion and transform individual desires into shared reality. It's a space for profound personal evolution, pushing both of you to confront your inner worlds.",
+    "purpose": "This relationship, with its Taurus Sun and Aquarius Moon, seems built to explore contrasting energies: the grounded, sensual Taurus seeking stability and the innovative, detached Aquarius pushing for change and intellectual connection.",
     "rising_sign": "sagittarius",
     "sun_sign": "taurus"
   },
-  "generation_time_ms": 5349,
-  "growth_areas": "Your emotional worlds operate very differently, making it hard to truly meet each other's needs. Communication can also be a flashpoint, requiring conscious effort to understand each other's perspective.",
-  "headline": "Pisces Sun Leo Moon: A Fiery, Deeply Felt Connection",
+  "generation_time_ms": 3512,
+  "growth_areas": "The biggest hurdle is emotional intimacy; you often feel shut off from each other's deepest feelings. Communication can also be volatile, and aligning on fundamental values requires constant negotiation and a clear understanding of your individual needs.",
+  "headline": "Leo Fire Meets Pisces Water",
   "karmic": {
     "destiny_note": null,
     "is_karmic": false,
@@ -560,10 +560,10 @@
           }
         ],
         "id": "emotional",
-        "insight": "Emma, you and James struggle to connect emotionally, often feeling shut off from each other's inner worlds. It's important to acknowledge that deep emotional support may not be the natural flow of this partnership.",
+        "insight": null,
         "label": "Shut Off",
         "name": "Emotional Connection",
-        "score": 10
+        "score": 9
       },
       {
         "aspect_ids": [
@@ -600,10 +600,10 @@
           }
         ],
         "id": "communication",
-        "insight": "Your communication styles can be combustible, Emma. While your ideas can sometimes spark inspiration for James, misunderstandings are frequent and require careful navigation to avoid arguments.",
+        "insight": null,
         "label": "Combustible",
         "name": "Communication",
-        "score": 15
+        "score": 19
       },
       {
         "aspect_ids": [
@@ -641,10 +641,10 @@
           }
         ],
         "id": "attraction",
-        "insight": "The initial physical and magnetic pull between you two feels faint, Emma. Your core identities and what draws you in are quite opposite, making attraction a challenge to ignite and sustain.",
+        "insight": null,
         "label": "Faint",
         "name": "Attraction",
-        "score": 21
+        "score": 23
       },
       {
         "aspect_ids": [
@@ -682,10 +682,10 @@
           }
         ],
         "id": "values",
-        "insight": "While your core values are generally aligned, Emma, how you each express them creates tension. You can work side-by-side, but differences in your love styles and emotional needs mean you must consciously bridge any gaps.",
-        "label": "Side-by-Side",
+        "insight": null,
+        "label": "Split",
         "name": "Shared Values",
-        "score": 44
+        "score": 32
       },
       {
         "aspect_ids": [
@@ -723,10 +723,10 @@
           }
         ],
         "id": "longTerm",
-        "insight": "The long-term potential of this connection feels fragile, Emma. Your emotional needs clash with James's need for structure and commitment, making it difficult to build a lasting foundation.",
-        "label": "Fragile",
+        "insight": null,
+        "label": "Short-Chapter",
         "name": "Long-term Potential",
-        "score": 26
+        "score": 17
       },
       {
         "aspect_ids": [
@@ -764,18 +764,18 @@
           }
         ],
         "id": "growth",
-        "insight": "This relationship acts as a rough mirror, Emma, challenging you both to grow. Your approach to commitment clashes with James's past patterns, and your love style pushes against his future direction.",
-        "label": "Rough Mirror",
+        "insight": null,
+        "label": "Draining",
         "name": "Growth Together",
-        "score": 21
+        "score": 18
       }
     ],
     "overall_label": "Rocky",
-    "overall_score": 23,
+    "overall_score": 20,
     "type": "romantic",
-    "vibe_phrase": "Deep Waters, Fiery Hearts"
+    "vibe_phrase": "Rocky Road"
   },
   "model_used": "gemini-2.5-flash-lite",
-  "strengths": "You both share a desire for a life lived with purpose and passion, finding common ground in your values. When you align, James's dreams can lift you up, and your own drive helps ground his more ethereal ideas.",
-  "summary": "Emma, your connection with James is a potent mix of shared dreams and intense emotional currents. While you can inspire each other's passions, navigating your deep-seated needs requires patience and clear communication."
+  "strengths": "When your energies align, there's a powerful, almost mystical fusion. Emma, your creativity and optimism can inspire James, while his deep intuition can offer profound insights, creating moments of shared vision and transformation.",
+  "summary": "Emma, your connection with James is a complex dance of intense highs and frequent lows. While there's a magnetic pull, the stars highlight significant challenges in truly understanding each other's emotional worlds and core values."
 }

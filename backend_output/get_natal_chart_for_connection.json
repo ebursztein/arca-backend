@@ -2,7 +2,7 @@
   "function_name": "get_natal_chart_for_connection",
   "request": {
     "user_id": "test_user_a",
-    "connection_id": "OkkLAdNiNjH7HYe8x6oeXw"
+    "connection_id": "y_ywruUccl7dlNPRc1UxEw"
   },
   "response": {
     "chart": {
@@ -571,5 +571,5 @@
     "has_exact_chart": false,
     "sun_sign": "leo"
   },
-  "captured_at": "2025-12-09T03:11:42.117186+00:00"
+  "captured_at": "2025-12-17T14:25:36.963184+00:00"
 }

@@ -26,14 +26,119 @@
         "last_mentioned": null
       }
     },
-    "connection_mentions": [],
+    "connection_mentions": [
+      {
+        "connection_id": "HVil76jMuySHJ0mFPhOvkQ",
+        "connection_name": "John",
+        "context": "The vibe with John is tense today. Old patterns might surface, making things feel volatile. It's best to avoid heavy talks and give each other some space.",
+        "date": "2025-12-17",
+        "relationship_category": "friend",
+        "relationship_label": "friend"
+      },
+      {
+        "connection_id": "cToJUD0y4M_ZkUStoU7ZGw",
+        "connection_name": "TestJane",
+        "context": "You and TestJane have a good vibe today. Mars' opposition is tense, but Mercury's trine offers supportive communication. It's a good time to reach out and make plans together.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      },
+      {
+        "connection_id": "DSWDZPXuEoFao04S-dw0Eg",
+        "connection_name": "TestJane",
+        "context": "You and TestJane are in sync right now, with a flowing and easy connection. It's a good time to reach out or make plans together as Mercury supports your affection point.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      },
+      {
+        "connection_id": "FGM6BTuCRzVKtRfVq_Je3w",
+        "connection_name": "TestJohn",
+        "context": "The vibe between you and John is tense today. Old patterns may surface due to the Sun opposing your passion point with him. Avoid heavy conversations and give each other space.",
+        "date": "2025-12-17",
+        "relationship_category": "friend",
+        "relationship_label": "friend"
+      },
+      {
+        "connection_id": "zPrVmtLkmcdxwemfUQ9XGQ",
+        "connection_name": "John",
+        "context": "You and John are experiencing some volatile energy today. Old patterns may surface, making heavy talks difficult. Give each other space and avoid intense conversations.",
+        "date": "2025-12-17",
+        "relationship_category": "friend",
+        "relationship_label": "friend"
+      },
+      {
+        "connection_id": "J0Cu29k3XMl0Y9oZV9pGRA",
+        "connection_name": "TestMom",
+        "context": "You and TestMom are in a flowing, easy connection today. The Moon trines and sextiles your points of attraction and emotional connection with her, making it a supportive time to reach out or make plans.",
+        "date": "2025-12-17",
+        "relationship_category": "family",
+        "relationship_label": "mother"
+      },
+      {
+        "connection_id": "5KhB95YchfiP8gQeLdr37Q",
+        "connection_name": "Jane",
+        "context": "You and Jane are experiencing an easy connection today. Mars opposing your attraction point might bring a spark of tension, but Mercury trining your affection point creates supportive communication. It's a good time to reach out and make plans together.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      },
+      {
+        "connection_id": "spQojm_JWlT6_N0TfjInuA",
+        "connection_name": "John",
+        "context": "The vibe between you and John is currently volatile. Old patterns may surface, creating tension. It's best to avoid heavy talks and give each other space today.",
+        "date": "2025-12-17",
+        "relationship_category": "friend",
+        "relationship_label": "friend"
+      },
+      {
+        "connection_id": "zMlEvbtY5ZoiLi0NK8nXjg",
+        "connection_name": "Jane",
+        "context": "You and Jane share an easy connection today, Luna. Good energy for reaching out or making plans together. Mercury is supporting your communication, making things flow smoothly.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      },
+      {
+        "connection_id": "nGFVGF2da5uz2ASqSetdSQ",
+        "connection_name": "TestJane",
+        "context": "You and TestJane are in sync, with an easy connection flowing between you. Good energy to reach out and make plans together today.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      },
+      {
+        "connection_id": "bu0l0S5uJ4QcQD75MPTd-g",
+        "connection_name": "Johnny",
+        "context": "The vibe with Johnny is currently tense. Old patterns may surface, creating volatility. Avoid heavy talks and give each other some space.",
+        "date": "2025-12-17",
+        "relationship_category": "friend",
+        "relationship_label": "friend"
+      },
+      {
+        "connection_id": "qBdHmJbDeik8KNekDh6IEQ",
+        "connection_name": "Jane",
+        "context": "You and Jane are in sync right now. The connection feels flowing and easy, making it a good time to reach out or make plans together.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      },
+      {
+        "connection_id": "ezaemm-pIDsgI3Rj9F1CNQ",
+        "connection_name": "KeepMe",
+        "context": "You and KeepMe are in a good sync today. There's an easy connection flowing between you, and it's a supportive time to reach out or make plans together.",
+        "date": "2025-12-17",
+        "relationship_category": "love",
+        "relationship_label": "partner"
+      }
+    ],
     "entity_summary": {},
     "last_conversation_date": null,
     "question_categories": {},
     "relationship_mentions": [],
     "total_conversations": 0,
-    "updated_at": "2025-12-09T03:14:01.819165",
+    "updated_at": "2025-12-10T15:35:42.867458",
     "user_id": "test_user_a"
   },
-  "captured_at": "2025-12-09T03:14:13.792643+00:00"
+  "captured_at": "2025-12-17T14:28:47.325912+00:00"
 }

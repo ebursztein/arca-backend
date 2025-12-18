@@ -3,33 +3,30 @@
   "request": {
     "user_id": "test_user_a",
     "connection": {
-      "name": "Alex",
-      "birth_date": "1992-01-15",
-      "birth_time": "14:30",
-      "birth_lat": 40.7128,
-      "birth_lon": -74.006,
-      "relationship_category": "love",
-      "relationship_label": "partner"
+      "name": "TestMom",
+      "birth_date": "1965-07-10",
+      "relationship_category": "family",
+      "relationship_label": "mother"
     }
   },
   "response": {
     "arca_notes": [],
-    "birth_date": "1992-01-15",
-    "birth_lat": 40.7128,
-    "birth_lon": -74.006,
-    "birth_time": "14:30",
+    "birth_date": "1965-07-10",
+    "birth_lat": null,
+    "birth_lon": null,
+    "birth_time": null,
     "birth_timezone": null,
-    "connection_id": "SrOsMVA_sbYBQquTECfM8w",
-    "created_at": "2025-12-09T03:13:11.405741",
-    "name": "Alex",
+    "connection_id": "bgDfyFuSyZUWAF6CGGuddQ",
+    "created_at": "2025-12-17T15:31:41.309260",
+    "name": "TestMom",
     "photo_path": null,
-    "relationship_category": "love",
-    "relationship_label": "partner",
+    "relationship_category": "family",
+    "relationship_label": "mother",
     "source_user_id": null,
-    "sun_sign": "capricorn",
+    "sun_sign": "cancer",
     "synastry_points": [
       {
-        "degree": 130.36,
+        "degree": 299.06,
         "label": "emotional connection point",
         "planets": [
           "moon",
@@ -38,7 +35,7 @@
         "type": "moon_moon_midpoint"
       },
       {
-        "degree": 217.07,
+        "degree": 96.06,
         "label": "core identity point",
         "planets": [
           "sun",
@@ -47,7 +44,7 @@
         "type": "sun_sun_midpoint"
       },
       {
-        "degree": 221.56,
+        "degree": 90.22,
         "label": "affection point",
         "planets": [
           "venus",
@@ -56,7 +53,7 @@
         "type": "venus_venus_midpoint"
       },
       {
-        "degree": 208.39,
+        "degree": 99.44,
         "label": "communication point",
         "planets": [
           "mercury",
@@ -65,7 +62,7 @@
         "type": "mercury_mercury_midpoint"
       },
       {
-        "degree": 229.81,
+        "degree": 117.36,
         "label": "attraction point",
         "planets": [
           "venus",
@@ -74,7 +71,7 @@
         "type": "venus_mars_midpoint"
       },
       {
-        "degree": 172.59,
+        "degree": 71.35,
         "label": "passion point",
         "planets": [
           "mars",
@@ -83,8 +80,8 @@
         "type": "mars_venus_midpoint"
       }
     ],
-    "updated_at": "2025-12-09T03:13:11.405741",
+    "updated_at": "2025-12-17T15:31:41.309260",
     "vibes": []
   },
-  "captured_at": "2025-12-09T03:13:11.417067+00:00"
+  "captured_at": "2025-12-17T15:31:41.316182+00:00"
 }

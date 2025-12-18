@@ -2,7 +2,7 @@
   "function_name": "import_connection",
   "request": {
     "user_id": "test_sharing_importer",
-    "share_secret": "4bCL_d5MEUR5",
+    "share_secret": "2MRoTHSyLPnI",
     "relationship_category": "friend",
     "relationship_label": "friend"
   },
@@ -11,10 +11,10 @@
       "name": "Source User",
       "sun_sign": "gemini"
     },
-    "connection_id": "hNfpW3T3W0YwGt25Z4Vj6g",
+    "connection_id": "FlZHepTCUa4TAyLhZLtzPQ",
     "message": null,
     "notification_sent": false,
     "success": true
   },
-  "captured_at": "2025-12-08T23:05:59.698610+00:00"
+  "captured_at": "2025-12-17T15:31:43.691434+00:00"
 }

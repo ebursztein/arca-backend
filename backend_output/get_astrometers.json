@@ -134,13 +134,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 26.700000000000003,
-          "direction": "increasing",
-          "previous": 35.0
+          "delta": -13.899999999999999,
+          "direction": "decreasing",
+          "previous": 55.8
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 61.7
+      "unified_quality": "turbulent",
+      "unified_score": 41.9
     },
     "aspect_count": 85,
     "circle": {
@@ -271,14 +271,14 @@
           "previous": 1.821875416282262
         },
         "unified_score": {
-          "change_rate": "rapid",
-          "delta": 20.799999999999997,
-          "direction": "increasing",
-          "previous": 37.7
+          "change_rate": "moderate",
+          "delta": -9.399999999999999,
+          "direction": "decreasing",
+          "previous": 44.8
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 58.5
+      "unified_quality": "turbulent",
+      "unified_score": 35.4
     },
     "clarity": {
       "advice": [
@@ -408,14 +408,14 @@
           "previous": 30.795824164015233
         },
         "unified_score": {
-          "change_rate": "moderate",
-          "delta": 10.200000000000003,
+          "change_rate": "rapid",
+          "delta": 13.099999999999994,
           "direction": "increasing",
-          "previous": 51.0
+          "previous": 35.2
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 61.2
+      "unified_quality": "turbulent",
+      "unified_score": 48.3
     },
     "communication": {
       "advice": [
@@ -545,14 +545,14 @@
           "previous": 1.9218045105017036
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": -4.900000000000006,
+          "change_rate": "rapid",
+          "delta": -20.699999999999996,
           "direction": "decreasing",
-          "previous": 50.2
+          "previous": 61.9
         }
       },
       "unified_quality": "turbulent",
-      "unified_score": 45.3
+      "unified_score": 41.2
     },
     "connections": {
       "advice": [
@@ -682,14 +682,14 @@
           "previous": 1.5947360440734508
         },
         "unified_score": {
-          "change_rate": "rapid",
-          "delta": 18.300000000000004,
+          "change_rate": "slow",
+          "delta": 4.799999999999997,
           "direction": "increasing",
-          "previous": 46.6
+          "previous": 52.1
         }
       },
       "unified_quality": "peaceful",
-      "unified_score": 64.9
+      "unified_score": 56.9
     },
     "creativity": {
       "advice": [
@@ -820,13 +820,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": -26.6,
+          "delta": -29.89999999999999,
           "direction": "decreasing",
-          "previous": 63.7
+          "previous": 71.6
         }
       },
       "unified_quality": "turbulent",
-      "unified_score": 37.1
+      "unified_score": 41.7
     },
     "date": "Sun, 15 Jun 2025 00:00:00 GMT",
     "drive": {
@@ -958,13 +958,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 41.2,
+          "delta": 33.8,
           "direction": "increasing",
-          "previous": 14.9
+          "previous": 14.5
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 56.1
+      "unified_quality": "turbulent",
+      "unified_score": 48.3
     },
     "energy": {
       "advice": [
@@ -1095,13 +1095,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": -21.699999999999996,
+          "delta": -15.200000000000003,
           "direction": "decreasing",
-          "previous": 57.3
+          "previous": 69.9
         }
       },
-      "unified_quality": "turbulent",
-      "unified_score": 35.6
+      "unified_quality": "peaceful",
+      "unified_score": 54.7
     },
     "evolution": {
       "advice": [
@@ -1232,13 +1232,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 35.0,
+          "delta": 19.099999999999998,
           "direction": "increasing",
-          "previous": 17.3
+          "previous": 13.8
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 52.3
+      "unified_quality": "turbulent",
+      "unified_score": 32.9
     },
     "flow": {
       "advice": [
@@ -1369,13 +1369,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": -11.699999999999996,
+          "delta": -20.4,
           "direction": "decreasing",
-          "previous": 62.3
+          "previous": 51.0
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 50.6
+      "unified_quality": "turbulent",
+      "unified_score": 30.6
     },
     "focus": {
       "advice": [
@@ -1506,13 +1506,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 15.299999999999999,
+          "delta": 21.0,
           "direction": "increasing",
-          "previous": 8.1
+          "previous": 6.4
         }
       },
-      "unified_quality": "challenging",
-      "unified_score": 23.4
+      "unified_quality": "turbulent",
+      "unified_score": 27.4
     },
     "intuition": {
       "advice": [
@@ -1643,13 +1643,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 33.9,
+          "delta": 32.8,
           "direction": "increasing",
-          "previous": 9.6
+          "previous": 15.1
         }
       },
       "unified_quality": "turbulent",
-      "unified_score": 43.5
+      "unified_score": 47.9
     },
     "key_aspects": [
       {
@@ -1971,14 +1971,14 @@
           "previous": 1.9311817079440459
         },
         "unified_score": {
-          "change_rate": "moderate",
-          "delta": -7.400000000000006,
+          "change_rate": "rapid",
+          "delta": -13.700000000000003,
           "direction": "decreasing",
-          "previous": 58.7
+          "previous": 56.1
         }
       },
-      "unified_quality": "peaceful",
-      "unified_score": 51.3
+      "unified_quality": "turbulent",
+      "unified_score": 42.4
     },
     "overall_harmony": {
       "advice": [
@@ -1987,19 +1987,19 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 41.946745224535206,
-      "intensity": 33.70574026890991,
+      "harmony": 41.63955536431979,
+      "intensity": 33.17834387577798,
       "interpretation": "Across all life areas, harmony is at 42/100",
       "meter_name": "overall_harmony",
       "raw_scores": {
-        "harmony": 41.946745224535206,
-        "intensity": 33.70574026890991
+        "harmony": 41.63955536431979,
+        "intensity": 33.17834387577798
       },
       "state_label": "Turbulent",
       "top_aspects": [],
       "trend": null,
       "unified_quality": "turbulent",
-      "unified_score": 41.9
+      "unified_score": 41.7
     },
     "overall_intensity": {
       "advice": [
@@ -2008,19 +2008,19 @@
       ],
       "date": "Sun, 15 Jun 2025 00:00:00 GMT",
       "group": "growth",
-      "harmony": 41.946745224535206,
-      "intensity": 33.70574026890991,
-      "interpretation": "Across all life areas, intensity is at 34/100",
+      "harmony": 41.63955536431979,
+      "intensity": 33.17834387577798,
+      "interpretation": "Across all life areas, intensity is at 33/100",
       "meter_name": "overall_intensity",
       "raw_scores": {
-        "harmony": 41.946745224535206,
-        "intensity": 33.70574026890991
+        "harmony": 41.63955536431979,
+        "intensity": 33.17834387577798
       },
       "state_label": "Turbulent",
       "top_aspects": [],
       "trend": null,
       "unified_quality": "turbulent",
-      "unified_score": 41.9
+      "unified_score": 41.7
     },
     "overall_unified_quality": "turbulent",
     "resilience": {
@@ -2151,14 +2151,14 @@
           "previous": 1.9441908742581984
         },
         "unified_score": {
-          "change_rate": "slow",
-          "delta": -4.099999999999994,
-          "direction": "decreasing",
-          "previous": 59.8
+          "change_rate": "rapid",
+          "delta": 24.799999999999997,
+          "direction": "increasing",
+          "previous": 36.7
         }
       },
       "unified_quality": "peaceful",
-      "unified_score": 55.7
+      "unified_score": 61.5
     },
     "strength": {
       "advice": [
@@ -2289,13 +2289,13 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": 18.999999999999996,
+          "delta": 35.400000000000006,
           "direction": "increasing",
           "previous": 18.8
         }
       },
-      "unified_quality": "turbulent",
-      "unified_score": 37.8
+      "unified_quality": "peaceful",
+      "unified_score": 54.2
     },
     "vision": {
       "advice": [
@@ -2425,14 +2425,14 @@
           "previous": 24.656243089485095
         },
         "unified_score": {
-          "change_rate": "stable",
-          "delta": -0.5999999999999943,
+          "change_rate": "slow",
+          "delta": -4.199999999999996,
           "direction": "decreasing",
-          "previous": 49.3
+          "previous": 46.8
         }
       },
       "unified_quality": "turbulent",
-      "unified_score": 48.7
+      "unified_score": 42.6
     },
     "vulnerability": {
       "advice": [
@@ -2563,14 +2563,14 @@
         },
         "unified_score": {
           "change_rate": "rapid",
-          "delta": -27.1,
+          "delta": -22.799999999999997,
           "direction": "decreasing",
-          "previous": 62.6
+          "previous": 52.9
         }
       },
       "unified_quality": "turbulent",
-      "unified_score": 35.5
+      "unified_score": 30.1
     }
   },
-  "captured_at": "2025-12-09T03:11:29.476880+00:00"
+  "captured_at": "2025-12-17T14:25:16.699535+00:00"
 }
